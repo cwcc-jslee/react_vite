@@ -41,6 +41,7 @@ const Cell = styled.div`
 `;
 
 const SfaDetailTable = ({ data }) => {
+  console.log(`>sfa detail table (data) : ${data}`);
   if (!data) return null;
 
   // 매출품목과 사업부 문자열 생성

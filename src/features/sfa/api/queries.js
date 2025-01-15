@@ -10,7 +10,7 @@ export const buildSfaListQuery = ({
   // 기본 필터 설정
   const defaultFilter = [
     {
-      sales_rec_date: {
+      recognition_date: {
         $gte: dateRange.startDate,
         $lte: dateRange.endDate,
       },
@@ -18,17 +18,17 @@ export const buildSfaListQuery = ({
   ];
 
   // probability 필터 추가
+  // sfa 월간 테이블에서 월&매출확률 클릭시 사용용
   if (probability) {
     if (probability === 'confirmed') {
       defaultFilter.push({
-        confirmed: { $eq: true },
+        is_confirmed: { $eq: true },
       });
     } else {
       defaultFilter.push({
-        confirmed: { $eq: false },
-        sfa_percentage: {
-          name: { $eq: probability },
-        },
+        is_confirmed: { $eq: false },
+          probability: { $eq: probability },
+        
       });
     }
   }
@@ -37,28 +37,28 @@ export const buildSfaListQuery = ({
     filters: {
       $and: [
         {
-          deleted: {
+          is_deleted: {
             $eq: false,
           },
         },
         ...defaultFilter,
       ],
     },
-    sort: ['sales_rec_date:asc'],
+    sort: ['recognition_date:asc'],
     fields: [
-      'confirmed',
-      'sales_revenue',
-      'sales_profit',
-      'sales_rec_date',
-      'payment_date',
+      'billing_type',
+      'is_confirmed',
+      'probability',
+      'amount',
+      'profit_amount',
+      'profit_config',
+      'recognition_date',
+      'scheduled_date',
     ],
     populate: {
       sfa: {
-        fields: ['name', 'sfa_item_price', 'isProject'],
+        fields: ['name', 'sfa_by_items', 'has_partner','is_project'],
         populate: {
-          sfa_sales_type: {
-            fields: ['name'],
-          },
           customer: {
             fields: ['name'],
           },
@@ -69,15 +69,6 @@ export const buildSfaListQuery = ({
             fields: ['name'],
           },
         },
-      },
-      sfa_percentage: {
-        fields: ['name'],
-      },
-      sfa_profit_margin: {
-        fields: ['name'],
-      },
-      re_payment_method: {
-        fields: ['name'],
       },
     },
     pagination: {
@@ -101,7 +92,7 @@ export const buildSfaDetailQuery = (id) => {
       filters: {
         id: { $eq: id },
       },
-      fields: ['name', 'isProject', 'sfa_item_price', 'description'],
+      fields: ['name', 'is_project', 'total_price', 'sfa_by_items', 'has_partner', 'description'],
       populate: {
         customer: {
           fields: ['name'],
@@ -134,47 +125,35 @@ export const buildSfaDetailQuery = (id) => {
         //     },
         //   },
         // },
-        sfa_moreinfos: {
+        sfa_by_payments: {
           filters: {
-            deleted: {
+            is_deleted: {
               $eq: false,
             },
           },
           sort: ['id:asc'],
           fields: [
-            'confirmed',
-            'sales_revenue',
-            'sales_profit',
-            'sales_rec_date',
-            'payment_date',
-            'profitMargin_value',
-            'payment_date',
+            'is_confirmed',
+            'probability',
+            'amount',
+            'profit_amount',
+            'recognition_date',
+            'scheduled_date',
+            'profit_config',
+            'memo',
           ],
           // populate: '*',
           populate: {
-            sfa_change_records: {
+            sfa_by_payment_histories: {
+              fields: ['is_confirmed',
+              'probability',
+              'amount',
+              'profit_amount',
+              'recognition_date',
+              'scheduled_date',
+              'profit_config',
+              'memo',],
               sort: ['id:desc'],
-              populate: {
-                sfa_percentage: {
-                  fields: ['name'],
-                },
-                sfa_profit_margin: {
-                  fields: ['name'],
-                },
-                re_payment_method: {
-                  fields: ['name'],
-                },
-              },
-            },
-            re_payment_method: {
-              fields: ['name', 'code', 'sort'],
-              sort: ['sort:asc'],
-            },
-            sfa_percentage: {
-              fields: ['name'],
-            },
-            sfa_profit_margin: {
-              fields: ['name'],
             },
           },
         },
@@ -191,7 +170,7 @@ export const buildSfaStatsQuery = (dateRanges, { pagination } = {}) => {
   //  `>>>>buildSfaStatsQuery [ ${pagination.start}/${pagination.limit} ]`,
   //);
   const filters = dateRanges.map((range) => ({
-    sales_rec_date: {
+    recognition_date: {
       $gte: range.startDate,
       $lte: range.endDate,
     },
@@ -201,7 +180,7 @@ export const buildSfaStatsQuery = (dateRanges, { pagination } = {}) => {
     filters: {
       $and: [
         {
-          deleted: {
+          is_deleted: {
             $eq: false,
           },
         },
@@ -210,7 +189,7 @@ export const buildSfaStatsQuery = (dateRanges, { pagination } = {}) => {
         },
       ],
     },
-    fields: ['confirmed', 'sales_revenue', 'sales_profit', 'sales_rec_date'],
+    fields: ['is_confirmed', 'probability','amount', 'profit_amount', 'recognition_date'],
     populate: {
       sfa_percentage: {
         fields: ['name'],

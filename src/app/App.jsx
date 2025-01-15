@@ -45,7 +45,7 @@ const App = () => {
         <DefaultLayout>
           <Suspense fallback={<div>Loading...</div>}>
             <Routes>
-              <Route path="/" element={<Navigate to="/sfa" replace />} />
+              <Route path="/" element={<Navigate to="/customer" replace />} />
               <Route path="/sfa" element={<SfaPage />} />
               <Route path="/customer" element={<CustomerPage />} />
             </Routes>

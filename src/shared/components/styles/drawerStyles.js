@@ -1,4 +1,4 @@
-// src/shared/components/drawer/styles/drawerStyles.js
+// src/shared/components/styles/drawerStyles.js
 import styled from 'styled-components';
 
 export const DrawerContainer = styled.div`
@@ -24,7 +24,7 @@ export const DrawerWrapper = styled.div`
   position: fixed;
   top: 0;
   right: 0;
-  width: ${(props) => props.width || '900px'};
+  width: ${({ $width }) => $width || '900px'};
   height: 100vh;
   background: white;
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
@@ -59,9 +59,9 @@ export const CloseButton = styled.button`
 `;
 
 export const DrawerContent = styled.div`
-  padding: 0 24px 24px 24px; // 좌우 하단 여백 추가
-  height: ${(props) =>
-    props.hasMenu ? 'calc(100vh - 120px)' : 'calc(100vh - 72px)'};
+  padding: 0 24px 24px 24px;
+  height: ${({ $hasMenu }) =>
+    $hasMenu ? 'calc(100vh - 120px)' : 'calc(100vh - 72px)'};
   overflow-y: auto;
 `;
 
@@ -76,12 +76,12 @@ export const ActionButton = styled.button`
   padding: 8px 16px;
   border: 1px solid #e5e7eb;
   border-radius: 4px;
-  background: ${(props) => (props.active ? '#2563eb' : 'white')};
-  color: ${(props) => (props.active ? 'white' : '#374151')};
+  background: ${({ $active }) => ($active ? '#2563eb' : 'white')};
+  color: ${({ $active }) => ($active ? 'white' : '#374151')};
   cursor: pointer;
   font-size: 13px;
 
   &:hover {
-    background: ${(props) => (props.active ? '#2563eb' : '#f9fafb')};
+    background: ${({ $active }) => ($active ? '#2563eb' : '#f9fafb')};
   }
 `;

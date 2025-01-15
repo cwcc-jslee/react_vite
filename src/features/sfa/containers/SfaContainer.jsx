@@ -27,6 +27,7 @@ const SfaContainer = () => {
 
       {/* Drawer */}
       <SfaDrawer />
+      <p1>테스트</p1>
     </Container>
   );
 };

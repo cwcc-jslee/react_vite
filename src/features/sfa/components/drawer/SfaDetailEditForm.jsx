@@ -6,7 +6,7 @@ import {
   Label,
   Select,
   SubmitButton,
-} from '../../../../shared/components/drawer/styles/formStyles';
+} from '../../../../shared/components/styles/formStyles';
 
 const SfaDetailEditForm = ({ initialData, onSubmit }) => {
   const [formData, setFormData] = useState(initialData);

@@ -33,7 +33,7 @@ export const sfaApi = {
         probability,
       });
 
-      const response = await apiClient.get(`/api/sfa-moreinfos?${query}`);
+      const response = await apiClient.get(`/api/sfa-by-payments?${query}`);
       return response.data;
     } catch (error) {
       console.error('Failed to fetch SFA data:', error);
@@ -54,14 +54,14 @@ export const sfaApi = {
   },
 
   // 단일 월 통계 데이터 조회
-  getSfaMonthStats: async (year, month) => {
+  getSfaMonthStats: async (startDate, endDate) => {
     try {
       // 날짜 범위 계산
-      const date = dayjs().year(year).month(month);
-      const startDate = date.startOf('month').format('YYYY-MM-DD');
-      const endDate = date.endOf('month').format('YYYY-MM-DD');
+      // const date = dayjs().year(year).month(month);
+      // const startDate = date.startOf('month').format('YYYY-MM-DD');
+      // const endDate = date.endOf('month').format('YYYY-MM-DD');
 
-      console.log('Fetching data for:', { startDate, endDate });
+      console.log('>>>Fetching data for:', { startDate, endDate });
 
       // API 호출
       const response = await apiClient.get(
@@ -90,11 +90,16 @@ export const sfaApi = {
       // 데이터 변환 - group_name을 키로 사용
       const processedData = response.data.data.reduce((acc, item) => {
         acc[item.group_name] = {
-          revenue: Number(item.total_sales_revenue) || 0,
-          profit: Number(item.total_sales_profit) || 0,
+          revenue: Number(item.total_amount) || 0,
+          profit: Number(item.total_profit_amount) || 0,
         };
         return acc;
       }, {});
+
+      // 확정 데이터가 없는 경우 빈 객체 추가
+      if (!processedData.confirmed) {
+        processedData.confirmed = { revenue: 0, profit: 0 };
+      }
 
       console.log(
         `>> ${startDate}/${endDate} >>Processed data:`,

@@ -154,7 +154,7 @@ const COLUMNS = [
   { key: 'percentage', title: '확률', align: 'center' },
   { key: 'customer', title: '고객사/매출처', align: 'left' },
   { key: 'name', title: '건명', align: 'left' },
-  { key: 'payment', title: '결제구분', align: 'center' },
+  { key: 'payment', title: '결제방법', align: 'center' },
   { key: 'classification', title: '매출구분', align: 'center' },
   { key: 'item', title: '매출품목', align: 'center' },
   { key: 'team', title: '사업부', align: 'center' },
@@ -175,11 +175,11 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
   return (
     <tr>
       <Td align="center">{actualIndex}</Td>
-      <Td align="center">{item.confirmed ? 'YES' : 'NO'}</Td>
-      <Td align="center">{item.sfa_percentage?.name || '-'}</Td>
+      <Td align="center">{item.is_confirmed ? 'YES' : 'NO'}</Td>
+      <Td align="center">{item.probability || '-'}</Td>
       <Td>{item.sfa?.customer?.name || '-'}</Td>
       <Td>{item.sfa?.name}</Td>
-      <Td align="center">{item.re_payment_method?.name || '-'}</Td>
+      <Td align="center">{item.billing_type || '-'}</Td>
       <Td align="center">{item.sfa?.sfa_classification?.name || '-'}</Td>
       <Td align="center">
         {sfaItemPrice.map((item) => item.sfa_item_name).join(', ') || '-'}
@@ -188,12 +188,12 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
         {sfaItemPrice.map((item) => item.team_name).join(', ') || '-'}
       </Td>
       <Td align="right">
-        {new Intl.NumberFormat('ko-KR').format(item.sales_revenue)}
+        {new Intl.NumberFormat('ko-KR').format(item.amount)}
       </Td>
       <Td align="right">
-        {new Intl.NumberFormat('ko-KR').format(item.sales_profit)}
+        {new Intl.NumberFormat('ko-KR').format(item.profit_amount)}
       </Td>
-      <Td align="center">{item.sales_rec_date}</Td>
+      <Td align="center">{item.recognition_date}</Td>
       <Td align="center">
         <ActionButton onClick={() => fetchSfaDetail(item.sfa.id)}>
           View

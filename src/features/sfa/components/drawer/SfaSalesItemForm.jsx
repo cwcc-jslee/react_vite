@@ -6,7 +6,7 @@ import {
   Input,
   Select,
   SubmitButton,
-} from '../../../../shared/components/drawer/styles/formStyles';
+} from '../../../../shared/components/styles/formStyles';
 
 const ItemRow = styled.div`
   display: grid;

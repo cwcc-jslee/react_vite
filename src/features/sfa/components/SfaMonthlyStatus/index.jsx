@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { sfaApi } from '../../api/sfaApi';
 import { useSfa } from '../../context/SfaContext';
+import dayjs from 'dayjs';
 
 // 스타일 컴포넌트 정의
 const StatsTable = styled.table`
@@ -48,8 +49,6 @@ const SfaMonthlyStats = () => {
   const [monthlyStats, setMonthlyStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // 마지막 클릭 상태를 저장하는 state 추가
   const [lastClick, setLastClick] = useState({
     yearMonth: null,
     probability: null,
@@ -57,45 +56,70 @@ const SfaMonthlyStats = () => {
 
   const { updateFilter } = useSfa();
 
-  // 월 계산 함수
+  // 월 계산 함수 - dayjs 사용
   const calculateMonths = () => {
-    const now = new Date();
+    // 현재 월을 기준으로 계산
+    const baseDate = dayjs();
     const months = [];
 
     // 전월부터 익익월까지 4개월 계산
     for (let i = -1; i <= 2; i++) {
-      const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
-      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const currentDate = baseDate.add(i, 'month');
       months.push({
-        month,
-        year: date.getFullYear(),
+        month: currentDate.format('MM'),  // '01'-'12' 형식
+        year: currentDate.year()
       });
     }
 
+    // console.log('Calculated months:', months);
     return months;
   };
 
   const months = calculateMonths();
+
   const probabilities = ['confirmed', '100', '90', '70', '50'];
+
+  // API 응답 데이터 검증 및 처리
+  const validateApiData = (data) => {
+    if (!data) {
+      console.warn('Empty API response');
+      return {};
+    }
+
+    const validatedData = {};
+    
+    // 각 확률에 대해 데이터 검증 및 처리
+    probabilities.forEach(prob => {
+      const probData = data[prob];
+      if (probData) {
+        validatedData[prob] = {
+          revenue: parseInt(probData.revenue || 0),
+          profit: parseInt(probData.profit || 0)
+        };
+        console.log(`Validated data for probability ${prob}:`, validatedData[prob]);
+      }
+    });
+
+    return validatedData;
+  };
+
+  // 디버깅을 위한 상태 변경 감시
+  useEffect(() => {
+    console.log('monthlyStats updated:', monthlyStats);
+  }, [monthlyStats]);
 
   // 셀 클릭 이벤트 핸들러
   const handleCellClick = (monthObj, probability) => {
     const yearMonth = `${monthObj.year}-${monthObj.month}`;
 
-    // 이전 클릭과 동일한 셀인지 확인
-    if (
-      lastClick.yearMonth === yearMonth &&
-      lastClick.probability === probability
-    ) {
-      return; // 동일한 셀이면 함수 종료
+    if (lastClick.yearMonth === yearMonth && lastClick.probability === probability) {
+      return;
     }
 
-    // 새로운 클릭 정보 저장
     setLastClick({
       yearMonth,
       probability,
     });
-    // SfaContext의 필터 업데이트
     updateFilter(yearMonth, probability);
     console.log(`Clicked Table [ ${yearMonth} / ${probability}]`);
   };
@@ -104,18 +128,14 @@ const SfaMonthlyStats = () => {
   const handleHeaderClick = (monthObj) => {
     const yearMonth = `${monthObj.year}-${monthObj.month}`;
 
-    // 이전 클릭과 동일한 헤더인지 확인
     if (lastClick.yearMonth === yearMonth && lastClick.probability === null) {
-      return; // 동일한 헤더면 함수 종료
+      return;
     }
 
-    // 새로운 클릭 정보 저장 (헤더는 probability가 없으므로 null)
     setLastClick({
       yearMonth,
       probability: null,
     });
-
-    // SfaContext의 필터 업데이트
     updateFilter(yearMonth, null);
     console.log(`Clicked Table [ ${yearMonth} / null ]`);
   };
@@ -126,19 +146,47 @@ const SfaMonthlyStats = () => {
       setError(null);
 
       try {
-        const statsPromises = months.map(({ year, month }) =>
-          sfaApi
-            .getSfaMonthStats(year, parseInt(month) - 1)
-            .then((data) => ({ month: month, data })),
-        );
-        const results = await Promise.all(statsPromises);
+        console.log('Fetching data for months:', months);
+        const monthlyData = {};
 
-        const monthlyData = results.reduce((acc, { month, data }) => {
-          acc[month] = data;
-          return acc;
-        }, {});
+        // 각 월별 데이터를 순차적으로 처리
+        for (const { year, month } of months) {
+          try {
+            // 날짜 범위 계산
+            const date = dayjs().year(year).month(month -1);  // dayjs : 0-11 사용
+            const startDate = date.startOf('month').format('YYYY-MM-DD');
+            const endDate = date.endOf('month').format('YYYY-MM-DD');
+            console.log('>>Fetching data for:', { startDate, endDate });
 
-        setMonthlyStats(monthlyData);
+            // API 호출 및 응답 데이터 가져오기
+            const response = await sfaApi.getSfaMonthStats(startDate, endDate);
+            console.log(`Month ${month} - Raw API response:`, response);
+
+            // 응답 데이터 검증 및 처리
+            if (response) {
+              const validatedData = validateApiData(response);
+              console.log(`Month ${month} - Validated data:`, validatedData);
+
+              // 유효한 데이터가 있는 경우에만 저장
+              if (Object.keys(validatedData).length > 0) {
+                monthlyData[month] = validatedData;
+                console.log(`Month ${month} - Data added to monthlyData:`, monthlyData[month]);
+              }
+            }
+          } catch (error) {
+            console.error(`Error fetching data for ${year}-${month}:`, error);
+            // 에러 발생 시 빈 객체로 초기화
+            monthlyData[month] = {};
+          }
+        }
+
+        console.log('Final monthlyData before setState:', monthlyData);
+        setMonthlyStats(prevStats => {
+          console.log('Previous monthlyStats:', prevStats);
+          console.log('New monthlyStats:', monthlyData);
+          return monthlyData;
+        });
+
       } catch (error) {
         console.error('Failed to fetch monthly stats:', error);
         setError('통계 데이터를 불러오는데 실패했습니다.');
@@ -155,17 +203,20 @@ const SfaMonthlyStats = () => {
 
   // 행 렌더링 함수
   const renderRow = (prob) => {
+    // console.log('Current monthlyStats:', monthlyStats);
+    
     return (
       <tr key={prob}>
-        <Td
-          className="probability"
-          onClick={() => handleCellClick(months[0], prob)}
-        >
-          {prob}
-        </Td>
+        <Td className="probability" onClick={() => handleCellClick(months[0], prob)}>{prob}</Td>
         {months.map((month, index) => {
-          const monthData = monthlyStats[month.month] || {};
-          const probData = monthData[prob] || { revenue: 0, profit: 0 };
+          // 현재 월의 데이터 가져오기
+          const currentMonthData = monthlyStats[month.month];
+          // console.log(`Month ${month.month} data:`, currentMonthData);
+          
+          // 현재 확률에 대한 데이터 가져오기
+          const probData = currentMonthData?.[prob] || { revenue: 0, profit: 0 };
+          // console.log(`Probability ${prob} data for month ${month.month}:`, probData);
+
 
           // 전월 (index === 0)
           if (index === 0) {
@@ -204,20 +255,19 @@ const SfaMonthlyStats = () => {
                   </Td>
                 </React.Fragment>
               );
-            } else {
-              return (
-                <React.Fragment key={`${month.month}-current`}>
-                  <Td onClick={() => handleCellClick(month, prob)}>
-                    {probData.revenue.toLocaleString()}
-                  </Td>
-                  <Td onClick={() => handleCellClick(month, prob)}>
-                    {probData.profit.toLocaleString()}
-                  </Td>
-                  <Td onClick={() => handleCellClick(month, prob)}>-</Td>
-                  <Td onClick={() => handleCellClick(month, prob)}>-</Td>
-                </React.Fragment>
-              );
             }
+            return (
+              <React.Fragment key={`${month.month}-current`}>
+                <Td onClick={() => handleCellClick(month, prob)}>
+                  {probData.revenue.toLocaleString()}
+                </Td>
+                <Td onClick={() => handleCellClick(month, prob)}>
+                  {probData.profit.toLocaleString()}
+                </Td>
+                <Td onClick={() => handleCellClick(month, prob)}>-</Td>
+                <Td onClick={() => handleCellClick(month, prob)}>-</Td>
+              </React.Fragment>
+            );
           }
 
           // 익월, 익익월 (index === 2 or 3)

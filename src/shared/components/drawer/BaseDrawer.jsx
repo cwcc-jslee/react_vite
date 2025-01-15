@@ -3,13 +3,15 @@ import React from 'react';
 import {
   DrawerContainer,
   Overlay,
-  DrawerWrapper,
   DrawerHeader,
   Title,
   CloseButton,
-  DrawerContent,
   ButtonGroup,
-} from './styles/drawerStyles';
+} from '../styles/drawerStyles';
+import {
+  DrawerWrapper,
+  DrawerContent
+} from '../styles/DynamicComponents';
 
 const BaseDrawer = ({
   visible,
@@ -25,7 +27,7 @@ const BaseDrawer = ({
   return (
     <DrawerContainer>
       <Overlay onClick={enableOverlayClick ? onClose : undefined} />
-      <DrawerWrapper width={width}>
+      <DrawerWrapper $width={width}>
         <DrawerHeader>
           <Title>{title}</Title>
           <CloseButton onClick={onClose}>&times;</CloseButton>
@@ -33,7 +35,7 @@ const BaseDrawer = ({
 
         {menu && <ButtonGroup>{menu}</ButtonGroup>}
 
-        <DrawerContent hasMenu={!!menu}>{children}</DrawerContent>
+        {/* <DrawerContent $hasMenu={!!menu}>{children}</DrawerContent> */}
       </DrawerWrapper>
     </DrawerContainer>
   );

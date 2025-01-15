@@ -1,16 +1,16 @@
 // src/features/sfa/containers/SfaDrawer/index.jsx
 import React from 'react';
 import BaseDrawer from '../../../../shared/components/drawer/BaseDrawer';
-import { ActionButton } from '../../../../shared/components/drawer/styles/drawerStyles';
+import { ActionButton } from '../../../../shared/components/styles/drawerStyles';
 import { useSfa } from '../../context/SfaContext';
 
 // 폼 컴포넌트들
 // 매출등록 - drawer 폼
-import SfaAddForm from '../../components/drawer/SfaAddForm';
-// 매출상세보기 - draser
+// import SfaAddForm from '../../components/drawer/SfaAddForm';
+// // // 매출상세보기 - draser
 import SfaDetailTable from '../../components/drawer/SfaDetailTable';
 import SfaDetailSalesTable from '../../components/drawer/SfaDetailSalesTable';
-//
+// //
 import SfaDetailEditForm from '../../components/drawer/SfaDetailEditForm';
 import SfaSalesItemForm from '../../components/drawer/SfaSalesItemForm';
 
@@ -74,9 +74,10 @@ const SfaDrawer = () => {
 
   // 컨텐츠 렌더링
   const renderContent = () => {
+    console.log(`>>mode : ${mode} / detail mode : ${detailMode}`);
     // 매출등록 mode
     if (mode === 'add') {
-      return <SfaAddForm onSubmit={handleFormSubmit} />;
+      // return <SfaAddForm onSubmit={handleFormSubmit} />;
     }
 
     // detail mode
@@ -85,8 +86,9 @@ const SfaDrawer = () => {
         case 'view':
           return (
             <>
+              <h1>hi...</h1>
               <SfaDetailTable data={data} />
-              <SfaDetailSalesTable
+              {/* <SfaDetailSalesTable
                 data={data.sfa_moreinfos || []}
                 onEdit={(item) =>
                   setDrawer({
@@ -94,27 +96,27 @@ const SfaDrawer = () => {
                     editData: item,
                   })
                 }
-              />
+              /> */}
             </>
           );
 
-        case 'edit':
-          return (
-            <SfaDetailEditForm initialData={data} onSubmit={handleFormSubmit} />
-          );
+        // case 'edit':
+        //   return (
+        //     <SfaDetailEditForm initialData={data} onSubmit={handleFormSubmit} />
+        //   );
 
-        case 'sales-add':
-          return (
-            <SfaSalesItemForm sfaId={data.id} onSubmit={handleFormSubmit} />
-          );
+        // case 'sales-add':
+        //   return (
+        //     <SfaSalesItemForm sfaId={data.id} onSubmit={handleFormSubmit} />
+        //   );
 
-        case 'sales-edit':
-          return (
-            <SfaDetailEditForm
-              initialData={drawerState.editData}
-              onSubmit={handleFormSubmit}
-            />
-          );
+        // case 'sales-edit':
+        //   return (
+        //     <SfaDetailEditForm
+        //       initialData={drawerState.editData}
+        //       onSubmit={handleFormSubmit}
+        //     />
+        //   );
 
         default:
           return null;
