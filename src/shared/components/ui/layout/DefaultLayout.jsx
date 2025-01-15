@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../../../features/auth/store/authSlice';
 import { fetchFrequentCodebooks } from '../../../../features/codebook/store/codebookSlice';
-import { Button } from '../index';
+import { Button } from '../index.jsx';
 import {
   Layout,
   Header,
@@ -14,7 +14,7 @@ import {
   Navigation,
   NavList,
   NavItem,
-} from './index';
+} from './components.jsx';
 
 const menuItems = [
   { key: '/', label: 'HOME' },
@@ -53,54 +53,43 @@ const DefaultLayout = ({ children }) => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="fixed top-0 left-0 right-0 h-16 bg-blue-800 shadow-md z-50">
-        <div className="h-full px-6 flex items-center justify-between">
-          <div className="text-xl font-bold text-white">CWCC PMS</div>
-          <div className="flex items-center gap-4">
-            <span className="text-white font-medium">
-              {user?.user?.username || 'Guest'}
-            </span>
-            <Button
-              variant="outline"
-              onClick={handleLogout}
-              className="text-white border-white/30 hover:bg-white/10"
-            >
-              로그아웃
-            </Button>
-          </div>
+    <Layout>
+      <Header>
+        <Logo>CWCC PMS</Logo>
+        <div className="flex items-center gap-4">
+          <span className="text-white font-medium">
+            {user?.user?.username || 'Guest'}
+          </span>
+          <Button
+            variant="outline"
+            onClick={handleLogout}
+            className="text-white border-white/30 hover:bg-white/10"
+          >
+            로그아웃
+          </Button>
         </div>
-      </header>
+      </Header>
 
       <div className="flex pt-16 min-h-[calc(100vh-64px)]">
-        <aside className="fixed top-16 left-0 w-60 h-[calc(100vh-64px)] bg-slate-800 overflow-y-auto">
-          <nav className="h-full">
-            <ul className="list-none p-0 m-0">
+        <Sider>
+          <Navigation>
+            <NavList>
               {menuItems.map((item) => (
-                <li
+                <NavItem
                   key={item.key}
-                  className={`
-                    px-6 py-3 cursor-pointer transition-colors
-                    ${
-                      location.pathname === item.key
-                        ? 'bg-blue-600 text-white'
-                        : 'text-slate-400 hover:bg-slate-700 hover:text-white'
-                    }
-                  `}
+                  active={location.pathname === item.key}
                   onClick={() => navigate(item.key)}
                 >
                   {item.label}
-                </li>
+                </NavItem>
               ))}
-            </ul>
-          </nav>
-        </aside>
+            </NavList>
+          </Navigation>
+        </Sider>
 
-        <main className="ml-60 flex-1 p-3 bg-slate-50 min-h-[calc(100vh-64px)] overflow-y-auto">
-          {children}
-        </main>
+        <Content>{children}</Content>
       </div>
-    </div>
+    </Layout>
   );
 };
 

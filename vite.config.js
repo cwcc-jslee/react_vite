@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
@@ -18,13 +18,16 @@ export default defineConfig({
               console.log('Proxying:', req.method, req.url);
             }
           });
-        }
-      }
-    }
+        },
+      },
+    },
   },
+  // resolve: {
+  //   alias: {
+  //     '@': path.resolve(__dirname, './src')
+  //   }
+  // }
   resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src')
-    }
-  }
-})
+    extensions: ['.js', '.jsx', '.ts', '.tsx'],
+  },
+});

@@ -1,46 +1,41 @@
 // src/features/sfa/components/drawer/SalesPayments.jsx
-// 매출항목 등록 폼폼
 import React, { useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import {
+  Group,
   Select,
   Input,
-} from '../../../../shared/components/drawer/styles/formStyles';
+  Checkbox,
+  Switch,
+} from '../../../../shared/components/ui';
 
-const SalesPayments = ({
+const SalesByPayment = ({
   entries,
   onChange,
   onAdd,
   onRemove,
   isSubmitting,
 }) => {
-  // 매출이익 자동 계산을 위한 useEffect
   useEffect(() => {
     entries.forEach((entry, index) => {
       let calculatedMarginAmount = 0;
 
-      // 이익/마진 계산 로직
       if (entry.isProfit) {
-        // 이익으로 선택된 경우: margin 값을 그대로 매출이익으로 설정
         calculatedMarginAmount = Number(entry.margin || 0);
       } else {
-        // 마진으로 선택된 경우: (매출액 * 마진%) / 100 계산
         calculatedMarginAmount =
           (Number(entry.amount || 0) * Number(entry.margin || 0)) / 100;
       }
 
-      // 계산된 값이 현재 값과 다른 경우에만 업데이트
       if (calculatedMarginAmount !== Number(entry.marginAmount)) {
         onChange(index, 'marginAmount', calculatedMarginAmount.toString());
       }
     });
-  }, [entries, onChange]); // entries나 onChange가 변경될 때마다 실행
+  }, [entries, onChange]);
 
-  // 입력값 변경 시 즉시 계산을 위한 핸들러
   const handleEntryChange = (index, field, value) => {
     onChange(index, field, value);
 
-    // amount, margin, isProfit 필드가 변경될 때만 즉시 계산
     if (['amount', 'margin', 'isProfit'].includes(field)) {
       const entry = entries[index];
       const amount = field === 'amount' ? value : entry.amount;
@@ -59,46 +54,19 @@ const SalesPayments = ({
     }
   };
 
-  const labelStyle = {
-    fontSize: '12px',
-    color: '#6B7280',
-    marginBottom: '4px',
-  };
-
   if (!entries?.length && !isSubmitting) return null;
 
   return (
     <>
       {entries.length > 0 && (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '24px',
-            padding: '0 20px',
-          }}
-        >
+        <div className="flex flex-col gap-6 px-5">
           {entries.map((entry, index) => (
             <div
               key={index}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '12px',
-                padding: '16px',
-                backgroundColor: '#f9fafb',
-                borderRadius: '4px',
-              }}
+              className="flex flex-col gap-3 p-4 bg-gray-50 rounded-md"
             >
-              {/* 첫 번째 줄 */}
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1.5fr 0.8fr 1fr 1fr auto 0.5fr 1fr',
-                  gap: '12px',
-                  alignItems: 'center',
-                }}
-              >
+              {/* First Row */}
+              <div className="grid grid-cols-[1.5fr,0.8fr,1fr,1fr,auto,0.5fr,1fr] gap-3 items-center">
                 <Select
                   value={entry.paymentType}
                   onChange={(e) =>
@@ -112,21 +80,14 @@ const SalesPayments = ({
                   <option value="TRANSFER">계좌이체</option>
                 </Select>
 
-                <label
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                  }}
-                >
-                  <input
-                    type="checkbox"
+                <label className="flex items-center gap-1">
+                  <Checkbox
                     checked={entry.confirmed}
                     onChange={(e) =>
                       onChange(index, 'confirmed', e.target.checked)
                     }
                     disabled={isSubmitting}
-                    style={{ width: '16px', height: '16px' }}
+                    className="w-4 h-4"
                   />
                   <span>확정여부</span>
                 </label>
@@ -155,49 +116,17 @@ const SalesPayments = ({
                   disabled={isSubmitting}
                 />
 
-                <label
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <input
-                    type="checkbox"
+                <div className="flex items-center justify-center">
+                  <Switch
                     checked={entry.isProfit}
-                    onChange={(e) =>
-                      handleEntryChange(index, 'isProfit', e.target.checked)
+                    onChange={() =>
+                      handleEntryChange(index, 'isProfit', !entry.isProfit)
                     }
                     disabled={isSubmitting}
-                    style={{ display: 'none' }}
                   />
-                  <span
-                    style={{
-                      position: 'relative',
-                      width: '36px',
-                      height: '20px',
-                      backgroundColor: entry.isProfit ? '#2563eb' : '#9CA3AF',
-                      borderRadius: '10px',
-                      transition: 'background-color 0.2s',
-                      display: 'inline-block',
-                    }}
-                  >
-                    <span
-                      style={{
-                        position: 'absolute',
-                        width: '16px',
-                        height: '16px',
-                        backgroundColor: 'white',
-                        borderRadius: '50%',
-                        top: '2px',
-                        left: entry.isProfit ? '18px' : '2px',
-                        transition: 'left 0.2s',
-                      }}
-                    />
-                  </span>
-                </label>
+                </div>
 
-                <div style={{ textAlign: 'center' }}>
+                <div className="text-center">
                   {entry.isProfit ? '이익' : '마진'}
                 </div>
 
@@ -211,16 +140,12 @@ const SalesPayments = ({
                 />
               </div>
 
-              {/* 두 번째 줄 */}
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(4, 1fr)',
-                  gap: '12px',
-                }}
-              >
-                <div>
-                  <div style={labelStyle}>매출인식일자</div>
+              {/* Second Row */}
+              <div className="grid grid-cols-4 gap-3">
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-500 mb-1">
+                    매출인식일자
+                  </span>
                   <Input
                     type="date"
                     value={entry.recognitionDate}
@@ -231,8 +156,8 @@ const SalesPayments = ({
                   />
                 </div>
 
-                <div>
-                  <div style={labelStyle}>결제일자</div>
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-500 mb-1">결제일자</span>
                   <Input
                     type="date"
                     value={entry.paymentDate}
@@ -243,8 +168,8 @@ const SalesPayments = ({
                   />
                 </div>
 
-                <div>
-                  <div style={labelStyle}>메모</div>
+                <div className="flex flex-col">
+                  <span className="text-xs text-gray-500 mb-1">메모</span>
                   <Input
                     type="text"
                     value={entry.memo}
@@ -253,38 +178,27 @@ const SalesPayments = ({
                   />
                 </div>
 
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr auto',
-                    gap: '8px',
-                    alignItems: 'flex-end',
-                  }}
-                >
-                  <div>
-                    <div style={labelStyle}>매출이익</div>
+                <div className="grid grid-cols-[1fr,auto] gap-2 items-end">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 mb-1">매출이익</span>
                     <Input
                       type="number"
                       value={entry.marginAmount}
                       readOnly
                       disabled={true}
-                      style={{ backgroundColor: '#f3f4f6' }}
+                      className="bg-gray-100"
                     />
                   </div>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'flex-end',
-                      paddingBottom: '1px',
-                    }}
+                  <button
+                    type="button"
+                    onClick={() => onRemove(index)}
+                    className="h-9 flex items-center justify-center"
                   >
                     <Trash2
-                      onClick={() => onRemove(index)}
                       size={20}
-                      color="#6B7280"
-                      style={{ cursor: 'pointer' }}
+                      className="text-gray-500 cursor-pointer"
                     />
-                  </div>
+                  </button>
                 </div>
               </div>
             </div>
@@ -295,4 +209,4 @@ const SalesPayments = ({
   );
 };
 
-export default SalesPayments;
+export default SalesByPayment;

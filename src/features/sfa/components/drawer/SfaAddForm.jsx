@@ -5,22 +5,27 @@ import { selectCodebookByType } from '../../../codebook/store/codebookSlice';
 import { CustomerSearchInput } from '../../../../shared/components/customer/CustomerSearchInput';
 import { notification } from '../../../../shared/services/notification';
 import { submitSfaForm } from '../../services/sfaSubmitService';
-import {
-  FormContainer,
-  FormSection,
-  FormRowInline,
-  Label,
-  InputContainer,
-} from '../../../../shared/components/styles/formStyles';
-import { Input, Select, TextArea, ButtonContainer,ErrorMessage, Checkbox,
-  ToggleSwitch} from '../../../../shared/components/form/FormComponents';
-import { ActionButton } from '../../../../shared/components/styles/DynamicComponents';
 import { useDrawerFormData } from '../../hooks/useDrawerFormData';
 import SalesByItem from './SalesByItem';
-import SalesPayments from './SalesPayments';
+import SalesByPayment from './SalesByPayment';
+
+// 새로운 UI 컴포넌트 import
+import {
+  Form,
+  FormItem,
+  Group,
+  Label,
+  Input,
+  Select,
+  TextArea,
+  Button,
+  Checkbox,
+  Switch,
+  Message,
+} from '../../../../shared/components/ui';
 
 const SfaAddForm = ({ onClose }) => {
-  // 파트너사, 프로젝트 상태 관리
+  // State management for partner and project
   const [hasPartner, setHasPartner] = useState(false);
   const [isProject, setIsProject] = useState(false);
 
@@ -87,19 +92,18 @@ const SfaAddForm = ({ onClose }) => {
     }
   };
 
-  // 금액 입력시 폼
+  // Format number with commas
   const formatNumber = (value) => {
     if (!value) return '';
     return Number(value).toLocaleString();
   };
 
   return (
-    <FormContainer onSubmit={handleSubmit}>
-    {/* 1열: 매출유형, 매출구분 */}
-    <FormSection>
-      <FormRowInline>
-        <Label className="required">매출유형</Label>
-        <InputContainer>
+    <Form onSubmit={handleSubmit}>
+      {/* Sales Type and Classification */}
+      <Group>
+        <FormItem>
+          <Label required>매출유형</Label>
           <Select
             name="sfaSalesType"
             value={formData.sfaSalesType}
@@ -114,14 +118,12 @@ const SfaAddForm = ({ onClose }) => {
             ))}
           </Select>
           {errors.sfaSalesType && (
-            <ErrorMessage>{errors.sfaSalesType}</ErrorMessage>
+            <Message type="error">{errors.sfaSalesType}</Message>
           )}
-        </InputContainer>
-      </FormRowInline>
+        </FormItem>
 
-      <FormRowInline>
-        <Label className="required">매출구분</Label>
-        <InputContainer>
+        <FormItem>
+          <Label required>매출구분</Label>
           <Select
             name="sfaClassification"
             value={formData.sfaClassification}
@@ -136,17 +138,15 @@ const SfaAddForm = ({ onClose }) => {
             ))}
           </Select>
           {errors.sfaClassification && (
-            <ErrorMessage>{errors.sfaClassification}</ErrorMessage>
+            <Message type="error">{errors.sfaClassification}</Message>
           )}
-        </InputContainer>
-      </FormRowInline>
-    </FormSection>
+        </FormItem>
+      </Group>
 
-    {/* 2열: 고객사, 매출파트너 관련 */}
-    <FormSection>
-      <FormRowInline>
-        <Label className="required">고객사</Label>
-        <InputContainer>
+      {/* Customer and Partner */}
+      <Group>
+        <FormItem>
+          <Label required>고객사</Label>
           <CustomerSearchInput
             onSelect={handleCustomerSelect}
             value={formData.customer}
@@ -154,20 +154,18 @@ const SfaAddForm = ({ onClose }) => {
             disabled={isSubmitting}
             size="small"
           />
-        </InputContainer>
-      </FormRowInline>
+        </FormItem>
 
-      <FormRowInline>
-        <Label>매출파트너</Label>
-        <InputContainer>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <FormItem>
+          <Label>매출파트너</Label>
+          <Group direction="horizontal">
             <Checkbox
               id="hasPartner"
               checked={hasPartner}
               onChange={(e) => setHasPartner(e.target.checked)}
               disabled={isSubmitting}
             />
-            {hasPartner && (
+            {/* {hasPartner && (
               <CustomerSearchInput
                 name="partner"
                 onSelect={(partner) =>
@@ -179,17 +177,15 @@ const SfaAddForm = ({ onClose }) => {
                 disabled={isSubmitting}
                 size="small"
               />
-            )}
-          </div>
-        </InputContainer>
-      </FormRowInline>
-    </FormSection>
+            )} */}
+          </Group>
+        </FormItem>
+      </Group>
 
-    {/* 3열: 건명, 프로젝트 */}
-    <FormSection>
-      <FormRowInline>
-        <Label className="required">건명</Label>
-        <InputContainer>
+      {/* Project Name and Toggle */}
+      <Group>
+        <FormItem>
+          <Label required>건명</Label>
           <Input
             type="text"
             name="name"
@@ -198,127 +194,103 @@ const SfaAddForm = ({ onClose }) => {
             placeholder="건명을 입력하세요"
             disabled={isSubmitting}
           />
-          {errors.name && <ErrorMessage>{errors.name}</ErrorMessage>}
-        </InputContainer>
-      </FormRowInline>
+          {errors.name && <Message type="error">{errors.name}</Message>}
+        </FormItem>
 
-      <FormRowInline>
-        <Label>프로젝트</Label>
-        <InputContainer>
-          <ToggleSwitch
+        <FormItem>
+          <Label>프로젝트</Label>
+          <Switch
             checked={isProject}
             onChange={() => setIsProject(!isProject)}
             disabled={isSubmitting}
           />
-        </InputContainer>
-      </FormRowInline>
-    </FormSection>
+        </FormItem>
+      </Group>
 
-    {/* 4열: 매출액, ITEM매출액 */}
-    <FormSection>
-      <FormRowInline>
-        <Label className="required">사업부 매출액</Label>
-        <InputContainer>
+      {/* Amount Information */}
+      <Group>
+        <FormItem>
+          <Label required>사업부 매출액</Label>
           <Input
             type="text"
             name="itemAmount"
             value={formatNumber(formData.itemAmount)}
             disabled={true}
-            style={{ textAlign: 'right' }}
+            className="text-right"
           />
           {errors.totalItemAmount && (
-            <ErrorMessage>{errors.itemAmount}</ErrorMessage>
+            <Message type="error">{errors.itemAmount}</Message>
           )}
-        </InputContainer>
-      </FormRowInline>
+        </FormItem>
 
-      <FormRowInline>
-        <Label className="required">결제 매출액</Label>
-        <InputContainer>
+        <FormItem>
+          <Label required>결제 매출액</Label>
           <Input
             type="text"
             name="totalPaymentAmount"
             value={formatNumber(formData.totalPaymentAmount)}
             disabled={true}
-            style={{ textAlign: 'right' }}
+            className="text-right"
           />
-        </InputContainer>
-      </FormRowInline>
-    </FormSection>
+        </FormItem>
+      </Group>
 
-    {/* 5열: 매출ITEM, 매출항목 */}
-    <FormSection>
-      <FormRowInline>
-        <Label>사업부별 매출등록</Label>
-        <ButtonContainer>
-        <ActionButton
-          type="button"
-          $active={false}  // active 대신 $active 사용
-          onClick={handleAddSalesItem}
-          disabled={isSubmitting}
-        >
+      {/* Sales Registration Buttons */}
+      <Group>
+        <FormItem>
+          <Label>사업부별 매출등록</Label>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleAddSalesItem}
+            disabled={isSubmitting}
+          >
             사업부 매출 등록
-          </ActionButton>
-        </ButtonContainer>
-      </FormRowInline>
-      <FormRowInline>
-        <Label>결제 매출 등록</Label>
-        <ButtonContainer>
-        <ActionButton
-          type="button"
-          $active={false}
-          onClick={handleAddSalesPayment}
-          disabled={isSubmitting}
-          // disabled={formData.salesPayments.length >= 3 || isSubmitting}
-        >
+          </Button>
+        </FormItem>
+
+        <FormItem>
+          <Label>결제 매출 등록</Label>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleAddSalesPayment}
+            disabled={isSubmitting}
+          >
             결제 매출 등록
-          </ActionButton>
-        </ButtonContainer>
-      </FormRowInline>
-    </FormSection>
+          </Button>
+        </FormItem>
+      </Group>
 
-    {/* 구분선 */}
-    <div
-      style={{
-        borderBottom: '1px solid #e5e7eb',
-        margin: '20px 0',
-        width: '100%',
-      }}
-    />
+      {/* Divider */}
+      <div className="w-full h-px bg-gray-200 my-6" />
 
-    {/* 매출ITEM 목록 */}
-    <SalesByItem
-      items={formData.salesItems}
-      onChange={handleSalesItemChange}
-      onAdd={handleAddSalesItem}
-      onRemove={handleRemoveSalesItem}
-      isSubmitting={isSubmitting}
-      errors={errors}
-    />
+      {/* Sales Items List */}
+      <SalesByItem
+        items={formData.salesItems}
+        onChange={handleSalesItemChange}
+        onAdd={handleAddSalesItem}
+        onRemove={handleRemoveSalesItem}
+        isSubmitting={isSubmitting}
+        errors={errors}
+      />
 
-    {/* 구분선 */}
-    <div
-      style={{
-        borderBottom: '1px solid #e5e7eb',
-        margin: '20px 0',
-        width: '100%',
-      }}
-    />
+      {/* Divider */}
+      <div className="w-full h-px bg-gray-200 my-6" />
 
-    {/* 매출항목 목록 */}
-    <SalesPayments
-      entries={formData.salesPayments}
-      onChange={handleSalesPaymentChange}
-      onAdd={handleAddSalesPayment}
-      onRemove={handleRemoveSalesPayment}
-      isSubmitting={isSubmitting}
-    />
+      {/* Sales Payments List */}
+      <SalesByPayment
+        entries={formData.salesPayments}
+        onChange={handleSalesPaymentChange}
+        onAdd={handleAddSalesPayment}
+        onRemove={handleRemoveSalesPayment}
+        isSubmitting={isSubmitting}
+      />
 
-    {/* 비고 */}
-    <FormSection>
-      <FormRowInline style={{ gridColumn: '1 / -1' }}>
-        <Label>비고</Label>
-        <InputContainer>
+      {/* Description */}
+      <Group>
+        <FormItem fullWidth>
+          <Label>비고</Label>
           <TextArea
             name="description"
             value={formData.description}
@@ -326,24 +298,28 @@ const SfaAddForm = ({ onClose }) => {
             placeholder="비고 사항을 입력하세요"
             disabled={isSubmitting}
           />
-        </InputContainer>
-      </FormRowInline>
-    </FormSection>
+        </FormItem>
+      </Group>
 
-    {/* 에러 메시지 */}
-    {errors.submit && (
-      <ErrorMessage style={{ textAlign: 'center', marginBottom: '1rem' }}>
-        {errors.submit}
-      </ErrorMessage>
-    )}
+      {/* Error Message */}
+      {errors.submit && (
+        <Message type="error" className="text-center mb-4">
+          {errors.submit}
+        </Message>
+      )}
 
-    {/* 저장 버튼 */}
-    <ButtonContainer>
-    <ActionButton type="submit" $active={true} disabled={isSubmitting}>
-      {isSubmitting ? '처리중...' : '저장'}
-    </ActionButton>
-    </ButtonContainer>
-  </FormContainer>
+      {/* Submit Button */}
+      <Group>
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={isSubmitting}
+          className="w-full"
+        >
+          {isSubmitting ? '처리중...' : '저장'}
+        </Button>
+      </Group>
+    </Form>
   );
 };
 

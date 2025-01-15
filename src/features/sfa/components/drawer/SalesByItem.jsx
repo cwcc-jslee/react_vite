@@ -1,14 +1,14 @@
-// src/features/sfa/components/drawer/SalesItems.jsx
-// 사업부별 매출항목 등록 (홈페이지, 디자인 등)
+// src/features/sfa/components/drawer/SalesByItem.jsx
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { Trash2 } from 'lucide-react';
 import { selectCodebookByType } from '../../../codebook/store/codebookSlice';
 import {
+  Group,
   Select,
   Input,
-  ErrorMessage,
-} from '../../../../shared/components/drawer/styles/formStyles';
+  Message,
+} from '../../../../shared/components/ui';
 
 const SalesByItem = ({
   items,
@@ -43,95 +43,86 @@ const SalesByItem = ({
   return (
     <>
       {items.length > 0 && (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '20px',
-            padding: '0 20px',
-          }}
-        >
-          {items.map((item, index) => (
-            <div
-              key={index}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr) 40px',
-                gap: '12px',
-                alignItems: 'start',
-              }}
-            >
-              <Select
-                value={item.productType}
-                onChange={(e) => onChange(index, 'productType', e.target.value)}
-                disabled={isSubmitting}
-              >
-                <option value="">매출품목 선택</option>
-                {productTypeData?.data?.map((type) => (
-                  <option key={type.id} value={type.code}>
-                    {type.name}
-                  </option>
-                ))}
-              </Select>
+        <div className="px-5">
+          <Group className="grid grid-cols-2 gap-5">
+            {items.map((item, index) => (
+              <div key={index} className="space-y-2">
+                <div className="grid grid-cols-[1fr,1fr,1fr,40px] gap-3 items-start">
+                  <Select
+                    value={item.productType}
+                    onChange={(e) =>
+                      onChange(index, 'productType', e.target.value)
+                    }
+                    disabled={isSubmitting}
+                  >
+                    <option value="">매출품목 선택</option>
+                    {productTypeData?.data?.map((type) => (
+                      <option key={type.id} value={type.code}>
+                        {type.name}
+                      </option>
+                    ))}
+                  </Select>
 
-              <Select
-                value={item.department}
-                onChange={(e) => onChange(index, 'department', e.target.value)}
-                disabled={isSubmitting}
-              >
-                <option value="">사업부 선택</option>
-                {departmentData?.data?.map((dept) => (
-                  <option key={dept.id} value={dept.code}>
-                    {dept.name}
-                  </option>
-                ))}
-              </Select>
+                  <Select
+                    value={item.department}
+                    onChange={(e) =>
+                      onChange(index, 'department', e.target.value)
+                    }
+                    disabled={isSubmitting}
+                  >
+                    <option value="">사업부 선택</option>
+                    {departmentData?.data?.map((dept) => (
+                      <option key={dept.id} value={dept.code}>
+                        {dept.name}
+                      </option>
+                    ))}
+                  </Select>
 
-              <Input
-                type="text"
-                // 표시할 때만 포맷팅 적용
-                value={formatNumber(item.amount)}
-                onChange={(e) => handleAmountChange(index, e.target.value)}
-                placeholder="금액"
-                disabled={isSubmitting}
-                style={{ textAlign: 'right' }}
-              />
+                  <Input
+                    type="text"
+                    value={formatNumber(item.amount)}
+                    onChange={(e) => handleAmountChange(index, e.target.value)}
+                    placeholder="금액"
+                    disabled={isSubmitting}
+                    className="text-right"
+                  />
 
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Trash2
-                  onClick={() => onRemove(index)}
-                  size={20}
-                  color="#6B7280"
-                  style={{
-                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                    opacity: isSubmitting ? 0.5 : 1,
-                  }}
-                />
+                  <button
+                    type="button"
+                    onClick={() => onRemove(index)}
+                    disabled={isSubmitting}
+                    className={`flex items-center justify-center transition-opacity
+                      ${
+                        isSubmitting
+                          ? 'opacity-50 cursor-not-allowed'
+                          : 'opacity-100 hover:opacity-70'
+                      }`}
+                  >
+                    <Trash2 size={20} className="text-gray-500" />
+                  </button>
+                </div>
+
+                {/* Error Messages */}
+                <div className="space-y-1">
+                  {errors[`salesItems.${index}.productType`] && (
+                    <Message type="error">
+                      {errors[`salesItems.${index}.productType`]}
+                    </Message>
+                  )}
+                  {errors[`salesItems.${index}.department`] && (
+                    <Message type="error">
+                      {errors[`salesItems.${index}.department`]}
+                    </Message>
+                  )}
+                  {errors[`salesItems.${index}.amount`] && (
+                    <Message type="error">
+                      {errors[`salesItems.${index}.amount`]}
+                    </Message>
+                  )}
+                </div>
               </div>
-
-              {errors[`salesItems.${index}.productType`] && (
-                <ErrorMessage>
-                  {errors[`salesItems.${index}.productType`]}
-                </ErrorMessage>
-              )}
-              {errors[`salesItems.${index}.department`] && (
-                <ErrorMessage>
-                  {errors[`salesItems.${index}.department`]}
-                </ErrorMessage>
-              )}
-              {errors[`salesItems.${index}.amount`] && (
-                <ErrorMessage>
-                  {errors[`salesItems.${index}.amount`]}
-                </ErrorMessage>
-              )}
-            </div>
-          ))}
+            ))}
+          </Group>
         </div>
       )}
     </>

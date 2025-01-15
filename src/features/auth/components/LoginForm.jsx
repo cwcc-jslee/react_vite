@@ -1,25 +1,26 @@
 // src/features/auth/components/LoginForm.jsx
+import React from 'react';
 import { useAuth } from '../hooks/useAuth';
 import {
-  StyledLoginForm,
-  InputField,
-  SubmitButton,
-  ErrorMessage, // ErrorMessage 컴포넌트 추가
-} from './styles';
+  Form,
+  Input,
+  Button,
+  Message,
+} from '../../../shared/components/ui/index.jsx';
 
 export const LoginForm = () => {
   const { form, loading, error, handleLogin, handleInputChange } = useAuth();
 
   return (
-    <StyledLoginForm onSubmit={handleLogin}>
-      <InputField
+    <Form maxWidth="sm" className="space-y-6">
+      <Input
         name="username"
         placeholder="아이디"
         value={form.username}
         onChange={handleInputChange}
         autoComplete="username"
       />
-      <InputField
+      <Input
         name="password"
         type="password"
         placeholder="비밀번호"
@@ -27,10 +28,16 @@ export const LoginForm = () => {
         onChange={handleInputChange}
         autoComplete="current-password"
       />
-      {error && <ErrorMessage>{error}</ErrorMessage>}
-      <SubmitButton type="submit" disabled={loading}>
+      {error && <Message type="error">{error}</Message>}
+      <Button
+        type="submit"
+        variant="primary"
+        disabled={loading}
+        className="w-full"
+        onClick={handleLogin}
+      >
         {loading ? '로그인 중...' : '로그인'}
-      </SubmitButton>
-    </StyledLoginForm>
+      </Button>
+    </Form>
   );
 };

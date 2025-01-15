@@ -1,22 +1,21 @@
 // src/features/sfa/containers/SfaDrawer/index.jsx
 import React from 'react';
-import BaseDrawer from '../../../../shared/components/drawer/BaseDrawer';
-import { ActionButton } from '../../../../shared/components/styles/drawerStyles';
+import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer';
+import { Button } from '../../../../shared/components/ui';
 import { useSfa } from '../../context/SfaContext';
 
 // 폼 컴포넌트들
 // 매출등록 - drawer 폼
-// import SfaAddForm from '../../components/drawer/SfaAddForm';
+import SfaAddForm from '../../components/drawer/SfaAddForm';
 // // // 매출상세보기 - draser
 import SfaDetailTable from '../../components/drawer/SfaDetailTable';
 import SfaDetailSalesTable from '../../components/drawer/SfaDetailSalesTable';
 // //
-import SfaDetailEditForm from '../../components/drawer/SfaDetailEditForm';
-import SfaSalesItemForm from '../../components/drawer/SfaSalesItemForm';
+// import SfaDetailEditForm from '../../components/drawer/SfaDetailEditForm';
+// import SfaSalesItemForm from '../../components/drawer/SfaSalesItemForm';
 
 const SfaDrawer = () => {
   const { drawerState, setDrawer, handleFormSubmit, setDrawerClose } = useSfa();
-
   const { visible, mode, detailMode, data } = drawerState;
 
   if (!visible) return null;
@@ -50,24 +49,27 @@ const SfaDrawer = () => {
 
     return (
       <>
-        <ActionButton
-          active={detailMode === 'view'}
+        <Button
+          variant={detailMode === 'view' ? 'primary' : 'outline'}
           onClick={() => setDrawer({ detailMode: 'view' })}
+          size="sm"
         >
           View
-        </ActionButton>
-        <ActionButton
-          active={detailMode === 'edit'}
+        </Button>
+        <Button
+          variant={detailMode === 'edit' ? 'primary' : 'outline'}
           onClick={() => setDrawer({ detailMode: 'edit' })}
+          size="sm"
         >
           Edit
-        </ActionButton>
-        <ActionButton
-          active={detailMode === 'sales-add'}
+        </Button>
+        <Button
+          variant={detailMode === 'sales-add' ? 'primary' : 'outline'}
           onClick={() => setDrawer({ detailMode: 'sales-add' })}
+          size="sm"
         >
           매출추가
-        </ActionButton>
+        </Button>
       </>
     );
   };
@@ -77,7 +79,11 @@ const SfaDrawer = () => {
     console.log(`>>mode : ${mode} / detail mode : ${detailMode}`);
     // 매출등록 mode
     if (mode === 'add') {
+      console.log(
+        `>>sfa add form --mode : ${mode} / detail mode : ${detailMode}`,
+      );
       // return <SfaAddForm onSubmit={handleFormSubmit} />;
+      return <h1>SfaAddForm TEST</h1>;
     }
 
     // detail mode
@@ -130,9 +136,10 @@ const SfaDrawer = () => {
       title={getHeaderTitle()}
       onClose={setDrawerClose}
       menu={renderMenu()}
-      width="50%"
-      maxWidth="1200px"
+      width="1200px"
+      enableOverlayClick={true}
     >
+      <h1>DRAWER 테스트 페이지</h1>
       {renderContent()}
     </BaseDrawer>
   );

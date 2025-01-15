@@ -1,7 +1,7 @@
 // src/app/App.jsx
 import React, { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import DefaultLayout from '../features/common/components/layout/DefaultLayout';
+import DefaultLayout from '../shared/components/ui/layout/DefaultLayout';
 import { useSelector } from 'react-redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
