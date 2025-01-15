@@ -101,8 +101,9 @@ const SfaAddForm = ({ onClose }) => {
   return (
     <Form onSubmit={handleSubmit}>
       {/* Sales Type and Classification */}
-      <Group>
-        <FormItem>
+      <Group direction="horizontal" className="gap-6">
+        <FormItem className="flex-1">
+          {/* flex-1 추가로 균등한 너비 */}
           <Label required>매출유형</Label>
           <Select
             name="sfaSalesType"
@@ -122,7 +123,7 @@ const SfaAddForm = ({ onClose }) => {
           )}
         </FormItem>
 
-        <FormItem>
+        <FormItem className="flex-1">
           <Label required>매출구분</Label>
           <Select
             name="sfaClassification"
@@ -144,8 +145,8 @@ const SfaAddForm = ({ onClose }) => {
       </Group>
 
       {/* Customer and Partner */}
-      <Group>
-        <FormItem>
+      <Group direction="horizontal" className="gap-6">
+        <FormItem className="flex-1">
           <Label required>고객사</Label>
           <CustomerSearchInput
             onSelect={handleCustomerSelect}
@@ -156,7 +157,7 @@ const SfaAddForm = ({ onClose }) => {
           />
         </FormItem>
 
-        <FormItem>
+        <FormItem className="flex-1">
           <Label>매출파트너</Label>
           <Group direction="horizontal">
             <Checkbox
@@ -165,7 +166,7 @@ const SfaAddForm = ({ onClose }) => {
               onChange={(e) => setHasPartner(e.target.checked)}
               disabled={isSubmitting}
             />
-            {/* {hasPartner && (
+            {hasPartner && (
               <CustomerSearchInput
                 name="partner"
                 onSelect={(partner) =>
@@ -177,14 +178,14 @@ const SfaAddForm = ({ onClose }) => {
                 disabled={isSubmitting}
                 size="small"
               />
-            )} */}
+            )}
           </Group>
         </FormItem>
       </Group>
 
       {/* Project Name and Toggle */}
-      <Group>
-        <FormItem>
+      <Group direction="horizontal" className="gap-6">
+        <FormItem className="flex-1">
           <Label required>건명</Label>
           <Input
             type="text"
@@ -197,7 +198,7 @@ const SfaAddForm = ({ onClose }) => {
           {errors.name && <Message type="error">{errors.name}</Message>}
         </FormItem>
 
-        <FormItem>
+        <FormItem className="flex-1">
           <Label>프로젝트</Label>
           <Switch
             checked={isProject}
@@ -208,8 +209,8 @@ const SfaAddForm = ({ onClose }) => {
       </Group>
 
       {/* Amount Information */}
-      <Group>
-        <FormItem>
+      <Group direction="horizontal" className="gap-6">
+        <FormItem className="flex-1">
           <Label required>사업부 매출액</Label>
           <Input
             type="text"
@@ -223,7 +224,7 @@ const SfaAddForm = ({ onClose }) => {
           )}
         </FormItem>
 
-        <FormItem>
+        <FormItem className="flex-1">
           <Label required>결제 매출액</Label>
           <Input
             type="text"
@@ -236,8 +237,8 @@ const SfaAddForm = ({ onClose }) => {
       </Group>
 
       {/* Sales Registration Buttons */}
-      <Group>
-        <FormItem>
+      <Group direction="horizontal" className="gap-6">
+        <FormItem className="flex-1">
           <Label>사업부별 매출등록</Label>
           <Button
             type="button"
@@ -249,7 +250,7 @@ const SfaAddForm = ({ onClose }) => {
           </Button>
         </FormItem>
 
-        <FormItem>
+        <FormItem className="flex-1">
           <Label>결제 매출 등록</Label>
           <Button
             type="button"
@@ -267,7 +268,7 @@ const SfaAddForm = ({ onClose }) => {
 
       {/* Sales Items List */}
       <SalesByItem
-        items={formData.salesItems}
+        items={formData.salesByItems}
         onChange={handleSalesItemChange}
         onAdd={handleAddSalesItem}
         onRemove={handleRemoveSalesItem}
@@ -280,7 +281,7 @@ const SfaAddForm = ({ onClose }) => {
 
       {/* Sales Payments List */}
       <SalesByPayment
-        entries={formData.salesPayments}
+        payments={formData.salesByPayments}
         onChange={handleSalesPaymentChange}
         onAdd={handleAddSalesPayment}
         onRemove={handleRemoveSalesPayment}

@@ -82,8 +82,8 @@ const SfaDrawer = () => {
       console.log(
         `>>sfa add form --mode : ${mode} / detail mode : ${detailMode}`,
       );
-      // return <SfaAddForm onSubmit={handleFormSubmit} />;
-      return <h1>SfaAddForm TEST</h1>;
+      return <SfaAddForm onSubmit={handleFormSubmit} />;
+      // return <h1>SfaAddForm TEST</h1>;
     }
 
     // detail mode
@@ -136,10 +136,9 @@ const SfaDrawer = () => {
       title={getHeaderTitle()}
       onClose={setDrawerClose}
       menu={renderMenu()}
-      width="1200px"
+      width="900px"
       enableOverlayClick={true}
     >
-      <h1>DRAWER 테스트 페이지</h1>
       {renderContent()}
     </BaseDrawer>
   );

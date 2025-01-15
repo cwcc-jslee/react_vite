@@ -10,14 +10,14 @@ import {
 } from '../../../../shared/components/ui';
 
 const SalesByPayment = ({
-  entries,
+  payments,
   onChange,
   onAdd,
   onRemove,
   isSubmitting,
 }) => {
   useEffect(() => {
-    entries.forEach((entry, index) => {
+    payments.forEach((entry, index) => {
       let calculatedMarginAmount = 0;
 
       if (entry.isProfit) {
@@ -31,16 +31,16 @@ const SalesByPayment = ({
         onChange(index, 'marginAmount', calculatedMarginAmount.toString());
       }
     });
-  }, [entries, onChange]);
+  }, [payments, onChange]);
 
   const handleEntryChange = (index, field, value) => {
     onChange(index, field, value);
 
     if (['amount', 'margin', 'isProfit'].includes(field)) {
-      const entry = entries[index];
-      const amount = field === 'amount' ? value : entry.amount;
-      const margin = field === 'margin' ? value : entry.margin;
-      const isProfit = field === 'isProfit' ? value : entry.isProfit;
+      const payment = payments[index];
+      const amount = field === 'amount' ? value : payment.amount;
+      const margin = field === 'margin' ? value : payment.margin;
+      const isProfit = field === 'isProfit' ? value : payment.isProfit;
 
       let calculatedMarginAmount = 0;
       if (isProfit) {
@@ -54,13 +54,13 @@ const SalesByPayment = ({
     }
   };
 
-  if (!entries?.length && !isSubmitting) return null;
+  if (!payments?.length && !isSubmitting) return null;
 
   return (
     <>
-      {entries.length > 0 && (
+      {payments.length > 0 && (
         <div className="flex flex-col gap-6 px-5">
-          {entries.map((entry, index) => (
+          {payments.map((entry, index) => (
             <div
               key={index}
               className="flex flex-col gap-3 p-4 bg-gray-50 rounded-md"

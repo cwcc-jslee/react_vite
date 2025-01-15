@@ -14,17 +14,19 @@ export const Group = ({
 }) => {
   const baseStyles = 'w-full';
   const spacingStyles = {
-    sm: 'space-y-2',
-    md: 'space-y-4',
-    lg: 'space-y-6',
+    sm: direction === 'horizontal' ? 'space-x-2' : 'space-y-2',
+    md: direction === 'horizontal' ? 'space-x-4' : 'space-y-4',
+    lg: direction === 'horizontal' ? 'space-x-6' : 'space-y-6',
   };
   const directionStyles =
     direction === 'horizontal'
-      ? 'flex items-center space-x-4 space-y-0'
-      : spacingStyles[spacing];
+      ? 'flex items-start' // items-start로 변경하여 상단 정렬
+      : '';
 
   return (
-    <div className={`${baseStyles} ${directionStyles} ${className}`}>
+    <div
+      className={`${baseStyles} ${directionStyles} ${spacingStyles[spacing]} ${className}`}
+    >
       {children}
     </div>
   );
@@ -51,7 +53,7 @@ export const FormItem = ({ children, fullWidth, className = '' }) => {
   const widthClass = fullWidth ? 'col-span-2' : '';
   return (
     <div
-      className={`grid grid-cols-[80px,1fr] gap-4 items-start ${widthClass} ${className}`}
+      className={`grid grid-cols-[80px,1fr] gap-4 items-center ${widthClass} ${className}`}
     >
       {children}
     </div>
@@ -116,16 +118,22 @@ export const Select = React.forwardRef(
           ref={ref}
           className={`${baseStyles} ${stateStyles} ${className}
           disabled:bg-gray-50 disabled:cursor-not-allowed
-          focus:outline-none focus:ring-2 focus:ring-opacity-50`}
+          focus:outline-none focus:ring-2 focus:ring-opacity-50
+          bg-none`}
           {...props}
         />
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
           <svg
-            className="fill-current h-4 w-4"
+            className="h-4 w-4 text-gray-400"
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 20 20"
+            fill="currentColor"
           >
-            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+            <path
+              fillRule="evenodd"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+              clipRule="evenodd"
+            />
           </svg>
         </div>
       </div>

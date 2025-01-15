@@ -42,7 +42,7 @@ export const useDrawerFormData = () => {
   // salesItems의 amount 합계 계산 및 totalAmount 업데이트
   useEffect(() => {
     const calculateTotalAmount = () => {
-      const total = formData.salesItems.reduce((sum, item) => {
+      const total = formData.salesByItems.reduce((sum, item) => {
         // 이미 숫자로만 저장되어 있으므로 단순 변환만
         return sum + (parseInt(item.amount) || 0);
       }, 0);
@@ -56,7 +56,7 @@ export const useDrawerFormData = () => {
     };
 
     calculateTotalAmount();
-  }, [formData.salesItems]);
+  }, [formData.salesByItems]);
 
   // 기본 입력 핸들러
   const handleChange = (e) => {
@@ -156,14 +156,14 @@ export const useDrawerFormData = () => {
     const newErrors = {};
 
     // 기본 필드 검사
-    if (!formData.sfaSalesType)
-      newErrors.sfaSalesType = '매출유형을 선택해주세요';
-    if (!formData.customer) newErrors.customer = '고객사를 선택해주세요';
-    if (!formData.name) newErrors.name = '건명을 입력해주세요';
-    if (!formData.sfaClassification)
-      newErrors.sfaClassification = '매출구분을 선택해주세요';
-    if (!formData.totalItemAmount)
-      newErrors.totalItemAmount = 'ITEM 매출액을 입력해주세요';
+    // if (!formData.sfaSalesType)
+    //   newErrors.sfaSalesType = '매출유형을 선택해주세요';
+    // if (!formData.customer) newErrors.customer = '고객사를 선택해주세요';
+    // if (!formData.name) newErrors.name = '건명을 입력해주세요';
+    // if (!formData.sfaClassification)
+    //   newErrors.sfaClassification = '매출구분을 선택해주세요';
+    // if (!formData.totalItemAmount)
+    //   newErrors.totalItemAmount = 'ITEM 매출액을 입력해주세요';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
