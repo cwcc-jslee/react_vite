@@ -264,3 +264,72 @@ export const Checkbox = React.forwardRef(
     );
   },
 );
+
+/**
+ * Stack: 여러 컴포넌트를 수평/수직으로 배치하는 컨테이너
+ * @param {Object} props
+ * @param {React.ReactNode} props.children - 자식 컴포넌트들
+ * @param {'horizontal'|'vertical'} [props.direction='horizontal'] - 배치 방향
+ * @param {string} [props.ratio] - 자식 컴포넌트들의 비율 (예: "1:2")
+ * @param {'start'|'center'|'end'} [props.align='center'] - 교차축 정렬
+ * @param {'sm'|'md'|'lg'} [props.spacing='md'] - 컴포넌트 간 간격
+ */
+export const Stack = ({
+  children,
+  direction = 'horizontal',
+  ratio,
+  equal = true,
+  align = 'center',
+  spacing = 'md',
+  className = '',
+}) => {
+  const baseStyles = 'flex';
+  const directionStyles = direction === 'horizontal' ? 'flex-row' : 'flex-col';
+  const alignStyles = {
+    start: 'items-start',
+    center: 'items-center',
+    end: 'items-end',
+  }[align];
+  const spacingStyles = {
+    sm: 'gap-2',
+    md: 'gap-4',
+    lg: 'gap-6',
+  }[spacing];
+
+  const controls = React.Children.map(children, (child, index) => {
+    if (!React.isValidElement(child)) return child;
+
+    if (ratio) {
+      const ratios = ratio.split(':').map(Number);
+      const total = ratios.reduce((a, b) => a + b, 0);
+      const width = `w-${ratios[index]}/${total}`;
+      return React.cloneElement(child, {
+        className: `${child.props.className || ''} ${width}`.trim(),
+      });
+    }
+
+    // FormItem인 경우 flex-1 적용
+    if (child.type === FormItem) {
+      return React.cloneElement(child, {
+        className: `${child.props.className || ''} flex-1`.trim(),
+      });
+    }
+
+    // 그 외의 경우 equal prop에 따라 처리
+    if (equal) {
+      return React.cloneElement(child, {
+        className: `${child.props.className || ''} flex-1`.trim(),
+      });
+    }
+
+    return child;
+  });
+
+  return (
+    <div
+      className={`${baseStyles} ${directionStyles} ${alignStyles} ${spacingStyles} ${className}`}
+    >
+      {controls}
+    </div>
+  );
+};

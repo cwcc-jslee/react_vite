@@ -14,6 +14,7 @@ import {
   Form,
   FormItem,
   Group,
+  Stack,
   Label,
   Input,
   Select,
@@ -24,11 +25,17 @@ import {
   Message,
 } from '../../../../shared/components/ui';
 
+/**
+ * SFA(영업활동) 매출 등록을 위한 Drawer Form 컴포넌트
+ * @param {Object} props
+ * @param {Function} props.onClose - Drawer를 닫는 함수
+ */
 const SfaAddForm = ({ onClose }) => {
-  // State management for partner and project
+  // 파트너 및 프로젝트 상태 관리
   const [hasPartner, setHasPartner] = useState(false);
   const [isProject, setIsProject] = useState(false);
 
+  // Form 데이터 및 상태 관리 훅 사용
   const {
     formData,
     errors,
@@ -37,8 +44,8 @@ const SfaAddForm = ({ onClose }) => {
     setErrors,
     handleChange,
     handleCustomerSelect,
-    handleSalesItemChange,
     handleAddSalesItem,
+    handleSalesItemChange,
     handleRemoveSalesItem,
     handleSalesPaymentChange,
     handleAddSalesPayment,
@@ -52,6 +59,7 @@ const SfaAddForm = ({ onClose }) => {
   );
 
   const handleSubmit = async (e) => {
+    console.log('=========================================');
     e.preventDefault();
 
     console.log('========== Form Submit Data ==========');
@@ -63,7 +71,6 @@ const SfaAddForm = ({ onClose }) => {
       partner: formData.partner,
       name: formData.name,
       isProject: isProject,
-      totalItemAmount: formData.totalItemAmount,
       itemAmount: formData.itemAmount,
       description: formData.description,
     });
@@ -71,35 +78,56 @@ const SfaAddForm = ({ onClose }) => {
     console.log('매출 항목:', formData.salesPayments);
     console.log('====================================');
 
-    if (!validateForm()) {
-      notification.error('필수 항목을 모두 입력해주세요.');
-      return;
+    // 유효성 검사 수행
+    const isValid = validateForm();
+
+    if (!isValid) {
+      notification.error({
+        message: '입력 오류',
+        description: '필수 항목을 모두 입력해주세요.',
+      });
+      return; // 여기서 함수 종료
     }
 
     try {
       setIsSubmitting(true);
       const result = await submitSfaForm(formData);
+
+      // 서버 응답 검증
+      if (!response || !response.success) {
+        throw new Error(response?.message || '저장에 실패했습니다.');
+      }
+
+      // 성공적으로 저장된 경우에만 실행
       notification.success('성공적으로 저장되었습니다.');
-      onClose?.();
+      if (onClose) onClose();
     } catch (error) {
+      console.error('Form submission error:', error);
+
+      // 에러 상태 설정
       setErrors((prev) => ({
         ...prev,
-        submit: error.message,
+        submit: error.message || '저장 중 오류가 발생했습니다.',
       }));
-      notification.error(error.message);
+
+      // 에러 메시지 표시
+      notification.error({
+        message: '저장 실패',
+        description: error.message || '저장 중 오류가 발생했습니다.',
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Format number with commas
+  // 숫자 포맷팅
   const formatNumber = (value) => {
     if (!value) return '';
     return Number(value).toLocaleString();
   };
 
   return (
-    <Form onSubmit={handleSubmit}>
+    <Form onSubmit={handleSubmit} className="space-y-6">
       {/* Sales Type and Classification */}
       <Group direction="horizontal" className="gap-6">
         <FormItem className="flex-1">
@@ -208,58 +236,64 @@ const SfaAddForm = ({ onClose }) => {
         </FormItem>
       </Group>
 
-      {/* Amount Information */}
+      {/* Sales Registration Buttons */}
       <Group direction="horizontal" className="gap-6">
         <FormItem className="flex-1">
-          <Label required>사업부 매출액</Label>
-          <Input
-            type="text"
-            name="itemAmount"
-            value={formatNumber(formData.itemAmount)}
-            disabled={true}
-            className="text-right"
-          />
-          {errors.totalItemAmount && (
+          <Label>사업부 매출</Label>
+          <Stack>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleAddSalesItem}
+              disabled={isSubmitting || formData.salesByItems.length >= 3}
+              className={`w-full ${
+                formData.salesByItems.length >= 3
+                  ? 'bg-gray-200 hover:bg-gray-200 text-gray-500 border-gray-200'
+                  : ''
+              }`}
+            >
+              사업부매출등록 ({formData.salesByItems.length}/3)
+            </Button>
+            <Input
+              type="text"
+              name="itemAmount"
+              value={formatNumber(formData.itemAmount)}
+              disabled={true}
+              className="text-right"
+            />
+          </Stack>
+          {errors.itemAmount && (
             <Message type="error">{errors.itemAmount}</Message>
           )}
         </FormItem>
 
         <FormItem className="flex-1">
-          <Label required>결제 매출액</Label>
-          <Input
-            type="text"
-            name="totalPaymentAmount"
-            value={formatNumber(formData.totalPaymentAmount)}
-            disabled={true}
-            className="text-right"
-          />
-        </FormItem>
-      </Group>
-
-      {/* Sales Registration Buttons */}
-      <Group direction="horizontal" className="gap-6">
-        <FormItem className="flex-1">
-          <Label>사업부별 매출등록</Label>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleAddSalesItem}
-            disabled={isSubmitting}
-          >
-            사업부 매출 등록
-          </Button>
-        </FormItem>
-
-        <FormItem className="flex-1">
-          <Label>결제 매출 등록</Label>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleAddSalesPayment}
-            disabled={isSubmitting}
-          >
-            결제 매출 등록
-          </Button>
+          <Label>결제 매출</Label>
+          <Stack>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleAddSalesPayment}
+              disabled={isSubmitting || formData.salesByPayments.length >= 3}
+              className={`w-full ${
+                formData.salesByPayments.length >= 3
+                  ? 'bg-gray-200 hover:bg-gray-200 text-gray-500 border-gray-200'
+                  : ''
+              }`}
+            >
+              결제매출등록 ({formData.salesByPayments.length}/3)
+            </Button>
+            <Input
+              type="text"
+              name="paymentAmount"
+              value={formatNumber(formData.paymentAmount)}
+              disabled={true}
+              className="text-right"
+            />
+          </Stack>
+          {errors.paymentAmount && (
+            <Message type="error">{errors.paymentAmount}</Message>
+          )}
         </FormItem>
       </Group>
 
@@ -270,7 +304,6 @@ const SfaAddForm = ({ onClose }) => {
       <SalesByItem
         items={formData.salesByItems}
         onChange={handleSalesItemChange}
-        onAdd={handleAddSalesItem}
         onRemove={handleRemoveSalesItem}
         isSubmitting={isSubmitting}
         errors={errors}

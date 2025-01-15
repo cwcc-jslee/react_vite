@@ -21,21 +21,22 @@ const restoreUserSession = () => {
 
 restoreUserSession();
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
+// RouterWrapper 컴포넌트 생성
+const RouterWrapper = () => (
   // Strict Mode 활성화 상태
   // <React.StrictMode>
   //   <Provider store={store}>
-  //     <BrowserRouter>
+  //     <BrowserRouter future={{ v7_startTransition: true }}>
   //       <App />
   //     </BrowserRouter>
   //   </Provider>
   // </React.StrictMode>,
-
-  //Strict Mode 비활성화 상태
   <Provider store={store}>
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true }}>
       <App />
     </BrowserRouter>
-  </Provider>,
+  </Provider>
 );
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<RouterWrapper />);

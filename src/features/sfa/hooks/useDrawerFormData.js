@@ -1,12 +1,17 @@
 // src/features/sfa/hooks/useDrawerFormData.js
 import { useState, useEffect } from 'react';
 
+/**
+ * 매출 아이템 초기 상태
+ */
 const initialSalesByItem = {
   itemId: '',
   itemName: '',
   teamId: '',
   teamName: '',
   amount: '',
+  productType: '',
+  department: '',
 };
 
 const initialSalesByPayment = {
@@ -28,35 +33,37 @@ const initialFormState = {
   customer: '',
   sfaClassification: '',
   itemAmount: '',
-  totalItemAmount: '',
+  paymentAmount: '',
   description: '',
   salesByItems: [],
   salesByPayments: [],
 };
 
+/**
+ * Drawer 폼 데이터 관리 Hook
+ * @returns {Object} 폼 데이터 및 핸들러 함수들
+ */
 export const useDrawerFormData = () => {
   const [formData, setFormData] = useState(initialFormState);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // salesItems의 amount 합계 계산 및 totalAmount 업데이트
+  // 매출 금액 합계 계산 (매출아이템, 결제매출 통합)
   useEffect(() => {
-    const calculateTotalAmount = () => {
-      const total = formData.salesByItems.reduce((sum, item) => {
-        // 이미 숫자로만 저장되어 있으므로 단순 변환만
-        return sum + (parseInt(item.amount) || 0);
-      }, 0);
+    const itemTotal = formData.salesByItems.reduce((sum, item) => {
+      return sum + (parseInt(item.amount) || 0);
+    }, 0);
 
-      setFormData((prev) => ({
-        ...prev,
-        itemAmount: total.toString(), // 숫자로만 저장
-        totalItemAmount:
-          prev.totalItemAmount === '' ? total.toString() : prev.totalItemAmount,
-      }));
-    };
+    const paymentTotal = formData.salesByPayments.reduce((sum, payment) => {
+      return sum + (parseInt(payment.amount) || 0);
+    }, 0);
 
-    calculateTotalAmount();
-  }, [formData.salesByItems]);
+    setFormData((prev) => ({
+      ...prev,
+      itemAmount: itemTotal.toString(),
+      paymentAmount: paymentTotal.toString(),
+    }));
+  }, [formData.salesByItems, formData.salesByPayments]);
 
   // 기본 입력 핸들러
   const handleChange = (e) => {
@@ -89,57 +96,62 @@ export const useDrawerFormData = () => {
     }
   };
 
-  // 매출ITEM 핸들러
+  // 매출 아이템 관련 핸들러
   const handleSalesItemChange = (index, field, value) => {
     setFormData((prev) => {
-      const updatedItems = [...prev.salesItems];
+      const updatedItems = [...prev.salesByItems];
       updatedItems[index] = {
         ...updatedItems[index],
         [field]: value,
       };
       return {
         ...prev,
-        salesItems: updatedItems,
+        salesByItems: updatedItems,
       };
     });
   };
 
+  // 매출 아이템 추가 (최대 3개)
   const handleAddSalesItem = () => {
-    if (formData.salesItems.length < 3) {
+    if (formData.salesByItems.length < 3) {
       setFormData((prev) => ({
         ...prev,
-        salesItems: [...prev.salesItems, { ...initialSalesByItem }],
+        salesByItems: [...prev.salesByItems, { ...initialSalesByItem }],
       }));
     }
   };
 
+  // 매출 아이템 삭제
   const handleRemoveSalesItem = (index) => {
     setFormData((prev) => ({
       ...prev,
-      salesItems: prev.salesItems.filter((_, i) => i !== index),
+      salesByItems: prev.salesByItems.filter((_, i) => i !== index),
     }));
   };
 
-  // 매출항목 핸들러
+  // 결제매출 관련 핸들러
   const handleSalesPaymentChange = (index, field, value) => {
     setFormData((prev) => {
-      const updatedEntries = [...prev.salesPayments];
-      updatedEntries[index] = {
-        ...updatedEntries[index],
+      const updatedPayments = [...prev.salesByPayments];
+      updatedPayments[index] = {
+        ...updatedPayments[index],
         [field]: value,
       };
       return {
         ...prev,
-        salesPayments: updatedEntries,
+        salesByPayments: updatedPayments,
       };
     });
   };
 
   const handleAddSalesPayment = () => {
-    if (formData.salesPayments.length < 3) {
+    if (formData.salesByPayments.length < 3) {
       setFormData((prev) => ({
         ...prev,
-        salesPayments: [...prev.salesPayments, { ...initialSalesByPayment }],
+        salesByPayments: [
+          ...prev.salesByPayments,
+          { ...initialSalesByPayment },
+        ],
       }));
     }
   };
@@ -147,26 +159,74 @@ export const useDrawerFormData = () => {
   const handleRemoveSalesPayment = (index) => {
     setFormData((prev) => ({
       ...prev,
-      salesPayments: prev.salesPayments.filter((_, i) => i !== index),
+      salesByPayments: prev.salesByPayments.filter((_, i) => i !== index),
     }));
   };
 
-  // 유효성 검사
+  // 폼 유효성 검사
   const validateForm = () => {
     const newErrors = {};
+    let isValid = true;
 
-    // 기본 필드 검사
-    // if (!formData.sfaSalesType)
-    //   newErrors.sfaSalesType = '매출유형을 선택해주세요';
-    // if (!formData.customer) newErrors.customer = '고객사를 선택해주세요';
-    // if (!formData.name) newErrors.name = '건명을 입력해주세요';
-    // if (!formData.sfaClassification)
-    //   newErrors.sfaClassification = '매출구분을 선택해주세요';
-    // if (!formData.totalItemAmount)
-    //   newErrors.totalItemAmount = 'ITEM 매출액을 입력해주세요';
+    // 필수 필드 검사
+    if (!formData.sfaSalesType) {
+      newErrors.sfaSalesType = '매출유형을 선택해주세요';
+      isValid = false;
+    }
+    if (!formData.sfaClassification) {
+      newErrors.sfaClassification = '매출구분을 선택해주세요';
+      isValid = false;
+    }
+    if (!formData.customer) {
+      newErrors.customer = '고객사를 선택해주세요';
+      isValid = false;
+    }
+    if (!formData.name) {
+      newErrors.name = '건명을 입력해주세요';
+      isValid = false;
+    }
+
+    // 매출 아이템 검사 (하나 이상 필수)
+    if (formData.salesByItems.length === 0) {
+      newErrors.salesItems = '최소 하나의 사업부 매출을 등록해주세요';
+      isValid = false;
+    } else {
+      formData.salesByItems.forEach((item, index) => {
+        if (!item.productType) {
+          newErrors[`salesItems.${index}.productType`] =
+            '매출품목을 선택해주세요';
+          isValid = false;
+        }
+        if (!item.department) {
+          newErrors[`salesItems.${index}.department`] = '사업부를 선택해주세요';
+          isValid = false;
+        }
+        if (!item.amount) {
+          newErrors[`salesItems.${index}.amount`] = '금액을 입력해주세요';
+          isValid = false;
+        }
+      });
+    }
+
+    // 결제매출 검사
+    formData.salesByPayments.forEach((payment, index) => {
+      if (!payment.paymentType) {
+        newErrors[`salesPayments.${index}.paymentType`] =
+          '결제구분을 선택해주세요';
+        isValid = false;
+      }
+      if (!payment.amount) {
+        newErrors[`salesPayments.${index}.amount`] = '매출액을 입력해주세요';
+        isValid = false;
+      }
+      if (payment.isProfit && !payment.margin) {
+        newErrors[`salesPayments.${index}.margin`] = '이익/마진을 입력해주세요';
+        isValid = false;
+      }
+    });
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return isValid;
   };
 
   return {
