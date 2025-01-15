@@ -82,15 +82,21 @@ const SfaAddForm = ({ onClose }) => {
     const isValid = validateForm();
 
     if (!isValid) {
+      // 에러 메시지들을 정리하여 표시
+      const errorMessages = Object.entries(errors)
+        .filter(([_, value]) => value) // undefined나 null 제거
+        .map(([field, message]) => `${message}`)
+        .join('\n');
+
       notification.error({
         message: '입력 오류',
-        description: '필수 항목을 모두 입력해주세요.',
+        description: errorMessages || '필수 항목을 모두 입력해주세요.',
       });
-      return; // 여기서 함수 종료
+      return;
     }
 
     try {
-      // setIsSubmitting(true);
+      setIsSubmitting(true);
       // const response = await submitSfaForm(formData);
 
       // 서버 응답 검증
@@ -99,21 +105,28 @@ const SfaAddForm = ({ onClose }) => {
       }
 
       // 성공적으로 저장된 경우에만 실행
-      notification.success('성공적으로 저장되었습니다.');
+      notification.success({
+        message: '저장 성공',
+        description: '성공적으로 저장되었습니다.',
+      });
+
       if (onClose) onClose();
     } catch (error) {
       console.error('Form submission error:', error);
 
+      // 에러 메시지를 문자열로 확실하게 변환
+      const errorMessage = error?.message || '저장 중 오류가 발생했습니다.';
+
       // 에러 상태 설정
       setErrors((prev) => ({
         ...prev,
-        submit: error.message || '저장 중 오류가 발생했습니다.',
+        submit: errorMessage,
       }));
 
       // 에러 메시지 표시
       notification.error({
         message: '저장 실패',
-        description: error.message || '저장 중 오류가 발생했습니다.',
+        description: errorMessage,
       });
     } finally {
       setIsSubmitting(false);
