@@ -90,8 +90,8 @@ const SfaAddForm = ({ onClose }) => {
     }
 
     try {
-      setIsSubmitting(true);
-      const result = await submitSfaForm(formData);
+      // setIsSubmitting(true);
+      // const response = await submitSfaForm(formData);
 
       // 서버 응답 검증
       if (!response || !response.success) {
@@ -127,7 +127,13 @@ const SfaAddForm = ({ onClose }) => {
   };
 
   return (
-    <Form onSubmit={handleSubmit} className="space-y-6">
+    <Form
+      onSubmit={handleSubmit}
+      className="space-y-6"
+      // 추가: method와 action 속성 명시적 지정
+      method="POST"
+      action="#"
+    >
       {/* Sales Type and Classification */}
       <Group direction="horizontal" className="gap-6">
         <FormItem className="flex-1">
@@ -138,6 +144,7 @@ const SfaAddForm = ({ onClose }) => {
             value={formData.sfaSalesType}
             onChange={handleChange}
             disabled={isSubmitting}
+            error={errors.sfaSalesType}
           >
             <option value="">선택하세요</option>
             {sfaSalesTypeData?.data?.map((item) => (
@@ -146,9 +153,6 @@ const SfaAddForm = ({ onClose }) => {
               </option>
             ))}
           </Select>
-          {errors.sfaSalesType && (
-            <Message type="error">{errors.sfaSalesType}</Message>
-          )}
         </FormItem>
 
         <FormItem className="flex-1">
@@ -158,6 +162,7 @@ const SfaAddForm = ({ onClose }) => {
             value={formData.sfaClassification}
             onChange={handleChange}
             disabled={isSubmitting}
+            error={errors.sfaClassification}
           >
             <option value="">선택하세요</option>
             {sfaClassificationData?.data?.map((item) => (
@@ -166,9 +171,6 @@ const SfaAddForm = ({ onClose }) => {
               </option>
             ))}
           </Select>
-          {errors.sfaClassification && (
-            <Message type="error">{errors.sfaClassification}</Message>
-          )}
         </FormItem>
       </Group>
 
@@ -223,7 +225,7 @@ const SfaAddForm = ({ onClose }) => {
             placeholder="건명을 입력하세요"
             disabled={isSubmitting}
           />
-          {errors.name && <Message type="error">{errors.name}</Message>}
+          {/* {errors.name && <Message type="error">{errors.name}</Message>} */}
         </FormItem>
 
         <FormItem className="flex-1">
@@ -349,6 +351,11 @@ const SfaAddForm = ({ onClose }) => {
           variant="primary"
           disabled={isSubmitting}
           className="w-full"
+          onClick={(e) => {
+            // 버튼 클릭 시에도 이벤트 전파 방지
+            e.preventDefault();
+            handleSubmit(e);
+          }}
         >
           {isSubmitting ? '처리중...' : '저장'}
         </Button>

@@ -104,6 +104,9 @@ export const Input = React.forwardRef(
 /**
  * Select: 드롭다운 선택 컴포넌트
  */
+{
+  /* shared/components/ui/index.jsx의 Select 컴포넌트 수정 */
+}
 export const Select = React.forwardRef(
   ({ error, className = '', ...props }, ref) => {
     const baseStyles =
@@ -113,29 +116,32 @@ export const Select = React.forwardRef(
       : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500';
 
     return (
-      <div className="relative">
-        <select
-          ref={ref}
-          className={`${baseStyles} ${stateStyles} ${className}
-          disabled:bg-gray-50 disabled:cursor-not-allowed
-          focus:outline-none focus:ring-2 focus:ring-opacity-50
-          bg-none`}
-          {...props}
-        />
-        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
-          <svg
-            className="h-4 w-4 text-gray-400"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
+      <div className="relative space-y-1">
+        <div className="relative">
+          <select
+            ref={ref}
+            className={`${baseStyles} ${stateStyles} ${className}
+            disabled:bg-gray-50 disabled:cursor-not-allowed
+            focus:outline-none focus:ring-2 focus:ring-opacity-50
+            bg-none`}
+            {...props}
+          />
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
+            <svg
+              className={`h-4 w-4 ${error ? 'text-red-500' : 'text-gray-400'}`}
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
         </div>
+        {error && <Message type="error">{error}</Message>}
       </div>
     );
   },

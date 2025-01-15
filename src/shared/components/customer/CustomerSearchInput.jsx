@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { css } from 'styled-components';
 import { useCustomerSearch } from '../../hooks/useCustomerSearch';
+import { Message } from '../ui/index';
 
 // 기본 입력 스타일 (Input, Select, TextArea 공통)
 const baseInputStyles = `
@@ -275,7 +276,8 @@ export const CustomerSearchInput = ({
         size={size}
       />
 
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {/* {error && <ErrorMessage>{error}</ErrorMessage>} */}
+      {error && <Message type="error">{error}</Message>}
 
       {isOpen && (
         <DropdownContainer>
