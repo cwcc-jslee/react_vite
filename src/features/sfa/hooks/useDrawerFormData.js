@@ -163,6 +163,33 @@ export const useDrawerFormData = () => {
     }));
   };
 
+  // 사업부 매출 유효성 검사사
+  const validateSalesItems = (items) => {
+    const errors = [];
+
+    items.forEach((item, index) => {
+      const itemErrors = [];
+
+      if (!item.productType) {
+        itemErrors.push('매출품목');
+      }
+      if (!item.department) {
+        itemErrors.push('사업부');
+      }
+      if (!item.amount) {
+        itemErrors.push('매출금액');
+      }
+
+      if (itemErrors.length > 0) {
+        errors.push(
+          `[매출항목 ${index + 1}] ${itemErrors.join(', ')}을(를) 입력해주세요`,
+        );
+      }
+    });
+
+    return errors;
+  };
+
   // 폼 유효성 검사
   const validateForm = () => {
     const newErrors = {};
@@ -191,39 +218,32 @@ export const useDrawerFormData = () => {
       newErrors.salesItems = '최소 하나의 사업부 매출을 등록해주세요';
       isValid = false;
     } else {
-      formData.salesByItems.forEach((item, index) => {
-        if (!item.productType) {
-          newErrors[`salesItems.${index}.productType`] =
-            '매출품목을 선택해주세요';
-          isValid = false;
-        }
-        if (!item.department) {
-          newErrors[`salesItems.${index}.department`] = '사업부를 선택해주세요';
-          isValid = false;
-        }
-        if (!item.amount) {
-          newErrors[`salesItems.${index}.amount`] = '금액을 입력해주세요';
-          isValid = false;
-        }
-      });
+      const salesItemErrors = validateSalesItems(formData.salesByItems);
+      if (salesItemErrors.length > 0) {
+        newErrors.salesItems = salesItemErrors.join('\n');
+        isValid = false;
+      }
     }
 
     // 결제매출 검사
-    formData.salesByPayments.forEach((payment, index) => {
-      if (!payment.paymentType) {
-        newErrors[`salesPayments.${index}.paymentType`] =
-          '결제구분을 선택해주세요';
-        isValid = false;
-      }
-      if (!payment.amount) {
-        newErrors[`salesPayments.${index}.amount`] = '매출액을 입력해주세요';
-        isValid = false;
-      }
-      if (payment.isProfit && !payment.margin) {
-        newErrors[`salesPayments.${index}.margin`] = '이익/마진을 입력해주세요';
-        isValid = false;
-      }
-    });
+    if (formData.salesByPayments.length === 0) {
+      newErrors.salesItems = '최소 하나의 결제 매출을 등록해주세요';
+      isValid = false;
+    } else {
+      formData.salesByPayments.forEach((payment, index) => {
+        if (!payment.paymentType) {
+          newErrors[`salesPayments.${index}.paymentType`] =
+            '결제구분을 선택해주세요';
+          isValid = false;
+        }
+        if (!payment.amount) {
+          newErrors[`salesPayments.${index}.amount`] = '매출액을 입력해주세요';
+          isValid = false;
+        }
+        if (payment.isProfit && !payment.margin) {
+        }
+      });
+    }
 
     setErrors(newErrors);
     return isValid;

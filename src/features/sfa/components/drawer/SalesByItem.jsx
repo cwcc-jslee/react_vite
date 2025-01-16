@@ -3,6 +3,8 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { Trash2 } from 'lucide-react';
 import { selectCodebookByType } from '../../../codebook/store/codebookSlice';
+import { useSelectData } from '../../../../shared/hooks/useSelectData';
+import { QUERY_KEYS } from '../../../../shared/utils/queryKeys';
 import {
   Group,
   Select,
@@ -30,7 +32,11 @@ const SalesByItem = ({
 }) => {
   // Redux에서 코드북 데이터 조회
   const productTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
-  const departmentData = useSelector(selectCodebookByType('sfa_department'));
+
+  // React Query를 사용하여 팀 데이터 조회
+  const { data: teamsData, isLoading: isTeamsLoading } = useSelectData(
+    QUERY_KEYS.TEAMS,
+  );
 
   // 금액 입력 처리 - 숫자만 허용
   const handleAmountChange = (index, value) => {
@@ -75,9 +81,9 @@ const SalesByItem = ({
                 disabled={isSubmitting}
               >
                 <option value="">사업부 선택</option>
-                {departmentData?.data?.map((dept) => (
-                  <option key={dept.id} value={dept.code}>
-                    {dept.name}
+                {teamsData?.data?.map((team) => (
+                  <option key={team.id} value={team.code}>
+                    {team.name}
                   </option>
                 ))}
               </Select>
