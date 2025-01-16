@@ -53,6 +53,10 @@ const SfaAddForm = ({ onClose }) => {
     validateForm,
     isItemsLoading,
     itemsData,
+    // 결제매출 관련 데이터
+    paymentMethodData,
+    percentageData,
+    isPaymentDataLoading,
   } = useDrawerFormData();
 
   const sfaSalesTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
@@ -338,6 +342,10 @@ const SfaAddForm = ({ onClose }) => {
         onAdd={handleAddSalesPayment}
         onRemove={handleRemoveSalesPayment}
         isSubmitting={isSubmitting}
+        errors={errors}
+        paymentMethodData={paymentMethodData}
+        percentageData={percentageData}
+        isPaymentDataLoading={isPaymentDataLoading}
       />
 
       {/* Description */}

@@ -103,6 +103,71 @@ export const useDrawerFormData = () => {
     }
   };
 
+  // 결제구분, 매출확률 데이터 상태 추가
+  const [paymentMethodData, setPaymentMethodData] = useState({ data: [] });
+  const [percentageData, setPercentageData] = useState({ data: [] });
+  const [isPaymentDataLoading, setIsPaymentDataLoading] = useState(false);
+
+  /**
+   * 코드북 데이터 조회 함수
+   * @param {string} type - 코드북 타입
+   * @returns {Promise} 코드북 데이터
+   */
+  const fetchCodebook = async (type) => {
+    const queryObj = {
+      fields: ['code', 'name', 'sort'],
+      populate: {
+        codetype: {
+          fields: ['type', 'name'],
+        },
+      },
+      filters: {
+        $and: [
+          { used: { $eq: true } },
+          {
+            codetype: {
+              type: { $eq: type },
+            },
+          },
+        ],
+      },
+      sort: ['sort:asc'],
+      pagination: {
+        start: 0,
+        limit: 50,
+      },
+    };
+
+    const query = qs.stringify(queryObj, { encodeValuesOnly: true });
+    const response = await apiClient.get(`/api/codebooks?${query}`);
+    return response.data;
+  };
+
+  /**
+   * 결제매출 관련 데이터 조회
+   * @returns {Promise} 결제구분, 매출확률 데이터
+   */
+  const fetchPayments = async () => {
+    setIsPaymentDataLoading(true);
+    try {
+      // 결제구분과 매출확률 데이터를 병렬로 조회
+      const [paymentMethods, percentages] = await Promise.all([
+        fetchCodebook('re_payment_method'),
+        fetchCodebook('sfa_percentage'),
+      ]);
+
+      setPaymentMethodData(paymentMethods);
+      setPercentageData(percentages);
+    } catch (error) {
+      console.error('Failed to fetch payment data:', error);
+      // 에러 발생시 빈 배열로 초기화
+      setPaymentMethodData({ data: [] });
+      setPercentageData({ data: [] });
+    } finally {
+      setIsPaymentDataLoading(false);
+    }
+  };
+
   // 기본 입력 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -196,8 +261,15 @@ export const useDrawerFormData = () => {
     });
   };
 
-  const handleAddSalesPayment = () => {
-    if (formData.salesByPayments.length < 3) {
+  const handleAddSalesPayment = async () => {
+    if (formData.salesByPayments.length >= 3) return;
+
+    try {
+      // 데이터 로딩 중이거나 이미 데이터가 있는 경우 API 호출 스킵
+      if (!isPaymentDataLoading && !paymentMethodData.data.length) {
+        await fetchPayments();
+      }
+
       setFormData((prev) => ({
         ...prev,
         salesByPayments: [
@@ -205,6 +277,8 @@ export const useDrawerFormData = () => {
           { ...initialSalesByPayment },
         ],
       }));
+    } catch (error) {
+      console.error('Failed to add sales payment:', error);
     }
   };
 
@@ -319,5 +393,9 @@ export const useDrawerFormData = () => {
     // 매출품목 관련 상태 추가
     isItemsLoading,
     itemsData,
+    // 결제매출 관련 데이터 추가
+    paymentMethodData,
+    percentageData,
+    isPaymentDataLoading,
   };
 };

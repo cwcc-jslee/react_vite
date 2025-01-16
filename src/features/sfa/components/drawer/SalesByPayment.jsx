@@ -14,6 +14,10 @@ const SalesByPayment = ({
   onChange,
   onRemove,
   isSubmitting,
+  errors,
+  paymentMethodData,
+  percentageData,
+  isPaymentDataLoading,
 }) => {
   // 이익/마진 금액 자동 계산
   useEffect(() => {
@@ -59,27 +63,30 @@ const SalesByPayment = ({
 
   return (
     <div className="flex flex-col gap-6 px-5">
-      {payments.map((entry, index) => (
+      {payments.map((payment, index) => (
         <div
           key={index}
           className="flex flex-col gap-3 p-4 bg-gray-50 rounded-md"
         >
           {/* 첫 번째 행 - 기본 정보 */}
           <div className="grid grid-cols-[1.5fr,0.8fr,1fr,1fr,auto,0.5fr,1fr] gap-3 items-center">
+            {/* 결제구분 Select */}
             <Select
-              value={entry.paymentType}
+              value={payment.paymentType}
               onChange={(e) => onChange(index, 'paymentType', e.target.value)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isPaymentDataLoading}
             >
-              <option value="">결제구분</option>
-              <option value="CARD">카드</option>
-              <option value="CASH">현금</option>
-              <option value="TRANSFER">계좌이체</option>
+              <option value="">결제구분 선택</option>
+              {paymentMethodData?.data?.map((method) => (
+                <option key={method.id} value={method.code}>
+                  {method.name}
+                </option>
+              ))}
             </Select>
 
             <label className="flex items-center gap-1">
               <Checkbox
-                checked={entry.confirmed}
+                checked={payment.confirmed}
                 onChange={(e) => onChange(index, 'confirmed', e.target.checked)}
                 disabled={isSubmitting}
                 className="w-4 h-4"
@@ -87,21 +94,23 @@ const SalesByPayment = ({
               <span>확정여부</span>
             </label>
 
+            {/* 매출확률 Select */}
             <Select
-              value={entry.probability}
+              value={payment.probability}
               onChange={(e) => onChange(index, 'probability', e.target.value)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isPaymentDataLoading}
             >
-              <option value="">매출확률</option>
-              <option value="25">25%</option>
-              <option value="50">50%</option>
-              <option value="75">75%</option>
-              <option value="100">100%</option>
+              <option value="">매출확률 선택</option>
+              {percentageData?.data?.map((percent) => (
+                <option key={percent.id} value={percent.code}>
+                  {percent.name}
+                </option>
+              ))}
             </Select>
 
             <Input
               type="number"
-              value={entry.amount}
+              value={payment.amount}
               onChange={(e) =>
                 handleEntryChange(index, 'amount', e.target.value)
               }
@@ -111,21 +120,21 @@ const SalesByPayment = ({
 
             <div className="flex items-center justify-center">
               <Switch
-                checked={entry.isProfit}
+                checked={payment.isProfit}
                 onChange={() =>
-                  handleEntryChange(index, 'isProfit', !entry.isProfit)
+                  handleEntryChange(index, 'isProfit', !payment.isProfit)
                 }
                 disabled={isSubmitting}
               />
             </div>
 
             <div className="text-center">
-              {entry.isProfit ? '이익' : '마진'}
+              {payment.isProfit ? '이익' : '마진'}
             </div>
 
             <Input
               type="number"
-              value={entry.margin}
+              value={payment.margin}
               onChange={(e) =>
                 handleEntryChange(index, 'margin', e.target.value)
               }
@@ -139,7 +148,7 @@ const SalesByPayment = ({
               <span className="text-xs text-gray-500 mb-1">매출인식일자</span>
               <Input
                 type="date"
-                value={entry.recognitionDate}
+                value={payment.recognitionDate}
                 onChange={(e) =>
                   onChange(index, 'recognitionDate', e.target.value)
                 }
@@ -151,7 +160,7 @@ const SalesByPayment = ({
               <span className="text-xs text-gray-500 mb-1">결제일자</span>
               <Input
                 type="date"
-                value={entry.paymentDate}
+                value={payment.paymentDate}
                 onChange={(e) => onChange(index, 'paymentDate', e.target.value)}
                 disabled={isSubmitting}
               />
@@ -161,7 +170,7 @@ const SalesByPayment = ({
               <span className="text-xs text-gray-500 mb-1">메모</span>
               <Input
                 type="text"
-                value={entry.memo}
+                value={payment.memo}
                 onChange={(e) => onChange(index, 'memo', e.target.value)}
                 disabled={isSubmitting}
               />
@@ -172,7 +181,7 @@ const SalesByPayment = ({
                 <span className="text-xs text-gray-500 mb-1">매출이익</span>
                 <Input
                   type="number"
-                  value={entry.marginAmount}
+                  value={payment.marginAmount}
                   readOnly
                   disabled={true}
                   className="bg-gray-100"
