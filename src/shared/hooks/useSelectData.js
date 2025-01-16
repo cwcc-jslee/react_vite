@@ -10,16 +10,17 @@ import { QUERY_KEYS } from '../utils/queryKeys';
  * @returns {Object} 쿼리 결과 객체
  */
 export const useSelectData = (type, options = {}) => {
-  const queryFn = () => {
+  // API 함수 선택
+  const getApiFunction = () => {
     switch (type) {
       case QUERY_KEYS.TEAMS:
-        return selectDataApi.getTeams();
+        return selectDataApi.getTeams;
       case QUERY_KEYS.FISCAL_YEARS:
-        return selectDataApi.getFiscalYears();
+        return selectDataApi.getFiscalYears;
       case QUERY_KEYS.STATUS:
-        return selectDataApi.getStatus();
+        return selectDataApi.getStatus;
       case QUERY_KEYS.REGIONS:
-        return selectDataApi.getRegions();
+        return selectDataApi.getRegions;
       default:
         throw new Error(`Unknown data type: ${type}`);
     }
@@ -27,7 +28,7 @@ export const useSelectData = (type, options = {}) => {
 
   return useQuery({
     queryKey: [type],
-    queryFn,
+    queryFn: getApiFunction(),
     staleTime: 5 * 60 * 1000, // 5분
     cacheTime: 30 * 60 * 1000, // 30분
     ...options,

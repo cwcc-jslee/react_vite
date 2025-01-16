@@ -1,5 +1,9 @@
 // src/features/sfa/hooks/useDrawerFormData.js
 import { useState, useEffect } from 'react';
+// import { useSelectData } from '../../../shared/hooks/useSelectData';
+// import { QUERY_KEYS } from '../../../shared/utils/queryKeys';
+import { apiClient } from '../../../shared/api/apiClient';
+import qs from 'qs';
 
 /**
  * 매출 아이템 초기 상태
@@ -47,6 +51,9 @@ export const useDrawerFormData = () => {
   const [formData, setFormData] = useState(initialFormState);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // 매출품목 데이터 관리
+  const [itemsData, setItemsData] = useState({ data: [] });
+  const [isItemsLoading, setIsItemsLoading] = useState(false);
 
   // 매출 금액 합계 계산 (매출아이템, 결제매출 통합)
   useEffect(() => {
@@ -65,6 +72,37 @@ export const useDrawerFormData = () => {
     }));
   }, [formData.salesByItems, formData.salesByPayments]);
 
+  // 매출품목 데이터 조회 함수
+  const fetchItems = async (classificationId) => {
+    if (!classificationId) {
+      setItemsData({ data: [] });
+      return;
+    }
+
+    setIsItemsLoading(true);
+    try {
+      const query = qs.stringify(
+        {
+          filters: {
+            sfa_classification: {
+              id: { $eq: classificationId },
+            },
+          },
+          sort: ['sort:asc'],
+        },
+        { encodeValuesOnly: true },
+      );
+
+      const response = await apiClient.get(`/api/sfa-items?${query}`);
+      setItemsData(response.data);
+    } catch (error) {
+      console.error('Failed to fetch items:', error);
+      setItemsData({ data: [] });
+    } finally {
+      setIsItemsLoading(false);
+    }
+  };
+
   // 기본 입력 핸들러
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -72,6 +110,20 @@ export const useDrawerFormData = () => {
       ...prev,
       [name]: value,
     }));
+
+    // 매출구분 변경시
+    if (name === 'sfaClassification' && value) {
+      fetchItems(value);
+      // 매출품목 초기화
+      setFormData((prev) => ({
+        ...prev,
+        salesByItems: prev.salesByItems.map((item) => ({
+          ...item,
+          productType: '',
+        })),
+      }));
+    }
+
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -264,5 +316,8 @@ export const useDrawerFormData = () => {
     handleAddSalesPayment,
     handleRemoveSalesPayment,
     validateForm,
+    // 매출품목 관련 상태 추가
+    isItemsLoading,
+    itemsData,
   };
 };

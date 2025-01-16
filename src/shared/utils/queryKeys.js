@@ -7,5 +7,5 @@ export const QUERY_KEYS = {
   FISCAL_YEARS: 'fiscalYears',
   STATUS: 'status',
   REGIONS: 'regions',
-  // 추가 선택 데이터 키들...
+  SFA_ITEMS: 'sfaItems',
 };

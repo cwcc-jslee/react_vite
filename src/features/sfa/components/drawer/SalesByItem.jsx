@@ -29,14 +29,17 @@ const SalesByItem = ({
   onRemove,
   isSubmitting,
   errors = {},
+  itemsData,
+  isItemsLoading,
 }) => {
   // Redux에서 코드북 데이터 조회
   const productTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
 
-  // React Query를 사용하여 팀 데이터 조회
+  // React Query를 사용하여 팀 데이터와 매출품목 데이터 조회
   const { data: teamsData, isLoading: isTeamsLoading } = useSelectData(
     QUERY_KEYS.TEAMS,
   );
+  if (!items?.length) return null;
 
   // 금액 입력 처리 - 숫자만 허용
   const handleAmountChange = (index, value) => {
@@ -67,7 +70,7 @@ const SalesByItem = ({
                 disabled={isSubmitting}
               >
                 <option value="">매출품목 선택</option>
-                {productTypeData?.data?.map((type) => (
+                {itemsData?.data?.map((type) => (
                   <option key={type.id} value={type.code}>
                     {type.name}
                   </option>

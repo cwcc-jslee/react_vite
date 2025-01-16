@@ -7,6 +7,32 @@ import qs from 'qs';
  */
 export const selectDataApi = {
   /**
+   * 매출품목 목록을 조회하는 함수
+   * @param {number} classificationId - 매출구분 ID
+   * @returns {Promise} 매출품목 데이터 배열
+   */
+  getSfaItems: async (classificationId) => {
+    const query = qs.stringify(
+      {
+        filters: {
+          sfa_classification: {
+            id: {
+              $eq: classificationId,
+            },
+          },
+        },
+        sort: ['sort:asc'],
+      },
+      {
+        encodeValuesOnly: true,
+      },
+    );
+
+    const response = await apiClient.get(`/api/sfa-items?${query}`);
+    return response.data;
+  },
+
+  /**
    * 팀 목록을 조회하는 함수
    * @returns {Promise} 팀 데이터 배열
    */

@@ -51,6 +51,8 @@ const SfaAddForm = ({ onClose }) => {
     handleAddSalesPayment,
     handleRemoveSalesPayment,
     validateForm,
+    isItemsLoading,
+    itemsData,
   } = useDrawerFormData();
 
   const sfaSalesTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
@@ -267,7 +269,7 @@ const SfaAddForm = ({ onClose }) => {
                   : ''
               }`}
             >
-              사업부매출등록 ({formData.salesByItems.length}/3)
+              사업부매출등록
             </Button>
             <Input
               type="text"
@@ -296,7 +298,7 @@ const SfaAddForm = ({ onClose }) => {
                   : ''
               }`}
             >
-              결제매출등록 ({formData.salesByPayments.length}/3)
+              결제매출등록
             </Button>
             <Input
               type="text"
@@ -322,6 +324,8 @@ const SfaAddForm = ({ onClose }) => {
         onRemove={handleRemoveSalesItem}
         isSubmitting={isSubmitting}
         errors={errors}
+        itemsData={itemsData}
+        isItemsLoading={isItemsLoading}
       />
 
       {/* Divider */}
