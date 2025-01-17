@@ -1,152 +1,10 @@
 // src/features/sfa/components/SfaTable/index.jsx
 import React from 'react';
-import styled from 'styled-components';
 import { useSfa } from '../../context/SfaContext';
-// import SfaPagination from '../SfaPagination';
-
-// const TableContainer = styled.div`
-//   display: flex;
-//   flex-direction: column;
-//   background: white;
-//   border-radius: 8px;
-//   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-//   margin-top: 20px;
-// `;
-
-const TableContainer = styled.div`
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  overflow: hidden;
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px; // 기본 폰트 사이즈 축소
-`;
-
-const Th = styled.th`
-  padding: 8px 12px; // 패딩도 약간 줄임
-  background: #f9fafb;
-  text-align: ${(props) => props.align || 'left'};
-  border-bottom: 2px solid #e5e7eb;
-  font-size: 12px; // 헤더 폰트 사이즈 축소
-  font-weight: 600;
-  color: #374151;
-  white-space: nowrap;
-`;
-
-const Td = styled.td`
-  padding: 8px 12px; // 패딩도 약간 줄임
-  border-bottom: 1px solid #e5e7eb;
-  text-align: ${(props) => props.align || 'left'};
-  font-size: 12px; // 데이터 폰트 사이즈 축소
-  color: #1f2937;
-
-  // 숫자 데이터(매출액, 매출이익)인 경우
-  ${(props) =>
-    props.isNumber &&
-    `
-    font-family: 'Roboto', sans-serif;
-    font-size: 11px;  // 숫자 데이터는 더 작게
-  `}
-`;
-
-const ActionButton = styled.button`
-  padding: 6px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  background: white;
-  cursor: pointer;
-  color: #374151;
-  transition: all 0.2s;
-
-  &:hover {
-    background: #f9fafb;
-    border-color: #d1d5db;
-  }
-
-  &:active {
-    background: #f3f4f6;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-const EmptyState = styled.div`
-  padding: 48px;
-  text-align: center;
-  color: #6b7280;
-`;
-
-const LoadingState = styled.div`
-  padding: 48px;
-  text-align: center;
-  color: #6b7280;
-`;
-
-const ErrorState = styled.div`
-  padding: 24px;
-  text-align: center;
-  color: #ef4444;
-  background: #fee2e2;
-  border-radius: 8px;
-  margin: 20px 0;
-`;
-
-const PaginationContainer = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 0;
-  border-top: 1px solid #e5e7eb;
-`;
-
-const PageSizeSelector = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const Select = styled.select`
-  font-size: 11px;
-  padding: 4px 8px;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-`;
-
-const PaginationControls = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-// 페이지네이션 관련 폰트 사이즈도 조정
-const PageInfo = styled.span`
-  font-size: 11px;
-  color: #6b7280;
-`;
-
-const PageButton = styled.button`
-  padding: 4px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  background: white;
-  cursor: pointer;
-
-  &:hover {
-    background: #f9fafb;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
+import { Button } from '../../../../shared/components/ui';
+import { Card } from '../../../../shared/components/ui/card/Card';
+import { StateDisplay } from '../../../../shared/components/ui/state/StateDisplay';
+import { Pagination } from '../../../../shared/components/ui/pagination/Pagination';
 
 const COLUMNS = [
   { key: 'no', title: 'No', align: 'center' },
@@ -169,36 +27,45 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
   const sfaItemPrice = item.sfa?.sfa_item_price || [];
   const { fetchSfaDetail } = useSfa();
 
-  //   if (loading) return <LoadingState>데이터를 불러오는 중...</LoadingState>;
-  //   if (error) return <ErrorState>{error}</ErrorState>;
-
   return (
-    <tr>
-      <Td align="center">{actualIndex}</Td>
-      <Td align="center">{item.is_confirmed ? 'YES' : 'NO'}</Td>
-      <Td align="center">{item.probability || '-'}</Td>
-      <Td>{item.sfa?.customer?.name || '-'}</Td>
-      <Td>{item.sfa?.name}</Td>
-      <Td align="center">{item.billing_type || '-'}</Td>
-      <Td align="center">{item.sfa?.sfa_classification?.name || '-'}</Td>
-      <Td align="center">
+    <tr className="hover:bg-gray-50">
+      <td className="px-3 py-2 text-center text-sm">{actualIndex}</td>
+      <td className="px-3 py-2 text-center text-sm">
+        {item.is_confirmed ? 'YES' : 'NO'}
+      </td>
+      <td className="px-3 py-2 text-center text-sm">
+        {item.probability || '-'}
+      </td>
+      <td className="px-3 py-2 text-sm">{item.sfa?.customer?.name || '-'}</td>
+      <td className="px-3 py-2 text-sm">{item.sfa?.name}</td>
+      <td className="px-3 py-2 text-center text-sm">
+        {item.billing_type || '-'}
+      </td>
+      <td className="px-3 py-2 text-center text-sm">
+        {item.sfa?.sfa_classification?.name || '-'}
+      </td>
+      <td className="px-3 py-2 text-center text-sm">
         {sfaItemPrice.map((item) => item.sfa_item_name).join(', ') || '-'}
-      </Td>
-      <Td align="center">
+      </td>
+      <td className="px-3 py-2 text-center text-sm">
         {sfaItemPrice.map((item) => item.team_name).join(', ') || '-'}
-      </Td>
-      <Td align="right">
+      </td>
+      <td className="px-3 py-2 text-right text-sm font-mono">
         {new Intl.NumberFormat('ko-KR').format(item.amount)}
-      </Td>
-      <Td align="right">
+      </td>
+      <td className="px-3 py-2 text-right text-sm font-mono">
         {new Intl.NumberFormat('ko-KR').format(item.profit_amount)}
-      </Td>
-      <Td align="center">{item.recognition_date}</Td>
-      <Td align="center">
-        <ActionButton onClick={() => fetchSfaDetail(item.sfa.id)}>
+      </td>
+      <td className="px-3 py-2 text-center text-sm">{item.recognition_date}</td>
+      <td className="px-3 py-2 text-center">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => fetchSfaDetail(item.sfa.id)}
+        >
           View
-        </ActionButton>
-      </Td>
+        </Button>
+      </td>
     </tr>
   );
 };
@@ -207,70 +74,51 @@ const SfaTable = () => {
   const { sfaData, loading, error, pagination, setPage, setPageSize } =
     useSfa();
 
-  const totalPages = Math.ceil(pagination.total / pagination.pageSize);
-
-  if (loading) return <LoadingState>데이터를 불러오는 중...</LoadingState>;
-  if (error) return <ErrorState>{error}</ErrorState>;
-  if (!sfaData?.length) return <EmptyState>데이터가 없습니다.</EmptyState>;
+  if (loading) return <StateDisplay type="loading" />;
+  if (error) return <StateDisplay type="error" message={error} />;
+  if (!sfaData?.length) return <StateDisplay type="empty" />;
 
   return (
-    <TableContainer>
-      <Table>
-        <thead>
-          <tr>
-            {COLUMNS.map((column) => (
-              <Th key={column.key} align={column.align}>
-                {column.title}
-              </Th>
+    <Card>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-gray-50 border-y border-gray-200">
+              {COLUMNS.map((column) => (
+                <th
+                  key={column.key}
+                  className={`px-3 py-2 text-sm font-semibold text-gray-700 whitespace-nowrap
+                    ${column.align === 'center' && 'text-center'}
+                    ${column.align === 'right' && 'text-right'}
+                  `}
+                >
+                  {column.title}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {sfaData.map((item, index) => (
+              <TableRow
+                key={item.id}
+                item={item}
+                index={index}
+                pageSize={pagination.pageSize}
+                currentPage={pagination.current}
+              />
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {sfaData.map((item, index) => (
-            <TableRow
-              key={item.id}
-              item={item}
-              index={index}
-              pageSize={pagination.pageSize}
-              currentPage={pagination.current}
-            />
-          ))}
-        </tbody>
-      </Table>
-      <PaginationContainer>
-        <PageSizeSelector>
-          <span>페이지당 행:</span>
-          <Select
-            value={pagination.pageSize}
-            onChange={(e) => setPageSize(Number(e.target.value))}
-          >
-            <option value={10}>10</option>
-            <option value={20}>20</option>
-            <option value={50}>50</option>
-          </Select>
-        </PageSizeSelector>
+          </tbody>
+        </table>
+      </div>
 
-        <PaginationControls>
-          <PageButton
-            disabled={pagination.current === 1}
-            onClick={() => setPage(pagination.current - 1)}
-          >
-            이전
-          </PageButton>
-
-          <PageInfo>
-            {pagination.current} / {totalPages} 페이지 (총 {pagination.total}개)
-          </PageInfo>
-
-          <PageButton
-            disabled={pagination.current === totalPages}
-            onClick={() => setPage(pagination.current + 1)}
-          >
-            다음
-          </PageButton>
-        </PaginationControls>
-      </PaginationContainer>
-    </TableContainer>
+      <Pagination
+        current={pagination.current}
+        pageSize={pagination.pageSize}
+        total={pagination.total}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
+    </Card>
   );
 };
 

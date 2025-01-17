@@ -1,49 +1,41 @@
 // src/features/sfa/components/SfaForecastTable/index.jsx
 import React, { useEffect, useState } from 'react';
-import styled from 'styled-components';
 import { sfaApi } from '../../api/sfaApi';
+import { StateDisplay } from '../../../../shared/components/ui/state/StateDisplay';
 import dayjs from 'dayjs';
 
-const ForecastTable = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-  margin: 20px 0;
-  font-size: 14px;
-`;
+// Table Header Cell Component
+const TableHeaderCell = ({ children }) => (
+  <th
+    className="
+    bg-gray-100 
+    p-3 
+    text-center 
+    border 
+    border-gray-200 
+    font-semibold 
+    text-sm 
+    whitespace-nowrap
+  "
+  >
+    {children}
+  </th>
+);
 
-const Th = styled.th`
-  background: #f3f4f6;
-  padding: 12px;
-  text-align: center;
-  border: 1px solid #e5e7eb;
-  font-weight: 600;
-  font-size: 13px;
-  white-space: nowrap;
-`;
-
-const Td = styled.td`
-  padding: 12px;
-  text-align: right;
-  border: 1px solid #e5e7eb;
-  font-size: 12px;
-
-  &.probability {
-    background: #f9fafb;
-    text-align: center;
-    font-weight: 500;
-  }
-`;
-
-const LoadingDiv = styled.div`
-  text-align: center;
-  padding: 20px;
-`;
-
-const ErrorDiv = styled.div`
-  color: red;
-  text-align: center;
-  padding: 20px;
-`;
+// Table Data Cell Component
+const TableDataCell = ({ children, isProbability = false }) => (
+  <td
+    className={`
+    p-3 
+    border 
+    border-gray-200 
+    text-sm
+    ${isProbability ? 'bg-gray-50 text-center font-medium' : 'text-right'}
+  `}
+  >
+    {children}
+  </td>
+);
 
 const SfaForecastTable = () => {
   const [forecastData, setForecastData] = useState({});
@@ -99,22 +91,22 @@ const SfaForecastTable = () => {
     fetchForecastData();
   }, []);
 
-  if (loading) return <LoadingDiv>로딩중...</LoadingDiv>;
-  if (error) return <ErrorDiv>{error}</ErrorDiv>;
+  if (loading) return <StateDisplay type="loading" />;
+  if (error) return <StateDisplay type="error" message={error} />;
 
   // 행 렌더링 함수
   const renderRow = (prob) => {
     return (
       <tr key={prob}>
-        <Td className="probability">{prob}</Td>
+        <TableDataCell isProbability>{prob}</TableDataCell>
         {months.map((month) => {
           const monthData = forecastData[month.month] || {};
           const probData = monthData[prob] || { revenue: 0 };
 
           return (
-            <Td key={`${month.year}-${month.month}`}>
+            <TableDataCell key={`${month.year}-${month.month}`}>
               {probData.revenue.toLocaleString()}
-            </Td>
+            </TableDataCell>
           );
         })}
       </tr>
@@ -126,21 +118,25 @@ const SfaForecastTable = () => {
   };
 
   return (
-    <div>
-      <h2>년간 매출예측</h2>
-      <ForecastTable>
-        <thead>
-          <tr>
-            <Th>확률</Th>
-            {months.map((month) => (
-              <Th key={`${month.year}-${month.month}`}>
-                {formatMonthHeader(month.month, month.year)}
-              </Th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>{probabilities.map(renderRow)}</tbody>
-      </ForecastTable>
+    <div className="space-y-4">
+      <h2 className="text-lg font-semibold text-gray-900">년간 매출예측</h2>
+      <div className="w-full overflow-x-auto">
+        <table className="w-full border-collapse text-sm my-5">
+          <thead>
+            <tr>
+              <TableHeaderCell>확률</TableHeaderCell>
+              {months.map((month) => (
+                <TableHeaderCell key={`${month.year}-${month.month}`}>
+                  {formatMonthHeader(month.month, month.year)}
+                </TableHeaderCell>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {probabilities.map(renderRow)}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
