@@ -27,17 +27,23 @@ const toDate = (dateStr) => {
 export const transformToDBFields = {
   /**
    * SFA 기본 정보 변환
+   * @param {Object} formData - 변환할 폼 데이터
+   * @returns {Object} - 변환된 기본 필드 데이터
    */
-  transformBaseFields: (formData) => {
-    console.log('Transform base fields input:', formData);
+  transformSfaFields: (formData) => {
+    console.log('Transform SFA fields input:', formData);
 
     const transformed = {
-      sfa_sales_type: formData.sfaSalesType,
+      name: formData.name,
       customer: formData.customer,
-      name: formData.name || '',
+      has_partner: formData.hasPartner,
+      selling_Partner: formData.sellingPartner,
+      sfa_sales_type: formData.sfaSalesType,
       sfa_classification: formData.sfaClassification,
+      total_price: convertToNumber(formData.itemAmount),
+      sfa_by_items: '',
+      is_project: formData.isProject,
       description: formData.description || '',
-      //   status: 'active',
     };
 
     console.log('Transform base fields output:', transformed);

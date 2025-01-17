@@ -1,12 +1,11 @@
 // src/features/sfa/hooks/useDrawerFormData.js
 import { useState, useEffect } from 'react';
-// import { useSelectData } from '../../../shared/hooks/useSelectData';
-// import { QUERY_KEYS } from '../../../shared/utils/queryKeys';
 import { apiClient } from '../../../shared/api/apiClient';
 import qs from 'qs';
+import { notification } from '../../../shared/services/notification';
 
 /**
- * 매출 아이템 초기 상태
+ * 초기 상태 정의
  */
 const initialSalesByItem = {
   itemId: '',
@@ -14,8 +13,6 @@ const initialSalesByItem = {
   teamId: '',
   teamName: '',
   amount: '',
-  productType: '',
-  department: '',
 };
 
 const initialSalesByPayment = {
@@ -34,8 +31,9 @@ const initialSalesByPayment = {
 const initialFormState = {
   name: '',
   sfaSalesType: '',
-  customer: '',
   sfaClassification: '',
+  customer: '',
+  sellingPartner: '',
   itemAmount: '',
   paymentAmount: '',
   description: '',
@@ -45,25 +43,34 @@ const initialFormState = {
 
 /**
  * Drawer 폼 데이터 관리 Hook
- * @returns {Object} 폼 데이터 및 핸들러 함수들
  */
 export const useDrawerFormData = () => {
   const [formData, setFormData] = useState(initialFormState);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // 매출품목 데이터 관리
+
+  // 데이터 상태 관리
   const [itemsData, setItemsData] = useState({ data: [] });
+  const [paymentMethodData, setPaymentMethodData] = useState({ data: [] });
+  const [percentageData, setPercentageData] = useState({ data: [] });
+
+  // 로딩 상태 관리
   const [isItemsLoading, setIsItemsLoading] = useState(false);
+  const [isPaymentDataLoading, setIsPaymentDataLoading] = useState(false);
 
-  // 매출 금액 합계 계산 (매출아이템, 결제매출 통합)
+  /**
+   * 매출 금액 합계 계산 Effect
+   */
   useEffect(() => {
-    const itemTotal = formData.salesByItems.reduce((sum, item) => {
-      return sum + (parseInt(item.amount) || 0);
-    }, 0);
+    const itemTotal = formData.salesByItems.reduce(
+      (sum, item) => sum + (parseInt(item.amount) || 0),
+      0,
+    );
 
-    const paymentTotal = formData.salesByPayments.reduce((sum, payment) => {
-      return sum + (parseInt(payment.amount) || 0);
-    }, 0);
+    const paymentTotal = formData.salesByPayments.reduce(
+      (sum, payment) => sum + (parseInt(payment.amount) || 0),
+      0,
+    );
 
     setFormData((prev) => ({
       ...prev,
@@ -72,7 +79,9 @@ export const useDrawerFormData = () => {
     }));
   }, [formData.salesByItems, formData.salesByPayments]);
 
-  // 매출품목 데이터 조회 함수
+  /**
+   * API 호출 함수들
+   */
   const fetchItems = async (classificationId) => {
     if (!classificationId) {
       setItemsData({ data: [] });
@@ -84,9 +93,7 @@ export const useDrawerFormData = () => {
       const query = qs.stringify(
         {
           filters: {
-            sfa_classification: {
-              id: { $eq: classificationId },
-            },
+            sfa_classification: { id: { $eq: classificationId } },
           },
           sort: ['sort:asc'],
         },
@@ -103,16 +110,6 @@ export const useDrawerFormData = () => {
     }
   };
 
-  // 결제구분, 매출확률 데이터 상태 추가
-  const [paymentMethodData, setPaymentMethodData] = useState({ data: [] });
-  const [percentageData, setPercentageData] = useState({ data: [] });
-  const [isPaymentDataLoading, setIsPaymentDataLoading] = useState(false);
-
-  /**
-   * 코드북 데이터 조회 함수
-   * @param {string} type - 코드북 타입
-   * @returns {Promise} 코드북 데이터
-   */
   const fetchCodebook = async (type) => {
     const queryObj = {
       fields: ['code', 'name', 'sort'],
@@ -122,45 +119,28 @@ export const useDrawerFormData = () => {
         },
       },
       filters: {
-        $and: [
-          { used: { $eq: true } },
-          {
-            codetype: {
-              type: { $eq: type },
-            },
-          },
-        ],
+        $and: [{ used: { $eq: true } }, { codetype: { type: { $eq: type } } }],
       },
       sort: ['sort:asc'],
-      pagination: {
-        start: 0,
-        limit: 50,
-      },
+      pagination: { start: 0, limit: 50 },
     };
 
     const query = qs.stringify(queryObj, { encodeValuesOnly: true });
-    const response = await apiClient.get(`/api/codebooks?${query}`);
-    return response.data;
+    return apiClient.get(`/api/codebooks?${query}`);
   };
 
-  /**
-   * 결제매출 관련 데이터 조회
-   * @returns {Promise} 결제구분, 매출확률 데이터
-   */
   const fetchPayments = async () => {
     setIsPaymentDataLoading(true);
     try {
-      // 결제구분과 매출확률 데이터를 병렬로 조회
       const [paymentMethods, percentages] = await Promise.all([
         fetchCodebook('re_payment_method'),
         fetchCodebook('sfa_percentage'),
       ]);
 
-      setPaymentMethodData(paymentMethods);
-      setPercentageData(percentages);
+      setPaymentMethodData(paymentMethods.data);
+      setPercentageData(percentages.data);
     } catch (error) {
       console.error('Failed to fetch payment data:', error);
-      // 에러 발생시 빈 배열로 초기화
       setPaymentMethodData({ data: [] });
       setPercentageData({ data: [] });
     } finally {
@@ -168,7 +148,9 @@ export const useDrawerFormData = () => {
     }
   };
 
-  // 기본 입력 핸들러
+  /**
+   * 이벤트 핸들러들
+   */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -176,51 +158,50 @@ export const useDrawerFormData = () => {
       [name]: value,
     }));
 
-    // 매출구분 변경시
     if (name === 'sfaClassification' && value) {
       fetchItems(value);
-      // 매출품목 초기화
       setFormData((prev) => ({
         ...prev,
         salesByItems: prev.salesByItems.map((item) => ({
           ...item,
-          productType: '',
+          itemName: '',
         })),
       }));
     }
 
     if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: undefined,
-      }));
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
   };
 
-  // 고객사 선택 핸들러
   const handleCustomerSelect = (customer) => {
     setFormData((prev) => ({
       ...prev,
       customer: customer.id,
-      // customer: customer.name,
-      // customerId: customer.id,
     }));
+
     if (errors.customer) {
-      setErrors((prev) => ({
-        ...prev,
-        customer: undefined,
-      }));
+      setErrors((prev) => ({ ...prev, customer: undefined }));
     }
   };
 
   // 매출 아이템 관련 핸들러
-  const handleSalesItemChange = (index, field, value) => {
+  const handleSalesItemChange = (index, fields, values) => {
     setFormData((prev) => {
       const updatedItems = [...prev.salesByItems];
-      updatedItems[index] = {
-        ...updatedItems[index],
-        [field]: value,
-      };
+
+      if (typeof fields === 'string') {
+        updatedItems[index] = {
+          ...updatedItems[index],
+          [fields]: values,
+        };
+      } else if (typeof fields === 'object') {
+        updatedItems[index] = {
+          ...updatedItems[index],
+          ...fields,
+        };
+      }
+
       return {
         ...prev,
         salesByItems: updatedItems,
@@ -228,7 +209,6 @@ export const useDrawerFormData = () => {
     });
   };
 
-  // 매출 아이템 추가 (최대 3개)
   const handleAddSalesItem = () => {
     if (formData.salesByItems.length < 3) {
       setFormData((prev) => ({
@@ -238,12 +218,38 @@ export const useDrawerFormData = () => {
     }
   };
 
-  // 매출 아이템 삭제
   const handleRemoveSalesItem = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      salesByItems: prev.salesByItems.filter((_, i) => i !== index),
-    }));
+    setFormData((prev) => {
+      // 깊은 복사를 통해 새로운 배열 생성
+      const updatedItems = [...prev.salesByItems];
+
+      // 해당 인덱스의 항목을 완전히 제거
+      updatedItems.splice(index, 1);
+
+      // 관련 에러 상태도 함께 제거
+      setErrors((prevErrors) => {
+        const newErrors = { ...prevErrors };
+        // 해당 인덱스의 모든 관련 에러 삭제
+        delete newErrors[`salesItems.${index}.productType`];
+        delete newErrors[`salesItems.${index}.teamName`];
+        delete newErrors[`salesItems.${index}.amount`];
+        return newErrors;
+      });
+
+      // 나머지 항목들의 값도 재설정하여 초기화된 상태로 업데이트
+      return {
+        ...prev,
+        salesByItems: updatedItems.map((item, i) => ({
+          itemId: item.itemId || '',
+          itemName: item.itemName || '',
+          teamId: item.teamId || '',
+          teamName: item.teamName || '',
+          amount: item.amount || '',
+          productType: item.productType || '',
+          teamName: item.teamName || '',
+        })),
+      };
+    });
   };
 
   // 결제매출 관련 핸들러
@@ -265,7 +271,6 @@ export const useDrawerFormData = () => {
     if (formData.salesByPayments.length >= 3) return;
 
     try {
-      // 데이터 로딩 중이거나 이미 데이터가 있는 경우 API 호출 스킵
       if (!isPaymentDataLoading && !paymentMethodData.data.length) {
         await fetchPayments();
       }
@@ -289,90 +294,130 @@ export const useDrawerFormData = () => {
     }));
   };
 
-  // 사업부 매출 유효성 검사사
+  /**
+   * 유효성 검사 함수들
+   */
   const validateSalesItems = (items) => {
-    const errors = [];
+    let hasError = false;
+    const errors = {};
 
     items.forEach((item, index) => {
-      const itemErrors = [];
+      const missingFields = [];
 
-      if (!item.productType) {
-        itemErrors.push('매출품목');
+      if (!item.productType) missingFields.push('매출품목');
+      if (!item.teamName) missingFields.push('사업부');
+      if (!item.amount) missingFields.push('매출금액');
+
+      if (missingFields.length > 0) {
+        hasError = true;
+        errors[`salesItems.${index}.productType`] = true;
+        errors[`salesItems.${index}.teamName`] = true;
+        errors[`salesItems.${index}.amount`] = true;
       }
-      if (!item.department) {
-        itemErrors.push('사업부');
-      }
-      if (!item.amount) {
-        itemErrors.push('매출금액');
+    });
+
+    return { errors, hasError };
+  };
+
+  const validatePayments = (payments) => {
+    const errors = {};
+
+    payments.forEach((payment, index) => {
+      // 필수 필드 검증
+      const requiredFields = {
+        paymentType: '결제구분을 선택해주세요',
+        probability: '매출확률을 선택해주세요',
+        amount: '매출액을 입력해주세요',
+        margin: payment.isProfit
+          ? '이익금을 입력해주세요'
+          : '이익률을 입력해주세요',
+        recognitionDate: '매출인식일자를 선택해주세요',
+      };
+
+      Object.entries(requiredFields).forEach(([field, message]) => {
+        if (!payment[field]) {
+          errors[`salesPayments.${index}.${field}`] = message;
+        }
+      });
+
+      // 매출액 숫자 검증
+      if (payment.amount && !Number.isInteger(Number(payment.amount))) {
+        errors[`salesPayments.${index}.amount`] =
+          '매출액은 정수만 입력 가능합니다';
       }
 
-      if (itemErrors.length > 0) {
-        errors.push(
-          `[매출항목 ${index + 1}] ${itemErrors.join(', ')}을(를) 입력해주세요`,
-        );
+      // 이익률/이익금 검증
+      if (payment.margin) {
+        const marginValue = Number(payment.margin);
+        const amountValue = Number(payment.amount);
+
+        if (payment.isProfit) {
+          // 이익금 검증: 매출액보다 작아야 함
+          if (marginValue >= amountValue) {
+            errors[`salesPayments.${index}.margin`] =
+              '이익금은 매출액보다 작아야 합니다';
+          }
+        } else {
+          // 이익률 검증: 0-100 사이 값
+          if (marginValue < 0 || marginValue > 100) {
+            errors[`salesPayments.${index}.margin`] =
+              '이익률은 0-100 사이의 값을 입력해주세요';
+          }
+        }
       }
     });
 
     return errors;
   };
 
-  // 폼 유효성 검사
   const validateForm = () => {
     const newErrors = {};
-    let isValid = true;
 
-    // 필수 필드 검사
-    if (!formData.sfaSalesType) {
-      newErrors.sfaSalesType = '매출유형을 선택해주세요';
-      isValid = false;
-    }
-    if (!formData.sfaClassification) {
-      newErrors.sfaClassification = '매출구분을 선택해주세요';
-      isValid = false;
-    }
-    if (!formData.customer) {
-      newErrors.customer = '고객사를 선택해주세요';
-      isValid = false;
-    }
-    if (!formData.name) {
-      newErrors.name = '건명을 입력해주세요';
-      isValid = false;
-    }
+    // 필수 필드 검증
+    const requiredFields = {
+      sfaSalesType: '매출유형을 선택해주세요',
+      sfaClassification: '매출구분을 선택해주세요',
+      customer: '고객사를 선택해주세요',
+      name: '건명을 입력해주세요',
+    };
 
-    // 매출 아이템 검사 (하나 이상 필수)
-    if (formData.salesByItems.length === 0) {
-      newErrors.salesItems = '최소 하나의 사업부 매출을 등록해주세요';
-      isValid = false;
-    } else {
-      const salesItemErrors = validateSalesItems(formData.salesByItems);
-      if (salesItemErrors.length > 0) {
-        newErrors.salesItems = salesItemErrors.join('\n');
-        isValid = false;
+    Object.entries(requiredFields).forEach(([field, message]) => {
+      if (!formData[field]) {
+        newErrors[field] = message;
       }
+    });
+
+    // 매출 아이템 검증
+    if (formData.salesByItems.length === 0) {
+      notification.error({
+        message: '사업부매출등록 오류',
+        description: '최소 하나의 사업부 매출을 등록해주세요',
+      });
+      return false;
     }
 
-    // 결제매출 검사
-    if (formData.salesByPayments.length === 0) {
-      newErrors.salesItems = '최소 하나의 결제 매출을 등록해주세요';
-      isValid = false;
-    } else {
-      formData.salesByPayments.forEach((payment, index) => {
-        if (!payment.paymentType) {
-          newErrors[`salesPayments.${index}.paymentType`] =
-            '결제구분을 선택해주세요';
-          isValid = false;
-        }
-        if (!payment.amount) {
-          newErrors[`salesPayments.${index}.amount`] = '매출액을 입력해주세요';
-          isValid = false;
-        }
-        if (payment.isProfit && !payment.margin) {
-        }
+    // 매출 아이템 유효성 검사
+    const { errors: salesItemErrors, hasError } = validateSalesItems(
+      formData.salesByItems,
+    );
+
+    if (hasError) {
+      notification.error({
+        message: '사업부매출등록 유효성 검사 오류!!',
+        description: '매출품목과 사업부를 모두 입력해주세요.',
       });
+      Object.assign(newErrors, salesItemErrors);
+    }
+
+    // 결제 매출 검증
+    if (formData.salesByPayments.length === 0) {
+      newErrors.salesPayments = '최소 하나의 결제 매출을 등록해주세요';
+    } else {
+      Object.assign(newErrors, validatePayments(formData.salesByPayments));
     }
 
     setErrors(newErrors);
-    return isValid;
+    return Object.keys(newErrors).length === 0;
   };
 
   return {
@@ -390,10 +435,8 @@ export const useDrawerFormData = () => {
     handleAddSalesPayment,
     handleRemoveSalesPayment,
     validateForm,
-    // 매출품목 관련 상태 추가
     isItemsLoading,
     itemsData,
-    // 결제매출 관련 데이터 추가
     paymentMethodData,
     percentageData,
     isPaymentDataLoading,

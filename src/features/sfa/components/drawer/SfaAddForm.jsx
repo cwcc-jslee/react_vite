@@ -3,9 +3,11 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { selectCodebookByType } from '../../../codebook/store/codebookSlice';
 import { CustomerSearchInput } from '../../../../shared/components/customer/CustomerSearchInput';
-import { notification } from '../../../../shared/services/notification';
 import { submitSfaForm } from '../../services/sfaSubmitService';
 import { useDrawerFormData } from '../../hooks/useDrawerFormData';
+import { formatDisplayNumber } from '../../../../shared/utils/format/number';
+import { transformToDBFields } from '../../utils/transformUtils';
+import { notification } from '../../../../shared/services/notification';
 import SalesByItem from './SalesByItem';
 import SalesByPayment from './SalesByPayment';
 
@@ -65,23 +67,33 @@ const SfaAddForm = ({ onClose }) => {
   );
 
   const handleSubmit = async (e) => {
-    console.log('=========================================');
     e.preventDefault();
 
+    // hasPartner와 isProject를 formData에 추가
+    const enrichedFormData = {
+      ...formData,
+      hasPartner,
+      isProject,
+    };
+
     console.log('========== Form Submit Data ==========');
-    console.log('기본 정보:', {
-      sfaSalesType: formData.sfaSalesType,
-      sfaClassification: formData.sfaClassification,
-      customer: formData.customer,
-      hasPartner: hasPartner,
-      partner: formData.partner,
-      name: formData.name,
-      isProject: isProject,
-      itemAmount: formData.itemAmount,
-      description: formData.description,
-    });
-    console.log('매출 아이템:', formData.salesItems);
-    console.log('매출 항목:', formData.salesPayments);
+    // console.log('기본 정보:', {
+    //   name: formData.name,
+    //   sfaSalesType: formData.sfaSalesType,
+    //   sfaClassification: formData.sfaClassification,
+    //   customer: formData.customer,
+    //   hasPartner: hasPartner,
+    //   sellingPartner: formData.sellingPartner,
+    //   itemAmount: formData.itemAmount,
+    //   paymentAmount: formData.paymentAmount,
+    //   isProject: isProject,
+    //   description: formData.description,
+    //   salesByItems: formData.salesByItems,
+    //   salesByPayments: formData.salesByPayments,
+    // });
+    // console.log('매출 아이템:', formData.salesByItems);
+    // console.log('매출 항목:', formData.salesByPayments);
+    console.log('formData:', formData);
     console.log('====================================');
 
     // 유효성 검사 수행
@@ -103,7 +115,8 @@ const SfaAddForm = ({ onClose }) => {
 
     try {
       setIsSubmitting(true);
-      // const response = await submitSfaForm(formData);
+      // const apiData = transformToDBFields.transformAll(enrichedFormData);
+      const response = await submitSfaForm(apiData);
 
       // 서버 응답 검증
       if (!response || !response.success) {
@@ -137,12 +150,6 @@ const SfaAddForm = ({ onClose }) => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // 숫자 포맷팅
-  const formatNumber = (value) => {
-    if (!value) return '';
-    return Number(value).toLocaleString();
   };
 
   return (
@@ -217,13 +224,16 @@ const SfaAddForm = ({ onClose }) => {
             />
             {hasPartner && (
               <CustomerSearchInput
-                name="partner"
+                name="sellingPartner"
                 onSelect={(partner) =>
                   handleChange({
-                    target: { name: 'partner', value: partner },
+                    target: {
+                      name: 'sellingPartner',
+                      value: partner.id,
+                    },
                   })
                 }
-                value={formData.partner}
+                value={formData.SellingPrtner}
                 disabled={isSubmitting}
                 size="small"
               />
@@ -278,7 +288,7 @@ const SfaAddForm = ({ onClose }) => {
             <Input
               type="text"
               name="itemAmount"
-              value={formatNumber(formData.itemAmount)}
+              value={formatDisplayNumber(formData.itemAmount)}
               disabled={true}
               className="text-right"
             />
@@ -307,7 +317,7 @@ const SfaAddForm = ({ onClose }) => {
             <Input
               type="text"
               name="paymentAmount"
-              value={formatNumber(formData.paymentAmount)}
+              value={formatDisplayNumber(formData.paymentAmount)}
               disabled={true}
               className="text-right"
             />
@@ -363,11 +373,11 @@ const SfaAddForm = ({ onClose }) => {
       </Group>
 
       {/* Error Message */}
-      {errors.submit && (
+      {/* {errors.submit && (
         <Message type="error" className="text-center mb-4">
           {errors.submit}
         </Message>
-      )}
+      )} */}
 
       {/* Submit Button */}
       <Group>

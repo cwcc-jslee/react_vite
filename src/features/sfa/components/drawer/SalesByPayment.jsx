@@ -1,5 +1,5 @@
 // src/features/sfa/components/drawer/SalesByPayment.jsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import {
   Group,
@@ -8,6 +8,10 @@ import {
   Checkbox,
   Switch,
 } from '../../../../shared/components/ui';
+import {
+  formatDisplayNumber,
+  ensureNumericAmount,
+} from '../../../../shared/utils/format/number';
 
 const SalesByPayment = ({
   payments = [],
@@ -19,43 +23,76 @@ const SalesByPayment = ({
   percentageData,
   isPaymentDataLoading,
 }) => {
-  // 이익/마진 금액 자동 계산
+  // 매출액액 임시 입력 상태 관리를 위한 state 추가
+  const [tempInputs, setTempInputs] = useState({});
+
+  // 이익/마진 금액 자동 계산 useEffect 수정
   useEffect(() => {
     payments.forEach((entry, index) => {
+      const amount = Number(entry.amount) || 0;
+      const margin = Number(entry.margin) || 0;
       let calculatedMarginAmount = 0;
 
       if (entry.isProfit) {
-        calculatedMarginAmount = Number(entry.margin || 0);
+        calculatedMarginAmount = margin;
       } else {
-        calculatedMarginAmount =
-          (Number(entry.amount || 0) * Number(entry.margin || 0)) / 100;
+        calculatedMarginAmount = (amount * margin) / 100;
       }
 
+      // 기존 값과 다를 때만 업데이트
       if (calculatedMarginAmount !== Number(entry.marginAmount)) {
         onChange(index, 'marginAmount', calculatedMarginAmount.toString());
       }
     });
-  }, [payments, onChange]);
+  }, [payments]);
+
+  // 금액 입력 처리 함수 수정
+  const handleAmountChange = (index, value) => {
+    // 임시 입력값 저장
+    setTempInputs((prev) => ({
+      ...prev,
+      [index]: value,
+    }));
+
+    // 숫자만 필터링하여 실제 값 업데이트
+    const numericValue = ensureNumericAmount(value);
+    handleEntryChange(index, 'amount', numericValue);
+  };
+
+  // blur 처리 함수 추가
+  const handleAmountBlur = (index) => {
+    setTempInputs((prev) => ({
+      ...prev,
+      [index]: '', // 임시 입력값 초기화
+    }));
+  };
 
   // 입력값 변경 시 이익/마진 금액 계산
+  // handleEntryChange 함수 수정
   const handleEntryChange = (index, field, value) => {
     onChange(index, field, value);
 
+    // amount, margin, isProfit 변경 시에만 marginAmount 계산
     if (['amount', 'margin', 'isProfit'].includes(field)) {
       const payment = payments[index];
-      const amount = field === 'amount' ? value : payment.amount;
-      const margin = field === 'margin' ? value : payment.margin;
+      const amount = Number(field === 'amount' ? value : payment.amount) || 0;
+      const margin = Number(field === 'margin' ? value : payment.margin) || 0;
       const isProfit = field === 'isProfit' ? value : payment.isProfit;
 
-      let calculatedMarginAmount = 0;
-      if (isProfit) {
-        calculatedMarginAmount = Number(margin || 0);
-      } else {
-        calculatedMarginAmount =
-          (Number(amount || 0) * Number(margin || 0)) / 100;
-      }
+      const calculatedMarginAmount = isProfit
+        ? margin
+        : (amount * margin) / 100;
 
       onChange(index, 'marginAmount', calculatedMarginAmount.toString());
+    }
+  };
+
+  // 확정여부 체크박스 핸들러 추가
+  const handleConfirmedChange = (index, checked) => {
+    onChange(index, 'confirmed', checked);
+    if (checked) {
+      // 확정 시 매출확률 100으로 설정
+      onChange(index, 'probability', '100');
     }
   };
 
@@ -75,6 +112,7 @@ const SalesByPayment = ({
               value={payment.paymentType}
               onChange={(e) => onChange(index, 'paymentType', e.target.value)}
               disabled={isSubmitting || isPaymentDataLoading}
+              required
             >
               <option value="">결제구분 선택</option>
               {paymentMethodData?.data?.map((method) => (
@@ -87,7 +125,7 @@ const SalesByPayment = ({
             <label className="flex items-center gap-1">
               <Checkbox
                 checked={payment.confirmed}
-                onChange={(e) => onChange(index, 'confirmed', e.target.checked)}
+                onChange={(e) => handleConfirmedChange(index, e.target.checked)}
                 disabled={isSubmitting}
                 className="w-4 h-4"
               />
@@ -98,7 +136,9 @@ const SalesByPayment = ({
             <Select
               value={payment.probability}
               onChange={(e) => onChange(index, 'probability', e.target.value)}
-              disabled={isSubmitting || isPaymentDataLoading}
+              disabled={
+                isSubmitting || isPaymentDataLoading || payment.confirmed
+              }
             >
               <option value="">매출확률 선택</option>
               {percentageData?.data?.map((percent) => (
@@ -109,13 +149,16 @@ const SalesByPayment = ({
             </Select>
 
             <Input
-              type="number"
-              value={payment.amount}
-              onChange={(e) =>
-                handleEntryChange(index, 'amount', e.target.value)
+              type="text"
+              value={
+                tempInputs[index] || formatDisplayNumber(payment.amount) || ''
               }
+              // value={payment.amount}
+              onChange={(e) => handleAmountChange(index, e.target.value)}
+              onBlur={() => handleAmountBlur(index)}
               placeholder="매출액"
               disabled={isSubmitting}
+              className="text-right"
             />
 
             <div className="flex items-center justify-center">
@@ -135,6 +178,7 @@ const SalesByPayment = ({
             <Input
               type="number"
               value={payment.margin}
+              // value={formatDisplayNumber(payment.margin)}
               onChange={(e) =>
                 handleEntryChange(index, 'margin', e.target.value)
               }
@@ -180,11 +224,12 @@ const SalesByPayment = ({
               <div className="flex flex-col">
                 <span className="text-xs text-gray-500 mb-1">매출이익</span>
                 <Input
-                  type="number"
+                  type="text"
+                  // value={formatDisplayNumber(payment.marginAmount)}
                   value={payment.marginAmount}
                   readOnly
                   disabled={true}
-                  className="bg-gray-100"
+                  className="bg-gray-100 text-right"
                 />
               </div>
               <button
