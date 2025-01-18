@@ -1,5 +1,5 @@
 // src/shared/components/ui/drawer/BaseDrawer.jsx
-import React from 'react';
+import React, { useEffect } from 'react';
 
 /**
  * BaseDrawer Component
@@ -23,6 +23,31 @@ const BaseDrawer = ({
   children,
   enableOverlayClick = false,
 }) => {
+  // Drawer가 열리고 닫힐 때 body 스크롤 제어
+  useEffect(() => {
+    if (visible) {
+      // 현재 스크롤 위치 저장
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+    } else {
+      // 스크롤 위치 복원
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
+    }
+
+    return () => {
+      // cleanup: drawer가 언마운트될 때 스타일 초기화
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+    };
+  }, [visible]);
+
   if (!visible) return null;
 
   // Drawer 외부 영역(Overlay) 클릭 핸들러
