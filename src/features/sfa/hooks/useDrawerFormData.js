@@ -304,13 +304,13 @@ export const useDrawerFormData = () => {
     items.forEach((item, index) => {
       const missingFields = [];
 
-      if (!item.productType) missingFields.push('매출품목');
+      if (!item.itemName) missingFields.push('매출품목');
       if (!item.teamName) missingFields.push('사업부');
       if (!item.amount) missingFields.push('매출금액');
 
       if (missingFields.length > 0) {
         hasError = true;
-        errors[`salesItems.${index}.productType`] = true;
+        errors[`salesItems.${index}.itemName`] = true;
         errors[`salesItems.${index}.teamName`] = true;
         errors[`salesItems.${index}.amount`] = true;
       }
