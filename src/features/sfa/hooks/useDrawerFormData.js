@@ -3,6 +3,19 @@ import { useState, useEffect } from 'react';
 import { apiClient } from '../../../shared/api/apiClient';
 import qs from 'qs';
 import { notification } from '../../../shared/services/notification';
+import {
+  formatValidationErrors,
+  getFirstErrorMessage,
+} from '../utils/validationUtils';
+import {
+  ERROR_GROUPS,
+  ERROR_TYPES,
+  REQUIRED_FIELDS,
+  PAYMENT_REQUIRED_FIELDS,
+  VALIDATION_RULES,
+  ERROR_MESSAGES,
+  PARTNER_ERROR_MESSAGE,
+} from '../constants/validationConstants';
 
 /**
  * 초기 상태 정의
@@ -46,6 +59,11 @@ const initialFormState = {
  */
 export const useDrawerFormData = () => {
   const [formData, setFormData] = useState(initialFormState);
+  const [validationErrors, setValidationErrors] = useState({
+    [ERROR_GROUPS.BASIC_INFO]: [],
+    [ERROR_GROUPS.SALES_ITEMS]: [],
+    [ERROR_GROUPS.PAYMENTS]: [],
+  });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -295,129 +313,120 @@ export const useDrawerFormData = () => {
   };
 
   /**
-   * 유효성 검사 함수들
+   * 폼 전체 검증 함수
+   * @param {boolean} hasPartner - 매출파트너 포함 여부 체크박스 상태
+   * @returns {boolean} 검증 통과 여부
    */
-  const validateSalesItems = (items) => {
-    let hasError = false;
-    const errors = {};
-
-    items.forEach((item, index) => {
-      const missingFields = [];
-
-      if (!item.itemName) missingFields.push('매출품목');
-      if (!item.teamName) missingFields.push('사업부');
-      if (!item.amount) missingFields.push('매출금액');
-
-      if (missingFields.length > 0) {
-        hasError = true;
-        errors[`salesItems.${index}.itemName`] = true;
-        errors[`salesItems.${index}.teamName`] = true;
-        errors[`salesItems.${index}.amount`] = true;
-      }
-    });
-
-    return { errors, hasError };
-  };
-
-  const validatePayments = (payments) => {
-    const errors = {};
-
-    payments.forEach((payment, index) => {
-      // 필수 필드 검증
-      const requiredFields = {
-        paymentType: '결제구분을 선택해주세요',
-        probability: '매출확률을 선택해주세요',
-        amount: '매출액을 입력해주세요',
-        margin: payment.isProfit
-          ? '이익금을 입력해주세요'
-          : '이익률을 입력해주세요',
-        recognitionDate: '매출인식일자를 선택해주세요',
-      };
-
-      Object.entries(requiredFields).forEach(([field, message]) => {
-        if (!payment[field]) {
-          errors[`salesPayments.${index}.${field}`] = message;
-        }
-      });
-
-      // 매출액 숫자 검증
-      if (payment.amount && !Number.isInteger(Number(payment.amount))) {
-        errors[`salesPayments.${index}.amount`] =
-          '매출액은 정수만 입력 가능합니다';
-      }
-
-      // 이익률/이익금 검증
-      if (payment.margin) {
-        const marginValue = Number(payment.margin);
-        const amountValue = Number(payment.amount);
-
-        if (payment.isProfit) {
-          // 이익금 검증: 매출액보다 작아야 함
-          if (marginValue >= amountValue) {
-            errors[`salesPayments.${index}.margin`] =
-              '이익금은 매출액보다 작아야 합니다';
-          }
-        } else {
-          // 이익률 검증: 0-100 사이 값
-          if (marginValue < 0 || marginValue > 100) {
-            errors[`salesPayments.${index}.margin`] =
-              '이익률은 0-100 사이의 값을 입력해주세요';
-          }
-        }
-      }
-    });
-
-    return errors;
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-
-    // 필수 필드 검증
-    const requiredFields = {
-      sfaSalesType: '매출유형을 선택해주세요',
-      sfaClassification: '매출구분을 선택해주세요',
-      customer: '고객사를 선택해주세요',
-      name: '건명을 입력해주세요',
+  const validateForm = (hasPartner) => {
+    const errors = {
+      [ERROR_GROUPS.BASIC_INFO]: [],
+      [ERROR_GROUPS.SALES_ITEMS]: [],
+      [ERROR_GROUPS.PAYMENTS]: [],
     };
 
-    Object.entries(requiredFields).forEach(([field, message]) => {
+    // 기본 정보 검증
+    Object.entries(REQUIRED_FIELDS).forEach(([field, label]) => {
       if (!formData[field]) {
-        newErrors[field] = message;
+        errors[ERROR_GROUPS.BASIC_INFO].push(
+          ERROR_MESSAGES.REQUIRED_FIELD(label),
+        );
       }
     });
+
+    // 매출파트너 선택 검증
+    if (hasPartner && !formData.sellingPartner) {
+      errors[ERROR_GROUPS.BASIC_INFO].push(PARTNER_ERROR_MESSAGE);
+    }
 
     // 매출 아이템 검증
     if (formData.salesByItems.length === 0) {
-      notification.error({
-        message: '사업부매출등록 오류',
-        description: '최소 하나의 사업부 매출을 등록해주세요',
-      });
-      return false;
-    }
+      errors[ERROR_GROUPS.SALES_ITEMS].push(ERROR_MESSAGES.MIN_SALES_ITEMS);
+    } else {
+      formData.salesByItems.forEach((item, index) => {
+        const missingFields = [];
+        if (!item.itemName) missingFields.push('매출품목');
+        if (!item.teamName) missingFields.push('사업부');
+        if (!item.amount) missingFields.push('매출금액');
 
-    // 매출 아이템 유효성 검사
-    const { errors: salesItemErrors, hasError } = validateSalesItems(
-      formData.salesByItems,
-    );
-
-    if (hasError) {
-      notification.error({
-        message: '사업부매출등록 유효성 검사 오류!!',
-        description: '매출품목과 사업부를 모두 입력해주세요.',
+        if (missingFields.length > 0) {
+          errors[ERROR_GROUPS.SALES_ITEMS].push(
+            ERROR_MESSAGES.ITEM_FIELDS(index + 1, missingFields),
+          );
+        }
       });
-      Object.assign(newErrors, salesItemErrors);
     }
 
     // 결제 매출 검증
     if (formData.salesByPayments.length === 0) {
-      newErrors.salesPayments = '최소 하나의 결제 매출을 등록해주세요';
+      errors[ERROR_GROUPS.PAYMENTS].push(ERROR_MESSAGES.MIN_PAYMENTS);
     } else {
-      Object.assign(newErrors, validatePayments(formData.salesByPayments));
+      formData.salesByPayments.forEach((payment, index) => {
+        // 필수 필드 검증
+        const paymentErrors = [];
+        Object.entries(PAYMENT_REQUIRED_FIELDS).forEach(([field, label]) => {
+          if (!payment[field]) {
+            paymentErrors.push(label);
+          }
+        });
+
+        if (paymentErrors.length > 0) {
+          errors[ERROR_GROUPS.PAYMENTS].push(
+            ERROR_MESSAGES.ITEM_FIELDS(index + 1, paymentErrors),
+          );
+        }
+
+        // 매출액 숫자 검증
+        if (payment.amount && !Number.isInteger(Number(payment.amount))) {
+          errors[ERROR_GROUPS.PAYMENTS].push(
+            `${index + 1}번 항목: ${ERROR_MESSAGES.INTEGER_ONLY}`,
+          );
+        }
+
+        // 이익률/이익금 검증
+        if (payment.margin) {
+          const marginValue = Number(payment.margin);
+          const amountValue = Number(payment.amount);
+
+          if (payment.isProfit && marginValue >= amountValue) {
+            errors[ERROR_GROUPS.PAYMENTS].push(
+              `${index + 1}번 항목: ${ERROR_MESSAGES.MARGIN_LESS_THAN_AMOUNT}`,
+            );
+          } else if (
+            !payment.isProfit &&
+            (marginValue < VALIDATION_RULES.MIN_MARGIN ||
+              marginValue > VALIDATION_RULES.MAX_MARGIN)
+          ) {
+            errors[ERROR_GROUPS.PAYMENTS].push(
+              `${index + 1}번 항목: ${ERROR_MESSAGES.MARGIN_RANGE}`,
+            );
+          }
+        }
+      });
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const hasErrors = Object.values(errors).some((group) => group.length > 0);
+
+    if (hasErrors) {
+      setValidationErrors(errors);
+      // notification으로 에러 메시지 표시
+      notification.error({
+        // message: getFirstErrorMessage(errors),
+        message: '매출등록오류',
+        description: formatValidationErrors(errors),
+        duration: 0, // 수동으로 닫을 때까지 유지
+        style: {
+          width: 500, // 더 넓은 알림창
+        },
+      });
+      return false;
+    }
+
+    setValidationErrors({
+      [ERROR_GROUPS.BASIC_INFO]: [],
+      [ERROR_GROUPS.SALES_ITEMS]: [],
+      [ERROR_GROUPS.PAYMENTS]: [],
+    });
+    return true;
   };
 
   return {
@@ -434,11 +443,13 @@ export const useDrawerFormData = () => {
     handleSalesPaymentChange,
     handleAddSalesPayment,
     handleRemoveSalesPayment,
-    validateForm,
     isItemsLoading,
     itemsData,
     paymentMethodData,
     percentageData,
     isPaymentDataLoading,
+    // validation
+    validationErrors,
+    validateForm,
   };
 };

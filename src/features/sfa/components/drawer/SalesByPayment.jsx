@@ -178,7 +178,6 @@ const SalesByPayment = ({
             <Input
               type="number"
               value={payment.margin}
-              // value={formatDisplayNumber(payment.margin)}
               onChange={(e) =>
                 handleEntryChange(index, 'margin', e.target.value)
               }
@@ -226,7 +225,7 @@ const SalesByPayment = ({
                 <Input
                   type="text"
                   // value={formatDisplayNumber(payment.marginAmount)}
-                  value={payment.marginAmount}
+                  value={Math.round(payment.marginAmount)}
                   readOnly
                   disabled={true}
                   className="bg-gray-100 text-right"

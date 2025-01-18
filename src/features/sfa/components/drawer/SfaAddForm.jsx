@@ -3,10 +3,8 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { selectCodebookByType } from '../../../codebook/store/codebookSlice';
 import { CustomerSearchInput } from '../../../../shared/components/customer/CustomerSearchInput';
-import { submitSfaForm } from '../../services/sfaSubmitService';
 import { useDrawerFormData } from '../../hooks/useDrawerFormData';
 import { formatDisplayNumber } from '../../../../shared/utils/format/number';
-import { transformToDBFields } from '../../utils/transformUtils';
 import { notification } from '../../../../shared/services/notification';
 import SalesByItem from './SalesByItem';
 import SalesByPayment from './SalesByPayment';
@@ -25,6 +23,7 @@ import {
   Checkbox,
   Switch,
   Message,
+  Modal,
 } from '../../../../shared/components/ui';
 
 /**
@@ -36,6 +35,7 @@ const SfaAddForm = ({ onClose }) => {
   // 파트너 및 프로젝트 상태 관리
   const [hasPartner, setHasPartner] = useState(false);
   const [isProject, setIsProject] = useState(false);
+  const [showAmountConfirm, setShowAmountConfirm] = useState(false);
 
   // Form 데이터 및 상태 관리 훅 사용
   const {
@@ -52,19 +52,30 @@ const SfaAddForm = ({ onClose }) => {
     handleSalesPaymentChange,
     handleAddSalesPayment,
     handleRemoveSalesPayment,
-    validateForm,
     isItemsLoading,
     itemsData,
     // 결제매출 관련 데이터
     paymentMethodData,
     percentageData,
     isPaymentDataLoading,
+    // 검증관련
+    validateForm,
+    validationErrors,
   } = useDrawerFormData();
 
   const sfaSalesTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
   const sfaClassificationData = useSelector(
     selectCodebookByType('sfa_classification'),
   );
+
+  /**
+   * 금액이 일치하는지 확인하는 함수
+   */
+  const checkAmounts = () => {
+    const itemAmount = parseInt(formData.itemAmount) || 0;
+    const paymentAmount = parseInt(formData.paymentAmount) || 0;
+    return itemAmount === paymentAmount;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -77,39 +88,17 @@ const SfaAddForm = ({ onClose }) => {
     };
 
     console.log('========== Form Submit Data ==========');
-    // console.log('기본 정보:', {
-    //   name: formData.name,
-    //   sfaSalesType: formData.sfaSalesType,
-    //   sfaClassification: formData.sfaClassification,
-    //   customer: formData.customer,
-    //   hasPartner: hasPartner,
-    //   sellingPartner: formData.sellingPartner,
-    //   itemAmount: formData.itemAmount,
-    //   paymentAmount: formData.paymentAmount,
-    //   isProject: isProject,
-    //   description: formData.description,
-    //   salesByItems: formData.salesByItems,
-    //   salesByPayments: formData.salesByPayments,
-    // });
-    // console.log('매출 아이템:', formData.salesByItems);
-    // console.log('매출 항목:', formData.salesByPayments);
     console.log('formData:', formData);
     console.log('====================================');
 
     // 유효성 검사 수행
-    const isValid = validateForm();
+    const isValid = validateForm(hasPartner);
+    if (!isValid) return;
 
-    if (!isValid) {
-      // 에러 메시지들을 정리하여 표시
-      const errorMessages = Object.entries(errors)
-        .filter(([_, value]) => value) // undefined나 null 제거
-        .map(([field, message]) => `${message}`)
-        .join('\n');
-
-      notification.error({
-        message: '입력 오류',
-        description: errorMessages || '필수 항목을 모두 입력해주세요.',
-      });
+    // 금액 일치 여부 확인
+    if (!checkAmounts()) {
+      console.log('========== checkedAmounts ==========');
+      setShowAmountConfirm(true);
       return;
     }
 
@@ -151,250 +140,295 @@ const SfaAddForm = ({ onClose }) => {
     }
   };
 
+  // 금액 확인 모달 내용 컴포넌트
+  const AmountConfirmContent = () => (
+    <div className="space-y-4">
+      <p className="text-base">
+        사업부매출금액과 결제매출금액이 일치하지 않습니다.
+      </p>
+      <div className="space-y-2">
+        <p>• 사업부매출금액: {formatDisplayNumber(formData.itemAmount)}원</p>
+        <p>• 결제매출금액: {formatDisplayNumber(formData.paymentAmount)}원</p>
+      </div>
+      <p className="text-gray-600">금액이 다르더라도 진행하시겠습니까?</p>
+    </div>
+  );
+
   return (
-    <Form
-      onSubmit={handleSubmit}
-      className="space-y-6"
-      // 추가: method와 action 속성 명시적 지정
-      method="POST"
-      action="#"
-    >
-      {/* Sales Type and Classification */}
-      <Group direction="horizontal" className="gap-6">
-        <FormItem className="flex-1">
-          {/* flex-1 추가로 균등한 너비 */}
-          <Label required>매출유형</Label>
-          <Select
-            name="sfaSalesType"
-            value={formData.sfaSalesType}
-            onChange={handleChange}
-            disabled={isSubmitting}
-            error={errors.sfaSalesType}
-          >
-            <option value="">선택하세요</option>
-            {sfaSalesTypeData?.data?.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </Select>
-        </FormItem>
+    <>
+      <Form
+        onSubmit={handleSubmit}
+        className="space-y-6"
+        // 추가: method와 action 속성 명시적 지정
+        method="POST"
+        action="#"
+      >
+        {/* Sales Type and Classification */}
+        <Group direction="horizontal" className="gap-6">
+          <FormItem className="flex-1">
+            {/* flex-1 추가로 균등한 너비 */}
+            <Label required>매출유형</Label>
+            <Select
+              name="sfaSalesType"
+              value={formData.sfaSalesType}
+              onChange={handleChange}
+              disabled={isSubmitting}
+              error={errors.sfaSalesType}
+            >
+              <option value="">선택하세요</option>
+              {sfaSalesTypeData?.data?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </FormItem>
 
-        <FormItem className="flex-1">
-          <Label required>매출구분</Label>
-          <Select
-            name="sfaClassification"
-            value={formData.sfaClassification}
-            onChange={handleChange}
-            disabled={isSubmitting}
-            error={errors.sfaClassification}
-          >
-            <option value="">선택하세요</option>
-            {sfaClassificationData?.data?.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </Select>
-        </FormItem>
-      </Group>
+          <FormItem className="flex-1">
+            <Label required>매출구분</Label>
+            <Select
+              name="sfaClassification"
+              value={formData.sfaClassification}
+              onChange={handleChange}
+              disabled={isSubmitting}
+              error={errors.sfaClassification}
+            >
+              <option value="">선택하세요</option>
+              {sfaClassificationData?.data?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </FormItem>
+        </Group>
 
-      {/* Customer and Partner */}
-      <Group direction="horizontal" className="gap-6">
-        <FormItem className="flex-1">
-          <Label required>고객사</Label>
-          <CustomerSearchInput
-            onSelect={handleCustomerSelect}
-            value={formData.customer}
-            error={errors.customer}
-            disabled={isSubmitting}
-            size="small"
-          />
-        </FormItem>
+        {/* Customer and Partner */}
+        <Group direction="horizontal" className="gap-6">
+          <FormItem className="flex-1">
+            <Label required>고객사</Label>
+            <CustomerSearchInput
+              onSelect={handleCustomerSelect}
+              value={formData.customer}
+              error={errors.customer}
+              disabled={isSubmitting}
+              size="small"
+            />
+          </FormItem>
 
-        <FormItem className="flex-1">
-          <Label>매출파트너</Label>
-          <Group direction="horizontal">
-            <Checkbox
-              id="hasPartner"
-              checked={hasPartner}
-              onChange={(e) => setHasPartner(e.target.checked)}
+          <FormItem className="flex-1">
+            <Label>매출파트너</Label>
+            <Group direction="horizontal">
+              <Checkbox
+                id="hasPartner"
+                checked={hasPartner}
+                onChange={(e) => setHasPartner(e.target.checked)}
+                disabled={isSubmitting}
+              />
+              {hasPartner && (
+                <CustomerSearchInput
+                  name="sellingPartner"
+                  onSelect={(partner) =>
+                    handleChange({
+                      target: {
+                        name: 'sellingPartner',
+                        value: partner.id,
+                      },
+                    })
+                  }
+                  value={formData.SellingPrtner}
+                  disabled={isSubmitting}
+                  size="small"
+                />
+              )}
+            </Group>
+          </FormItem>
+        </Group>
+
+        {/* Project Name and Toggle */}
+        <Group direction="horizontal" className="gap-6">
+          <FormItem className="flex-1">
+            <Label required>건명</Label>
+            <Input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="건명을 입력하세요"
               disabled={isSubmitting}
             />
-            {hasPartner && (
-              <CustomerSearchInput
-                name="sellingPartner"
-                onSelect={(partner) =>
-                  handleChange({
-                    target: {
-                      name: 'sellingPartner',
-                      value: partner.id,
-                    },
-                  })
-                }
-                value={formData.SellingPrtner}
-                disabled={isSubmitting}
-                size="small"
+            {/* {errors.name && <Message type="error">{errors.name}</Message>} */}
+          </FormItem>
+
+          <FormItem className="flex-1">
+            <Label>프로젝트</Label>
+            <Switch
+              checked={isProject}
+              onChange={() => setIsProject(!isProject)}
+              disabled={isSubmitting}
+            />
+          </FormItem>
+        </Group>
+
+        {/* Sales Registration Buttons */}
+        <Group direction="horizontal" className="gap-6">
+          <FormItem className="flex-1">
+            <Label>사업부 매출</Label>
+            <Stack>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleAddSalesItem}
+                disabled={isSubmitting || formData.salesByItems.length >= 3}
+                className={`w-full ${
+                  formData.salesByItems.length >= 3
+                    ? 'bg-gray-200 hover:bg-gray-200 text-gray-500 border-gray-200'
+                    : ''
+                }`}
+              >
+                사업부매출등록
+              </Button>
+              <Input
+                type="text"
+                name="itemAmount"
+                value={formatDisplayNumber(formData.itemAmount)}
+                disabled={true}
+                className="text-right"
               />
+            </Stack>
+            {errors.itemAmount && (
+              <Message type="error">{errors.itemAmount}</Message>
             )}
-          </Group>
-        </FormItem>
-      </Group>
+          </FormItem>
 
-      {/* Project Name and Toggle */}
-      <Group direction="horizontal" className="gap-6">
-        <FormItem className="flex-1">
-          <Label required>건명</Label>
-          <Input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="건명을 입력하세요"
-            disabled={isSubmitting}
-          />
-          {/* {errors.name && <Message type="error">{errors.name}</Message>} */}
-        </FormItem>
+          <FormItem className="flex-1">
+            <Label>결제 매출</Label>
+            <Stack>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleAddSalesPayment}
+                disabled={isSubmitting || formData.salesByPayments.length >= 3}
+                className={`w-full ${
+                  formData.salesByPayments.length >= 3
+                    ? 'bg-gray-200 hover:bg-gray-200 text-gray-500 border-gray-200'
+                    : ''
+                }`}
+              >
+                결제매출등록
+              </Button>
+              <Input
+                type="text"
+                name="paymentAmount"
+                value={formatDisplayNumber(formData.paymentAmount)}
+                disabled={true}
+                className="text-right"
+              />
+            </Stack>
+            {errors.paymentAmount && (
+              <Message type="error">{errors.paymentAmount}</Message>
+            )}
+          </FormItem>
+        </Group>
 
-        <FormItem className="flex-1">
-          <Label>프로젝트</Label>
-          <Switch
-            checked={isProject}
-            onChange={() => setIsProject(!isProject)}
-            disabled={isSubmitting}
-          />
-        </FormItem>
-      </Group>
+        {/* Divider */}
+        <div className="w-full h-px bg-gray-200 my-6" />
 
-      {/* Sales Registration Buttons */}
-      <Group direction="horizontal" className="gap-6">
-        <FormItem className="flex-1">
-          <Label>사업부 매출</Label>
-          <Stack>
-            <Button
-              type="button"
-              variant="primary"
-              onClick={handleAddSalesItem}
-              disabled={isSubmitting || formData.salesByItems.length >= 3}
-              className={`w-full ${
-                formData.salesByItems.length >= 3
-                  ? 'bg-gray-200 hover:bg-gray-200 text-gray-500 border-gray-200'
-                  : ''
-              }`}
-            >
-              사업부매출등록
-            </Button>
-            <Input
-              type="text"
-              name="itemAmount"
-              value={formatDisplayNumber(formData.itemAmount)}
-              disabled={true}
-              className="text-right"
+        {/* Sales Items List */}
+        <SalesByItem
+          items={formData.salesByItems}
+          onChange={handleSalesItemChange}
+          onRemove={handleRemoveSalesItem}
+          isSubmitting={isSubmitting}
+          errors={errors}
+          itemsData={itemsData}
+          isItemsLoading={isItemsLoading}
+        />
+
+        {/* Divider */}
+        <div className="w-full h-px bg-gray-200 my-6" />
+
+        {/* Sales Payments List */}
+        <SalesByPayment
+          payments={formData.salesByPayments}
+          onChange={handleSalesPaymentChange}
+          onAdd={handleAddSalesPayment}
+          onRemove={handleRemoveSalesPayment}
+          isSubmitting={isSubmitting}
+          errors={errors}
+          paymentMethodData={paymentMethodData}
+          percentageData={percentageData}
+          isPaymentDataLoading={isPaymentDataLoading}
+        />
+
+        {/* Description */}
+        <Group>
+          <FormItem fullWidth>
+            <Label>비고</Label>
+            <TextArea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="비고 사항을 입력하세요"
+              disabled={isSubmitting}
             />
-          </Stack>
-          {errors.itemAmount && (
-            <Message type="error">{errors.itemAmount}</Message>
-          )}
-        </FormItem>
+          </FormItem>
+        </Group>
 
-        <FormItem className="flex-1">
-          <Label>결제 매출</Label>
-          <Stack>
-            <Button
-              type="button"
-              variant="primary"
-              onClick={handleAddSalesPayment}
-              disabled={isSubmitting || formData.salesByPayments.length >= 3}
-              className={`w-full ${
-                formData.salesByPayments.length >= 3
-                  ? 'bg-gray-200 hover:bg-gray-200 text-gray-500 border-gray-200'
-                  : ''
-              }`}
-            >
-              결제매출등록
-            </Button>
-            <Input
-              type="text"
-              name="paymentAmount"
-              value={formatDisplayNumber(formData.paymentAmount)}
-              disabled={true}
-              className="text-right"
-            />
-          </Stack>
-          {errors.paymentAmount && (
-            <Message type="error">{errors.paymentAmount}</Message>
-          )}
-        </FormItem>
-      </Group>
-
-      {/* Divider */}
-      <div className="w-full h-px bg-gray-200 my-6" />
-
-      {/* Sales Items List */}
-      <SalesByItem
-        items={formData.salesByItems}
-        onChange={handleSalesItemChange}
-        onRemove={handleRemoveSalesItem}
-        isSubmitting={isSubmitting}
-        errors={errors}
-        itemsData={itemsData}
-        isItemsLoading={isItemsLoading}
-      />
-
-      {/* Divider */}
-      <div className="w-full h-px bg-gray-200 my-6" />
-
-      {/* Sales Payments List */}
-      <SalesByPayment
-        payments={formData.salesByPayments}
-        onChange={handleSalesPaymentChange}
-        onAdd={handleAddSalesPayment}
-        onRemove={handleRemoveSalesPayment}
-        isSubmitting={isSubmitting}
-        errors={errors}
-        paymentMethodData={paymentMethodData}
-        percentageData={percentageData}
-        isPaymentDataLoading={isPaymentDataLoading}
-      />
-
-      {/* Description */}
-      <Group>
-        <FormItem fullWidth>
-          <Label>비고</Label>
-          <TextArea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="비고 사항을 입력하세요"
-            disabled={isSubmitting}
-          />
-        </FormItem>
-      </Group>
-
-      {/* Error Message */}
-      {/* {errors.submit && (
+        {/* Error Message */}
+        {/* {errors.submit && (
         <Message type="error" className="text-center mb-4">
           {errors.submit}
         </Message>
       )} */}
 
-      {/* Submit Button */}
-      <Group>
-        <Button
-          type="submit"
-          variant="primary"
-          disabled={isSubmitting}
-          className="w-full"
-          onClick={(e) => {
-            // 버튼 클릭 시에도 이벤트 전파 방지
-            e.preventDefault();
-            handleSubmit(e);
-          }}
-        >
-          {isSubmitting ? '처리중...' : '저장'}
-        </Button>
-      </Group>
-    </Form>
+        {/* Submit Button */}
+        <Group>
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={isSubmitting}
+            className="w-full"
+            onClick={(e) => {
+              // 버튼 클릭 시에도 이벤트 전파 방지
+              e.preventDefault();
+              handleSubmit(e);
+            }}
+          >
+            {isSubmitting ? '처리중...' : '저장'}
+          </Button>
+        </Group>
+      </Form>
+
+      {/* 금액 비교 확인 모달 */}
+      <Modal
+        isOpen={showAmountConfirm}
+        onClose={() => setShowAmountConfirm(false)}
+        title="금액 불일치 확인"
+        size="md"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setShowAmountConfirm(false)}
+            >
+              아니오
+            </Button>
+            <Button
+              variant="primary"
+              onClick={async () => {
+                setShowAmountConfirm(false);
+                await submitForm();
+              }}
+            >
+              예
+            </Button>
+          </>
+        }
+      >
+        <AmountConfirmContent />
+      </Modal>
+    </>
   );
 };
 

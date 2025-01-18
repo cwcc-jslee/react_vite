@@ -1,9 +1,22 @@
 // src/shared/components/ui/drawer/BaseDrawer.jsx
 import React from 'react';
 
+/**
+ * BaseDrawer Component
+ *
+ * @param {Object} props
+ * @param {boolean} props.visible - Drawer 표시 여부
+ * @param {string} props.title - Drawer 제목
+ * @param {string} props.width - Drawer 너비 (default: '400px')
+ * @param {Function} props.onClose - Drawer 닫기 콜백 함수
+ * @param {React.ReactNode} props.menu - 상단 메뉴 영역 컴포넌트
+ * @param {React.ReactNode} props.children - Drawer 내부 컨텐츠
+ * @param {boolean} props.enableOverlayClick - Overlay 클릭시 닫기 여부 (default: false)
+ * @returns {React.ReactElement|null}
+ */
 const BaseDrawer = ({
-  visible,
-  title,
+  visible = false,
+  title = '',
   width = '900px',
   onClose,
   menu,
@@ -12,10 +25,24 @@ const BaseDrawer = ({
 }) => {
   if (!visible) return null;
 
+  // Drawer 외부 영역(Overlay) 클릭 핸들러
+  const handleOverlayClick = (e) => {
+    // enableOverlayClick이 true인 경우에만 닫기 동작 실행
+    if (enableOverlayClick && onClose) {
+      onClose(e);
+    }
+  };
+
+  // Drawer 내부 클릭 이벤트 전파 방지
+  const handleDrawerClick = (e) => {
+    e.stopPropagation();
+  };
+
   return (
     <>
       {/* Portal Root를 사용하여 최상위에 렌더링 */}
-      <div className="fixed inset-0 z-[9999] overflow-hidden">
+      {/* Drawer (z-index: 9000-9002) , Modal (z-index: 9999-10000)*/}
+      <div className="fixed inset-0 z-[9000] overflow-hidden">
         {/* Overlay */}
         <div
           className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"

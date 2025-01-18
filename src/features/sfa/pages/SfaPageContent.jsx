@@ -116,7 +116,7 @@ const SfaPageContent = () => {
         onClose={setDrawerClose}
         menu={renderMenu()}
         width="900px"
-        enableOverlayClick={true}
+        enableOverlayClick={false} // Overlay 클릭시 닫기 비활성화
       >
         {renderDrawerContent()}
       </BaseDrawer>

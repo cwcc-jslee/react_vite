@@ -1,6 +1,8 @@
 // src/shared/components/ui/index.jsx
 import React from 'react';
+import Modal from './modal/Modal';
 
+export { Modal };
 /**
  * Group: 여러 컴포넌트를 그룹화하는 컨테이너
  * - direction: 'horizontal' | 'vertical' (default: 'vertical')
