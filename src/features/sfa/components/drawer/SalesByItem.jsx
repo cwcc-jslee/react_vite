@@ -62,8 +62,25 @@ const SalesByItem = ({
           <div className="grid grid-cols-[3fr,3fr,2fr,40px] gap-3 items-start">
             {/* 매출품목 선택 */}
             <Select
-              value={item.itemName}
-              onChange={(e) => onChange(index, 'itemName', e.target.value)}
+              // value={item.itemName}
+              value={item.itemId || ''}
+              // onChange={(e) => onChange(index, 'itemName', e.target.value)}
+              onChange={(e) => {
+                const selectedItemId = e.target.value;
+                const selectedItem = itemsData?.data?.find(
+                  (type) => type.id === parseInt(selectedItemId), // select의 value는 문자열로 전달되므로 숫자로 변환
+                );
+                console.log(`***** : ${selectedItem}`);
+                if (selectedItem) {
+                  // teamId와 teamName 모두 업데이트
+                  // onChange(index, 'teamId', selectedTeam.id);
+                  // onChange(index, 'teamName', selectedTeam.name);
+                  onChange(index, {
+                    itemId: selectedItem.id,
+                    itemName: selectedItem.name,
+                  });
+                }
+              }}
               disabled={isSubmitting}
               className={
                 hasFieldError(index, 'itemName') ? 'border-red-300' : ''
@@ -71,7 +88,7 @@ const SalesByItem = ({
             >
               <option value="">매출품목 선택</option>
               {itemsData?.data?.map((type) => (
-                <option key={type.id} value={type.code}>
+                <option key={type.id} value={type.id}>
                   {type.name}
                 </option>
               ))}
@@ -80,7 +97,6 @@ const SalesByItem = ({
             {/* 사업부 선택 */}
             <Select
               value={item.teamId || ''} // teamId가 없을 경우 빈 문자열
-              // onChange={(e) => onChange(index, 'teamId', e.target.value)}
               onChange={(e) => {
                 const selectedTeamId = e.target.value;
                 const selectedTeam = teamsData?.data?.find(

@@ -115,8 +115,7 @@ const SfaAddForm = ({ onClose }) => {
 
     try {
       setIsSubmitting(true);
-      // const apiData = transformToDBFields.transformSfaFields(enrichedFormData);
-      const response = await submitSfaForm(enrichedFormData);
+      // const response = await submitSfaForm(enrichedFormData);
 
       // 서버 응답 검증
       if (!response || !response.success) {
