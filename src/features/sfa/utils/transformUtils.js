@@ -72,7 +72,7 @@ export const transformToDBFields = {
       name: formData.name,
       customer: formData.customer,
       has_partner: formData.hasPartner,
-      selling_partner: formData.sellingPartner || '',
+      selling_partner: formData.sellingPartner || null,
       sfa_sales_type: parseNumber(formData.sfaSalesType),
       sfa_classification: parseNumber(formData.sfaClassification),
       total_price: parseNumber(formData.itemAmount),

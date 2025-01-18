@@ -6,6 +6,7 @@ import { CustomerSearchInput } from '../../../../shared/components/customer/Cust
 import { useDrawerFormData } from '../../hooks/useDrawerFormData';
 import { formatDisplayNumber } from '../../../../shared/utils/format/number';
 import { notification } from '../../../../shared/services/notification';
+import { submitSfaForm } from '../../services/sfaSubmitService';
 import SalesByItem from './SalesByItem';
 import SalesByPayment from './SalesByPayment';
 
@@ -77,9 +78,8 @@ const SfaAddForm = ({ onClose }) => {
     return itemAmount === paymentAmount;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  // 폼 제출 처리를 위한 별도 함수
+  const processSubmit = async () => {
     // hasPartner와 isProject를 formData에 추가
     const enrichedFormData = {
       ...formData,
@@ -87,24 +87,9 @@ const SfaAddForm = ({ onClose }) => {
       isProject,
     };
 
-    console.log('========== Form Submit Data ==========');
-    console.log('formData:', formData);
-    console.log('====================================');
-
-    // 유효성 검사 수행
-    const isValid = validateForm(hasPartner);
-    if (!isValid) return;
-
-    // 금액 일치 여부 확인
-    if (!checkAmounts()) {
-      console.log('========== checkedAmounts ==========');
-      setShowAmountConfirm(true);
-      return;
-    }
-
     try {
       setIsSubmitting(true);
-      // const response = await submitSfaForm(enrichedFormData);
+      const response = await submitSfaForm(enrichedFormData);
 
       // 서버 응답 검증
       if (!response || !response.success) {
@@ -137,6 +122,26 @@ const SfaAddForm = ({ onClose }) => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    console.log('========== Form Submit Data ==========');
+    console.log('formData:', formData);
+    console.log('====================================');
+
+    // 유효성 검사 수행
+    const isValid = validateForm(hasPartner);
+    if (!isValid) return;
+
+    // 금액 일치 여부 확인
+    if (!checkAmounts()) {
+      setShowAmountConfirm(true);
+    } else {
+      // 금액이 일치하면 바로 제출
+      await processSubmit();
     }
   };
 
@@ -418,7 +423,7 @@ const SfaAddForm = ({ onClose }) => {
               variant="primary"
               onClick={async () => {
                 setShowAmountConfirm(false);
-                await submitForm();
+                await processSubmit();
               }}
             >
               예
