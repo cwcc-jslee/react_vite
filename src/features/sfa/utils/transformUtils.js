@@ -9,7 +9,9 @@
  */
 const parseNumber = (value) => {
   const num = Number(value);
-  return isNaN(num) ? 0 : num;
+  const result = isNaN(num) ? 0 : num;
+
+  return result;
 };
 
 /**
@@ -61,6 +63,47 @@ export const transformToDBFields = {
   },
 
   /**
+   * 결제 매출 항목목 변환
+   */
+  transformSalesByPayments: (payment) => {
+    // 입력값 로깅
+    console.group('Sales Payments Transform');
+    console.log('Input:', {
+      type: typeof payment,
+      value: payment,
+    });
+
+    const transformed = {
+      billing_type: payment.billingType,
+      is_confirmed: payment.isConfirmed,
+      probability: parseNumber(payment.probability),
+      amount: parseNumber(payment.amount),
+      profit_config: (() => {
+        const config = {
+          is_profit: payment.isProfit,
+          margin_profit_value: parseNumber(payment.marginProfitValue),
+        };
+        return JSON.stringify(config);
+      })(),
+      profit_amount: Math.floor(parseNumber(payment.profitAmount)),
+      scheduled_date: payment.scheduledDate || null,
+      recognition_date: payment.recognitionDate,
+      memo: payment.memo,
+      // 추가 필드가 있다면 여기에 작성
+    };
+
+    // 출력값 로깅
+    console.log('Output:', {
+      type: typeof transformed,
+      value: transformed,
+      isArray: Array.isArray(transformed),
+    });
+    console.groupEnd();
+
+    return transformed;
+  },
+
+  /**
    * SFA 기본 정보 변환
    * @param {Object} formData - 변환할 폼 데이터
    * @returns {Object} - 변환된 기본 필드 데이터
@@ -84,48 +127,6 @@ export const transformToDBFields = {
     };
 
     console.log('Transform base fields output:', transformed);
-    return transformed;
-  },
-
-  /**
-   * 매출 아이템 변환
-   */
-  transformSalesItem: (item) => {
-    console.log('Transform sales item input:', item);
-
-    const transformed = {
-      product_type: item.productType,
-      department: item.department,
-      amount: toNumber(item.amount),
-      created_by: item.createdBy,
-      status: item.status || 'active',
-    };
-
-    console.log('Transform sales item output:', transformed);
-    return transformed;
-  },
-
-  /**
-   * 매출 항목 변환
-   */
-  transformSalesEntry: (entry) => {
-    console.log('Transform sales entry input:', entry);
-
-    const transformed = {
-      payment_type: entry.paymentType,
-      confirmed: Boolean(entry.confirmed),
-      probability: toNumber(entry.probability),
-      amount: toNumber(entry.amount),
-      is_profit: Boolean(entry.isProfit),
-      margin: toNumber(entry.margin),
-      margin_amount: toNumber(entry.marginAmount),
-      recognition_date: toDate(entry.recognitionDate),
-      payment_date: toDate(entry.paymentDate),
-      memo: entry.memo || '',
-      status: entry.status || 'active',
-    };
-
-    console.log('Transform sales entry output:', transformed);
     return transformed;
   },
 };

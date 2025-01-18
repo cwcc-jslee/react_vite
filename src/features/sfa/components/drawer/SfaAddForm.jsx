@@ -128,10 +128,6 @@ const SfaAddForm = ({ onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log('========== Form Submit Data ==========');
-    console.log('formData:', formData);
-    console.log('====================================');
-
     // 유효성 검사 수행
     const isValid = validateForm(hasPartner);
     if (!isValid) return;

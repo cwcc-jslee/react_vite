@@ -23,25 +23,25 @@ const SalesByPayment = ({
   percentageData,
   isPaymentDataLoading,
 }) => {
-  // 매출액액 임시 입력 상태 관리를 위한 state 추가
+  // 매출액 임시 입력 상태 관리를 위한 state 추가
   const [tempInputs, setTempInputs] = useState({});
 
   // 이익/마진 금액 자동 계산 useEffect 수정
   useEffect(() => {
     payments.forEach((entry, index) => {
       const amount = Number(entry.amount) || 0;
-      const margin = Number(entry.margin) || 0;
-      let calculatedMarginAmount = 0;
+      const marginProfitValue = Number(entry.marginProfitValue) || 0;
+      let calculatedProfitAmount = 0;
 
       if (entry.isProfit) {
-        calculatedMarginAmount = margin;
+        calculatedProfitAmount = marginProfitValue;
       } else {
-        calculatedMarginAmount = (amount * margin) / 100;
+        calculatedProfitAmount = (amount * marginProfitValue) / 100;
       }
 
       // 기존 값과 다를 때만 업데이트
-      if (calculatedMarginAmount !== Number(entry.marginAmount)) {
-        onChange(index, 'marginAmount', calculatedMarginAmount.toString());
+      if (calculatedProfitAmount !== Number(entry.profitAmount)) {
+        onChange(index, 'profitAmount', calculatedProfitAmount.toString());
       }
     });
   }, [payments]);
@@ -72,24 +72,27 @@ const SalesByPayment = ({
   const handleEntryChange = (index, field, value) => {
     onChange(index, field, value);
 
-    // amount, margin, isProfit 변경 시에만 marginAmount 계산
-    if (['amount', 'margin', 'isProfit'].includes(field)) {
+    // amount, marginProfitValue, isProfit 변경 시에만 profitAmount 계산
+    if (['amount', 'marginProfitValue', 'isProfit'].includes(field)) {
       const payment = payments[index];
       const amount = Number(field === 'amount' ? value : payment.amount) || 0;
-      const margin = Number(field === 'margin' ? value : payment.margin) || 0;
+      const marginProfitValue =
+        Number(
+          field === 'marginProfitValue' ? value : payment.marginProfitValue,
+        ) || 0;
       const isProfit = field === 'isProfit' ? value : payment.isProfit;
 
-      const calculatedMarginAmount = isProfit
-        ? margin
-        : (amount * margin) / 100;
+      const calculatedProfitAmount = isProfit
+        ? marginProfitValue
+        : (amount * marginProfitValue) / 100;
 
-      onChange(index, 'marginAmount', calculatedMarginAmount.toString());
+      onChange(index, 'profitAmount', calculatedProfitAmount.toString());
     }
   };
 
   // 확정여부 체크박스 핸들러 추가
   const handleConfirmedChange = (index, checked) => {
-    onChange(index, 'confirmed', checked);
+    onChange(index, 'isConfirmed', checked);
     if (checked) {
       // 확정 시 매출확률 100으로 설정
       onChange(index, 'probability', '100');
@@ -109,8 +112,8 @@ const SalesByPayment = ({
           <div className="grid grid-cols-[1.5fr,0.8fr,1fr,1fr,auto,0.5fr,1fr] gap-3 items-center">
             {/* 결제구분 Select */}
             <Select
-              value={payment.paymentType}
-              onChange={(e) => onChange(index, 'paymentType', e.target.value)}
+              value={payment.billingType}
+              onChange={(e) => onChange(index, 'billingType', e.target.value)}
               disabled={isSubmitting || isPaymentDataLoading}
               required
             >
@@ -124,7 +127,7 @@ const SalesByPayment = ({
 
             <label className="flex items-center gap-1">
               <Checkbox
-                checked={payment.confirmed}
+                checked={payment.isConfirmed}
                 onChange={(e) => handleConfirmedChange(index, e.target.checked)}
                 disabled={isSubmitting}
                 className="w-4 h-4"
@@ -137,7 +140,7 @@ const SalesByPayment = ({
               value={payment.probability}
               onChange={(e) => onChange(index, 'probability', e.target.value)}
               disabled={
-                isSubmitting || isPaymentDataLoading || payment.confirmed
+                isSubmitting || isPaymentDataLoading || payment.isConfirmed
               }
             >
               <option value="">매출확률 선택</option>
@@ -177,9 +180,9 @@ const SalesByPayment = ({
 
             <Input
               type="number"
-              value={payment.margin}
+              value={payment.marginProfitValue}
               onChange={(e) =>
-                handleEntryChange(index, 'margin', e.target.value)
+                handleEntryChange(index, 'marginProfitValue', e.target.value)
               }
               disabled={isSubmitting}
             />
@@ -203,8 +206,10 @@ const SalesByPayment = ({
               <span className="text-xs text-gray-500 mb-1">결제일자</span>
               <Input
                 type="date"
-                value={payment.paymentDate}
-                onChange={(e) => onChange(index, 'paymentDate', e.target.value)}
+                value={payment.scheduledDate}
+                onChange={(e) =>
+                  onChange(index, 'scheduledDate', e.target.value)
+                }
                 disabled={isSubmitting}
               />
             </div>
@@ -224,8 +229,8 @@ const SalesByPayment = ({
                 <span className="text-xs text-gray-500 mb-1">매출이익</span>
                 <Input
                   type="text"
-                  // value={formatDisplayNumber(payment.marginAmount)}
-                  value={Math.round(payment.marginAmount)}
+                  // value={formatDisplayNumber(payment.profitAmount)}
+                  value={Math.round(payment.profitAmount)}
                   readOnly
                   disabled={true}
                   className="bg-gray-100 text-right"

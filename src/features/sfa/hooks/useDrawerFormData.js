@@ -29,15 +29,15 @@ const initialSalesByItem = {
 };
 
 const initialSalesByPayment = {
-  paymentType: '',
-  confirmed: false,
+  billingType: '',
+  isConfirmed: false,
   probability: '',
   amount: '',
+  profitAmount: '',
   isProfit: false,
-  margin: '',
-  marginAmount: '',
+  marginProfitValue: '',
   recognitionDate: '',
-  paymentDate: '',
+  scheduledDate: '',
   memo: '',
 };
 

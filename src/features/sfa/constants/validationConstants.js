@@ -39,10 +39,10 @@ export const PARTNER_ERROR_MESSAGE = '매출파트너를 선택해주세요';
 
 // 결제 매출 필수 필드
 export const PAYMENT_REQUIRED_FIELDS = {
-  paymentType: '결제구분',
+  billingType: '결제구분',
   probability: '매출확률',
   amount: '매출액',
-  margin: '이익률/이익금',
+  marginProfitValue: '이익률/이익금',
   recognitionDate: '매출인식일자',
 };
 
