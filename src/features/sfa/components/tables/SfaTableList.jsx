@@ -70,7 +70,7 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
   );
 };
 
-const SfaTable = () => {
+const SfaTableList = () => {
   const { sfaData, loading, error, pagination, setPage, setPageSize } =
     useSfa();
 
@@ -122,4 +122,4 @@ const SfaTable = () => {
   );
 };
 
-export default SfaTable;
+export default SfaTableList;

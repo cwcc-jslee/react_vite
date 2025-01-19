@@ -1,14 +1,14 @@
-// src/features/sfa/components/drawer/SfaAddForm.jsx
+// src/features/sfa/components/forms/SfaAddForm/index.jsx
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { selectCodebookByType } from '../../../codebook/store/codebookSlice';
-import { CustomerSearchInput } from '../../../../shared/components/customer/CustomerSearchInput';
-import { useDrawerFormData } from '../../hooks/useDrawerFormData';
-import { formatDisplayNumber } from '../../../../shared/utils/format/number';
-import { notification } from '../../../../shared/services/notification';
-import { submitSfaForm } from '../../services/sfaSubmitService';
-import SalesByItem from './SalesByItem';
-import SalesByPayment from './SalesByPayment';
+import { selectCodebookByType } from '../../../../codebook/store/codebookSlice';
+import { CustomerSearchInput } from '../../../../../shared/components/customer/CustomerSearchInput';
+import { useDrawerFormData } from '../../../hooks/useDrawerFormData';
+import { formatDisplayNumber } from '../../../../../shared/utils/format/number';
+import { notification } from '../../../../../shared/services/notification';
+import { submitSfaForm } from '../../../services/sfaSubmitService';
+import SalesByItem from '../../elements/SalesByItemForm';
+import SalesByPayment from '../../elements/SalesByPaymentForm';
 
 // 새로운 UI 컴포넌트 import
 import {
@@ -25,7 +25,7 @@ import {
   Switch,
   Message,
   Modal,
-} from '../../../../shared/components/ui';
+} from '../../../../../shared/components/ui';
 
 /**
  * SFA(영업활동) 매출 등록을 위한 Drawer Form 컴포넌트

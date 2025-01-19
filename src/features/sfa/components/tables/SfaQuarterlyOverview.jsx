@@ -35,7 +35,7 @@ const TableDataCell = ({ children, onClick, isProbability }) => (
   </td>
 );
 
-const SfaMonthlyStats = () => {
+const SfaQuarterlyOverview = () => {
   const [monthlyStats, setMonthlyStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -291,4 +291,4 @@ const SfaMonthlyStats = () => {
   );
 };
 
-export default SfaMonthlyStats;
+export default SfaQuarterlyOverview;

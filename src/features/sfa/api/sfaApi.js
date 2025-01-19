@@ -45,6 +45,7 @@ export const sfaApi = {
   getSfaDetail: async (id) => {
     try {
       const query = buildSfaDetailQuery(id);
+      console.log(`getSfaDetail query : ${query}`);
       const response = await apiClient.get(`/api/sfas?${query}`);
       return response.data;
     } catch (error) {

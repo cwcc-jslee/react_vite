@@ -37,7 +37,7 @@ const TableDataCell = ({ children, isProbability = false }) => (
   </td>
 );
 
-const SfaForecastTable = () => {
+const SfaAnnualOverview = () => {
   const [forecastData, setForecastData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -141,4 +141,4 @@ const SfaForecastTable = () => {
   );
 };
 
-export default SfaForecastTable;
+export default SfaAnnualOverview;

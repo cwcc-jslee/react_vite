@@ -341,3 +341,87 @@ export const Stack = ({
     </div>
   );
 };
+
+/**
+ * Description: 상세 정보를 보여주기 위한 컨테이너 컴포넌트
+ */
+export const Description = ({ children, className = '' }) => {
+  return (
+    <div className={`w-full border border-gray-200 rounded-md ${className}`}>
+      <div className="divide-y divide-gray-200">{children}</div>
+    </div>
+  );
+};
+
+/**
+ * DescriptionRow: Description 내부의 행을 나타내는 컴포넌트
+ * @param {Object} props
+ * @param {ReactNode} props.children - 자식 컴포넌트
+ * @param {boolean} [props.double] - 2칸 구조 여부 (기본: 4칸 구조)
+ * @param {boolean} [props.equalItems] - label이 아닌 항목들 균등 배분 여부
+ * @param {string} [props.className] - 추가 스타일 클래스
+ */
+export const DescriptionRow = ({
+  children,
+  double = false,
+  equalItems = false,
+  className = '',
+}) => {
+  const baseStyles = 'flex items-stretch';
+  const layoutStyles = double ? 'gap-2' : 'gap-2';
+
+  const modifiedChildren = React.Children.map(children, (child) => {
+    if (React.isValidElement(child)) {
+      // label이 아니고 width나 grow가 지정되지 않은 경우만 flex-1 적용
+      if (
+        equalItems &&
+        !child.props.label &&
+        !child.props.width &&
+        !child.props.grow
+      ) {
+        return React.cloneElement(child, {
+          className: `${child.props.className || ''} flex-1`.trim(),
+        });
+      }
+    }
+    return child;
+  });
+
+  return (
+    <div className={`${baseStyles} ${layoutStyles} ${className}`}>
+      {modifiedChildren}
+    </div>
+  );
+};
+
+/**
+ * DescriptionItem: Description 내부의 레이블 또는 값을 표시하는 컴포넌트
+ * @param {Object} props
+ * @param {ReactNode} props.children - 표시할 내용
+ * @param {boolean} [props.label] - 레이블 여부
+ * @param {string} [props.width] - 너비 클래스 (예: 'w-[120px]', 'w-1/4' 등)
+ * @param {boolean} [props.grow] - flex-grow 적용 여부
+ * @param {string} [props.className] - 추가 스타일 클래스
+ */
+export const DescriptionItem = ({
+  children,
+  label = false,
+  width,
+  grow = false,
+  className = '',
+}) => {
+  const baseStyles = 'px-4 py-3 text-sm';
+  const labelStyles = label
+    ? 'font-medium text-gray-500 bg-gray-50'
+    : 'text-gray-900';
+  const growStyles = grow ? 'flex-1' : '';
+  const widthStyles = width || (label ? 'w-[120px]' : 'min-w-[180px]');
+
+  return (
+    <div
+      className={`${baseStyles} ${labelStyles} ${growStyles} ${widthStyles} ${className}`}
+    >
+      {children}
+    </div>
+  );
+};

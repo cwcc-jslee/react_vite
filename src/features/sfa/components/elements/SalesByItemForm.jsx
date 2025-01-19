@@ -35,7 +35,7 @@ import {
  * @param {Object} props.itemsData - 매출품목 데이터
  * @param {boolean} props.isItemsLoading - 매출품목 로딩 상태
  */
-const SalesByItem = ({
+const SalesByItemForm = ({
   items = [],
   onChange,
   onRemove,
@@ -44,9 +44,6 @@ const SalesByItem = ({
   itemsData,
   isItemsLoading,
 }) => {
-  // Redux에서 코드북 데이터 조회
-  const productTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
-
   // React Query를 사용하여 팀 데이터와 매출품목 데이터 조회
   const { data: teamsData, isLoading: isTeamsLoading } = useSelectData(
     QUERY_KEYS.TEAMS,
@@ -65,16 +62,33 @@ const SalesByItem = ({
           <div className="grid grid-cols-[3fr,3fr,2fr,40px] gap-3 items-start">
             {/* 매출품목 선택 */}
             <Select
-              value={item.productType}
-              onChange={(e) => onChange(index, 'productType', e.target.value)}
+              // value={item.itemName}
+              value={item.itemId || ''}
+              // onChange={(e) => onChange(index, 'itemName', e.target.value)}
+              onChange={(e) => {
+                const selectedItemId = e.target.value;
+                const selectedItem = itemsData?.data?.find(
+                  (type) => type.id === parseInt(selectedItemId), // select의 value는 문자열로 전달되므로 숫자로 변환
+                );
+                console.log(`***** : ${selectedItem}`);
+                if (selectedItem) {
+                  // teamId와 teamName 모두 업데이트
+                  // onChange(index, 'teamId', selectedTeam.id);
+                  // onChange(index, 'teamName', selectedTeam.name);
+                  onChange(index, {
+                    itemId: selectedItem.id,
+                    itemName: selectedItem.name,
+                  });
+                }
+              }}
               disabled={isSubmitting}
               className={
-                hasFieldError(index, 'department') ? 'border-red-300' : ''
+                hasFieldError(index, 'itemName') ? 'border-red-300' : ''
               }
             >
               <option value="">매출품목 선택</option>
               {itemsData?.data?.map((type) => (
-                <option key={type.id} value={type.code}>
+                <option key={type.id} value={type.id}>
                   {type.name}
                 </option>
               ))}
@@ -82,16 +96,31 @@ const SalesByItem = ({
 
             {/* 사업부 선택 */}
             <Select
-              value={item.department}
-              onChange={(e) => onChange(index, 'department', e.target.value)}
+              value={item.teamId || ''} // teamId가 없을 경우 빈 문자열
+              onChange={(e) => {
+                const selectedTeamId = e.target.value;
+                const selectedTeam = teamsData?.data?.find(
+                  (team) => team.id === parseInt(selectedTeamId), // select의 value는 문자열로 전달되므로 숫자로 변환
+                );
+                console.log(`***** : ${selectedTeam}`);
+                if (selectedTeam) {
+                  // teamId와 teamName 모두 업데이트
+                  // onChange(index, 'teamId', selectedTeam.id);
+                  // onChange(index, 'teamName', selectedTeam.name);
+                  onChange(index, {
+                    teamId: selectedTeam.id,
+                    teamName: selectedTeam.name,
+                  });
+                }
+              }}
               disabled={isSubmitting}
               className={
-                hasFieldError(index, 'department') ? 'border-red-300' : ''
+                hasFieldError(index, 'teamName') ? 'border-red-300' : ''
               }
             >
               <option value="">사업부 선택</option>
               {teamsData?.data?.map((team) => (
-                <option key={team.id} value={team.code}>
+                <option key={team.id} value={team.id}>
                   {team.name}
                 </option>
               ))}
@@ -142,4 +171,4 @@ const SalesByItem = ({
   );
 };
 
-export default SalesByItem;
+export default SalesByItemForm;

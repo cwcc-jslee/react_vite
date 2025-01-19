@@ -1,7 +1,7 @@
 // src/features/sfa/components/SfaSearchForm/index.jsx
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useSfa } from '../../context/SfaContext';
+import { useSfa } from '../../../context/SfaContext';
 import dayjs from 'dayjs';
 
 const SearchFormContainer = styled.div`
