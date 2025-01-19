@@ -34,7 +34,10 @@ export const sfaSubmitService = {
    * @returns {Promise<Array>} 생성된 결제 매출 데이터 배열
    */
   async createSalesByPayments(sfaId, salesPayments) {
-    console.log('[SFA] Creating payments:', { sfaId, salesPayments });
+    console.log('[SFA] Creating payments with history:', {
+      sfaId,
+      salesPayments,
+    });
 
     try {
       // 각 payment 데이터를 변환하고 API 요청을 생성
@@ -45,9 +48,10 @@ export const sfaSubmitService = {
           sfa: sfaId, // SFA ID 연결
         };
 
-        console.log('[SFA] Sending payment data:', paymentData);
+        console.log('[SFA] Sending payment data with history:', paymentData);
+        // 새로운 엔드포인트 사용
         const response = await apiService.post(
-          '/api/sfa-by-payments',
+          '/api/sfa-by-payment-withhistory',
           paymentData,
         );
         return response.data;
@@ -55,13 +59,44 @@ export const sfaSubmitService = {
 
       // 모든 payment 요청을 병렬로 처리
       const results = await Promise.all(promises);
-      console.log('[SFA] All payments created:', results);
+      console.log('[SFA] All payments created with history:', results);
       return results;
     } catch (error) {
       console.error('[SFA] Payment creation error:', error);
       throw new Error(
         error.response?.data?.error?.message ||
           '결제 매출 데이터 저장 중 오류가 발생했습니다.',
+      );
+    }
+  },
+
+  /**
+   * SFA 결제 매출 정보 수정 (히스토리 포함)
+   * @param {string} paymentId - 수정할 결제 매출 ID
+   * @param {Object} paymentData - 수정할 결제 매출 데이터
+   * @returns {Promise<Object>} 수정된 결제 매출 데이터
+   */
+  async updateSalesByPayment(paymentId, paymentData) {
+    console.log('[SFA] Updating payment with history:', {
+      paymentId,
+      paymentData,
+    });
+
+    try {
+      const dbData = transformToDBFields.transformSalesByPayments(paymentData);
+
+      const response = await apiService.put(
+        `/api/sfa-by-payment-withhistory/${paymentId}`,
+        dbData,
+      );
+
+      console.log('[SFA] Payment updated with history:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('[SFA] Payment update error:', error);
+      throw new Error(
+        error.response?.data?.error?.message ||
+          '결제 매출 데이터 수정 중 오류가 발생했습니다.',
       );
     }
   },
