@@ -27,8 +27,7 @@ export const buildSfaListQuery = ({
     } else {
       defaultFilter.push({
         is_confirmed: { $eq: false },
-          probability: { $eq: probability },
-        
+        probability: { $eq: probability },
       });
     }
   }
@@ -57,7 +56,7 @@ export const buildSfaListQuery = ({
     ],
     populate: {
       sfa: {
-        fields: ['name', 'sfa_by_items', 'has_partner','is_project'],
+        fields: ['name', 'sfa_by_items', 'has_partner', 'is_project'],
         populate: {
           customer: {
             fields: ['name'],
@@ -92,7 +91,14 @@ export const buildSfaDetailQuery = (id) => {
       filters: {
         id: { $eq: id },
       },
-      fields: ['name', 'is_project', 'total_price', 'sfa_by_items', 'has_partner', 'description'],
+      fields: [
+        'name',
+        'is_project',
+        'total_price',
+        'sfa_by_items',
+        'has_partner',
+        'description',
+      ],
       populate: {
         customer: {
           fields: ['name'],
@@ -133,6 +139,7 @@ export const buildSfaDetailQuery = (id) => {
           },
           sort: ['id:asc'],
           fields: [
+            'billing_type',
             'is_confirmed',
             'probability',
             'amount',
@@ -145,14 +152,16 @@ export const buildSfaDetailQuery = (id) => {
           // populate: '*',
           populate: {
             sfa_by_payment_histories: {
-              fields: ['is_confirmed',
-              'probability',
-              'amount',
-              'profit_amount',
-              'recognition_date',
-              'scheduled_date',
-              'profit_config',
-              'memo',],
+              fields: [
+                'is_confirmed',
+                'probability',
+                'amount',
+                'profit_amount',
+                'recognition_date',
+                'scheduled_date',
+                'profit_config',
+                'memo',
+              ],
               sort: ['id:desc'],
             },
           },
@@ -189,7 +198,13 @@ export const buildSfaStatsQuery = (dateRanges, { pagination } = {}) => {
         },
       ],
     },
-    fields: ['is_confirmed', 'probability','amount', 'profit_amount', 'recognition_date'],
+    fields: [
+      'is_confirmed',
+      'probability',
+      'amount',
+      'profit_amount',
+      'recognition_date',
+    ],
     populate: {
       sfa_percentage: {
         fields: ['name'],

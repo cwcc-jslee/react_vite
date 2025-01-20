@@ -1,23 +1,18 @@
-// src/features/sfa/components/drawer/SfaDrawer.jsx
-import React from 'react';
-import { useSfa } from '../../context/SfaContext';
-import { Button } from '../../../../shared/components/ui';
-import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer';
-import SfaAddForm from '../forms/SfaAddForm';
-import SfaDetailTable from '../tables/SfaDetailTable';
-import SfaDetailPaymentTable from '../tables/SfaDetailPaymentTable';
-import { useSfaForm } from '../../hooks/useSfaForm';
+// src/features/sfa/containers/SfaDrawerContainer.jsx
+import BaseDrawer from '../../../shared/components/ui/drawer/BaseDrawer';
+import { useSfa } from '../context/SfaContext';
+import { Button } from '../../../shared/components/ui';
+// import SfaAddForm from '../components/forms/SfaAddForm';
+import SfaFormContainer from './SfaFormContainer';
+import SfaDetailTable from '../components/tables/SfaDetailTable';
+import SfaDetailPaymentTable from '../components/tables/SfaDetailPaymentTable';
+import SalesByPayment from '../components/elements/SalesByPaymentForm';
 
-/**
- * SFA Drawer 컴포넌트
- * Drawer UI와 상태 관리를 담당
- */
-const SfaDrawer = () => {
-  const { drawerState, setDrawer, setDrawerClose } = useSfa();
+const SfaDrawerContainer = () => {
+  const { drawerState, setDrawer, setDrawerClose, handleFormSubmit } = useSfa();
   const { visible, mode, detailMode, data } = drawerState;
-  const formProps = useSfaForm(); // Custom hook을 통한 form 관련 로직 분리
 
-  // Drawer 헤더 타이틀 설정
+  // Drawer related functions
   const getHeaderTitle = () => {
     if (mode === 'add') return '매출등록';
     if (mode === 'detail') {
@@ -33,7 +28,6 @@ const SfaDrawer = () => {
     return '';
   };
 
-  // 메뉴 버튼 렌더링
   const renderMenu = () => {
     if (mode !== 'detail') return null;
 
@@ -56,13 +50,12 @@ const SfaDrawer = () => {
     ));
   };
 
-  // Drawer 컨텐츠 렌더링
   const renderDrawerContent = () => {
     if (!visible) return null;
     if (mode === 'detail' && !data) return null;
 
-    if (mode === 'add' || mode === 'edit') {
-      return <SfaAddForm {...formProps} mode={mode} />;
+    if (mode === 'add') {
+      return <SfaFormContainer onSubmit={handleFormSubmit} />;
     }
 
     if (mode === 'detail' && detailMode === 'view') {
@@ -78,6 +71,7 @@ const SfaDrawer = () => {
               })
             }
           />
+          <h1>결제 매출</h1>
         </>
       );
     }
@@ -92,11 +86,11 @@ const SfaDrawer = () => {
       onClose={setDrawerClose}
       menu={renderMenu()}
       width="900px"
-      enableOverlayClick={false}
+      enableOverlayClick={false} // Overlay 클릭시 닫기 비활성화
     >
       {renderDrawerContent()}
     </BaseDrawer>
   );
 };
 
-export default SfaDrawer;
+export default SfaDrawerContainer;

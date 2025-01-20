@@ -73,7 +73,7 @@ const SfaDetail = ({ data }) => {
           {data.sfa_classification?.name || '-'}
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
-          매출품목/사업부
+          매출품목
         </DescriptionItem>
         <DescriptionItem>{itemsAndTeams}</DescriptionItem>
       </DescriptionRow>
@@ -81,15 +81,15 @@ const SfaDetail = ({ data }) => {
       {/* 5행: 매출, 매출이익 */}
       <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
-          매출
+          결제 매출/이익
         </DescriptionItem>
         <DescriptionItem>
-          {typeof data.sales_revenue === 'number'
-            ? data.sales_revenue.toLocaleString()
+          {typeof data.total_price === 'number'
+            ? data.total_price.toLocaleString()
             : '-'}
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
-          매출이익
+          사업부 매출
         </DescriptionItem>
         <DescriptionItem>
           {typeof data.sales_profit === 'number'

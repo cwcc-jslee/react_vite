@@ -1,9 +1,16 @@
 // src/features/sfa/components/forms/SfaAddForm/index.jsx
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { selectCodebookByType } from '../../../../codebook/store/codebookSlice';
 import { CustomerSearchInput } from '../../../../../shared/components/customer/CustomerSearchInput';
+import { useDrawerFormData } from '../../../hooks/useDrawerFormData';
 import { formatDisplayNumber } from '../../../../../shared/utils/format/number';
+import { notification } from '../../../../../shared/services/notification';
+import { submitSfaForm } from '../../../services/sfaSubmitService';
 import SalesByItem from '../../elements/SalesByItemForm';
 import SalesByPayment from '../../elements/SalesByPaymentForm';
+
+// 새로운 UI 컴포넌트 import
 import {
   Form,
   FormItem,
@@ -20,35 +27,107 @@ import {
   Modal,
 } from '../../../../../shared/components/ui';
 
-const SfaAddForm = ({
-  formData,
-  errors,
-  isSubmitting,
-  sfaSalesTypeData,
-  sfaClassificationData,
-  itemsData,
-  isItemsLoading,
-  paymentMethodData,
-  percentageData,
-  isPaymentDataLoading,
-  handleCustomerSelect,
-  handleChange,
-  handleAddSalesItem,
-  handleSalesItemChange,
-  handleRemoveSalesItem,
-  handleSalesPaymentChange,
-  handleAddSalesPayment,
-  handleRemoveSalesPayment,
-  processSubmit,
-  validateForm,
-  checkAmounts,
-}) => {
+/**
+ * SFA(영업활동) 매출 등록을 위한 Drawer Form 컴포넌트
+ * @param {Object} props
+ * @param {Function} props.onClose - Drawer를 닫는 함수
+ */
+const SfaAddForm = ({ onClose }) => {
+  // 파트너 및 프로젝트 상태 관리
   const [hasPartner, setHasPartner] = useState(false);
   const [isProject, setIsProject] = useState(false);
   const [showAmountConfirm, setShowAmountConfirm] = useState(false);
 
+  // Form 데이터 및 상태 관리 훅 사용
+  const {
+    formData,
+    errors,
+    isSubmitting,
+    setIsSubmitting,
+    setErrors,
+    handleChange,
+    handleCustomerSelect,
+    handleAddSalesItem,
+    handleSalesItemChange,
+    handleRemoveSalesItem,
+    handleSalesPaymentChange,
+    handleAddSalesPayment,
+    handleRemoveSalesPayment,
+    isItemsLoading,
+    itemsData,
+    // 결제매출 관련 데이터
+    paymentMethodData,
+    percentageData,
+    isPaymentDataLoading,
+    // 검증관련
+    validateForm,
+    validationErrors,
+  } = useDrawerFormData();
+
+  const sfaSalesTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
+  const sfaClassificationData = useSelector(
+    selectCodebookByType('sfa_classification'),
+  );
+
+  /**
+   * 금액이 일치하는지 확인하는 함수
+   */
+  const checkAmounts = () => {
+    const itemAmount = parseInt(formData.itemAmount) || 0;
+    const paymentAmount = parseInt(formData.paymentAmount) || 0;
+    return itemAmount === paymentAmount;
+  };
+
+  // 폼 제출 처리를 위한 별도 함수
+  const processSubmit = async () => {
+    // hasPartner와 isProject를 formData에 추가
+    const enrichedFormData = {
+      ...formData,
+      hasPartner,
+      isProject,
+    };
+
+    try {
+      setIsSubmitting(true);
+      const response = await submitSfaForm(enrichedFormData);
+
+      // 서버 응답 검증
+      if (!response || !response.success) {
+        throw new Error(response?.message || '저장에 실패했습니다.');
+      }
+
+      // 성공적으로 저장된 경우에만 실행
+      notification.success({
+        message: '저장 성공',
+        description: '성공적으로 저장되었습니다.',
+      });
+
+      if (onClose) onClose();
+    } catch (error) {
+      console.error('Form submission error:', error);
+
+      // 에러 메시지를 문자열로 확실하게 변환
+      const errorMessage = error?.message || '저장 중 오류가 발생했습니다.';
+
+      // 에러 상태 설정
+      setErrors((prev) => ({
+        ...prev,
+        submit: errorMessage,
+      }));
+
+      // 에러 메시지 표시
+      notification.error({
+        message: '저장 실패',
+        description: errorMessage,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     // 유효성 검사 수행
     const isValid = validateForm(hasPartner);
     if (!isValid) return;
@@ -57,7 +136,8 @@ const SfaAddForm = ({
     if (!checkAmounts()) {
       setShowAmountConfirm(true);
     } else {
-      await processSubmit(hasPartner, isProject);
+      // 금액이 일치하면 바로 제출
+      await processSubmit();
     }
   };
 
@@ -84,7 +164,6 @@ const SfaAddForm = ({
         method="POST"
         action="#"
       >
-        {/* <Form onSubmit={handleFormSubmit} className="space-y-6"> */}
         {/* Sales Type and Classification */}
         <Group direction="horizontal" className="gap-6">
           <FormItem className="flex-1">
@@ -340,7 +419,7 @@ const SfaAddForm = ({
               variant="primary"
               onClick={async () => {
                 setShowAmountConfirm(false);
-                await processSubmit(hasPartner, isProject);
+                await processSubmit();
               }}
             >
               예

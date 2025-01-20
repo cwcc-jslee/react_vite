@@ -1,7 +1,7 @@
 // src/features/sfa/pages/SfaPage.jsx
 import React from 'react';
 import { SfaProvider } from '../context/SfaContext';
-import SfaPageContent from './SfaPageContent';
+import SfaContainer from '../containers/SfaContainer';
 
 /**
  * Main SFA Page Component
@@ -10,7 +10,7 @@ import SfaPageContent from './SfaPageContent';
 const SfaPage = () => {
   return (
     <SfaProvider>
-      <SfaPageContent />
+      <SfaContainer />
     </SfaProvider>
   );
 };

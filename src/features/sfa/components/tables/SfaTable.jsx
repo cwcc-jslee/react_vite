@@ -1,4 +1,4 @@
-// src/features/sfa/components/SfaTable/index.jsx
+// src/features/sfa/components/table/SfaTable.jsx
 import React from 'react';
 import { useSfa } from '../../context/SfaContext';
 import { Button } from '../../../../shared/components/ui';
@@ -70,7 +70,7 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
   );
 };
 
-const SfaTableList = () => {
+const SfaTable = () => {
   const { sfaData, loading, error, pagination, setPage, setPageSize } =
     useSfa();
 
@@ -122,4 +122,4 @@ const SfaTableList = () => {
   );
 };
 
-export default SfaTableList;
+export default SfaTable;

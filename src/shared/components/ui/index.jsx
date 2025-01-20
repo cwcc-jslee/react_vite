@@ -425,3 +425,58 @@ export const DescriptionItem = ({
     </div>
   );
 };
+
+/**
+ * Table: 테이블 컴포넌트 그룹
+ */
+export const Table = ({ children, className = '' }) => {
+  return (
+    <div className={`w-full overflow-x-auto mt-5 ${className}`}>
+      <table className="w-full border-collapse border border-gray-200">
+        {children}
+      </table>
+    </div>
+  );
+};
+
+Table.Head = ({ children, className = '' }) => (
+  <thead className={className}>{children}</thead>
+);
+
+Table.Body = ({ children, className = '' }) => (
+  <tbody className={`divide-y divide-gray-200 ${className}`}>{children}</tbody>
+);
+
+Table.Row = ({ children, className = '' }) => (
+  <tr className={className}>{children}</tr>
+);
+
+Table.Th = ({ children, className = '' }) => (
+  <th
+    className={`px-4 py-3 text-xs font-semibold text-gray-700 bg-gray-50 border border-gray-200 ${className}`}
+  >
+    {children}
+  </th>
+);
+
+Table.Td = ({ children, align = 'left', className = '' }) => {
+  const alignClass = {
+    left: 'text-left',
+    center: 'text-center',
+    right: 'text-right',
+  }[align];
+
+  return (
+    <td
+      className={`px-4 py-3 text-sm border border-gray-200 ${alignClass} ${className}`}
+    >
+      {children}
+    </td>
+  );
+};
+
+Table.Title = ({ children, className = '' }) => (
+  <h3 className={`text-base font-semibold text-gray-900 mb-3 ${className}`}>
+    {children}
+  </h3>
+);
