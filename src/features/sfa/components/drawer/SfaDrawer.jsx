@@ -1,5 +1,7 @@
 // src/features/sfa/components/drawer/SfaDrawer.jsx
 import React from 'react';
+import { useSelector } from 'react-redux';
+import { selectCodebookByType } from '../../../codebook/store/codebookSlice';
 import { useSfa } from '../../context/SfaContext';
 import { Button } from '../../../../shared/components/ui';
 import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer';
@@ -7,15 +9,30 @@ import SfaAddForm from '../forms/SfaAddForm';
 import SfaDetailTable from '../tables/SfaDetailTable';
 import SfaDetailPaymentTable from '../tables/SfaDetailPaymentTable';
 import { useSfaForm } from '../../hooks/useSfaForm';
+import SfaEditForm from '../forms/SfaEditForm';
 
 /**
  * SFA Drawer 컴포넌트
  * Drawer UI와 상태 관리를 담당
  */
 const SfaDrawer = () => {
+  // Codebook 데이터 조회
+  const sfaSalesTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
+  const sfaClassificationData = useSelector(
+    selectCodebookByType('sfa_classification'),
+  );
+  // Form Props 생성
+  const formProps = useSfaForm(); // Custom hook을 통한 form 관련 로직 분리
+
+  // Props 객체 구성
+  const addFormProps = {
+    ...formProps,
+    sfaSalesTypeData,
+    sfaClassificationData,
+  };
+
   const { drawerState, setDrawer, setDrawerClose } = useSfa();
   const { visible, mode, detailMode, data } = drawerState;
-  const formProps = useSfaForm(); // Custom hook을 통한 form 관련 로직 분리
 
   // Drawer 헤더 타이틀 설정
   const getHeaderTitle = () => {
@@ -62,7 +79,7 @@ const SfaDrawer = () => {
     if (mode === 'detail' && !data) return null;
 
     if (mode === 'add' || mode === 'edit') {
-      return <SfaAddForm {...formProps} mode={mode} />;
+      return <SfaAddForm {...addFormProps} mode={mode} />;
     }
 
     if (mode === 'detail' && detailMode === 'view') {
@@ -78,6 +95,21 @@ const SfaDrawer = () => {
               })
             }
           />
+        </>
+      );
+    }
+    if (mode === 'detail' && detailMode === 'edit') {
+      return (
+        <>
+          <SfaDetailTable data={data} />
+          <SfaEditForm data={data} {...addFormProps} />
+        </>
+      );
+    }
+    if (mode === 'detail' && detailMode === 'sales-add') {
+      return (
+        <>
+          <SfaDetailTable data={data} />
         </>
       );
     }

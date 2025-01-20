@@ -15,12 +15,6 @@ export const useSfaForm = () => {
   const formState = useDrawerFormData();
   const { formData, setIsSubmitting, setErrors, validateForm } = formState;
 
-  // Codebook 데이터 조회
-  const sfaSalesTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
-  const sfaClassificationData = useSelector(
-    selectCodebookByType('sfa_classification'),
-  );
-
   // 금액 일치 확인
   const checkAmounts = () => {
     const itemAmount = parseInt(formData.itemAmount) || 0;
@@ -70,8 +64,6 @@ export const useSfaForm = () => {
 
   return {
     ...formState,
-    sfaSalesTypeData,
-    sfaClassificationData,
     checkAmounts,
     processSubmit,
   };
