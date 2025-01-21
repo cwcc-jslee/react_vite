@@ -34,8 +34,10 @@ export const SfaProvider = ({ children }) => {
   // drawer 상태
   const [drawerState, setDrawerState] = useState({
     visible: false,
-    mode: null, // 'add' | 'detail'
-    detailMode: null, // 'edit' | 'sales-view' | 'sales-edit' | 'sales-add'
+    // mode: null, // 'add' | 'detail'
+    // detailMode: null, // 'edit' | 'sales-view' | 'sales-edit' | 'sales-add'
+    codtrolMode: null,
+    featureMode: null,
     data: null,
   });
 
@@ -128,8 +130,7 @@ export const SfaProvider = ({ children }) => {
       const response = await sfaApi.getSfaDetail(id);
       setDrawerState({
         visible: true,
-        mode: 'detail',
-        detailMode: 'view',
+        controlMode: 'view',
         data: response.data[0],
       });
     } catch (error) {

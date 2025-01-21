@@ -36,7 +36,9 @@ const SfaSubMenu = () => {
 
   return (
     <MenuContainer>
-      <MenuButton onClick={() => setDrawer({ visible: true, mode: 'add' })}>
+      <MenuButton
+        onClick={() => setDrawer({ visible: true, controlMode: 'add' })}
+      >
         매출등록
       </MenuButton>
       <MenuButton onClick={() => setLayout('search')}>상세조회</MenuButton>

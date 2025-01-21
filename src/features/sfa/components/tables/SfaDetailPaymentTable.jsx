@@ -2,7 +2,34 @@
 import React from 'react';
 import { Table, Button } from '../../../../shared/components/ui/index';
 
-const SfaDetailPaymentTable = ({ data }) => {
+/**
+ * SFA 매출 상세 내역 테이블 컴포넌트
+ * @param {Object} props
+ * @param {Array} props.data - 매출 내역 데이터
+ * @param {Function} props.onEdit - 수정 버튼 클릭 핸들러
+ * @param {string} props.detailMode - 상세 보기 모드 ('view' | 'edit')
+ */
+const SfaDetailPaymentTable = ({ data, onEdit, detailMode = 'view' }) => {
+  const renderLastColumn = () => {
+    return detailMode === 'view' ? (
+      <Table.Th>Memo</Table.Th>
+    ) : (
+      <Table.Th>Action</Table.Th>
+    );
+  };
+
+  const renderLastCell = (item) => {
+    return detailMode === 'view' ? (
+      <Table.Td>{item.memo || '-'}</Table.Td>
+    ) : (
+      <Table.Td align="center">
+        <Button size="sm" variant="outline" onClick={() => onEdit?.(item)}>
+          수정
+        </Button>
+      </Table.Td>
+    );
+  };
+
   if (!Array.isArray(data) || data.length === 0) {
     return (
       <div>
@@ -16,7 +43,7 @@ const SfaDetailPaymentTable = ({ data }) => {
               <Table.Th>매출액</Table.Th>
               <Table.Th>매출이익</Table.Th>
               <Table.Th>매출인식일</Table.Th>
-              <Table.Th>Action</Table.Th>
+              {renderLastColumn()}
             </Table.Row>
           </Table.Head>
           <Table.Body>
@@ -43,7 +70,7 @@ const SfaDetailPaymentTable = ({ data }) => {
             <Table.Th>매출액</Table.Th>
             <Table.Th>매출이익</Table.Th>
             <Table.Th>매출인식일</Table.Th>
-            <Table.Th>Action</Table.Th>
+            {renderLastColumn()}
           </Table.Row>
         </Table.Head>
         <Table.Body>
@@ -65,15 +92,7 @@ const SfaDetailPaymentTable = ({ data }) => {
                   : '-'}
               </Table.Td>
               <Table.Td align="center">{item.recognition_date || '-'}</Table.Td>
-              <Table.Td align="center">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  // onClick={() => onEdit?.(item)}
-                >
-                  수정
-                </Button>
-              </Table.Td>
+              {renderLastCell(item)}
             </Table.Row>
           ))}
         </Table.Body>

@@ -33,20 +33,17 @@ const SfaDrawer = () => {
   };
 
   const { drawerState, setDrawer, setDrawerClose } = useSfa();
-  const { visible, mode, detailMode, data } = drawerState;
+  const { visible, controlMode, detailMode, data } = drawerState;
 
   // Drawer 헤더 타이틀 설정
   const getHeaderTitle = () => {
-    if (mode === 'add') return '매출등록';
-    if (mode === 'detail') {
+    if (controlMode) {
       const titles = {
+        add: '매출등록',
         view: 'SFA 상세정보',
         edit: 'SFA 수정',
-        'sales-view': '매출정보 상세 보기',
-        'sales-edit': '매출정보 수정',
-        'sales-add': '매출정보 추가',
       };
-      return titles[detailMode] || '';
+      return titles[controlMode] || '';
     }
     return '';
   };
@@ -63,21 +60,82 @@ const SfaDrawer = () => {
     }
   };
 
+  // Control 메뉴 렌더링 (View/Edit)
+  const renderControlMenu = () => {
+    if (controlMode === 'add') return null;
+
+    const controlItems = [
+      { mode: 'view', label: 'View' },
+      { mode: 'edit', label: 'Edit' },
+    ];
+
+    return (
+      <div className="flex gap-2">
+        {controlItems.map(({ mode: btnMode, label }) => (
+          <Button
+            key={btnMode}
+            variant={controlMode === btnMode ? 'primary' : 'outline'}
+            onClick={() => setDrawer({ controlMode: btnMode })}
+            size="sm"
+            className="mx-1"
+          >
+            {label}
+          </Button>
+        ))}
+      </div>
+    );
+  };
+
+  // Feature 메뉴 렌더링 (매출추가, 항목수정)
+  const renderFeatureMenu = () => {
+    if (controlMode !== 'edit') return null;
+
+    const featureItems = [
+      { mode: 'addPayment', label: '매출추가' },
+      { mode: 'editItem', label: '항목수정' },
+    ];
+
+    return (
+      <div className="flex gap-2 mt-2">
+        {featureItems.map(({ mode: btnMode, label }) => (
+          <Button
+            key={btnMode}
+            variant={featureMode === btnMode ? 'primary' : 'outline'}
+            onClick={() => setDrawer({ featureMode: btnMode })}
+            size="sm"
+            className="mx-1"
+          >
+            {label}
+          </Button>
+        ))}
+      </div>
+    );
+  };
+
   // 메뉴 버튼 렌더링
   const renderMenu = () => {
     if (mode !== 'detail') return null;
 
-    const menuItems = [
-      { mode: 'view', label: 'View' },
-      { mode: 'edit', label: 'Edit' },
-      { mode: 'sales-add', label: '매출추가' },
-    ];
+    let menuItems = [];
+
+    if (detailMode === 'view') {
+      menuItems = [
+        { mode: 'view', label: 'View' },
+        { mode: 'edit', label: 'Edit' },
+      ];
+    } else if (detailMode === 'edit') {
+      menuItems = [
+        { mode: 'view', label: 'View' },
+        { mode: 'edit', label: 'Edit' },
+        { mode: 'addPayment', label: '매출추가' },
+      ];
+    }
 
     return menuItems.map(({ mode: btnMode, label }) => (
       <Button
         key={btnMode}
         variant={detailMode === btnMode ? 'primary' : 'outline'}
-        onClick={() => setDrawer({ detailMode: btnMode })}
+        onClick={() => setDrawer({ mode: btnMode })}
         size="sm"
         className="mx-1"
       >
@@ -89,18 +147,19 @@ const SfaDrawer = () => {
   // Drawer 컨텐츠 렌더링
   const renderDrawerContent = () => {
     if (!visible) return null;
-    if (mode === 'detail' && !data) return null;
+    if (controlMode === 'view' && !data) return null;
 
-    if (mode === 'add' || mode === 'edit') {
-      return <SfaAddForm {...addFormProps} mode={mode} />;
+    if (controlMode === 'add') {
+      return <SfaAddForm {...addFormProps} />;
     }
 
-    if (mode === 'detail' && detailMode === 'view') {
+    if (controlMode === 'view') {
       return (
         <>
           <SfaDetailTable data={data} />
           <SfaDetailPaymentTable
             data={data.sfa_by_payments || []}
+            detailMode="view"
             onEdit={(item) =>
               setDrawer({
                 detailMode: 'sales-edit',
@@ -111,7 +170,7 @@ const SfaDrawer = () => {
         </>
       );
     }
-    if (mode === 'detail' && detailMode === 'edit') {
+    if (controlMode === 'edit') {
       return (
         <>
           <h1>기본정보수정</h1>
@@ -123,6 +182,7 @@ const SfaDrawer = () => {
 
           <SfaDetailPaymentTable
             data={data.sfa_by_payments || []}
+            detailMode="edit"
             onEdit={(item) =>
               setDrawer({
                 detailMode: 'sales-edit',
@@ -133,7 +193,7 @@ const SfaDrawer = () => {
         </>
       );
     }
-    if (mode === 'detail' && detailMode === 'sales-add') {
+    if (controlMode === 'detail' && detailMode === 'sales-add') {
       return (
         <>
           <SfaDetailTable data={data} />
@@ -149,7 +209,7 @@ const SfaDrawer = () => {
       visible={visible}
       title={getHeaderTitle()}
       onClose={setDrawerClose}
-      menu={renderMenu()}
+      menu={renderControlMenu()}
       width="900px"
       enableOverlayClick={false}
     >
