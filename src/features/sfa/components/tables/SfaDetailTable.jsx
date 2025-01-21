@@ -31,13 +31,9 @@ const SfaDetail = ({ data }) => {
       {/* 기본 4칸 구조 - 너비 지정 */}
       <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
-          매출유형
+          건명
         </DescriptionItem>
-        <DescriptionItem>{data.sfa_sales_type?.name || '-'}</DescriptionItem>
-        <DescriptionItem label width="w-[140px]">
-          지원프로그램
-        </DescriptionItem>
-        <DescriptionItem grow>{data.proposal?.name || '-'}</DescriptionItem>
+        <DescriptionItem>{data.name || '-'}</DescriptionItem>
       </DescriptionRow>
 
       {/* 2행: 고객사/매출처, 매출확정여부 */}
@@ -47,24 +43,12 @@ const SfaDetail = ({ data }) => {
         </DescriptionItem>
         <DescriptionItem>{data.customer?.name || '-'}</DescriptionItem>
         <DescriptionItem label width="w-[140px]">
-          매출확정여부
+          매출유형
         </DescriptionItem>
-        <DescriptionItem>{data.confirmed ? 'YES' : 'NO'}</DescriptionItem>
+        <DescriptionItem>{data.sfa_sales_type?.name || '-'}</DescriptionItem>
       </DescriptionRow>
 
-      {/* 3행: 건명, 프로젝트여부 */}
-      <DescriptionRow equalItems>
-        <DescriptionItem label width="w-[140px]">
-          건명
-        </DescriptionItem>
-        <DescriptionItem>{data.name || '-'}</DescriptionItem>
-        <DescriptionItem label width="w-[140px]">
-          프로젝트여부
-        </DescriptionItem>
-        <DescriptionItem>{data.isProject ? 'YES' : 'NO'}</DescriptionItem>
-      </DescriptionRow>
-
-      {/* 4행: 매출구분, 매출품목/사업부 */}
+      {/* 3행: 매출구분, 매출품목/사업부 */}
       <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
           매출구분
@@ -73,12 +57,12 @@ const SfaDetail = ({ data }) => {
           {data.sfa_classification?.name || '-'}
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
-          매출품목
+          프로젝트여부
         </DescriptionItem>
-        <DescriptionItem>{itemsAndTeams}</DescriptionItem>
+        <DescriptionItem>{data.isProject ? 'YES' : 'NO'}</DescriptionItem>
       </DescriptionRow>
 
-      {/* 5행: 매출, 매출이익 */}
+      {/* 4행: 매출, 매출이익 */}
       <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
           결제 매출/이익
@@ -96,6 +80,26 @@ const SfaDetail = ({ data }) => {
             ? data.sales_profit.toLocaleString()
             : '-'}
         </DescriptionItem>
+      </DescriptionRow>
+
+      {/* 5행: 건명, 프로젝트여부 */}
+      <DescriptionRow equalItems>
+        <DescriptionItem label width="w-[140px]">
+          매출확정여부
+        </DescriptionItem>
+        <DescriptionItem>{data.confirmed ? 'YES' : 'NO'}</DescriptionItem>
+        <DescriptionItem label width="w-[140px]">
+          지원프로그램
+        </DescriptionItem>
+        <DescriptionItem grow>{data.proposal?.name || '-'}</DescriptionItem>
+      </DescriptionRow>
+
+      {/* 6행: 비고 */}
+      <DescriptionRow>
+        <DescriptionItem label width="w-[140px]">
+          매출품목
+        </DescriptionItem>
+        <DescriptionItem>{itemsAndTeams}</DescriptionItem>
       </DescriptionRow>
 
       {/* 6행: 비고 */}

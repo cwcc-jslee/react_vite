@@ -10,6 +10,7 @@ import SfaDetailTable from '../tables/SfaDetailTable';
 import SfaDetailPaymentTable from '../tables/SfaDetailPaymentTable';
 import { useSfaForm } from '../../hooks/useSfaForm';
 import SfaEditForm from '../forms/SfaEditForm';
+import EditableSfaDetail from '../tables/EditableSfaDetail';
 
 /**
  * SFA Drawer 컴포넌트
@@ -48,6 +49,18 @@ const SfaDrawer = () => {
       return titles[detailMode] || '';
     }
     return '';
+  };
+
+  // 필드 업데이트 핸들러 / sfa 상세보기 'eidt ' 모드
+  const handleFieldUpdate = async (fieldName, value) => {
+    try {
+      await updateSfaDetail({
+        id: data.id,
+        [fieldName]: value,
+      });
+    } catch (error) {
+      console.error('Failed to update field:', error);
+    }
   };
 
   // 메뉴 버튼 렌더링
@@ -101,8 +114,22 @@ const SfaDrawer = () => {
     if (mode === 'detail' && detailMode === 'edit') {
       return (
         <>
-          <SfaDetailTable data={data} />
-          <SfaEditForm data={data} {...addFormProps} />
+          <h1>기본정보수정</h1>
+          <EditableSfaDetail
+            data={data}
+            sfaSalesTypeData={sfaSalesTypeData}
+            onUpdate={handleFieldUpdate}
+          />
+
+          <SfaDetailPaymentTable
+            data={data.sfa_by_payments || []}
+            onEdit={(item) =>
+              setDrawer({
+                detailMode: 'sales-edit',
+                editData: item,
+              })
+            }
+          />
         </>
       );
     }
