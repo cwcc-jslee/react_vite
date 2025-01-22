@@ -9,7 +9,7 @@ import React, { useEffect } from 'react';
  * @param {string} props.title - Drawer 제목
  * @param {string} props.width - Drawer 너비 (default: '400px')
  * @param {Function} props.onClose - Drawer 닫기 콜백 함수
- * @param {React.ReactNode} props.menu - 상단 메뉴 영역 컴포넌트
+ * @param {React.ReactNode} props.controlMenu - 상단 메뉴 영역 컴포넌트
  * @param {React.ReactNode} props.children - Drawer 내부 컨텐츠
  * @param {boolean} props.enableOverlayClick - Overlay 클릭시 닫기 여부 (default: false)
  * @returns {React.ReactElement|null}
@@ -19,7 +19,8 @@ const BaseDrawer = ({
   title = '',
   width = '900px',
   onClose,
-  menu,
+  controlMenu,
+  featureMenu,
   children,
   enableOverlayClick = false,
 }) => {
@@ -112,10 +113,15 @@ const BaseDrawer = ({
           </div>
 
           {/* Menu */}
-          {menu && (
-            <div className="flex items-center gap-2 px-6 py-2 border-b border-gray-200 bg-gray-50">
-              {menu}
-            </div>
+          {controlMenu && (
+            <>
+              <div className="flex items-center gap-2 px-6 py-2 border-b border-gray-200 bg-gray-50">
+                {controlMenu}
+              </div>
+              <div className="flex items-center gap-2 px-6 py-2 border-b border-gray-200 bg-gray-50">
+                {featureMenu}
+              </div>
+            </>
           )}
 
           {/* Content */}

@@ -131,6 +131,7 @@ export const SfaProvider = ({ children }) => {
       setDrawerState({
         visible: true,
         controlMode: 'view',
+        featureMode: null,
         data: response.data[0],
       });
     } catch (error) {

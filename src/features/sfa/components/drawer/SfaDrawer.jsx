@@ -33,7 +33,7 @@ const SfaDrawer = () => {
   };
 
   const { drawerState, setDrawer, setDrawerClose } = useSfa();
-  const { visible, controlMode, detailMode, data } = drawerState;
+  const { visible, controlMode, featureMode, detailMode, data } = drawerState;
 
   // Drawer 헤더 타이틀 설정
   const getHeaderTitle = () => {
@@ -209,7 +209,8 @@ const SfaDrawer = () => {
       visible={visible}
       title={getHeaderTitle()}
       onClose={setDrawerClose}
-      menu={renderControlMenu()}
+      controlMenu={renderControlMenu()}
+      featureMenu={renderFeatureMenu()}
       width="900px"
       enableOverlayClick={false}
     >
