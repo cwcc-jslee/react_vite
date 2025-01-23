@@ -11,6 +11,8 @@ import SfaDetailPaymentTable from '../tables/SfaDetailPaymentTable';
 import { useSfaForm } from '../../hooks/useSfaForm';
 import SfaEditForm from '../forms/SfaEditForm';
 import EditableSfaDetail from '../tables/EditableSfaDetail';
+import SalesByPayment from '../elements/SalesByPayment.jsx';
+import SfaAddPaymentForm from '../forms/SfaAddPaymentForm.jsx';
 
 /**
  * SFA Drawer 컴포넌트
@@ -34,6 +36,16 @@ const SfaDrawer = () => {
 
   const { drawerState, setDrawer, setDrawerClose } = useSfa();
   const { visible, controlMode, featureMode, detailMode, data } = drawerState;
+  // edit > 결제 매출 등록 메뉴..
+  // const {
+  //   formData,
+  //   handleSalesPaymentChange,
+  //   handleRemoveSalesPayment,
+  //   isSubmitting,
+  //   paymentMethodData,
+  //   percentageData,
+  //   isPaymentDataLoading,
+  // } = formProps;
 
   // Drawer 헤더 타이틀 설정
   const getHeaderTitle = () => {
@@ -90,25 +102,40 @@ const SfaDrawer = () => {
   const renderFeatureMenu = () => {
     if (controlMode !== 'edit') return null;
 
-    const featureItems = [
-      { mode: 'addPayment', label: '매출추가' },
-      { mode: 'editItem', label: '항목수정' },
-    ];
+    // const featureItems = [
+    //   { mode: 'addPayment', label: '매출추가' },
+    //   { mode: 'editItem', label: '항목수정' },
+    // ];
 
+    // return (
+    //   <div className="flex gap-2 mt-2">
+    //     {featureItems.map(({ mode: btnMode, label }) => (
+    //       <Button
+    //         key={btnMode}
+    //         variant={featureMode === btnMode ? 'primary' : 'outline'}
+    //         onClick={() => setDrawer({ featureMode: btnMode })}
+    //         size="sm"
+    //         className="mx-1"
+    //       >
+    //         {label}
+    //       </Button>
+    //     ))}
+    //   </div>
+    // );
     return (
-      <div className="flex gap-2 mt-2">
-        {featureItems.map(({ mode: btnMode, label }) => (
-          <Button
-            key={btnMode}
-            variant={featureMode === btnMode ? 'primary' : 'outline'}
-            onClick={() => setDrawer({ featureMode: btnMode })}
-            size="sm"
-            className="mx-1"
-          >
-            {label}
-          </Button>
-        ))}
-      </div>
+      <Button
+        type="button"
+        variant="primary"
+        onClick={addFormProps.handleAddSalesPayment}
+        // disabled={isSubmitting || formData.salesByPayments.length >= 3}
+        // className={`w-full ${
+        //   formData.salesByPayments.length >= 3
+        //     ? 'bg-gray-200 hover:bg-gray-200 text-gray-500 border-gray-200'
+        //     : ''
+        // }`}
+      >
+        결제매출등록
+      </Button>
     );
   };
 
@@ -180,6 +207,22 @@ const SfaDrawer = () => {
             onUpdate={handleFieldUpdate}
           />
 
+          {/* 결제 매출 등록 버튼 */}
+          {renderFeatureMenu()}
+
+          {/* 결제 매출 Form */}
+          <SfaAddPaymentForm {...formProps} />
+          {/* <SalesByPayment
+            payments={formData.salesByPayments}
+            onChange={handleSalesPaymentChange}
+            // onAdd={handleAddSalesPayment}
+            onRemove={handleRemoveSalesPayment}
+            isSubmitting={isSubmitting}
+            paymentMethodData={paymentMethodData}
+            percentageData={percentageData}
+            isPaymentDataLoading={isPaymentDataLoading}
+          /> */}
+
           <SfaDetailPaymentTable
             data={data.sfa_by_payments || []}
             detailMode="edit"
@@ -210,7 +253,7 @@ const SfaDrawer = () => {
       title={getHeaderTitle()}
       onClose={setDrawerClose}
       controlMenu={renderControlMenu()}
-      featureMenu={renderFeatureMenu()}
+      // featureMenu={renderFeatureMenu()}
       width="900px"
       enableOverlayClick={false}
     >

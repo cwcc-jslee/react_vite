@@ -312,6 +312,7 @@ export const useDrawerFormData = () => {
     }));
   };
 
+  // hooks/useFormValidation 으로 이동 예정
   /**
    * 폼 전체 검증 함수
    * @param {boolean} hasPartner - 매출파트너 포함 여부 체크박스 상태

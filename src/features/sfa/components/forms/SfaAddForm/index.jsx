@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import { CustomerSearchInput } from '../../../../../shared/components/customer/CustomerSearchInput';
 import { formatDisplayNumber } from '../../../../../shared/utils/format/number';
-import SalesByItem from '../../elements/SalesByItemForm';
-import SalesByPayment from '../../elements/SalesByPaymentForm';
+import SalesByItem from '../../elements/SalesByItem.jsx';
+import SalesByPayment from '../../elements/SalesByPayment.jsx';
 import {
   Form,
   FormItem,

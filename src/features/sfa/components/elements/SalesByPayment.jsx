@@ -19,7 +19,7 @@ const SalesByPayment = ({
   onRemove,
   isSubmitting,
   errors,
-  paymentMethodData,
+  // paymentMethodData,
   percentageData,
   isPaymentDataLoading,
 }) => {
@@ -118,11 +118,11 @@ const SalesByPayment = ({
               required
             >
               <option value="">결제구분 선택</option>
-              {paymentMethodData?.data?.map((method) => (
+              {/* {paymentMethodData?.data?.map((method) => (
                 <option key={method.id} value={method.code}>
                   {method.name}
                 </option>
-              ))}
+              ))} */}
             </Select>
 
             <label className="flex items-center gap-1">
