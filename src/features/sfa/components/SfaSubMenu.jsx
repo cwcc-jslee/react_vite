@@ -1,7 +1,8 @@
 // src/features/sfa/components/SfaSubMenu/index.jsx
 import React from 'react';
 import styled from 'styled-components';
-import { useSfa } from '../context/SfaContext';
+import { useSfa } from '../context/SfaProvider';
+// import { useLayout } from '../context/LayoutProvider';
 
 const MenuContainer = styled.div`
   display: flex;
@@ -27,7 +28,7 @@ const MenuButton = styled.button`
 `;
 
 const SfaSubMenu = () => {
-  const { setLayout, setDrawer } = useSfa();
+  const { setLayout, setDrawer, resetFilters } = useSfa();
 
   // const handleModeChange = (newMode) => {
   //   console.log('Clicking menu button:', newMode); // 디버깅을 위한 로그 추가
@@ -43,7 +44,14 @@ const SfaSubMenu = () => {
       </MenuButton>
       <MenuButton onClick={() => setLayout('search')}>상세조회</MenuButton>
       <MenuButton onClick={() => setLayout('forecast')}>매출예측</MenuButton>
-      <MenuButton onClick={() => setLayout('default')}>초기화</MenuButton>
+      <MenuButton
+        onClick={() => {
+          resetFilters();
+          setLayout('default');
+        }}
+      >
+        초기화
+      </MenuButton>
     </MenuContainer>
   );
 };

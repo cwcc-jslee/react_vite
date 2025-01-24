@@ -1,7 +1,8 @@
 // src/features/sfa/components/SfaMonthlyStats/index.jsx
 import React, { useEffect, useState } from 'react';
 import { sfaApi } from '../../api/sfaApi';
-import { useSfa } from '../../context/SfaContext';
+import { useSfa } from '../../context/SfaProvider';
+import { useSfaTable } from '../../hooks/useSfaTable';
 import { StateDisplay } from '../../../../shared/components/ui/state/StateDisplay';
 import dayjs from 'dayjs';
 
@@ -44,7 +45,8 @@ const SfaQuarterlyOverview = () => {
     probability: null,
   });
 
-  const { updateFilter } = useSfa();
+  // const { updateFilter } = useSfaTable();
+  const { updateMonthlyFilter } = useSfa();
 
   // 월 계산 함수
   const calculateMonths = () => {
@@ -90,7 +92,7 @@ const SfaQuarterlyOverview = () => {
       return;
     }
     setLastClick({ yearMonth, probability });
-    updateFilter(yearMonth, probability);
+    updateMonthlyFilter(yearMonth, probability);
   };
 
   // 헤더 클릭 이벤트 핸들러
@@ -100,7 +102,7 @@ const SfaQuarterlyOverview = () => {
       return;
     }
     setLastClick({ yearMonth, probability: null });
-    updateFilter(yearMonth, null);
+    updateMonthlyFilter(yearMonth, null);
   };
 
   useEffect(() => {

@@ -1,6 +1,8 @@
 // src/features/sfa/pages/SfaPage.jsx
 import React from 'react';
-import { SfaProvider } from '../context/SfaContext';
+// import { SfaProvider } from '../context/SfaContext';
+// import { LayoutProvider } from '../context/LayoutProvider';
+import { SfaProvider } from '../context/SfaProvider';
 import SfaContainer from '../containers/SfaContainer';
 
 /**
@@ -9,9 +11,14 @@ import SfaContainer from '../containers/SfaContainer';
  */
 const SfaPage = () => {
   return (
+    // <SfaProvider>
+    //   <SfaContainer />
+    // </SfaProvider>
+    // <LayoutProvider>
     <SfaProvider>
       <SfaContainer />
     </SfaProvider>
+    // </LayoutProvider>
   );
 };
 

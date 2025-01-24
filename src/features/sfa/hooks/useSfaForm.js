@@ -5,7 +5,7 @@ import { selectCodebookByType } from '../../codebook/store/codebookSlice';
 import { useDrawerFormData } from './useDrawerFormData';
 import { submitSfaForm } from '../services/sfaSubmitService';
 import { notification } from '../../../shared/services/notification';
-import { useSfa } from '../context/SfaContext';
+import { useSfa } from '../context/SfaProvider';
 
 /**
  * SFA Form 관련 로직을 관리하는 Custom Hook

@@ -431,19 +431,19 @@ export const useDrawerFormData = () => {
   };
 
   return {
-    formData,
-    errors,
+    formData, //useFormData
+    errors, //useFormData
     isSubmitting,
     setIsSubmitting,
-    setErrors,
-    handleChange,
-    handleCustomerSelect,
+    setErrors, //useFormData
+    handleChange, //useFormData
+    handleCustomerSelect, //useFormData
     handleSalesItemChange,
-    handleAddSalesItem,
-    handleRemoveSalesItem,
+    handleAddSalesItem, //useFormActions
+    handleRemoveSalesItem, //useFormActions
     handleSalesPaymentChange,
-    handleAddSalesPayment,
-    handleRemoveSalesPayment,
+    handleAddSalesPayment, //useFormActions
+    handleRemoveSalesPayment, //useFormActions
     isItemsLoading,
     itemsData,
     paymentMethodData,

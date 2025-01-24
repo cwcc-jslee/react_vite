@@ -8,40 +8,43 @@ import {
 } from './queries';
 
 export const sfaApi = {
-  // 리스트 조회
-  getSfaList: async ({
-    start = 0,
-    limit = 20,
-    dateRange,
-    probability = null,
-  }) => {
+  /**
+   * SFA 목록 조회
+   * @param {Object} params - 조회 파라미터
+   * @returns {Promise} API 응답
+   */
+  getSfaList: async (params) => {
     try {
-      // 날짜 범위가 없으면 현재 월을 기본값으로 사용
       const defaultDateRange = {
         startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
         endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
       };
 
-      const actualDateRange = dateRange || defaultDateRange;
-      console.log('Date Range:', actualDateRange);
+      const queryParams = {
+        pagination: params.pagination,
+        filters: params.filters,
+        dateRange: params.dateRange || defaultDateRange,
+        probability: params.probability,
+      };
 
-      // 쿼리 빌드 시 probability 필터 추가
-      const query = buildSfaListQuery({
-        start,
-        limit,
-        dateRange: actualDateRange,
-        probability,
-      });
-
+      const query = buildSfaListQuery(queryParams);
       const response = await apiClient.get(`/api/sfa-by-payments?${query}`);
-      return response.data;
+
+      return {
+        data: response.data.data,
+        meta: response.data.meta,
+      };
     } catch (error) {
-      console.error('Failed to fetch SFA data:', error);
-      throw new Error('Failed to fetch SFA data');
+      console.error('Failed to fetch SFA list:', error);
+      throw new Error('Failed to fetch SFA list');
     }
   },
 
-  // 상세 조회
+  /**
+   * SFA 상세 조회
+   * @param {string|number} id - SFA ID
+   * @returns {Promise} API 응답
+   */
   getSfaDetail: async (id) => {
     try {
       const query = buildSfaDetailQuery(id);
@@ -54,7 +57,12 @@ export const sfaApi = {
     }
   },
 
-  // 단일 월 통계 데이터 조회
+  /**
+   * SFA 월별 통계 조회
+   * @param {string} startDate - 시작일
+   * @param {string} endDate - 종료일
+   * @returns {Promise} API 응답
+   */
   getSfaMonthStats: async (startDate, endDate) => {
     try {
       // 날짜 범위 계산

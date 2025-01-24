@@ -1,4 +1,4 @@
-// hooks/useFormValidation.js
+// src/features/sfa/hooks/useFormValidation.js
 // 구조개선(25.01.23)
 import { useState } from 'react';
 import {
@@ -80,8 +80,11 @@ export const useFormValidation = (formData) => {
   };
 
   return {
+    // 상태
     validationErrors,
     isSubmitting,
+
+    // 함수
     setIsSubmitting,
     validateForm,
     validatePayments, // 결제매출 등록시 사용

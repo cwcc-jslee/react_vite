@@ -1,7 +1,7 @@
 // src/features/sfa/components/SfaSearchForm/index.jsx
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useSfa } from '../../../context/SfaContext';
+import { useSfa } from '../../../context/SfaProvider';
 import dayjs from 'dayjs';
 
 const SearchFormContainer = styled.div`
@@ -103,15 +103,15 @@ const SfaSearchForm = () => {
       startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
       endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
     },
-    salesType: '',
-    probability: '',
-    confirmed: '',
+    name: '',
     customer: '',
-    salesItem: '',
-    salesCategory: '',
-    title: '',
-    team: '',
-    paymentType: '',
+    sfaSalesType: '', //매출유형 | 지원사업/일반매출/정기매출...
+    sfaClassification: '', //매출구분 | 서비스/상품/공사사
+    salesItem: '', //매출아이템 | 홈페이지/홍보영상...
+    team: '', //사업부 | 디자인/영상...
+    billingType: '', //결제유형 | 일시불/선금/중도금/잔금
+    isConfirmed: '',
+    probability: '',
   });
 
   const handleInputChange = (e) => {
@@ -143,15 +143,15 @@ const SfaSearchForm = () => {
         startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
         endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
       },
-      salesType: '',
-      probability: '',
-      confirmed: '',
+      name: '',
       customer: '',
-      salesItem: '',
-      salesCategory: '',
-      title: '',
+      sfaSalesType: '',
+      sfaClassification: '',
+      item: '',
       team: '',
-      paymentType: '',
+      billingType: '',
+      isConfirmed: '',
+      probability: '',
     });
     resetSearch();
   };
@@ -179,8 +179,8 @@ const SfaSearchForm = () => {
           <FormItem>
             <Label>매출구분</Label>
             <Select
-              name="salesType"
-              value={searchCriteria.salesType}
+              name="sfaClassification"
+              value={searchCriteria.sfaClassification}
               onChange={handleInputChange}
             >
               <option value="">전체</option>
@@ -189,18 +189,15 @@ const SfaSearchForm = () => {
             </Select>
           </FormItem>
           <FormItem>
-            <Label>확률</Label>
+            <Label>매출유형</Label>
             <Select
-              name="probability"
-              value={searchCriteria.probability}
+              name="salesCategory"
+              value={searchCriteria.salesCategory}
               onChange={handleInputChange}
             >
               <option value="">전체</option>
-              <option value="confirmed">확정</option>
-              <option value="100">100%</option>
-              <option value="90">90%</option>
-              <option value="70">70%</option>
-              <option value="50">50%</option>
+              <option value="direct">직접</option>
+              <option value="partner">파트너</option>
             </Select>
           </FormItem>
         </FormGroup>
@@ -227,15 +224,18 @@ const SfaSearchForm = () => {
             />
           </FormItem>
           <FormItem>
-            <Label>매출유형</Label>
+            <Label>확률</Label>
             <Select
-              name="salesCategory"
-              value={searchCriteria.salesCategory}
+              name="probability"
+              value={searchCriteria.probability}
               onChange={handleInputChange}
             >
               <option value="">전체</option>
-              <option value="direct">직접</option>
-              <option value="partner">파트너</option>
+              <option value="confirmed">확정</option>
+              <option value="100">100%</option>
+              <option value="90">90%</option>
+              <option value="70">70%</option>
+              <option value="50">50%</option>
             </Select>
           </FormItem>
         </FormGroup>
@@ -263,11 +263,12 @@ const SfaSearchForm = () => {
               <option value="consulting">컨설팅사업부</option>
             </Select>
           </FormItem>
+
           <FormItem>
-            <Label>결제구분</Label>
+            <Label>결제유형</Label>
             <Select
-              name="paymentType"
-              value={searchCriteria.paymentType}
+              name="billingType"
+              value={searchCriteria.billingType}
               onChange={handleInputChange}
             >
               <option value="">전체</option>

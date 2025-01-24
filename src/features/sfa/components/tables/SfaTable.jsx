@@ -1,6 +1,8 @@
 // src/features/sfa/components/table/SfaTable.jsx
 import React from 'react';
-import { useSfa } from '../../context/SfaContext';
+// import { useSfa } from '../../context/SfaContext';
+import { useSfa } from '../../context/SfaProvider';
+import { useLayout } from '../../context/LayoutProvider';
 import { Button } from '../../../../shared/components/ui';
 import { Card } from '../../../../shared/components/ui/card/Card';
 import { StateDisplay } from '../../../../shared/components/ui/state/StateDisplay';
@@ -71,8 +73,10 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
 };
 
 const SfaTable = () => {
+  // SFA 데이터 관련 상태와 함수
   const { sfaData, loading, error, pagination, setPage, setPageSize } =
     useSfa();
+  console.log(`**** sfaTable's sfaData : ${sfaData}`);
 
   if (loading) return <StateDisplay type="loading" />;
   if (error) return <StateDisplay type="error" message={error} />;

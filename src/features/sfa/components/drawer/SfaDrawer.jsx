@@ -2,7 +2,7 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { selectCodebookByType } from '../../../codebook/store/codebookSlice';
-import { useSfa } from '../../context/SfaContext';
+import { useSfa } from '../../context/SfaProvider.jsx';
 import { Button } from '../../../../shared/components/ui';
 import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer';
 import SfaAddForm from '../forms/SfaAddForm';
@@ -35,7 +35,7 @@ const SfaDrawer = () => {
   };
 
   const { drawerState, setDrawer, setDrawerClose } = useSfa();
-  const { visible, controlMode, featureMode, detailMode, data } = drawerState;
+  const { visible, controlMode, featureMode, data } = drawerState;
   // edit > 결제 매출 등록 메뉴..
   // const {
   //   formData,
