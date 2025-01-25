@@ -2,8 +2,6 @@
 // SfaPage.jsx 에서 분리
 // SfaPage 컴포넌트가 useSfa hook을 사용하기 전에 SfaProvider로 감싸져 있지 않아서 발생하는 문제해결
 import React from 'react';
-// import { useSfa } from '../context/SfaContext';
-import { useLayout } from '../context/LayoutProvider';
 import { useSfa } from '../context/SfaProvider';
 import { Section } from '../../../shared/components/ui/layout/components';
 import SfaDrawer from '../components/drawer/SfaDrawer';

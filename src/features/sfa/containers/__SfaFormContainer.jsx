@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { selectCodebookByType } from '../../codebook/store/codebookSlice';
 // import { selectCodebookByType } from '../../../../codebook/store/codebookSlice';
 import { useDrawerFormData } from '../hooks/useDrawerFormData';
-import { submitSfaForm } from '../services/sfaSubmitService';
+import { submitSfaAddForm } from '../services/sfaSubmitService';
 import { notification } from '../../../shared/services/notification';
 import SfaAddForm from '../components/forms/SfaAddForm';
 
@@ -64,7 +64,7 @@ const SfaFormContainer = ({ onClose }) => {
 
     try {
       setIsSubmitting(true);
-      const response = await submitSfaForm(enrichedFormData);
+      const response = await submitSfaAddForm(enrichedFormData);
 
       if (!response || !response.success) {
         throw new Error(response?.message || '저장에 실패했습니다.');

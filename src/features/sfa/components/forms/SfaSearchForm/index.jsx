@@ -1,100 +1,26 @@
 // src/features/sfa/components/SfaSearchForm/index.jsx
 import React, { useState } from 'react';
-import styled from 'styled-components';
+import {
+  Form,
+  FormItem,
+  Group,
+  Label,
+  Input,
+  Select,
+  Button,
+  Stack,
+} from '../../../../../shared/components/ui/index';
 import { useSfa } from '../../../context/SfaProvider';
 import dayjs from 'dayjs';
 
-const SearchFormContainer = styled.div`
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
-`;
-
-const FormGroup = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 16px;
-`;
-
-const FormItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const Label = styled.label`
-  min-width: 100px;
-  font-size: 13px;
-  color: #374151;
-`;
-
-const Input = styled.input`
-  flex: 1;
-  padding: 6px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  font-size: 13px;
-
-  &:focus {
-    outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 1px #2563eb;
-  }
-`;
-
-const Select = styled.select`
-  flex: 1;
-  padding: 6px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  font-size: 13px;
-  background: white;
-
-  &:focus {
-    outline: none;
-    border-color: #2563eb;
-    box-shadow: 0 0 0 1px #2563eb;
-  }
-`;
-
-const ButtonContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-top: 20px;
-`;
-
-const Button = styled.button`
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &.search {
-    background: #2563eb;
-    color: white;
-    border: none;
-
-    &:hover {
-      background: #1d4ed8;
-    }
-  }
-
-  &.reset {
-    background: white;
-    color: #374151;
-    border: 1px solid #e5e7eb;
-
-    &:hover {
-      background: #f9fafb;
-    }
-  }
-`;
-
+/**
+ * SFA 검색 폼 컴포넌트
+ * @component
+ * @description 매출 정보 검색을 위한 필터링 폼을 제공합니다.
+ * - 날짜 범위, 매출구분, 매출유형, 매출처, 매출품목 등 검색 조건을 설정할 수 있습니다.
+ * - 검색 조건은 실시간으로 상태에 저장되며, 검색 버튼 클릭시 실제 검색이 수행됩니다.
+ * - 초기화 버튼으로 모든 검색 조건을 기본값으로 되돌릴 수 있습니다.
+ */
 const SfaSearchForm = () => {
   const { executeSearch, resetSearch } = useSfa();
 
@@ -105,11 +31,11 @@ const SfaSearchForm = () => {
     },
     name: '',
     customer: '',
-    sfaSalesType: '', //매출유형 | 지원사업/일반매출/정기매출...
-    sfaClassification: '', //매출구분 | 서비스/상품/공사사
-    salesItem: '', //매출아이템 | 홈페이지/홍보영상...
-    team: '', //사업부 | 디자인/영상...
-    billingType: '', //결제유형 | 일시불/선금/중도금/잔금
+    sfaSalesType: '',
+    sfaClassification: '',
+    salesItem: '',
+    team: '',
+    billingType: '',
     isConfirmed: '',
     probability: '',
   });
@@ -157,25 +83,29 @@ const SfaSearchForm = () => {
   };
 
   return (
-    <SearchFormContainer>
-      <form onSubmit={handleSubmit}>
-        <FormGroup>
+    <div className="bg-white border border-gray-200 rounded-lg p-5 mb-5">
+      <Form onSubmit={handleSubmit} className="space-y-4">
+        {/* Stack 컴포넌트를 사용하여 3개의 항목을 한 줄에 표시 */}
+        <Stack direction="horizontal" spacing="lg">
           <FormItem>
             <Label>기준일자</Label>
-            <Input
-              type="date"
-              name="startDate"
-              value={searchCriteria.dateRange.startDate}
-              onChange={handleInputChange}
-            />
-            <span>~</span>
-            <Input
-              type="date"
-              name="endDate"
-              value={searchCriteria.dateRange.endDate}
-              onChange={handleInputChange}
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                type="date"
+                name="startDate"
+                value={searchCriteria.dateRange.startDate}
+                onChange={handleInputChange}
+              />
+              <span className="text-gray-500">~</span>
+              <Input
+                type="date"
+                name="endDate"
+                value={searchCriteria.dateRange.endDate}
+                onChange={handleInputChange}
+              />
+            </div>
           </FormItem>
+
           <FormItem>
             <Label>매출구분</Label>
             <Select
@@ -188,6 +118,7 @@ const SfaSearchForm = () => {
               <option value="service">서비스</option>
             </Select>
           </FormItem>
+
           <FormItem>
             <Label>매출유형</Label>
             <Select
@@ -200,9 +131,10 @@ const SfaSearchForm = () => {
               <option value="partner">파트너</option>
             </Select>
           </FormItem>
-        </FormGroup>
+        </Stack>
 
-        <FormGroup>
+        {/* 두 번째 줄도 Stack으로 변경 */}
+        <Stack direction="horizontal" spacing="lg">
           <FormItem>
             <Label>매출처</Label>
             <Input
@@ -213,6 +145,7 @@ const SfaSearchForm = () => {
               placeholder="매출처명 입력"
             />
           </FormItem>
+
           <FormItem>
             <Label>매출품목</Label>
             <Input
@@ -223,6 +156,7 @@ const SfaSearchForm = () => {
               placeholder="매출품목 입력"
             />
           </FormItem>
+
           <FormItem>
             <Label>확률</Label>
             <Select
@@ -238,9 +172,10 @@ const SfaSearchForm = () => {
               <option value="50">50%</option>
             </Select>
           </FormItem>
-        </FormGroup>
+        </Stack>
 
-        <FormGroup>
+        {/* 세 번째 줄도 Stack으로 변경 */}
+        <Stack direction="horizontal" spacing="lg">
           <FormItem>
             <Label>건명</Label>
             <Input
@@ -251,6 +186,7 @@ const SfaSearchForm = () => {
               placeholder="건명 입력"
             />
           </FormItem>
+
           <FormItem>
             <Label>사업부</Label>
             <Select
@@ -276,18 +212,18 @@ const SfaSearchForm = () => {
               <option value="bank">계좌이체</option>
             </Select>
           </FormItem>
-        </FormGroup>
+        </Stack>
 
-        <ButtonContainer>
-          <Button type="submit" className="search">
+        <Group direction="horizontal" className="justify-center">
+          <Button type="submit" variant="primary">
             검색
           </Button>
-          <Button type="button" className="reset" onClick={handleReset}>
+          <Button type="button" variant="outline" onClick={handleReset}>
             초기화
           </Button>
-        </ButtonContainer>
-      </form>
-    </SearchFormContainer>
+        </Group>
+      </Form>
+    </div>
   );
 };
 

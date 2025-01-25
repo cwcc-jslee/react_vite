@@ -1,5 +1,5 @@
 // src/features/sfa/components/tables/EditableSfaDetail.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import * as Icons from 'lucide-react';
 import { CustomerSearchInput } from '../../../../shared/components/customer/CustomerSearchInput';
 import {
@@ -8,9 +8,9 @@ import {
   DescriptionItem,
   Input,
   Select,
+  Checkbox,
   Switch,
 } from '../../../../shared/components/ui';
-import { useEditableField } from '../../hooks/useEditableField';
 
 /**
  * 수정 가능한 SFA 상세 정보 컴포넌트
@@ -20,23 +20,99 @@ import { useEditableField } from '../../hooks/useEditableField';
  * @param {Function} props.onUpdate - 필드 업데이트 핸들러
  */
 const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
-  const {
-    editingField,
-    editValue,
-    partnerChecked,
-    tempPartnerChecked,
-    partnerId,
-    projectStatus,
-    tempProjectStatus,
-    startEditing,
-    cancelEditing,
-    saveEditing,
-    handleValueChange,
-    handlePartnerSelect,
-    setTempProjectStatus,
-  } = useEditableField(data, onUpdate);
+  // 편집 상태 관리
+  const [editingField, setEditingField] = useState(null);
+  const [editValue, setEditValue] = useState('');
 
-  console.log(`**** EditableSfaDetail's Data : ${data.documentId}`);
+  // 매출파트너 관련 상태
+  const [partnerChecked, setPartnerChecked] = useState(
+    data?.has_partner || false,
+  );
+  const [tempPartnerChecked, setTempPartnerChecked] = useState(
+    data?.has_partner || false,
+  );
+  const [partnerId, setPartnerId] = useState(data?.selling_partner?.id || null);
+
+  // 프로젝트 관련 상태
+  const [projectStatus, setProjectStatus] = useState(data?.is_project || false);
+  const [tempProjectStatus, setTempProjectStatus] = useState(
+    data?.is_project || false,
+  );
+
+  // data가 변경될 때 상태 업데이트
+  useEffect(() => {
+    setPartnerChecked(data?.has_partner || false);
+    setTempPartnerChecked(data?.has_partner || false);
+    setPartnerId(data?.selling_partner?.id || null);
+    setProjectStatus(data?.is_project || false);
+    setTempProjectStatus(data?.is_project || false);
+  }, [data]);
+
+  // 편집 시작
+  const startEditing = (fieldName) => {
+    setEditingField(fieldName);
+    if (fieldName === 'selling_partner') {
+      setTempPartnerChecked(partnerChecked);
+    } else if (fieldName === 'is_project') {
+      setTempProjectStatus(projectStatus);
+    } else {
+      const field = editableFields[fieldName];
+      setEditValue(field?.getValue(data) || '');
+    }
+  };
+
+  // 편집 취소
+  const cancelEditing = () => {
+    setEditingField(null);
+    setEditValue('');
+    setTempPartnerChecked(partnerChecked);
+    setTempProjectStatus(projectStatus);
+  };
+
+  // 편집 저장
+  const saveEditing = async (fieldName) => {
+    try {
+      if (fieldName === 'selling_partner') {
+        await onUpdate('has_partner', tempPartnerChecked);
+        if (!tempPartnerChecked) {
+          await onUpdate('selling_partner', null);
+        }
+        setPartnerChecked(tempPartnerChecked);
+      } else if (fieldName === 'is_project') {
+        await onUpdate('is_project', tempProjectStatus);
+        setProjectStatus(tempProjectStatus);
+      } else {
+        await onUpdate(fieldName, editValue);
+      }
+      setEditingField(null);
+      setEditValue('');
+    } catch (error) {
+      console.error('Failed to save:', error);
+      // 에러 발생시 원래 상태로 복구
+      setTempPartnerChecked(partnerChecked);
+      setTempProjectStatus(projectStatus);
+    }
+  };
+
+  // 값 변경 핸들러
+  const handleValueChange = (e) => {
+    const newValue = e.target.value;
+    setEditValue(newValue);
+  };
+
+  // 파트너 선택 핸들러
+  const handlePartnerSelect = async (partner) => {
+    // is_partner 체크 & update 시 해당 필드정보 업데이트 필요
+    // 체크에서 unckedk 시 is_partner -> false & selling_partner -> null
+    setPartnerChecked(true);
+    try {
+      await onUpdate('selling_partner', partner.id);
+      setPartnerId(partner.id);
+      setEditingField(null);
+    } catch (error) {
+      console.error('Failed to update partner:', error);
+    }
+  };
 
   // 편집 가능한 필드 정의
   const editableFields = {
@@ -102,9 +178,7 @@ const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
   // 편집 가능한 필드 렌더링
   const renderEditableField = (fieldName, content) => {
     const isEditing = editingField === fieldName;
-    const field = editableFields[fieldName];
 
-    // 특수 필드 처리 (매출파트너, 프로젝트여부)
     if (fieldName === 'selling_partner') {
       return (
         <div className="group relative flex items-center justify-between w-full h-8">
@@ -163,7 +237,7 @@ const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
                 type="button"
                 onClick={() => startEditing(fieldName)}
                 className="invisible group-hover:visible flex items-center justify-center 
-                           h-7 w-7 rounded-sm hover:bg-blue-100"
+                         h-7 w-7 rounded-sm hover:bg-blue-100"
               >
                 <Icons.Edit
                   className="h-4 w-4 text-blue-600"
@@ -176,7 +250,8 @@ const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
       );
     }
 
-    // 기본 필드 렌더링
+    // 기본 필드 렌더링...
+    const field = editableFields[fieldName];
     if (!field?.editable) return content;
 
     return (
@@ -222,9 +297,9 @@ const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
             <span className="flex-grow truncate">{content}</span>
             <button
               type="button"
-              onClick={() => startEditing(fieldName, editableFields)}
+              onClick={() => startEditing(fieldName)}
               className="invisible group-hover:visible flex items-center justify-center 
-                          h-7 w-7 rounded-sm hover:bg-blue-100"
+                       h-7 w-7 rounded-sm hover:bg-blue-100"
             >
               <Icons.Edit className="h-4 w-4 text-blue-600" strokeWidth={2.5} />
             </button>
@@ -234,7 +309,7 @@ const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
     );
   };
 
-  // 컴포넌트 렌더링
+  // 렌더링...
   return (
     <Description className="text-sm">
       {/* 기존 렌더링 코드와 동일 */}

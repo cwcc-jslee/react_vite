@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import { sfaApi } from '../../api/sfaApi';
 import { useSfa } from '../../context/SfaProvider';
-import { useSfaTable } from '../../hooks/useSfaTable';
 import { StateDisplay } from '../../../../shared/components/ui/state/StateDisplay';
 import dayjs from 'dayjs';
 
@@ -45,7 +44,6 @@ const SfaQuarterlyOverview = () => {
     probability: null,
   });
 
-  // const { updateFilter } = useSfaTable();
   const { updateMonthlyFilter } = useSfa();
 
   // 월 계산 함수

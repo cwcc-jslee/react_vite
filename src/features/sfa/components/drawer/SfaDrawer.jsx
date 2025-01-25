@@ -1,16 +1,16 @@
 // src/features/sfa/components/drawer/SfaDrawer.jsx
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { selectCodebookByType } from '../../../codebook/store/codebookSlice';
+import { selectCodebookByType } from '../../../codebook/store/codebookSlice.js';
 import { useSfa } from '../../context/SfaProvider.jsx';
-import { Button } from '../../../../shared/components/ui';
-import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer';
-import SfaAddForm from '../forms/SfaAddForm';
-import SfaDetailTable from '../tables/SfaDetailTable';
-import SfaDetailPaymentTable from '../tables/SfaDetailPaymentTable';
-import { useSfaForm } from '../../hooks/useSfaForm';
-import SfaEditForm from '../forms/SfaEditForm';
-import EditableSfaDetail from '../tables/EditableSfaDetail';
+import { Button } from '../../../../shared/components/ui/index.jsx';
+import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer.jsx';
+import SfaAddForm from '../forms/SfaAddForm/index.jsx';
+import SfaDetailTable from '../tables/SfaDetailTable.jsx';
+import SfaDetailPaymentTable from '../tables/SfaDetailPaymentTable.jsx';
+import { useSfaForm } from '../../hooks/useSfaForm.js';
+import SfaEditForm from '../forms/SfaEditForm/index.jsx';
+import EditableSfaDetail from '../tables/EditableSfaDetail.jsx';
 import SalesByPayment from '../elements/SalesByPayment.jsx';
 import SfaAddPaymentForm from '../forms/SfaAddPaymentForm.jsx';
 
@@ -61,16 +61,16 @@ const SfaDrawer = () => {
   };
 
   // 필드 업데이트 핸들러 / sfa 상세보기 'eidt ' 모드
-  const handleFieldUpdate = async (fieldName, value) => {
-    try {
-      await updateSfaDetail({
-        id: data.id,
-        [fieldName]: value,
-      });
-    } catch (error) {
-      console.error('Failed to update field:', error);
-    }
-  };
+  // const handleFieldUpdate = async (fieldName, value) => {
+  //   try {
+  //     await updateSfaDetail({
+  //       id: data.id,
+  //       [fieldName]: value,
+  //     });
+  //   } catch (error) {
+  //     console.error('Failed to update field:', error);
+  //   }
+  // };
 
   // Control 메뉴 렌더링 (View/Edit)
   const renderControlMenu = () => {
@@ -204,7 +204,7 @@ const SfaDrawer = () => {
           <EditableSfaDetail
             data={data}
             sfaSalesTypeData={sfaSalesTypeData}
-            onUpdate={handleFieldUpdate}
+            // onUpdate={handleFieldUpdate}
           />
 
           {/* 결제 매출 등록 버튼 */}

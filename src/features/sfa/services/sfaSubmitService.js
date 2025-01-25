@@ -1,7 +1,10 @@
 // src/features/sfa/services/sfaSubmitService.js
 import { apiService } from '../../../shared/services/apiService';
 import { transformToDBFields } from '../utils/transformUtils';
+import { useSfa } from '../context/SfaProvider';
+// import { sfaApi } from '../api/sfaApi';
 
+// const { fetchSfaDetail, setDrawerState, drawerState } = useSfa();
 /**
  * SFA 데이터 제출 서비스
  */
@@ -107,7 +110,7 @@ export const sfaSubmitService = {
  * @param {Object} formData - SFA 폼 전체 데이터
  * @returns {Promise<Object>} 처리 결과
  */
-export const submitSfaForm = async (formData) => {
+export const submitSfaAddForm = async (formData) => {
   try {
     console.log('===== Starting SFA Form Submission =====');
 
@@ -135,5 +138,36 @@ export const submitSfaForm = async (formData) => {
   } catch (error) {
     console.error('SFA Form Submission Error:', error);
     throw error;
+  }
+};
+
+// 매출상세 editableSfaDetail 폼 업데이트용
+export const updateSfaField = async (sfaId, fieldName, value) => {
+  const formData = { [fieldName]: value };
+  console.log('[SFA] Updating field with formData:', formData);
+
+  try {
+    // DB 필드 형식으로 데이터 변환
+    // const dbData = transformToDBFields.transformSfaFields(formData);
+
+    // API 요청 수행
+    const response = await apiService.put(`/api/sfas/${sfaId}`, formData);
+
+    // 정상 업데이트시 fetchSfaDetail 수행
+    // const response1 = await sfaApi.getSfaDetail(1060);
+    // setDrawerState({
+    //   ...drawerState,
+    //   data: response1.data[0],
+    // });
+    // if (response.data) {
+    //   //
+    // }
+    return response.data;
+  } catch (error) {
+    console.error('[SFA] Update error:', error);
+    throw new Error(
+      error.response?.data?.error?.message ||
+        '데이터 저장 중 오류가 발생했습니다.',
+    );
   }
 };
