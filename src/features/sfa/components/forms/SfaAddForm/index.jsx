@@ -4,6 +4,7 @@ import { CustomerSearchInput } from '../../../../../shared/components/customer/C
 import { formatDisplayNumber } from '../../../../../shared/utils/format/number';
 import SalesByItem from '../../elements/SalesByItem.jsx';
 import SalesByPayment from '../../elements/SalesByPayment.jsx';
+import { useSfaForm } from '../../../hooks/useSfaForm.js';
 import {
   Form,
   FormItem,
@@ -21,9 +22,9 @@ import {
 } from '../../../../../shared/components/ui';
 
 const SfaAddForm = ({
-  formData,
-  errors,
-  isSubmitting,
+  // formData,
+  // errors,
+  // isSubmitting,
   sfaSalesTypeData,
   sfaClassificationData,
   itemsData,
@@ -32,20 +33,35 @@ const SfaAddForm = ({
   percentageData,
   isPaymentDataLoading,
   handleCustomerSelect,
-  handleChange,
-  handleAddSalesItem,
-  handleSalesItemChange,
-  handleRemoveSalesItem,
-  handleSalesPaymentChange,
-  handleAddSalesPayment,
-  handleRemoveSalesPayment,
+  // updateFormField,
+  // handleSalesItemChange,
+  // handleRemoveSalesItem,
+  // handleSalesPaymentChange,
+  // handleAddPayment,
+  // handleRemovePayment,
   processSubmit,
   validateForm,
   checkAmounts,
+  // actions,
+  // data,
 }) => {
+  const {
+    formData,
+    errors,
+    isSubmitting,
+    updateFormField,
+    handleAddSalesItem,
+    handleRemoveSalesItem,
+    handleSalesItemChange,
+    handleAddPayment,
+    handleRemovePayment,
+    handlePaymentChange,
+  } = useSfaForm();
   const [hasPartner, setHasPartner] = useState(false);
   const [isProject, setIsProject] = useState(false);
   const [showAmountConfirm, setShowAmountConfirm] = useState(false);
+  // const { handleAddSalesItem } = actions();
+  console.log(`>>> form data :`, formData);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -93,7 +109,7 @@ const SfaAddForm = ({
             <Select
               name="sfaSalesType"
               value={formData.sfaSalesType}
-              onChange={handleChange}
+              onChange={updateFormField}
               disabled={isSubmitting}
               error={errors.sfaSalesType}
             >
@@ -111,7 +127,7 @@ const SfaAddForm = ({
             <Select
               name="sfaClassification"
               value={formData.sfaClassification}
-              onChange={handleChange}
+              onChange={updateFormField}
               disabled={isSubmitting}
               error={errors.sfaClassification}
             >
@@ -151,7 +167,7 @@ const SfaAddForm = ({
                 <CustomerSearchInput
                   name="sellingPartner"
                   onSelect={(partner) =>
-                    handleChange({
+                    updateFormField({
                       target: {
                         name: 'sellingPartner',
                         value: partner.id,
@@ -175,7 +191,7 @@ const SfaAddForm = ({
               type="text"
               name="name"
               value={formData.name}
-              onChange={handleChange}
+              onChange={updateFormField}
               placeholder="건명을 입력하세요"
               disabled={isSubmitting}
             />
@@ -229,7 +245,7 @@ const SfaAddForm = ({
               <Button
                 type="button"
                 variant="primary"
-                onClick={handleAddSalesPayment}
+                onClick={handleAddPayment}
                 disabled={isSubmitting || formData.salesByPayments.length >= 3}
                 className={`w-full ${
                   formData.salesByPayments.length >= 3
@@ -273,9 +289,9 @@ const SfaAddForm = ({
         {/* Sales Payments List */}
         <SalesByPayment
           payments={formData.salesByPayments}
-          onChange={handleSalesPaymentChange}
-          onAdd={handleAddSalesPayment}
-          onRemove={handleRemoveSalesPayment}
+          onChange={handlePaymentChange}
+          onAdd={handleAddPayment}
+          onRemove={handleRemovePayment}
           isSubmitting={isSubmitting}
           errors={errors}
           paymentMethodData={paymentMethodData}
@@ -290,7 +306,7 @@ const SfaAddForm = ({
             <TextArea
               name="description"
               value={formData.description}
-              onChange={handleChange}
+              onChange={updateFormField}
               placeholder="비고 사항을 입력하세요"
               disabled={isSubmitting}
             />

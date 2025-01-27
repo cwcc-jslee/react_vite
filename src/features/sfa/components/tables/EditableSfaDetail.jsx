@@ -9,6 +9,8 @@ import {
   Input,
   Select,
   Switch,
+  Stack,
+  Checkbox,
 } from '../../../../shared/components/ui';
 import { useEditableField } from '../../hooks/useEditableField';
 
@@ -17,24 +19,23 @@ import { useEditableField } from '../../hooks/useEditableField';
  * @param {Object} props
  * @param {Object} props.data - SFA 상세 데이터
  * @param {Object} props.sfaSalesTypeData - 매출유형 데이터
- * @param {Function} props.onUpdate - 필드 업데이트 핸들러
  */
-const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
+const EditableSfaDetail = ({
+  data,
+  sfaSalesTypeData,
+  sfaClassificationData,
+}) => {
   const {
-    editingField,
-    editValue,
-    partnerChecked,
-    tempPartnerChecked,
-    partnerId,
-    projectStatus,
-    tempProjectStatus,
+    editState,
+    partnerState,
     startEditing,
-    cancelEditing,
     saveEditing,
+    cancelEditing,
     handleValueChange,
-    handlePartnerSelect,
-    setTempProjectStatus,
-  } = useEditableField(data, onUpdate);
+    handlePartnerStateChange,
+  } = useEditableField(data);
+
+  const { editField } = editState;
 
   console.log(`**** EditableSfaDetail's Data : ${data.documentId}`);
 
@@ -53,6 +54,14 @@ const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
       value: data?.sfa_sales_type?.id,
       getValue: (data) => data?.sfa_sales_type?.id || '',
       getDisplayValue: (data) => data?.sfa_sales_type?.name || '-',
+      editable: true,
+    },
+    sfa_classification: {
+      type: 'select',
+      label: '매출구분',
+      value: data?.sfa_classification?.id,
+      getValue: (data) => data?.sfa_classification?.id || '',
+      getDisplayValue: (data) => data?.sfa_classification?.name || '-',
       editable: true,
     },
     customer: {
@@ -76,6 +85,7 @@ const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
       label: '비고',
       value: data?.description,
       getValue: (data) => data?.description || '',
+      editable: true,
     },
   };
 
@@ -84,7 +94,7 @@ const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
     <div className="flex shrink-0 items-center gap-0.5">
       <button
         type="button"
-        onClick={() => saveEditing(editingField)}
+        onClick={() => saveEditing()}
         className="flex items-center justify-center h-7 w-7 rounded-sm hover:bg-green-100"
       >
         <Icons.Check className="h-4 w-4 text-green-600" strokeWidth={2.5} />
@@ -101,8 +111,7 @@ const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
 
   // 편집 가능한 필드 렌더링
   const renderEditableField = (fieldName, content) => {
-    const isEditing = editingField === fieldName;
-    const field = editableFields[fieldName];
+    const isEditing = editField === fieldName;
 
     // 특수 필드 처리 (매출파트너, 프로젝트여부)
     if (fieldName === 'selling_partner') {
@@ -111,9 +120,24 @@ const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
           {isEditing ? (
             <div className="flex items-center w-full gap-1">
               <div className="flex items-center gap-2 flex-grow">
+                <Checkbox
+                  id="has_partner"
+                  checked={partnerState.pendingState}
+                  onChange={(e) => handlePartnerStateChange(e)}
+                  // disabled={isSubmitting}
+                />
                 <CustomerSearchInput
-                  value={partnerId}
-                  onSelect={handlePartnerSelect}
+                  value={editState.newValue}
+                  onSelect={(selected) => {
+                    handleValueChange({
+                      target: {
+                        value: selected.id,
+                        type: 'customer-search', // 커스텀 타입 지정
+                        name: selected.name,
+                      },
+                    });
+                  }}
+                  disabled={!partnerState.pendingState}
                   size="small"
                 />
               </div>
@@ -122,7 +146,9 @@ const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
           ) : (
             <div className="flex items-center w-full h-8">
               <span className="flex-grow truncate">
-                {partnerChecked ? data?.selling_partner?.name || '-' : 'NO'}
+                {partnerState.isEnabled
+                  ? data?.selling_partner?.name || '-'
+                  : 'NO'}
               </span>
               <button
                 type="button"
@@ -148,8 +174,15 @@ const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
             <div className="flex items-center w-full gap-1">
               <div className="flex-grow">
                 <Switch
-                  checked={tempProjectStatus}
-                  onChange={() => setTempProjectStatus(!tempProjectStatus)}
+                  checked={editState.newValue}
+                  onChange={() =>
+                    handleValueChange({
+                      target: {
+                        value: !editState.newValue,
+                        type: 'switch',
+                      },
+                    })
+                  }
                 />
               </div>
               {renderEditButtons()}
@@ -157,7 +190,7 @@ const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
           ) : (
             <div className="flex items-center w-full h-8">
               <span className="flex-grow truncate">
-                {projectStatus ? 'YES' : 'NO'}
+                {data?.is_project ? 'YES' : 'NO'}
               </span>
               <button
                 type="button"
@@ -177,6 +210,7 @@ const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
     }
 
     // 기본 필드 렌더링
+    const field = editableFields[fieldName];
     if (!field?.editable) return content;
 
     return (
@@ -184,9 +218,9 @@ const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
         {isEditing ? (
           <div className="flex items-center w-full gap-1">
             <div className="flex-grow">
-              {field.type === 'select' ? (
+              {field.type === 'select' && field.label === '매출유형' ? (
                 <Select
-                  value={editValue}
+                  value={editState.newValue}
                   onChange={handleValueChange}
                   className="w-full h-8 text-sm"
                 >
@@ -197,19 +231,37 @@ const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
                     </option>
                   ))}
                 </Select>
+              ) : field.type === 'select' && field.label === '매출구분' ? (
+                <Select
+                  value={editState.newValue}
+                  onChange={handleValueChange}
+                  className="w-full h-8 text-sm"
+                >
+                  <option value="">선택하세요</option>
+                  {sfaClassificationData?.data?.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.name}
+                    </option>
+                  ))}
+                </Select>
               ) : field.type === 'customer' ? (
                 <CustomerSearchInput
-                  value={editValue}
+                  value={editState.newValue}
                   onSelect={(selected) => {
-                    setEditValue(selected.id);
-                    saveEditing(fieldName);
+                    handleValueChange({
+                      target: {
+                        value: selected.id,
+                        type: 'customer-search', // 커스텀 타입 지정
+                        name: selected.name,
+                      },
+                    });
                   }}
                   size="small"
                 />
               ) : (
                 <Input
                   type="text"
-                  value={editValue}
+                  value={editState.newValue}
                   onChange={handleValueChange}
                   className="w-full h-8 text-sm"
                 />
@@ -285,6 +337,10 @@ const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
           매출구분
         </DescriptionItem>
         <DescriptionItem>
+          {/* {renderEditableField(
+            'sfa_classification',
+            editableFields.sfa_classification.getDisplayValue(data),
+          )} */}
           {data.sfa_classification?.name || '-'}
         </DescriptionItem>
       </DescriptionRow>
@@ -302,9 +358,9 @@ const EditableSfaDetail = ({ data, sfaSalesTypeData, onUpdate }) => {
           사업부 매출
         </DescriptionItem>
         <DescriptionItem>
-          {typeof data.sales_profit === 'number'
+          {/* {typeof data.sales_profit === 'number'
             ? data.sales_profit.toLocaleString()
-            : '-'}
+            : '-'} */}
         </DescriptionItem>
       </DescriptionRow>
 

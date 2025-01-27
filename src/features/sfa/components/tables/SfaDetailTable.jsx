@@ -41,7 +41,10 @@ const SfaDetail = ({ data }) => {
         <DescriptionItem label width="w-[140px]">
           고객사/매출처
         </DescriptionItem>
-        <DescriptionItem>{data.customer?.name || '-'}</DescriptionItem>
+        <DescriptionItem>
+          {data.customer?.name}
+          {data.selling_partner && `/${data.selling_partner.name}`}
+        </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
           매출유형
         </DescriptionItem>
@@ -59,7 +62,7 @@ const SfaDetail = ({ data }) => {
         <DescriptionItem label width="w-[140px]">
           프로젝트여부
         </DescriptionItem>
-        <DescriptionItem>{data.isProject ? 'YES' : 'NO'}</DescriptionItem>
+        <DescriptionItem>{data.is_project ? 'YES' : 'NO'}</DescriptionItem>
       </DescriptionRow>
 
       {/* 4행: 매출, 매출이익 */}

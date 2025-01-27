@@ -12,22 +12,30 @@ const SfaAddPaymentForm = ({
   paymentMethodData,
   percentageData,
   isPaymentDataLoading,
+  processPaymentSubmit,
+  data,
 }) => {
   const { validatePayments } = useFormValidation(formData);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const sfaId = data.id;
+    console.log(`***** form : `, formData.salesByPayments);
+    console.log(`***** sfaId : `, sfaId);
 
     // 유효성 검사 수행
     const paymentErrors = validatePayments(formData.salesByPayments);
     console.log(`***** paymentErrors : ${paymentErrors}`);
     if (paymentErrors.length > 0) return;
 
-    const isValid = validateForm();
-    if (!isValid) return;
+    // const isValid = validateForm();
+    // if (!isValid) return;
 
     // submit
+    await processPaymentSubmit(sfaId);
   };
+
+  const handleCancle = async () => {};
 
   return (
     <>
@@ -54,19 +62,30 @@ const SfaAddPaymentForm = ({
         {/* Submit Button */}
         <Group>
           {formData.salesByPayments.length !== 0 && (
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={isSubmitting}
-              className="w-full"
-              onClick={(e) => {
-                // 버튼 클릭 시에도 이벤트 전파 방지
-                e.preventDefault();
-                handleSubmit(e);
-              }}
-            >
-              {isSubmitting ? '처리중...' : '저장'}
-            </Button>
+            <>
+              <Button
+                type="button"
+                variant="primary"
+                disabled={isSubmitting}
+                className="w-full"
+                onClick={handleCancle}
+              >
+                취소
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={isSubmitting}
+                className="w-full"
+                onClick={(e) => {
+                  // 버튼 클릭 시에도 이벤트 전파 방지
+                  e.preventDefault();
+                  handleSubmit(e);
+                }}
+              >
+                {isSubmitting ? '처리중...' : '저장'}
+              </Button>
+            </>
           )}
         </Group>
       </Form>

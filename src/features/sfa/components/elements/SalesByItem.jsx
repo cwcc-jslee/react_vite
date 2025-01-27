@@ -25,15 +25,6 @@ import {
 /**
  * SalesByItem Component
  * 매출 아이템 입력을 위한 컴포넌트
- *
- * @param {Object} props
- * @param {Array} props.items - 매출 아이템 목록
- * @param {Function} props.onChange - 아이템 변경 핸들러
- * @param {Function} props.onRemove - 아이템 삭제 핸들러
- * @param {boolean} props.isSubmitting - 제출 중 여부
- * @param {Object} props.errors - 유효성 검사 에러
- * @param {Object} props.itemsData - 매출품목 데이터
- * @param {boolean} props.isItemsLoading - 매출품목 로딩 상태
  */
 const SalesByItemForm = ({
   items = [],
@@ -48,6 +39,7 @@ const SalesByItemForm = ({
   const { data: teamsData, isLoading: isTeamsLoading } = useSelectData(
     QUERY_KEYS.TEAMS,
   );
+  console.log('>>> items ', items);
   if (!items?.length) return null;
 
   // 특정 인덱스의 각 필드별 에러 확인

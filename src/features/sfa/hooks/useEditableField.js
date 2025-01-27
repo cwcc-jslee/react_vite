@@ -1,135 +1,155 @@
 // src/features/sfa/hooks/useEditableField.js
-import { useState, useEffect } from 'react';
-import { updateSfaField } from '../services/sfaSubmitService';
+import { useState, useEffect, useCallback } from 'react';
+import { sfaSubmitService } from '../services/sfaSubmitService';
+import { getCurrentValue } from '../utils/fieldUtils';
+import { sfaApi } from '../api/sfaApi';
+import { useSfa } from '../context/SfaProvider';
 
 /**
  * 편집 가능한 필드의 상태와 동작을 관리하는 커스텀 훅
  * @param {Object} initialData - 초기 데이터
- * @param {Function} onUpdate - 필드 업데이트 핸들러
  * @returns {Object} 편집 관련 상태와 메서드들
  */
-export const useEditableField = (initialData, onUpdate) => {
+export const useEditableField = (initialData) => {
+  const { setDrawer } = useSfa();
   // 편집 상태 관리
-  const [editingField, setEditingField] = useState(null);
-  const [editValue, setEditValue] = useState('');
-
-  // 매출파트너 관련 상태
-  const [partnerChecked, setPartnerChecked] = useState(
-    initialData?.has_partner || false,
-  );
-  const [tempPartnerChecked, setTempPartnerChecked] = useState(
-    initialData?.has_partner || false,
-  );
-  const [partnerId, setPartnerId] = useState(
-    initialData?.selling_partner?.id || null,
-  );
-
-  // 프로젝트 관련 상태
-  const [projectStatus, setProjectStatus] = useState(
-    initialData?.is_project || false,
-  );
-  const [tempProjectStatus, setTempProjectStatus] = useState(
-    initialData?.is_project || false,
-  );
-
-  // 초기 데이터가 변경될 때 상태 업데이트
-  useEffect(() => {
-    setPartnerChecked(initialData?.has_partner || false);
-    setTempPartnerChecked(initialData?.has_partner || false);
-    setPartnerId(initialData?.selling_partner?.id || null);
-    setProjectStatus(initialData?.is_project || false);
-    setTempProjectStatus(initialData?.is_project || false);
-  }, [initialData]);
+  const [editState, setEditState] = useState({
+    editField: null, // 현재 편집 중인 필드
+    currentValue: null, // 현재 값
+    newValue: null, // 변경경 값
+  });
+  // 파트너 등록 여부
+  const [partnerState, setPartnerState] = useState({
+    isEnabled: initialData?.has_partner || false, // 현재 값
+    pendingState: initialData?.has_partner || false, // 변경 값
+  });
 
   // 편집 시작
-  const startEditing = (fieldName, editableFields) => {
-    setEditingField(fieldName);
-    if (fieldName === 'selling_partner') {
-      setTempPartnerChecked(partnerChecked);
-    } else if (fieldName === 'is_project') {
-      setTempProjectStatus(projectStatus);
-    } else {
-      const field = editableFields[fieldName];
-      setEditValue(field?.getValue(initialData) || '');
-    }
+  const startEditing = (fieldName) => {
+    const currentValue = getCurrentValue(fieldName, initialData);
+    setEditState({
+      editField: fieldName,
+      currentValue,
+      newValue: currentValue,
+    });
   };
 
   // 편집 취소
   const cancelEditing = () => {
-    setEditingField(null);
-    setEditValue('');
-    setTempPartnerChecked(partnerChecked);
-    setTempProjectStatus(projectStatus);
+    setEditState({
+      editField: null,
+      currentValue: null,
+      newValue: null,
+    });
   };
 
   // 편집 저장
-  const saveEditing = async (fieldName) => {
-    try {
-      const sfaId = initialData.documentId;
+  /**
+   * 파트너 관련 필드 업데이트 처리
+   * @param {string} sfaId - SFA 문서 ID
+   * @param {Object} formData - 업데이트할 데이터
+   */
+  const processParterUpdate = async (sfaId, formData) => {
+    const { currentValue, newValue } = editState;
+    const { isEnabled, pendingState } = partnerState;
 
-      if (fieldName === 'selling_partner') {
-        // 매출파트너 관련 처리
-        await updateSfaField(sfaId, 'has_partner', tempPartnerChecked);
-        if (!tempPartnerChecked) {
-          await updateSfaField(sfaId, 'selling_partner', null);
-        }
-        setPartnerChecked(tempPartnerChecked);
-      } else if (fieldName === 'is_project') {
-        // 프로젝트 여부 처리
-        await updateSfaField(sfaId, 'is_project', tempProjectStatus);
-        setProjectStatus(tempProjectStatus);
-      } else {
-        // 일반 필드 처리
-        await updateSfaField(sfaId, fieldName, editValue);
-      }
-
-      // API 업데이트 성공 후 상태 초기화
-      setEditingField(null);
-      setEditValue('');
-
-      // 부모 컴포넌트 콜백 실행
-      if (onUpdate) {
-        await onUpdate(fieldName, editValue);
-      }
-    } catch (error) {
-      console.error('Failed to save:', error);
-      setTempPartnerChecked(partnerChecked);
-      setTempProjectStatus(projectStatus);
-      // 에러 처리를 위해 에러를 다시 던짐
-      throw error;
+    // Case 1: false -> true (파트너 추가)
+    if (!isEnabled && pendingState && newValue) {
+      await sfaSubmitService.updateSfaBase(sfaId, {
+        ...formData,
+        has_partner: true,
+      });
+    }
+    // Case 2: true -> true (파트너 변경)
+    else if (isEnabled && pendingState && currentValue !== newValue) {
+      await sfaSubmitService.updateSfaBase(sfaId, formData);
+    }
+    // Case 3: true -> false (파트너 제거)
+    else if (isEnabled && !pendingState) {
+      await sfaSubmitService.updateSfaBase(sfaId, {
+        has_partner: false,
+        selling_partner: null,
+      });
+    } else {
+      console.warn('Invalid partner update case:', {
+        partnerState,
+        editState,
+        formData,
+      });
     }
   };
+
+  const saveEditing = useCallback(async () => {
+    const { editField, currentValue, newValue } = editState;
+    if (!editField) return;
+    const sfaId = initialData.documentId;
+    const formData = { [editField]: newValue };
+
+    try {
+      console.log('[SFA Edit]', {
+        field: editField,
+        before: currentValue,
+        after: newValue,
+      });
+
+      if (editField === 'selling_partner') {
+        await processParterUpdate(sfaId, formData);
+
+        // 모달 업데이트 성공..
+
+        // 변경내용 가져오기 & DrawerState 업데이트
+        setEditState({ editField: null, currentValue: null, newValue: null });
+        const updateData = await sfaApi.getSfaDetail(initialData.id);
+        setDrawer({ controlMode: 'view', data: updateData.data[0] });
+      } else {
+        // 일반 필드 처리
+        // 유효성 검증
+        // 기존 값과 비교, 건명 등 null 이나 공백 확인
+
+        await sfaSubmitService.updateSfaBase(sfaId, formData);
+
+        // 변경내용 가져오기 & DrawerState 업데이트
+        setEditState({ editField: null, currentValue: null, newValue: null });
+        const updateData = await sfaApi.getSfaDetail(initialData.id);
+        setDrawer({ controlMode: 'view', data: updateData.data[0] });
+      }
+    } catch (error) {
+      console.error('[SFA Edit] Save Error:', error);
+      throw error;
+    }
+  }, [editState, partnerState]);
 
   // 값 변경 핸들러
   const handleValueChange = (e) => {
-    setEditValue(e.target.value);
+    console.log(`>>> handleValueChange >>> : ${e.target.type}`);
+    const value =
+      e.target?.type === 'select-one'
+        ? Number(e.target.value)
+        : e.target?.type === 'customer-search' //CustomerSearchInput
+        ? e.target.value
+        : e.target.value;
+
+    setEditState((prev) => ({
+      ...prev,
+      newValue: value,
+    }));
   };
 
-  // 파트너 선택 핸들러
-  const handlePartnerSelect = async (partner) => {
-    setPartnerChecked(true);
-    try {
-      await onUpdate('selling_partner', partner.id);
-      setPartnerId(partner.id);
-      setEditingField(null);
-    } catch (error) {
-      console.error('Failed to update partner:', error);
-    }
+  // 매출 파트너 체크 박스 핸들러
+  const handlePartnerStateChange = (e) => {
+    const value = e.target.checked;
+
+    setPartnerState((prev) => ({ ...prev, pendingState: value }));
+    console.log(`>>> handlepartnerStateChange >>> : ${value}`);
   };
 
   return {
-    editingField,
-    editValue,
-    partnerChecked,
-    tempPartnerChecked,
-    partnerId,
-    projectStatus,
-    tempProjectStatus,
+    editState,
+    partnerState,
     startEditing,
-    cancelEditing,
     saveEditing,
+    cancelEditing,
     handleValueChange,
-    handlePartnerSelect,
-    setTempProjectStatus,
+    handlePartnerStateChange,
   };
 };
