@@ -21,30 +21,7 @@ import {
   Modal,
 } from '../../../../../shared/components/ui';
 
-const SfaAddForm = ({
-  // formData,
-  // errors,
-  // isSubmitting,
-  sfaSalesTypeData,
-  sfaClassificationData,
-  itemsData,
-  isItemsLoading,
-  paymentMethodData,
-  percentageData,
-  isPaymentDataLoading,
-  handleCustomerSelect,
-  // updateFormField,
-  // handleSalesItemChange,
-  // handleRemoveSalesItem,
-  // handleSalesPaymentChange,
-  // handleAddPayment,
-  // handleRemovePayment,
-  processSubmit,
-  validateForm,
-  checkAmounts,
-  // actions,
-  // data,
-}) => {
+const SfaAddForm = ({ sfaSalesTypeData, sfaClassificationData }) => {
   const {
     formData,
     errors,
@@ -56,12 +33,19 @@ const SfaAddForm = ({
     handleAddPayment,
     handleRemovePayment,
     handlePaymentChange,
+    handleCustomerSelect,
+    isItemsLoading,
+    itemsData,
+    paymentData,
+    percentageData,
+    isPaymentDataLoading,
+    validateForm,
+    checkAmounts,
+    processSubmit,
   } = useSfaForm();
   const [hasPartner, setHasPartner] = useState(false);
   const [isProject, setIsProject] = useState(false);
   const [showAmountConfirm, setShowAmountConfirm] = useState(false);
-  // const { handleAddSalesItem } = actions();
-  console.log(`>>> form data :`, formData);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -294,7 +278,7 @@ const SfaAddForm = ({
           onRemove={handleRemovePayment}
           isSubmitting={isSubmitting}
           errors={errors}
-          paymentMethodData={paymentMethodData}
+          paymentData={paymentData}
           percentageData={percentageData}
           isPaymentDataLoading={isPaymentDataLoading}
         />

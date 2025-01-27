@@ -39,7 +39,7 @@ const SalesByItemForm = ({
   const { data: teamsData, isLoading: isTeamsLoading } = useSelectData(
     QUERY_KEYS.TEAMS,
   );
-  console.log('>>> items ', items);
+  // console.log('>>> items ', items);
   if (!items?.length) return null;
 
   // 특정 인덱스의 각 필드별 에러 확인

@@ -17,7 +17,76 @@ export const useFormValidation = (formData) => {
     [ERROR_GROUPS.SALES_ITEMS]: [],
     [ERROR_GROUPS.PAYMENTS]: [],
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  //
+  // *********************************************************
+  // 내부 헬퍼 함수들
+  const validateBasicInfo = (hasPartner) => {
+    const errors = [];
+
+    Object.entries(REQUIRED_FIELDS).forEach(([field, label]) => {
+      if (!formData[field]) {
+        errors.push(ERROR_MESSAGES.REQUIRED_FIELD(label));
+      }
+    });
+
+    if (hasPartner && !formData.sellingPartner) {
+      errors.push(PARTNER_ERROR_MESSAGE);
+    }
+
+    return errors;
+  };
+
+  const validateSalesItems = () => {
+    const errors = [];
+
+    if (formData.salesByItems.length === 0) {
+      errors.push(ERROR_MESSAGES.MIN_SALES_ITEMS);
+      return errors;
+    }
+
+    formData.salesByItems.forEach((item, index) => {
+      const missingFields = [];
+      if (!item.itemName) missingFields.push('매출품목');
+      if (!item.teamName) missingFields.push('사업부');
+      if (!item.amount) missingFields.push('매출금액');
+
+      if (missingFields.length > 0) {
+        errors.push(ERROR_MESSAGES.ITEM_FIELDS(index + 1, missingFields));
+      }
+    });
+
+    return errors;
+  };
+
+  const validatePaymentMargin = (payment, index, errors) => {
+    if (!payment.margin) return;
+
+    const marginValue = Number(payment.margin);
+    const amountValue = Number(payment.amount);
+
+    if (payment.isProfit && marginValue >= amountValue) {
+      errors.push(
+        `${index + 1}번 항목: ${ERROR_MESSAGES.MARGIN_LESS_THAN_AMOUNT}`,
+      );
+    } else if (
+      !payment.isProfit &&
+      (marginValue < VALIDATION_RULES.MIN_MARGIN ||
+        marginValue > VALIDATION_RULES.MAX_MARGIN)
+    ) {
+      errors.push(`${index + 1}번 항목: ${ERROR_MESSAGES.MARGIN_RANGE}`);
+    }
+  };
+
+  const showErrorNotification = (errors) => {
+    notification.error({
+      message: '매출등록오류',
+      description: formatValidationErrors(errors),
+      duration: 0,
+      style: { width: 500 },
+    });
+  };
+  // *********************************************************
 
   // 전체 폼 검증 (신규등록)
   const validateForm = (hasPartner = false) => {
@@ -82,79 +151,9 @@ export const useFormValidation = (formData) => {
   return {
     // 상태
     validationErrors,
-    isSubmitting,
-
     // 함수
-    setIsSubmitting,
     validateForm,
     validatePayments, // 결제매출 등록시 사용
     checkAmounts,
   };
-};
-
-// 내부 헬퍼 함수들
-const validateBasicInfo = (hasPartner) => {
-  const errors = [];
-
-  Object.entries(REQUIRED_FIELDS).forEach(([field, label]) => {
-    if (!formData[field]) {
-      errors.push(ERROR_MESSAGES.REQUIRED_FIELD(label));
-    }
-  });
-
-  if (hasPartner && !formData.sellingPartner) {
-    errors.push(PARTNER_ERROR_MESSAGE);
-  }
-
-  return errors;
-};
-
-const validateSalesItems = () => {
-  const errors = [];
-
-  if (formData.salesByItems.length === 0) {
-    errors.push(ERROR_MESSAGES.MIN_SALES_ITEMS);
-    return errors;
-  }
-
-  formData.salesByItems.forEach((item, index) => {
-    const missingFields = [];
-    if (!item.itemName) missingFields.push('매출품목');
-    if (!item.teamName) missingFields.push('사업부');
-    if (!item.amount) missingFields.push('매출금액');
-
-    if (missingFields.length > 0) {
-      errors.push(ERROR_MESSAGES.ITEM_FIELDS(index + 1, missingFields));
-    }
-  });
-
-  return errors;
-};
-
-const validatePaymentMargin = (payment, index, errors) => {
-  if (!payment.margin) return;
-
-  const marginValue = Number(payment.margin);
-  const amountValue = Number(payment.amount);
-
-  if (payment.isProfit && marginValue >= amountValue) {
-    errors.push(
-      `${index + 1}번 항목: ${ERROR_MESSAGES.MARGIN_LESS_THAN_AMOUNT}`,
-    );
-  } else if (
-    !payment.isProfit &&
-    (marginValue < VALIDATION_RULES.MIN_MARGIN ||
-      marginValue > VALIDATION_RULES.MAX_MARGIN)
-  ) {
-    errors.push(`${index + 1}번 항목: ${ERROR_MESSAGES.MARGIN_RANGE}`);
-  }
-};
-
-const showErrorNotification = (errors) => {
-  notification.error({
-    message: '매출등록오류',
-    description: formatValidationErrors(errors),
-    duration: 0,
-    style: { width: 500 },
-  });
 };

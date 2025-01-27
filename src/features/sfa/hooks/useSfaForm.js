@@ -2,8 +2,9 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { selectCodebookByType } from '../../codebook/store/codebookSlice';
-import { useDrawerFormData } from './useDrawerFormData';
+// import { useDrawerFormData } from './useDrawerFormData';
 import { useFormData } from './useFormData';
+import { useFormValidation } from './useFormValidation';
 // import { useFormAction } from './useFormActions';
 import { createSfaWithPayment } from '../services/sfaSubmitService';
 import { notification } from '../../../shared/services/notification';
@@ -16,17 +17,20 @@ import { sfaSubmitService } from '../services/sfaSubmitService';
  */
 export const useSfaForm = () => {
   const { setDrawerClose, setDrawer } = useSfa();
-  // const formState = useDrawerFormData();
   const formState = useFormData();
-  // const formActions = useFormAction();
-  const { formData, setIsSubmitting, setErrors, validateForm } = formState;
+  const { formData, setIsSubmitting, setErrors } = formState;
+  const { validateForm, validatePayments, checkAmounts } =
+    useFormValidation(formData);
 
+  //
+  // const formState = useDrawerFormData();
+  // const formActions = useFormAction();
   // 금액 일치 확인
-  const checkAmounts = () => {
-    const itemAmount = parseInt(formData.itemAmount) || 0;
-    const paymentAmount = parseInt(formData.paymentAmount) || 0;
-    return itemAmount === paymentAmount;
-  };
+  // const checkAmounts = () => {
+  //   const itemAmount = parseInt(formData.itemAmount) || 0;
+  //   const paymentAmount = parseInt(formData.paymentAmount) || 0;
+  //   return itemAmount === paymentAmount;
+  // };
 
   // 폼 제출 처리
   const processSubmit = async (hasPartner, isProject) => {
@@ -110,10 +114,11 @@ export const useSfaForm = () => {
 
   return {
     ...formState,
+    validateForm,
     checkAmounts,
     processSubmit,
     processPaymentSubmit,
-    data: formState,
+    // data: formState,
     // actions: formActions,
   };
 };

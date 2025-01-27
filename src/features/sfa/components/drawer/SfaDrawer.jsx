@@ -26,13 +26,14 @@ const SfaDrawer = () => {
   );
   // Form Props 생성
   const formProps = useSfaForm(); // Custom hook을 통한 form 관련 로직 분리
+  const { handleAddPayment } = formProps;
 
   // Props 객체 구성
-  const addFormProps = {
-    ...formProps,
-    sfaSalesTypeData,
-    sfaClassificationData,
-  };
+  // const addFormProps = {
+  //   // ...formProps,
+  //   sfaSalesTypeData,
+  //   sfaClassificationData,
+  // };
 
   const { drawerState, setDrawer, setDrawerClose } = useSfa();
   const { visible, controlMode, featureMode, data } = drawerState;
@@ -84,7 +85,7 @@ const SfaDrawer = () => {
       <Button
         type="button"
         variant="primary"
-        onClick={addFormProps.handleAddSalesPayment}
+        onClick={handleAddPayment}
         // disabled={isSubmitting || formData.salesByPayments.length >= 3}
         // className={`w-full ${
         //   formData.salesByPayments.length >= 3
@@ -103,7 +104,12 @@ const SfaDrawer = () => {
     if (controlMode === 'view' && !data) return null;
 
     if (controlMode === 'add') {
-      return <SfaAddForm {...addFormProps} />;
+      return (
+        <SfaAddForm
+          sfaSalesTypeData={sfaSalesTypeData}
+          sfaClassificationData={sfaClassificationData}
+        />
+      );
     }
 
     if (controlMode === 'view') {

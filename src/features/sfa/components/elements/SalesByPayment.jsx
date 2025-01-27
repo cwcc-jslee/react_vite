@@ -19,7 +19,7 @@ const SalesByPayment = ({
   onRemove,
   isSubmitting,
   errors,
-  paymentMethodData,
+  paymentData,
   percentageData,
   isPaymentDataLoading,
 }) => {
@@ -118,7 +118,7 @@ const SalesByPayment = ({
               required
             >
               <option value="">결제구분 선택</option>
-              {paymentMethodData?.data?.map((method) => (
+              {paymentData?.data?.map((method) => (
                 <option key={method.id} value={method.code}>
                   {method.name}
                 </option>

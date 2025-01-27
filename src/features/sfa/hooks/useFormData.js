@@ -1,61 +1,41 @@
 // src/features/sfa/hooks/useFormData.js
 // 구조개선(25.01.24)
-import { useState, useEffect } from 'react';
-
-/**
- * 초기 상태 정의
- */
-export const initialState = {
-  name: '',
-  sfaSalesType: '',
-  sfaClassification: '',
-  customer: '',
-  sellingPartner: '',
-  itemAmount: '',
-  paymentAmount: '',
-  description: '',
-  salesByItems: [],
-  salesByPayments: [],
-};
-
-const initialSalesByItem = {
-  itemId: '',
-  itemName: '',
-  teamId: '',
-  teamName: '',
-  amount: '',
-};
-
-const initialSalesByPayment = {
-  billingType: '',
-  isConfirmed: false,
-  probability: '',
-  amount: '',
-  profitAmount: '',
-  isProfit: false,
-  marginProfitValue: '',
-  recognitionDate: '',
-  scheduledDate: '',
-  memo: '',
-};
+import { useState, useEffect, useCallback } from 'react';
+import { sfaApi } from '../services/sfaApi';
+import {
+  FORM_LIMITS,
+  initialFormState,
+  initialSalesByItem,
+  initialSalesByPayment,
+} from '../constants/formInitialState';
 
 /**
  * 매출 등록 폼의 데이터를 관리하는 커스텀 훅
  * @param {Function} fetchItems - 매출품목 조회 함수
  * @returns {Object} 폼 데이터 상태와 관련 핸들러 함수들
  */
-export const useFormData = (fetchItems) => {
+export const useFormData = () => {
   // 폼 데이터 상태 관리
-  const [formData, setFormData] = useState(initialState);
+  const [formData, setFormData] = useState(initialFormState);
+  // 에러 상태 관리
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  // API 데이터 상태
+  const [itemsData, setItemsData] = useState({ data: [] });
+  const [paymentData, setPaymentData] = useState({ data: [] });
+  const [percentageData, setPercentageData] = useState({ data: [] });
+  // API 데이터 로딩 상태 관리
+  const [isItemsLoading, setIsItemsLoading] = useState(false);
+  const [isPaymentDataLoading, setIsPaymentDataLoading] = useState(false);
 
   useEffect(() => {
     console.log('Form Data Changed:', {
-      previous: initialState,
+      previous: initialFormState,
       current: formData,
       changes: Object.keys(formData).reduce((diff, key) => {
-        if (formData[key] !== initialState[key]) {
+        if (formData[key] !== initialFormState[key]) {
           diff[key] = {
-            from: initialState[key],
+            from: initialFormState[key],
             to: formData[key],
           };
         }
@@ -64,9 +44,64 @@ export const useFormData = (fetchItems) => {
     });
   }, [formData]);
 
-  // 에러 상태 관리
-  const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  /**
+   * 매출 금액 합계 계산 Effect
+   */
+  useEffect(() => {
+    const itemTotal = formData.salesByItems.reduce(
+      (sum, item) => sum + (parseInt(item.amount) || 0),
+      0,
+    );
+
+    const paymentTotal = formData.salesByPayments.reduce(
+      (sum, payment) => sum + (parseInt(payment.amount) || 0),
+      0,
+    );
+
+    setFormData((prev) => ({
+      ...prev,
+      itemAmount: itemTotal.toString(),
+      paymentAmount: paymentTotal.toString(),
+    }));
+  }, [formData.salesByItems, formData.salesByPayments]);
+
+  // 아이템 데이터 조회
+  const loadItems = useCallback(async (classificationId) => {
+    if (!classificationId) {
+      setItemsData({ data: [] });
+      return;
+    }
+
+    setIsItemsLoading(true);
+    try {
+      const response = await sfaApi.fetchItems(classificationId);
+      setItemsData(response.data);
+    } catch (error) {
+      console.error('Failed to fetch items:', error);
+      setItemsData({ data: [] });
+    } finally {
+      setIsItemsLoading(false);
+    }
+  }, []);
+
+  const loadPayments = async () => {
+    setIsPaymentDataLoading(true);
+    try {
+      const [paymentMethods, percentages] = await Promise.all([
+        sfaApi.fetchCodebook('re_payment_method'),
+        sfaApi.fetchCodebook('sfa_percentage'),
+      ]);
+
+      setPaymentData(paymentMethods.data);
+      setPercentageData(percentages.data);
+    } catch (error) {
+      console.error('Failed to fetch payment data:', error);
+      setPaymentData({ data: [] });
+      setPercentageData({ data: [] });
+    } finally {
+      setIsPaymentDataLoading(false);
+    }
+  };
 
   /**
    * 입력값 변경 핸들러
@@ -82,7 +117,8 @@ export const useFormData = (fetchItems) => {
 
     // SFA 분류 변경 시 관련 매출품목 조회
     if (name === 'sfaClassification' && value) {
-      fetchItems(value);
+      loadItems(value);
+      // fetchItems(value);
       // 매출품목 변경 시 관련 항목 초기화
       setFormData((prev) => ({
         ...prev,
@@ -120,7 +156,7 @@ export const useFormData = (fetchItems) => {
    * 모든 필드를 초기 상태로 리셋
    */
   const resetForm = () => {
-    setFormData(initialState);
+    setFormData(initialFormState);
     setErrors({});
   };
 
@@ -202,8 +238,8 @@ export const useFormData = (fetchItems) => {
     if (formData.salesByPayments.length >= 3) return;
 
     try {
-      if (!isPaymentDataLoading && !paymentMethodData.data.length) {
-        await fetchPayments();
+      if (!isPaymentDataLoading && !paymentData.data.length) {
+        await loadPayments();
       }
 
       setFormData((prev) => ({
@@ -268,14 +304,77 @@ export const useFormData = (fetchItems) => {
     });
   };
 
+  /**
+   * 매출 아이템 관리 훅
+   * updateItem
+   * addItem
+   * removeItem
+   */
+  const updateItem = useCallback(
+    (index, fields, values) => {
+      setFormData((prev) => {
+        const updatedItems = [...prev.salesByItems];
+
+        if (typeof fields === 'string') {
+          updatedItems[index] = {
+            ...updatedItems[index],
+            [fields]: values,
+          };
+        } else {
+          updatedItems[index] = {
+            ...updatedItems[index],
+            ...fields,
+          };
+        }
+
+        return {
+          ...prev,
+          salesByItems: updatedItems,
+        };
+      });
+    },
+    [setFormData],
+  );
+
+  const addItem = useCallback(() => {
+    if (formData.salesByItems.length < FORM_LIMITS.MAX_SALES_ITEMS) {
+      setFormData((prev) => ({
+        ...prev,
+        salesByItems: [...prev.salesByItems, { ...initialSalesByItem }],
+      }));
+    }
+  }, [formData.salesByItems.length, setFormData]);
+
+  const removeItem = useCallback(
+    (index) => {
+      setFormData((prev) => ({
+        ...prev,
+        salesByItems: prev.salesByItems.filter((_, i) => i !== index),
+      }));
+    },
+    [setFormData],
+  );
+
   return {
+    // 폼 상태관리
     formData,
-    setFormData,
     errors,
+    updateFormField, // 기존 handleChange
+    setFormData, //확인후 삭제
     setErrors,
+    //
     isSubmitting,
     setIsSubmitting,
-    updateFormField, // 기존 handleChange
+    // 매출 아이템 관리 훅
+    updateItem,
+    addItem,
+    removeItem,
+    itemsData,
+    isItemsLoading,
+    paymentData,
+    percentageData,
+    isPaymentDataLoading,
+    //
     handleCustomerSelect,
     resetForm,
     setFieldValue,
