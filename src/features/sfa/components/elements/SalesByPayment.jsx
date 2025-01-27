@@ -18,7 +18,6 @@ const SalesByPayment = ({
   onChange,
   onRemove,
   isSubmitting,
-  errors,
   paymentData,
   percentageData,
   isPaymentDataLoading,

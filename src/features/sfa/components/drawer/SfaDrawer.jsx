@@ -141,10 +141,10 @@ const SfaDrawer = () => {
           />
 
           {/* 결제 매출 등록 버튼 */}
-          {renderFeatureMenu()}
+          {/* {renderFeatureMenu()} */}
 
           {/* 결제 매출 Form */}
-          <SfaAddPaymentForm {...formProps} data={data} />
+          <SfaAddPaymentForm data={data} controlMode={controlMode} />
           {/* <SalesByPayment
             payments={formData.salesByPayments}
             onChange={handleSalesPaymentChange}

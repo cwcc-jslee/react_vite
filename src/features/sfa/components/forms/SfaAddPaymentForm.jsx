@@ -1,20 +1,22 @@
 // src/features/sfa/components/forms/SfaAddPaymentForm.jsx
 import { useFormValidation } from '../../hooks/useFormValidation';
 import SalesByPayment from '../elements/SalesByPayment';
+import { useSfaForm } from '../../hooks/useSfaForm.js';
 import { Form, Group, Button } from '../../../../shared/components/ui';
 
-const SfaAddPaymentForm = ({
-  formData,
-  handleSalesPaymentChange,
-  handleRemoveSalesPayment,
-  isSubmitting,
-  errors,
-  paymentMethodData,
-  percentageData,
-  isPaymentDataLoading,
-  processPaymentSubmit,
-  data,
-}) => {
+const SfaAddPaymentForm = ({ data, controlMode }) => {
+  const {
+    formData,
+    handleAddPayment,
+    handlePaymentChange,
+    handleRemovePayment,
+    isSubmitting,
+    errors,
+    paymentData,
+    percentageData,
+    isPaymentDataLoading,
+    processPaymentSubmit,
+  } = useSfaForm();
   const { validatePayments } = useFormValidation(formData);
 
   const handleSubmit = async (e) => {
@@ -39,6 +41,21 @@ const SfaAddPaymentForm = ({
 
   return (
     <>
+      {controlMode === 'edit' && (
+        <Button
+          type="button"
+          variant="primary"
+          onClick={handleAddPayment}
+          // disabled={isSubmitting || formData.salesByPayments.length >= 3}
+          // className={`w-full ${
+          //   formData.salesByPayments.length >= 3
+          //     ? 'bg-gray-200 hover:bg-gray-200 text-gray-500 border-gray-200'
+          //     : ''
+          // }`}
+        >
+          결제매출등록
+        </Button>
+      )}
       <Form
         onSubmit={handleSubmit}
         className="space-y-6"
@@ -49,12 +66,12 @@ const SfaAddPaymentForm = ({
         {/* 결제 매출 추가 */}
         <SalesByPayment
           payments={formData.salesByPayments}
-          onChange={handleSalesPaymentChange}
+          onChange={handlePaymentChange}
           // onAdd={handleAddSalesPayment}
-          onRemove={handleRemoveSalesPayment}
+          onRemove={handleRemovePayment}
           isSubmitting={isSubmitting}
-          errors={errors}
-          paymentMethodData={paymentMethodData}
+          // errors={errors}
+          paymentData={paymentData}
           percentageData={percentageData}
           isPaymentDataLoading={isPaymentDataLoading}
         />

@@ -1,7 +1,7 @@
 // src/features/sfa/hooks/useFormData.js
 // 구조개선(25.01.24)
 import { useState, useEffect, useCallback } from 'react';
-import { sfaApi } from '../services/sfaApi';
+import { sfaApi } from '../api/sfaApi';
 import {
   FORM_LIMITS,
   initialFormState,

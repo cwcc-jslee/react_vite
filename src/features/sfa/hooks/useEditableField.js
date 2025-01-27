@@ -34,6 +34,12 @@ export const useEditableField = (initialData) => {
     });
   };
 
+  useEffect(() => {
+    console.log('editState Changed:', {
+      value: editState.newValue,
+    });
+  }, [editState]);
+
   // 편집 취소
   const cancelEditing = () => {
     setEditState({
@@ -82,6 +88,10 @@ export const useEditableField = (initialData) => {
   const saveEditing = useCallback(async () => {
     const { editField, currentValue, newValue } = editState;
     if (!editField) return;
+    if (newValue === null || newValue === '') {
+      console.log(`>>> newValue...null or 값 없음`);
+      return;
+    }
     const sfaId = initialData.documentId;
     const formData = { [editField]: newValue };
 
@@ -104,9 +114,14 @@ export const useEditableField = (initialData) => {
       } else {
         // 일반 필드 처리
         // 유효성 검증
-        // 기존 값과 비교, 건명 등 null 이나 공백 확인
-
-        await sfaSubmitService.updateSfaBase(sfaId, formData);
+        // 값이 같으면 업데이트 하지 않음
+        if (currentValue !== newValue) {
+          await sfaSubmitService.updateSfaBase(sfaId, formData);
+        } else {
+          // 에러 표시 값 동일
+          console.log(`>>> 기존 - 현재 값 동일`);
+          return;
+        }
 
         // 변경내용 가져오기 & DrawerState 업데이트
         setEditState({ editField: null, currentValue: null, newValue: null });
@@ -121,13 +136,23 @@ export const useEditableField = (initialData) => {
 
   // 값 변경 핸들러
   const handleValueChange = (e) => {
-    console.log(`>>> handleValueChange >>> : ${e.target.type}`);
+    console.log(`>>> handleValueChange >>> : ${e.target.value}`);
     const value =
       e.target?.type === 'select-one'
-        ? Number(e.target.value)
+        ? e.target.value === ''
+          ? null
+          : Number(e.target.value)
         : e.target?.type === 'customer-search' //CustomerSearchInput
         ? e.target.value
         : e.target.value;
+
+    //단어 앞 공백 제거
+    const trimmedValue =
+      value === null
+        ? null
+        : typeof value === 'string'
+        ? value.replace(/^\s+/, '')
+        : value;
 
     setEditState((prev) => ({
       ...prev,

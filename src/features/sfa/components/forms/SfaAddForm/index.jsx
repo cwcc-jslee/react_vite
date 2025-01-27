@@ -274,10 +274,10 @@ const SfaAddForm = ({ sfaSalesTypeData, sfaClassificationData }) => {
         <SalesByPayment
           payments={formData.salesByPayments}
           onChange={handlePaymentChange}
-          onAdd={handleAddPayment}
+          // onAdd={handleAddPayment}
           onRemove={handleRemovePayment}
           isSubmitting={isSubmitting}
-          errors={errors}
+          // errors={errors}
           paymentData={paymentData}
           percentageData={percentageData}
           isPaymentDataLoading={isPaymentDataLoading}
