@@ -14,7 +14,7 @@ import {
  * @param {Function} fetchItems - 매출품목 조회 함수
  * @returns {Object} 폼 데이터 상태와 관련 핸들러 함수들
  */
-export const useFormData = () => {
+export const useFormData = (drawerState) => {
   // 폼 데이터 상태 관리
   const [formData, setFormData] = useState(initialFormState);
   // 에러 상태 관리
@@ -27,6 +27,9 @@ export const useFormData = () => {
   // API 데이터 로딩 상태 관리
   const [isItemsLoading, setIsItemsLoading] = useState(false);
   const [isPaymentDataLoading, setIsPaymentDataLoading] = useState(false);
+  // 선택된 결제매출 ID 상태 관리
+  const [selectedPaymentIds, setSelectedPaymentIds] = useState([]);
+  const [selectedPaymentData, setSelectedPaymentData] = useState([]);
 
   useEffect(() => {
     console.log('Form Data Changed:', {
@@ -42,8 +45,12 @@ export const useFormData = () => {
         return diff;
       }, {}),
     });
+    console.log('PaymentData Changed:', paymentData);
   }, [formData]);
 
+  // useEffect(() => {
+  //   console.log('Payment Data Changed:', paymentData);
+  // }, [paymentData]);
   /**
    * 매출 금액 합계 계산 Effect
    */
@@ -355,6 +362,69 @@ export const useFormData = () => {
     [setFormData],
   );
 
+  //경제매출 수정 선택시
+  const handleEditPayment = async () => {
+    if (formData.salesByPayments.length >= 3) return;
+
+    try {
+      if (!isPaymentDataLoading && !paymentData.data.length) {
+        await loadPayments();
+      }
+    } catch (error) {
+      console.error('Failed to load payment:', error);
+    }
+  };
+
+  // 결제매출 선택 핸들러 (수정 모드)
+  const togglePaymentSelection = async (paymentId) => {
+    console.log('>>togglePaymentSelection>> [paymentId] : ', paymentId);
+
+    // formData 업데이트
+    const payment = drawerState.data.sfa_by_payments.find(
+      (p) => p.documentId === paymentId,
+    );
+    console.log('>>togglePaymentSelection>> [payment] : ', payment);
+
+    try {
+      if (!isPaymentDataLoading && !paymentData.data.length) {
+        await loadPayments();
+      }
+      setFormData((prev) => ({
+        ...prev,
+        salesByPayments: [
+          {
+            // 선택시 추가
+            id: payment.id,
+            documentId: payment.documentId,
+            billingType: payment.billing_type || '',
+            isConfirmed: payment.is_confirmed || false,
+            probability: payment.probability?.toString() || '',
+            amount: payment.amount?.toString() || '',
+            profitAmount: payment.profit_amount?.toString() || '',
+            isProfit: payment.profit_config?.is_profit || false,
+            marginProfitValue:
+              payment.profit_config?.margin_profit_value?.toString() || '',
+            recognitionDate: payment.recognition_date || '',
+            scheduledDate: payment.scheduled_date || '',
+            memo: payment.memo || '',
+            sfa: payment.sfa || null,
+          },
+        ],
+      }));
+    } catch (error) {
+      console.error('Failed to edit sales payment:', error);
+    }
+    setSelectedPaymentIds(paymentId);
+  };
+
+  const resetPaymentForm = () => {
+    setFormData((prev) => ({
+      ...prev,
+      salesByPayments: [],
+    }));
+    setSelectedPaymentIds([]);
+  };
+
   return {
     // 폼 상태관리
     formData,
@@ -386,5 +456,11 @@ export const useFormData = () => {
     handleRemovePayment,
     handleSalesItemChange,
     handlePaymentChange,
+    // 결제매출 수정
+    // selectedPaymentData,
+    selectedPaymentIds,
+    togglePaymentSelection,
+    resetPaymentForm,
+    handleEditPayment,
   };
 };

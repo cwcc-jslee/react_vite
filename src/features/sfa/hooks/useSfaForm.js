@@ -16,8 +16,8 @@ import { sfaSubmitService } from '../services/sfaSubmitService';
  * SFA Form 관련 로직을 관리하는 Custom Hook
  */
 export const useSfaForm = () => {
-  const { setDrawerClose, setDrawer } = useSfa();
-  const formState = useFormData();
+  const { setDrawerClose, setDrawer, drawerState } = useSfa();
+  const formState = useFormData(drawerState);
   const { formData, setIsSubmitting, setErrors } = formState;
   const { validateForm, validatePayments, checkAmounts } =
     useFormValidation(formData);

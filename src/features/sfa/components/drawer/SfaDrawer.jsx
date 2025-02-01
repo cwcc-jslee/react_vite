@@ -13,6 +13,7 @@ import SfaEditForm from '../forms/SfaEditForm/index.jsx';
 import EditableSfaDetail from '../tables/EditableSfaDetail.jsx';
 import SalesByPayment from '../elements/SalesByPayment.jsx';
 import SfaAddPaymentForm from '../forms/SfaAddPaymentForm.jsx';
+import SfaPaymentForm from '../forms/SfaPaymentForm.jsx';
 
 /**
  * SFA Drawer 컴포넌트
@@ -26,7 +27,14 @@ const SfaDrawer = () => {
   );
   // Form Props 생성
   const formProps = useSfaForm(); // Custom hook을 통한 form 관련 로직 분리
-  const { handleAddPayment } = formProps;
+  const {
+    formData,
+    handleAddPayment,
+    togglePaymentSelection,
+    handleEditPayment,
+    resetPaymentForm,
+    // selectedPaymentData,
+  } = formProps;
 
   // Props 객체 구성
   // const addFormProps = {
@@ -66,7 +74,9 @@ const SfaDrawer = () => {
           <Button
             key={btnMode}
             variant={controlMode === btnMode ? 'primary' : 'outline'}
-            onClick={() => setDrawer({ controlMode: btnMode })}
+            onClick={() =>
+              setDrawer({ controlMode: btnMode, featureMode: 'editBase' })
+            }
             size="sm"
             className="mx-1"
           >
@@ -77,24 +87,35 @@ const SfaDrawer = () => {
     );
   };
 
-  // Feature 메뉴 렌더링 (매출추가, 항목수정)
+  // Feature 메뉴 렌더링 (editBase, addPayment, editPayment)
   const renderFeatureMenu = () => {
     if (controlMode !== 'edit') return null;
 
+    const featureItems = [
+      { mode: 'editBase', label: '기본정보수정' },
+      { mode: 'addPayment', label: '결제매출등록' },
+      { mode: 'editPayment', label: '결제매출수정' },
+    ];
+
     return (
-      <Button
-        type="button"
-        variant="primary"
-        onClick={handleAddPayment}
-        // disabled={isSubmitting || formData.salesByPayments.length >= 3}
-        // className={`w-full ${
-        //   formData.salesByPayments.length >= 3
-        //     ? 'bg-gray-200 hover:bg-gray-200 text-gray-500 border-gray-200'
-        //     : ''
-        // }`}
-      >
-        결제매출등록
-      </Button>
+      <div className="flex gap-2">
+        {featureItems.map(({ mode, label }) => (
+          <Button
+            key={mode}
+            type="button"
+            variant={featureMode === mode ? 'primary' : 'outline'}
+            onClick={() => {
+              setDrawer({ featureMode: mode });
+              resetPaymentForm();
+              // handleEditPayment();
+            }}
+            size="sm"
+            className="mx-1"
+          >
+            {label}
+          </Button>
+        ))}
+      </div>
     );
   };
 
@@ -118,7 +139,7 @@ const SfaDrawer = () => {
           <SfaDetailTable data={data} />
           <SfaDetailPaymentTable
             data={data.sfa_by_payments || []}
-            detailMode="view"
+            controlMode="view"
             onEdit={(item) =>
               setDrawer({
                 detailMode: 'sales-edit',
@@ -135,6 +156,7 @@ const SfaDrawer = () => {
           <h1>기본정보수정</h1>
           <EditableSfaDetail
             data={data}
+            featureMode={featureMode}
             sfaSalesTypeData={sfaSalesTypeData}
             sfaClassificationData={sfaClassificationData}
             // onUpdate={handleFieldUpdate}
@@ -144,7 +166,21 @@ const SfaDrawer = () => {
           {/* {renderFeatureMenu()} */}
 
           {/* 결제 매출 Form */}
-          <SfaAddPaymentForm data={data} controlMode={controlMode} />
+
+          {/* {featureMode === 'addPayment' && (
+            <SfaAddPaymentForm data={data} controlMode={controlMode} />
+          )} */}
+
+          {(featureMode === 'editPayment' || featureMode === 'addPayment') && (
+            <SfaPaymentForm
+              {...formProps}
+              data={data}
+              controlMode={controlMode}
+              featureMode={featureMode}
+              // selectedPaymentData={selectedPaymentData}
+              // formData={formData}
+            />
+          )}
           {/* <SalesByPayment
             payments={formData.salesByPayments}
             onChange={handleSalesPaymentChange}
@@ -158,13 +194,15 @@ const SfaDrawer = () => {
 
           <SfaDetailPaymentTable
             data={data.sfa_by_payments || []}
-            detailMode="edit"
-            onEdit={(item) =>
-              setDrawer({
-                detailMode: 'sales-edit',
-                editData: item,
-              })
-            }
+            controlMode="edit"
+            featureMode={featureMode}
+            togglePaymentSelection={togglePaymentSelection}
+            // onEdit={(item) =>
+            //   setDrawer({
+            //     detailMode: 'sales-edit',
+            //     editData: item,
+            //   })
+            // }
           />
         </>
       );
@@ -186,7 +224,7 @@ const SfaDrawer = () => {
       title={getHeaderTitle()}
       onClose={setDrawerClose}
       controlMenu={renderControlMenu()}
-      // featureMenu={renderFeatureMenu()}
+      featureMenu={renderFeatureMenu()}
       width="900px"
       enableOverlayClick={false}
     >

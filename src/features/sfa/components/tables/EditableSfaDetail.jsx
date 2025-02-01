@@ -22,6 +22,7 @@ import { useEditableField } from '../../hooks/useEditableField';
  */
 const EditableSfaDetail = ({
   data,
+  featureMode,
   sfaSalesTypeData,
   sfaClassificationData,
 }) => {
@@ -112,6 +113,7 @@ const EditableSfaDetail = ({
   // 편집 가능한 필드 렌더링
   const renderEditableField = (fieldName, content) => {
     const isEditing = editField === fieldName;
+    // if (featureMode !== 'editBase') return;
 
     // 특수 필드 처리 (매출파트너, 프로젝트여부)
     if (fieldName === 'selling_partner') {
@@ -295,16 +297,20 @@ const EditableSfaDetail = ({
           건명
         </DescriptionItem>
         <DescriptionItem className="px-0.5">
-          {renderEditableField('name', data.name || '-')}
+          {featureMode !== 'editBase'
+            ? data.name || '-'
+            : renderEditableField('name', data.name || '-')}
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
           매출유형
         </DescriptionItem>
         <DescriptionItem className="px-0.5">
-          {renderEditableField(
-            'sfa_sales_type',
-            editableFields.sfa_sales_type.getDisplayValue(data),
-          )}
+          {featureMode !== 'editBase'
+            ? data.sfa_sales_type?.name || '-'
+            : renderEditableField(
+                'sfa_sales_type',
+                editableFields.sfa_sales_type.getDisplayValue(data),
+              )}
         </DescriptionItem>
       </DescriptionRow>
 
@@ -313,16 +319,20 @@ const EditableSfaDetail = ({
           고객사
         </DescriptionItem>
         <DescriptionItem className="px-0.5">
-          {renderEditableField(
-            'customer',
-            editableFields.customer.getDisplayValue(data),
-          )}
+          {featureMode !== 'editBase'
+            ? data.customer?.name
+            : renderEditableField(
+                'customer',
+                editableFields.customer.getDisplayValue(data),
+              )}
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
           매출파트너
         </DescriptionItem>
         <DescriptionItem className="px-0.5">
-          {renderEditableField('selling_partner', null)}
+          {featureMode !== 'editBase'
+            ? data.selling_partner?.name || '-'
+            : renderEditableField('selling_partner', null)}
         </DescriptionItem>
       </DescriptionRow>
 
@@ -331,7 +341,11 @@ const EditableSfaDetail = ({
           프로젝트여부
         </DescriptionItem>
         <DescriptionItem className="px-0.5">
-          {renderEditableField('is_project', null)}
+          {featureMode !== 'editBase'
+            ? data.is_project
+              ? 'YES'
+              : 'NO'
+            : renderEditableField('is_project', null)}
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
           매출구분
@@ -391,7 +405,9 @@ const EditableSfaDetail = ({
           비고
         </DescriptionItem>
         <DescriptionItem className="flex-1 px-0.5">
-          {renderEditableField('description', data.description || '-')}
+          {featureMode !== 'editBase'
+            ? data.description || '-'
+            : renderEditableField('description', data.description || '-')}
         </DescriptionItem>
       </DescriptionRow>
     </Description>

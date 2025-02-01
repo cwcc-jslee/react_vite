@@ -7,26 +7,45 @@ import { Table, Button } from '../../../../shared/components/ui/index';
  * @param {Object} props
  * @param {Array} props.data - 매출 내역 데이터
  * @param {Function} props.onEdit - 수정 버튼 클릭 핸들러
- * @param {string} props.detailMode - 상세 보기 모드 ('view' | 'edit')
+ * @param {string} props.controlMode - 상세 보기 모드 ('view' | 'edit')
  */
-const SfaDetailPaymentTable = ({ data, onEdit, detailMode = 'view' }) => {
+const SfaDetailPaymentTable = ({
+  data,
+  onView,
+  // onEdit,
+  controlMode = 'view',
+  featureMode,
+  togglePaymentSelection,
+}) => {
   const renderLastColumn = () => {
-    return detailMode === 'view' ? (
-      <Table.Th>Memo</Table.Th>
+    return controlMode === 'view' ? (
+      // <Table.Th>Memo</Table.Th>
+      <Table.Th>Action</Table.Th>
     ) : (
       <Table.Th>Action</Table.Th>
     );
   };
 
   const renderLastCell = (item) => {
-    return detailMode === 'view' ? (
-      <Table.Td>{item.memo || '-'}</Table.Td>
-    ) : (
+    return controlMode === 'view' ? (
+      // <Table.Td>{item.memo || '-'}</Table.Td>
       <Table.Td align="center">
-        <Button size="sm" variant="outline" onClick={() => onEdit?.(item)}>
-          수정
+        <Button size="sm" variant="outline" onClick={() => onView?.(item)}>
+          view
         </Button>
       </Table.Td>
+    ) : featureMode === 'editPayment' ? (
+      <Table.Td align="center">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => togglePaymentSelection?.(item)}
+        >
+          edit
+        </Button>
+      </Table.Td>
+    ) : (
+      ''
     );
   };
 
@@ -92,7 +111,7 @@ const SfaDetailPaymentTable = ({ data, onEdit, detailMode = 'view' }) => {
                   : '-'}
               </Table.Td>
               <Table.Td align="center">{item.recognition_date || '-'}</Table.Td>
-              {renderLastCell(item)}
+              {renderLastCell(item.documentId)}
             </Table.Row>
           ))}
         </Table.Body>
