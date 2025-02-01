@@ -26,11 +26,15 @@ const SfaDetailPaymentTable = ({
     );
   };
 
-  const renderLastCell = (item) => {
+  const renderLastCell = (documentId, id) => {
     return controlMode === 'view' ? (
       // <Table.Td>{item.memo || '-'}</Table.Td>
       <Table.Td align="center">
-        <Button size="sm" variant="outline" onClick={() => onView?.(item)}>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => onView?.({ documentId, id })}
+        >
           view
         </Button>
       </Table.Td>
@@ -39,7 +43,7 @@ const SfaDetailPaymentTable = ({
         <Button
           size="sm"
           variant="outline"
-          onClick={() => togglePaymentSelection?.(item)}
+          onClick={() => togglePaymentSelection?.({ documentId, id })}
         >
           edit
         </Button>
@@ -56,6 +60,7 @@ const SfaDetailPaymentTable = ({
         <Table>
           <Table.Head>
             <Table.Row>
+              <Table.Th>ID</Table.Th>
               <Table.Th>구분</Table.Th>
               <Table.Th>확정여부</Table.Th>
               <Table.Th>확률</Table.Th>
@@ -83,7 +88,8 @@ const SfaDetailPaymentTable = ({
       <Table>
         <Table.Head>
           <Table.Row>
-            <Table.Th>구분</Table.Th>
+            <Table.Th>ID</Table.Th>
+            <Table.Th>매출구분</Table.Th>
             <Table.Th>확정여부</Table.Th>
             <Table.Th>확률</Table.Th>
             <Table.Th>매출액</Table.Th>
@@ -95,7 +101,8 @@ const SfaDetailPaymentTable = ({
         <Table.Body>
           {data.map((item, index) => (
             <Table.Row key={item.id || index}>
-              <Table.Td>{item.billing_type || '-'}</Table.Td>
+              <Table.Td align="center">{item.id || '-'}</Table.Td>
+              <Table.Td align="center">{item.billing_type || '-'}</Table.Td>
               <Table.Td align="center">
                 {item.is_confirmed ? 'YES' : 'NO'}
               </Table.Td>
@@ -111,7 +118,7 @@ const SfaDetailPaymentTable = ({
                   : '-'}
               </Table.Td>
               <Table.Td align="center">{item.recognition_date || '-'}</Table.Td>
-              {renderLastCell(item.documentId)}
+              {renderLastCell(item.documentId, item.id)}
             </Table.Row>
           ))}
         </Table.Body>

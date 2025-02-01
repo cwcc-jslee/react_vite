@@ -17,7 +17,6 @@ const SfaPaymentForm = ({
   formData,
   controlMode,
   featureMode,
-  //
   handleAddPayment,
   handlePaymentChange,
   handleRemovePayment,
@@ -30,10 +29,6 @@ const SfaPaymentForm = ({
   selectedPaymentIds,
 }) => {
   const { validatePayments } = useFormValidation(formData);
-  console.log(
-    `_2_cmode ${controlMode}, fmode${featureMode}, fdata :`,
-    paymentData,
-  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,20 +59,25 @@ const SfaPaymentForm = ({
           variant="primary"
           onClick={handleAddPayment}
           disabled={isSubmitting || formData.salesByPayments.length >= 3}
-          className={`w-full ${
-            formData.salesByPayments.length >= 3
-              ? 'bg-gray-200 hover:bg-gray-200 text-gray-500 border-gray-200'
-              : ''
-          }`}
+          className={`
+            w-full mb-6 px-4 h-8 text-base font-medium
+            ${
+              formData.salesByPayments.length >= 3
+                ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                : 'bg-cyan-500 border-blue-300 text-gray-600 hover:bg-blue-100 hover:border-blue-400 hover:text-white'
+            }
+          `}
         >
-          결제매출추가
+          + 결제매출추가
         </Button>
       );
     }
     if (controlMode === 'edit' && featureMode === 'editPayment') {
       return (
         <div>
-          <h3 className="text-lg font-medium mb-3">수정할 결제매출 선택</h3>
+          <h3 className="text-lg font-medium mb-3">
+            수정 결제매출 ID : {selectedPaymentIds.id}
+          </h3>
         </div>
       );
     }
@@ -97,13 +97,11 @@ const SfaPaymentForm = ({
       >
         {/* 결제 매출 추가 */}
         <SalesByPayment
-          // payments={selectedPaymentData}
           payments={formData.salesByPayments}
           onChange={handlePaymentChange}
           // onAdd={handleAddSalesPayment}
-          // onRemove={handleRemovePayment}
+          onRemove={handleRemovePayment}
           isSubmitting={isSubmitting}
-          // errors={errors}
           paymentData={paymentData}
           percentageData={percentageData}
           isPaymentDataLoading={isPaymentDataLoading}
@@ -112,12 +110,16 @@ const SfaPaymentForm = ({
         {/* Submit Button */}
         <Group>
           {formData.salesByPayments.length !== 0 && (
-            <>
+            <Group
+              direction="horizontal"
+              spacing="md"
+              className="pt-4 border-t border-gray-200"
+            >
               <Button
                 type="button"
                 variant="primary"
                 disabled={isSubmitting}
-                className="w-full"
+                className="w-[120px] h-8 text-base font-medium bg-indigo-500 hover:bg-fuchsia-500"
                 onClick={handleCancle}
               >
                 취소
@@ -126,7 +128,7 @@ const SfaPaymentForm = ({
                 type="submit"
                 variant="primary"
                 disabled={isSubmitting}
-                className="w-full"
+                className="w-[120px] h-8 text-base font-medium bg-indigo-500 hover:bg-fuchsia-500"
                 onClick={(e) => {
                   // 버튼 클릭 시에도 이벤트 전파 방지
                   e.preventDefault();
@@ -139,7 +141,7 @@ const SfaPaymentForm = ({
                   ? '저장'
                   : '수정'}
               </Button>
-            </>
+            </Group>
           )}
         </Group>
       </Form>

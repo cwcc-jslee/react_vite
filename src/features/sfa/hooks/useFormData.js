@@ -7,6 +7,7 @@ import {
   initialFormState,
   initialSalesByItem,
   initialSalesByPayment,
+  INITIAL_PAYMENT_ID_STATE,
 } from '../constants/formInitialState';
 
 /**
@@ -28,7 +29,9 @@ export const useFormData = (drawerState) => {
   const [isItemsLoading, setIsItemsLoading] = useState(false);
   const [isPaymentDataLoading, setIsPaymentDataLoading] = useState(false);
   // 선택된 결제매출 ID 상태 관리
-  const [selectedPaymentIds, setSelectedPaymentIds] = useState([]);
+  const [selectedPaymentIds, setSelectedPaymentIds] = useState(
+    INITIAL_PAYMENT_ID_STATE,
+  );
   const [selectedPaymentData, setSelectedPaymentData] = useState([]);
 
   useEffect(() => {
@@ -45,12 +48,11 @@ export const useFormData = (drawerState) => {
         return diff;
       }, {}),
     });
-    console.log('PaymentData Changed:', paymentData);
   }, [formData]);
 
-  // useEffect(() => {
-  //   console.log('Payment Data Changed:', paymentData);
-  // }, [paymentData]);
+  useEffect(() => {
+    console.log('Payment Data Changed:', paymentData);
+  }, [paymentData]);
   /**
    * 매출 금액 합계 계산 Effect
    */
@@ -376,12 +378,12 @@ export const useFormData = (drawerState) => {
   };
 
   // 결제매출 선택 핸들러 (수정 모드)
-  const togglePaymentSelection = async (paymentId) => {
-    console.log('>>togglePaymentSelection>> [paymentId] : ', paymentId);
+  const togglePaymentSelection = async (item) => {
+    console.log('>>togglePaymentSelection>> [paymentId] : ', item);
 
     // formData 업데이트
     const payment = drawerState.data.sfa_by_payments.find(
-      (p) => p.documentId === paymentId,
+      (p) => p.documentId === item.documentId,
     );
     console.log('>>togglePaymentSelection>> [payment] : ', payment);
 
@@ -414,15 +416,25 @@ export const useFormData = (drawerState) => {
     } catch (error) {
       console.error('Failed to edit sales payment:', error);
     }
-    setSelectedPaymentIds(paymentId);
+    setSelectedPaymentIds({ id: item.id, documentId: item.documentId });
   };
 
   const resetPaymentForm = () => {
-    setFormData((prev) => ({
-      ...prev,
-      salesByPayments: [],
-    }));
-    setSelectedPaymentIds([]);
+    console.log('Reset 전 selectedPaymentIds:', selectedPaymentIds);
+
+    try {
+      // 순차적으로 상태 업데이트
+      setFormData((prev) => ({
+        ...prev,
+        salesByPayments: [],
+      }));
+
+      setSelectedPaymentIds(INITIAL_PAYMENT_ID_STATE);
+
+      console.log('Reset 후 확인');
+    } catch (error) {
+      console.error('Reset 중 오류 발생:', error);
+    }
   };
 
   return {

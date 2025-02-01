@@ -1,5 +1,13 @@
+/**
+ * 기본 Drawer 컴포넌트 - 모든 Drawer의 기본이 되는 컴포넌트입니다.
+ * 헤더, 컨텐츠 영역, 오버레이 등 Drawer의 기본 구조를 제공합니다.
+ */
+
 // src/shared/components/ui/drawer/BaseDrawer.jsx
 import React, { useEffect } from 'react';
+import PropTypes from 'prop-types';
+import { Button } from '../index';
+import { X } from 'lucide-react';
 
 /**
  * BaseDrawer Component
@@ -7,22 +15,23 @@ import React, { useEffect } from 'react';
  * @param {Object} props
  * @param {boolean} props.visible - Drawer 표시 여부
  * @param {string} props.title - Drawer 제목
- * @param {string} props.width - Drawer 너비 (default: '400px')
- * @param {Function} props.onClose - Drawer 닫기 콜백 함수
- * @param {React.ReactNode} props.controlMenu - 상단 메뉴 영역 컴포넌트
- * @param {React.ReactNode} props.children - Drawer 내부 컨텐츠
- * @param {boolean} props.enableOverlayClick - Overlay 클릭시 닫기 여부 (default: false)
- * @returns {React.ReactElement|null}
+ * @param {string|number} props.width - Drawer 너비 (default: '600px')
+ * @param {Function} props.onClose - 닫기 핸들러
+ * @param {React.ReactNode} props.menu - 상단 메뉴 영역
+ * @param {React.ReactNode} props.children - Drawer 내용
+ * @param {boolean} [props.enableOverlayClick=false] - 오버레이 클릭 시 닫기 활성화 여부
  */
 const BaseDrawer = ({
   visible = false,
   title = '',
   width = '900px',
   onClose,
-  controlMenu,
-  featureMenu,
+  // controlMenu,
+  // featureMenu,
+  menu,
   children,
   enableOverlayClick = false,
+  controlMode = 'view',
 }) => {
   // Drawer가 열리고 닫힐 때 body 스크롤 제어
   useEffect(() => {
@@ -64,74 +73,67 @@ const BaseDrawer = ({
     e.stopPropagation();
   };
 
+  // Convert width to tailwind class if possible
+  const getWidthClass = (w) => {
+    const widthMap = {
+      '600px': 'w-[600px]',
+      '800px': 'w-[800px]',
+      '400px': 'w-[400px]',
+    };
+    return widthMap[w] || `w-[${w}]`;
+  };
+
   return (
-    <>
-      {/* Portal Root를 사용하여 최상위에 렌더링 */}
-      {/* Drawer (z-index: 9000-9002) , Modal (z-index: 9999-10000)*/}
-      <div className="fixed inset-0 z-[9000] overflow-hidden">
-        {/* Overlay */}
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-          onClick={enableOverlayClick ? onClose : undefined}
-          aria-hidden="true"
-        />
+    <div className="fixed inset-0 z-50 overflow-hidden">
+      {/* Overlay */}
+      <div
+        className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
+        onClick={enableOverlayClick ? onClose : undefined}
+      />
 
-        {/* Drawer Panel */}
-        <div
-          className="fixed inset-y-0 right-0 flex flex-col w-full bg-white shadow-xl"
-          style={{ maxWidth: width }}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="drawer-title"
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-            <h2 id="drawer-title" className="text-lg font-medium text-gray-900">
-              {title}
-            </h2>
-            <button
-              type="button"
-              className="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onClick={onClose}
-            >
-              <span className="sr-only">Close panel</span>
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
+      {/* Drawer Container */}
+      <div className="absolute inset-y-0 right-0 flex max-w-full">
+        <div className={`relative ${getWidthClass(width)} h-full`}>
+          {/* Drawer Content */}
+          <div className="flex h-full flex-col overflow-hidden bg-white shadow-xl">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+              <h2 className="text-lg font-medium text-gray-900">{title}</h2>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-12 w-12 p-1 hover:bg-gray-100 hover:text-gray-900 border-gray-200"
+                onClick={onClose}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
+                <X className="h-8 w-8" />
+              </Button>
+            </div>
 
-          {/* Menu */}
-          {controlMenu && (
-            <>
-              <div className="flex items-center gap-2 px-6 py-2 border-b border-gray-200 bg-gray-50">
-                {controlMenu}
-              </div>
-              <div className="flex items-center gap-2 px-6 py-2 border-b border-gray-200 bg-gray-50">
-                {featureMenu}
-              </div>
-            </>
-          )}
+            {/* Menu Area */}
+            {menu && controlMode !== 'add' && (
+              <div className="border-b border-gray-200 px-4 py-2">{menu}</div>
+            )}
 
-          {/* Content */}
-          <div className="relative flex-1 h-0 overflow-y-auto">
-            <div className="absolute inset-0 p-6">{children}</div>
+            {/* Content Area with Scrolling */}
+            <div className="relative flex-1 overflow-y-auto">
+              <div className="p-4">{children}</div>
+            </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
+};
+
+BaseDrawer.propTypes = {
+  visible: PropTypes.bool.isRequired,
+  title: PropTypes.string.isRequired,
+  width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onClose: PropTypes.func.isRequired,
+  menu: PropTypes.node,
+  children: PropTypes.node,
+  enableOverlayClick: PropTypes.bool,
+  controlMode: PropTypes.oneOf(['view', 'edit', 'add']),
 };
 
 export default BaseDrawer;

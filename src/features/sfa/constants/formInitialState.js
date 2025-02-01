@@ -37,3 +37,8 @@ export const initialFormState = {
   salesByItems: [],
   salesByPayments: [],
 };
+
+export const INITIAL_PAYMENT_ID_STATE = {
+  id: null,
+  documentId: null,
+};

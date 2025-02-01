@@ -1,9 +1,5 @@
 // src/features/sfa/components/drawer/SalesByPayment.jsx
-/**
- * 매출 결제 정보를 입력받는 컴포넌트
- * 결제 구분, 확정여부, 매출확률, 매출액, 이익/마진 등의 정보를 관리
- */
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import {
   Group,
@@ -27,78 +23,55 @@ const SalesByPayment = ({
   isPaymentDataLoading,
 }) => {
   // 매출액 임시 입력 상태 관리를 위한 state 추가
-  const [displayValues, setDisplayValues] = useState({});
-  const isFormatting = useRef(false);
-  // 입력 중인 금액을 관리하는 상태
-  const [inputAmounts, setInputAmounts] = useState({});
+  const [tempInputs, setTempInputs] = useState({});
 
   // 이익/마진 금액 자동 계산 useEffect 수정
   useEffect(() => {
-    if (!isFormatting.current) {
-      payments.forEach((entry, index) => {
-        const amount = Number(entry.amount) || 0;
-        const marginProfitValue = Number(entry.marginProfitValue) || 0;
-        const calculatedProfitAmount = entry.isProfit
-          ? marginProfitValue
-          : (amount * marginProfitValue) / 100;
+    payments.forEach((entry, index) => {
+      const amount = Number(entry.amount) || 0;
+      const marginProfitValue = Number(entry.marginProfitValue) || 0;
+      let calculatedProfitAmount = 0;
 
-        if (calculatedProfitAmount !== Number(entry.profitAmount)) {
-          onChange(index, 'profitAmount', calculatedProfitAmount.toString());
-        }
-      });
-    }
-  }, [payments, onChange]);
+      if (entry.isProfit) {
+        calculatedProfitAmount = marginProfitValue;
+      } else {
+        calculatedProfitAmount = (amount * marginProfitValue) / 100;
+      }
 
-  useEffect(() => {
-    console.log('SalesByPayment rendered:', {
-      payments,
-      isSubmitting,
-      paymentData,
-      percentageData,
+      // 기존 값과 다를 때만 업데이트
+      if (calculatedProfitAmount !== Number(entry.profitAmount)) {
+        onChange(index, 'profitAmount', calculatedProfitAmount.toString());
+      }
     });
-  }, [payments, isSubmitting, paymentData, percentageData]);
+  }, [payments]);
 
-  // 금액 입력 처리
+  // 금액 입력 처리 함수 수정
   const handleAmountChange = (index, value) => {
-    // 숫자와 쉼표만 허용
-    const sanitizedValue = value.replace(/[^\d,]/g, '');
-    setDisplayValues((prev) => ({
+    // 임시 입력값 저장
+    setTempInputs((prev) => ({
       ...prev,
-      [index]: sanitizedValue,
+      [index]: value,
     }));
 
-    // 실제 값 업데이트는 쉼표를 제거한 숫자만
-    const numericValue = sanitizedValue.replace(/,/g, '');
-    if (numericValue !== payments[index].amount) {
-      isFormatting.current = true;
-      onChange(index, 'amount', numericValue);
-      setTimeout(() => {
-        isFormatting.current = false;
-      }, 0);
-    }
+    // 숫자만 필터링하여 실제 값 업데이트
+    const numericValue = ensureNumericAmount(value);
+    handleEntryChange(index, 'amount', numericValue);
   };
 
-  // 금액 입력 필드 포커스 처리
-  const handleAmountFocus = (index) => {
-    // 포커스 시 쉼표가 제거된 원래 숫자 값 표시
-    setDisplayValues((prev) => ({
-      ...prev,
-      [index]: payments[index].amount,
-    }));
-  };
-
-  // 금액 입력 필드 블러 처리
+  // blur 처리 함수 추가
   const handleAmountBlur = (index) => {
-    const numericValue = payments[index].amount;
-    const formattedValue = formatDisplayNumber(numericValue);
-    setDisplayValues((prev) => ({
+    setTempInputs((prev) => ({
       ...prev,
-      [index]: formattedValue,
+      [index]: '', // 임시 입력값 초기화
     }));
   };
 
-  // 이익/마진 값 변경 처리
+  // 입력값 변경 시 이익/마진 금액 계산
+  // handleEntryChange 함수 수정
   const handleEntryChange = (index, field, value) => {
+    onChange(index, field, value);
+
+    // amount, marginProfitValue, isProfit 변경 시에만 profitAmount 계산
     if (['amount', 'marginProfitValue', 'isProfit'].includes(field)) {
       const payment = payments[index];
       const amount = Number(field === 'amount' ? value : payment.amount) || 0;
@@ -108,33 +81,21 @@ const SalesByPayment = ({
         ) || 0;
       const isProfit = field === 'isProfit' ? value : payment.isProfit;
 
-      isFormatting.current = true;
-      onChange(index, field, value);
-
       const calculatedProfitAmount = isProfit
         ? marginProfitValue
         : (amount * marginProfitValue) / 100;
 
       onChange(index, 'profitAmount', calculatedProfitAmount.toString());
-
-      setTimeout(() => {
-        isFormatting.current = false;
-      }, 0);
-    } else {
-      onChange(index, field, value);
     }
   };
 
-  // 확정여부 변경 처리
+  // 확정여부 체크박스 핸들러 추가
   const handleConfirmedChange = (index, checked) => {
-    isFormatting.current = true;
     onChange(index, 'isConfirmed', checked);
     if (checked) {
+      // 확정 시 매출확률 100으로 설정
       onChange(index, 'probability', '100');
     }
-    setTimeout(() => {
-      isFormatting.current = false;
-    }, 0);
   };
 
   if (!payments?.length) return null;
@@ -146,7 +107,9 @@ const SalesByPayment = ({
           key={index}
           className="flex flex-col gap-3 p-4 bg-gray-50 rounded-md"
         >
+          {/* 첫 번째 행 - 기본 정보 */}
           <div className="grid grid-cols-[1.5fr,0.8fr,1fr,1fr,auto,0.5fr,1fr] gap-3 items-center">
+            {/* 결제구분 Select */}
             <Select
               value={payment.billingType}
               onChange={(e) => onChange(index, 'billingType', e.target.value)}
@@ -171,6 +134,7 @@ const SalesByPayment = ({
               <span>확정여부</span>
             </label>
 
+            {/* 매출확률 Select */}
             <Select
               value={payment.probability}
               onChange={(e) => onChange(index, 'probability', e.target.value)}
@@ -189,11 +153,10 @@ const SalesByPayment = ({
             <Input
               type="text"
               value={
-                displayValues[index] ||
-                formatDisplayNumber(payment.amount || '')
+                tempInputs[index] || formatDisplayNumber(payment.amount) || ''
               }
+              // value={payment.amount}
               onChange={(e) => handleAmountChange(index, e.target.value)}
-              onFocus={() => handleAmountFocus(index)}
               onBlur={() => handleAmountBlur(index)}
               placeholder="매출액"
               disabled={isSubmitting}
