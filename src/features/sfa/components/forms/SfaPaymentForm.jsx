@@ -1,5 +1,9 @@
 // src/features/sfa/components/forms/SfaPaymentForm.jsx
-import React, { useEffect } from 'react';
+/**
+ * SFA 결제매출 등록/수정을 위한 최적화된 폼 컴포넌트
+ * 불필요한 리렌더링을 방지하고 입력 필드의 포커스를 유지하도록 구현
+ */
+import React, { useState, useRef, useEffect } from 'react';
 import { useFormValidation } from '../../hooks/useFormValidation.js';
 import SalesByPayment from '../elements/SalesByPayment.jsx';
 // import { useSfaForm } from '../../hooks/useSfaForm.js';
@@ -27,8 +31,17 @@ const SfaPaymentForm = ({
   isPaymentDataLoading,
   processPaymentSubmit,
   selectedPaymentIds,
+  resetPaymentForm,
 }) => {
+  // 폼 상태를 로컬로 관리하여 불필요한 리렌더링 방지
+  const [localFormData, setLocalFormData] = useState(formData);
+  const formRef = useRef(null);
   const { validatePayments } = useFormValidation(formData);
+
+  // formData가 변경될 때만 localFormData 업데이트
+  useEffect(() => {
+    setLocalFormData(formData);
+  }, [formData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,7 +61,31 @@ const SfaPaymentForm = ({
     await processPaymentSubmit(sfaId);
   };
 
-  const handleCancle = async () => {};
+  const handleLocalPaymentChange = (index, field, value) => {
+    // 로컬 상태 먼저 업데이트
+    setLocalFormData((prev) => {
+      const updatedPayments = [...prev.salesByPayments];
+      updatedPayments[index] = {
+        ...updatedPayments[index],
+        [field]: value,
+      };
+      return {
+        ...prev,
+        salesByPayments: updatedPayments,
+      };
+    });
+
+    // 부모 컴포넌트에 변경 사항 전달
+    handlePaymentChange(index, field, value);
+  };
+
+  const handleCancle = async () => {
+    if (selectedPaymentIds.id === null) {
+      resetForm();
+    } else {
+      resetPaymentForm();
+    }
+  };
 
   // 수정 모드일 때 결제매출 선택 UI 렌더링
   const renderPaymentSelection = () => {
@@ -81,7 +118,7 @@ const SfaPaymentForm = ({
         </div>
       );
     }
-    return <></>;
+    return null;
   };
 
   return (

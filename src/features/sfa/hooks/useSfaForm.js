@@ -72,27 +72,38 @@ export const useSfaForm = () => {
     }
   };
 
-  // 폼 제출 처리
-  const processPaymentSubmit = async (sfaId) => {
-    console.log(`***** processPaymentSubmit : `, sfaId);
+  // 결제매출 제출 처리 로직
+  const processPaymentSubmit = async (processMode, targetId, sfaId) => {
     try {
       setIsSubmitting(true);
-      const paymentsResponse = await sfaSubmitService.addSfaPayment(
-        sfaId,
-        formData.salesByPayments,
-      );
 
-      console.log('===== SFA Form Submission Completed =====');
-      // if (!paymentsResponse || !paymentsResponse.success) {
-      //   throw new Error(response?.message || '저장에 실패했습니다.');
-      // }
+      // processMode에 따른 API 호출
+      const response =
+        processMode === 'create'
+          ? await sfaSubmitService.addSfaPayment(
+              targetId, //sfaId
+              formData.salesByPayments,
+            )
+          : await sfaSubmitService.updateSfaPayment(
+              targetId, //payment documentId
+              formData.salesByPayments,
+            );
 
       notification.success({
         message: '저장 성공',
-        description: '성공적으로 저장되었습니다.',
+        description: `성공적으로 ${
+          processMode === 'create' ? '등록' : '수정'
+        }되었습니다.`,
+      });
+
+      // 데이터 갱신 및 뷰 모드로 전환
+      const updateData = await sfaApi.getSfaDetail(sfaId);
+      setDrawer({
+        controlMode: 'view',
+        data: updateData.data[0],
       });
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error('Payment submission error:', error);
       const errorMessage = error?.message || '저장 중 오류가 발생했습니다.';
 
       setErrors((prev) => ({
@@ -106,9 +117,20 @@ export const useSfaForm = () => {
       });
     } finally {
       setIsSubmitting(false);
-      // 폼데이터 초기화
-      const updateData = await sfaApi.getSfaDetail(initialData.id);
-      setDrawer({ controlMode: 'view', data: updateData.data[0] });
+    }
+  };
+
+  const resetPaymentForm = () => {
+    console.log('Reset 전 selectedPaymentIds:', selectedPaymentIds);
+
+    try {
+      resetForm();
+
+      setSelectedPaymentIds(INITIAL_PAYMENT_ID_STATE);
+
+      console.log('Reset 후 확인');
+    } catch (error) {
+      console.error('Reset 중 오류 발생:', error);
     }
   };
 
@@ -120,5 +142,6 @@ export const useSfaForm = () => {
     processPaymentSubmit,
     // data: formState,
     // actions: formActions,
+    resetPaymentForm,
   };
 };

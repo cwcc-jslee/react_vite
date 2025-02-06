@@ -2,6 +2,8 @@
 // SfaPage.jsx 에서 분리
 // SfaPage 컴포넌트가 useSfa hook을 사용하기 전에 SfaProvider로 감싸져 있지 않아서 발생하는 문제해결
 import React from 'react';
+import { useSelector } from 'react-redux';
+import { selectCodebookByType } from '../../codebook/store/codebookSlice';
 import { useSfa } from '../context/SfaProvider';
 import { Section } from '../../../shared/components/ui/layout/components';
 import SfaDrawer from '../components/drawer/SfaDrawer';
@@ -21,12 +23,22 @@ const SfaContainer = () => {
   // 레이아웃 관련 상태 가져오기
   const { pageLayout } = useSfa();
   const { components } = pageLayout;
+  // Codebook 데이터 조회
+  const sfaSalesTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
+  const sfaClassificationData = useSelector(
+    selectCodebookByType('sfa_classification'),
+  );
 
   return (
     <>
       <Section>
         <SfaSubMenu />
-        {components.searchForm && <SfaSearchForm />}
+        {components.searchForm && (
+          <SfaSearchForm
+          // sfaSalesTypeData={sfaSalesTypeData}
+          // sfaClassificationData={sfaClassificationData}
+          />
+        )}
         {components.monthlyStatus && <SfaQuarterlyOverview />}
         {components.sfaTable && <SfaTable />}
         {components.forecastTable && <SfaAnnualOverview />}

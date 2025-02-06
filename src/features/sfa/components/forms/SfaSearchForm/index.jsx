@@ -1,5 +1,11 @@
 // src/features/sfa/components/SfaSearchForm/index.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSfa } from '../../../context/SfaProvider';
+import dayjs from 'dayjs';
+import { CustomerSearchInput } from '../../../../../shared/components/customer/CustomerSearchInput';
+import { useCodebook } from '../../../../../shared/hooks/useCodebook';
+import { useTeam } from '../../../../../shared/hooks/useTeam';
+import { useSfaItem } from '../../../../../shared/hooks/useSfaItem';
 import {
   Form,
   FormItem,
@@ -10,21 +16,22 @@ import {
   Button,
   Stack,
 } from '../../../../../shared/components/ui/index';
-import { useSfa } from '../../../context/SfaProvider';
-import dayjs from 'dayjs';
 
-/**
- * SFA 검색 폼 컴포넌트
- * @component
- * @description 매출 정보 검색을 위한 필터링 폼을 제공합니다.
- * - 날짜 범위, 매출구분, 매출유형, 매출처, 매출품목 등 검색 조건을 설정할 수 있습니다.
- * - 검색 조건은 실시간으로 상태에 저장되며, 검색 버튼 클릭시 실제 검색이 수행됩니다.
- * - 초기화 버튼으로 모든 검색 조건을 기본값으로 되돌릴 수 있습니다.
- */
 const SfaSearchForm = () => {
   const { executeSearch, resetSearch } = useSfa();
 
-  const [searchCriteria, setSearchCriteria] = useState({
+  const {
+    data: codebook,
+    isLoading,
+    error,
+  } = useCodebook([
+    're_payment_method',
+    'sfa_percentage',
+    'sfa_sales_type',
+    'sfa_classification',
+  ]);
+
+  const [searchFormData, setSearchFormData] = useState({
     dateRange: {
       startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
       endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
@@ -40,18 +47,34 @@ const SfaSearchForm = () => {
     probability: '',
   });
 
+  const { data: teams, isLoading: teamLoading } = useTeam();
+  const { data: items, refetch } = useSfaItem();
+
+  useEffect(() => {
+    if (searchFormData.sfaClassification) {
+      refetch(searchFormData.sfaClassification);
+    }
+  }, [searchFormData.sfaClassification]);
+  console.log(`>> items : `, items);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name === 'startDate' || name === 'endDate') {
-      setSearchCriteria((prev) => ({
+      setSearchFormData((prev) => ({
         ...prev,
         dateRange: {
           ...prev.dateRange,
           [name]: value,
         },
       }));
+    } else if (name === 'sfaClassification') {
+      setSearchFormData((prev) => ({
+        ...prev,
+        salesItem: '',
+        [name]: value,
+      }));
     } else {
-      setSearchCriteria((prev) => ({
+      setSearchFormData((prev) => ({
         ...prev,
         [name]: value,
       }));
@@ -60,11 +83,12 @@ const SfaSearchForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    executeSearch(searchCriteria);
+    console.log(`search form : `, searchFormData);
+    // executeSearch(searchFormData);
   };
 
   const handleReset = () => {
-    setSearchCriteria({
+    setSearchFormData({
       dateRange: {
         startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
         endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
@@ -73,13 +97,13 @@ const SfaSearchForm = () => {
       customer: '',
       sfaSalesType: '',
       sfaClassification: '',
-      item: '',
+      salesItem: '',
       team: '',
       billingType: '',
       isConfirmed: '',
       probability: '',
     });
-    resetSearch();
+    // resetSearch();
   };
 
   return (
@@ -93,14 +117,14 @@ const SfaSearchForm = () => {
               <Input
                 type="date"
                 name="startDate"
-                value={searchCriteria.dateRange.startDate}
+                value={searchFormData.dateRange.startDate}
                 onChange={handleInputChange}
               />
               <span className="text-gray-500">~</span>
               <Input
                 type="date"
                 name="endDate"
-                value={searchCriteria.dateRange.endDate}
+                value={searchFormData.dateRange.endDate}
                 onChange={handleInputChange}
               />
             </div>
@@ -110,12 +134,15 @@ const SfaSearchForm = () => {
             <Label>매출구분</Label>
             <Select
               name="sfaClassification"
-              value={searchCriteria.sfaClassification}
+              value={searchFormData.sfaClassification}
               onChange={handleInputChange}
             >
-              <option value="">전체</option>
-              <option value="product">제품</option>
-              <option value="service">서비스</option>
+              <option value="">선택하세요</option>
+              {codebook?.sfa_classification?.data?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
             </Select>
           </FormItem>
 
@@ -123,12 +150,15 @@ const SfaSearchForm = () => {
             <Label>매출유형</Label>
             <Select
               name="salesCategory"
-              value={searchCriteria.salesCategory}
+              value={searchFormData.salesCategory}
               onChange={handleInputChange}
             >
-              <option value="">전체</option>
-              <option value="direct">직접</option>
-              <option value="partner">파트너</option>
+              <option value="">선택하세요</option>
+              {codebook?.sfa_sales_type?.data?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
             </Select>
           </FormItem>
         </Stack>
@@ -137,39 +167,45 @@ const SfaSearchForm = () => {
         <Stack direction="horizontal" spacing="lg">
           <FormItem>
             <Label>매출처</Label>
-            <Input
-              type="text"
-              name="customer"
-              value={searchCriteria.customer}
-              onChange={handleInputChange}
-              placeholder="매출처명 입력"
+            <CustomerSearchInput
+              // onSelect={handleCustomerSelect}
+              value={searchFormData.customer}
+              // error={errors.customer}
+              // disabled={isSubmitting}
+              size="small"
             />
           </FormItem>
 
           <FormItem>
             <Label>매출품목</Label>
-            <Input
-              type="text"
+            <Select
               name="salesItem"
-              value={searchCriteria.salesItem}
+              value={searchFormData.salesItem}
               onChange={handleInputChange}
-              placeholder="매출품목 입력"
-            />
+            >
+              <option value="">선택하세요</option>
+              {items?.data?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
           </FormItem>
 
           <FormItem>
             <Label>확률</Label>
             <Select
               name="probability"
-              value={searchCriteria.probability}
+              value={searchFormData.probability}
               onChange={handleInputChange}
             >
-              <option value="">전체</option>
+              <option value="">선택하세요</option>
               <option value="confirmed">확정</option>
-              <option value="100">100%</option>
-              <option value="90">90%</option>
-              <option value="70">70%</option>
-              <option value="50">50%</option>
+              {codebook.sfa_percentage?.data?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
             </Select>
           </FormItem>
         </Stack>
@@ -181,7 +217,7 @@ const SfaSearchForm = () => {
             <Input
               type="text"
               name="title"
-              value={searchCriteria.title}
+              value={searchFormData.title}
               onChange={handleInputChange}
               placeholder="건명 입력"
             />
@@ -191,12 +227,15 @@ const SfaSearchForm = () => {
             <Label>사업부</Label>
             <Select
               name="team"
-              value={searchCriteria.team}
+              value={searchFormData.team}
               onChange={handleInputChange}
             >
-              <option value="">전체</option>
-              <option value="solution">솔루션사업부</option>
-              <option value="consulting">컨설팅사업부</option>
+              <option value="">선택하세요</option>
+              {teams?.data?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
             </Select>
           </FormItem>
 
@@ -204,18 +243,21 @@ const SfaSearchForm = () => {
             <Label>결제유형</Label>
             <Select
               name="billingType"
-              value={searchCriteria.billingType}
+              value={searchFormData.billingType}
               onChange={handleInputChange}
             >
-              <option value="">전체</option>
-              <option value="card">카드</option>
-              <option value="bank">계좌이체</option>
+              <option value="">선택하세요</option>
+              {codebook.re_payment_method?.data?.map((item) => (
+                <option key={item.id} value={item.name}>
+                  {item.name}
+                </option>
+              ))}
             </Select>
           </FormItem>
         </Stack>
 
         <Group direction="horizontal" className="justify-center">
-          <Button type="submit" variant="primary">
+          <Button type="button" variant="primary" onClick={handleSubmit}>
             검색
           </Button>
           <Button type="button" variant="outline" onClick={handleReset}>

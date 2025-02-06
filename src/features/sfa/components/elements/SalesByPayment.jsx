@@ -31,6 +31,7 @@ const SalesByPayment = ({
   const isFormatting = useRef(false);
   // 입력 중인 금액을 관리하는 상태
   const [inputAmounts, setInputAmounts] = useState({});
+  const inputRefs = useRef([]);
 
   // 이익/마진 금액 자동 계산 useEffect 수정
   useEffect(() => {
@@ -48,6 +49,21 @@ const SalesByPayment = ({
       });
     }
   }, [payments, onChange]);
+
+  // useEffect를 사용하여 payments가 변경될 때마다 displayValues를 업데이트합니다.
+  // useEffect(() => {
+  //   const initialDisplayValues = {};
+  //   payments.forEach((payment, index) => {
+  //     initialDisplayValues[index] = formatDisplayNumber(payment.amount || '');
+  //   });
+  //   setDisplayValues(initialDisplayValues);
+  // }, [payments]);
+
+  // useEffect(() => {
+  //   if (inputRefs.current[index]) {
+  //     inputRefs.current[index].focus();
+  //   }
+  // }, [payments]);
 
   useEffect(() => {
     console.log('SalesByPayment rendered:', {
@@ -143,7 +159,7 @@ const SalesByPayment = ({
     <div className="flex flex-col gap-6 px-5">
       {payments.map((payment, index) => (
         <div
-          key={index}
+          key={payment.id}
           className="flex flex-col gap-3 p-4 bg-gray-50 rounded-md"
         >
           <div className="grid grid-cols-[1.5fr,0.8fr,1fr,1fr,auto,0.5fr,1fr] gap-3 items-center">
@@ -193,8 +209,6 @@ const SalesByPayment = ({
                 formatDisplayNumber(payment.amount || '')
               }
               onChange={(e) => handleAmountChange(index, e.target.value)}
-              onFocus={() => handleAmountFocus(index)}
-              onBlur={() => handleAmountBlur(index)}
               placeholder="매출액"
               disabled={isSubmitting}
               className="text-right"
