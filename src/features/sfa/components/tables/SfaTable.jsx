@@ -75,6 +75,8 @@ const SfaTable = () => {
   const { sfaData, loading, error, pagination, setPage, setPageSize } =
     useSfa();
 
+  console.log(`======== SfaTable pagination : `, pagination);
+
   if (loading) return <StateDisplay type="loading" />;
   if (error) return <StateDisplay type="error" message={error} />;
   if (!sfaData?.length) return <StateDisplay type="empty" />;

@@ -129,26 +129,4 @@ export const transformToDBFields = {
     console.log('Transform base fields output:', transformed);
     return transformed;
   },
-
-  // transformSfaFields: (formData) => {
-  //   console.log('Transform SFA fields input:', formData);
-
-  //   // const transformed = {
-  //   //   name: formData.name,
-  //   //   customer: formData.customer,
-  //   //   has_partner: formData.hasPartner,
-  //   //   selling_partner: formData.hasPartner ? formData.sellingPartner : null,
-  //   //   sfa_sales_type: parseNumber(formData.sfaSalesType),
-  //   //   sfa_classification: parseNumber(formData.sfaClassification),
-  //   //   total_price: parseNumber(formData.itemAmount),
-  //   //   sfa_by_items: transformToDBFields.transformSalesByItems(
-  //   //     formData.salesByItems,
-  //   //   ),
-  //   //   is_project: formData.isProject,
-  //   //   description: formData.description || '',
-  //   // };
-
-  //   // console.log('Transform base fields output:', transformed);
-  //   // return transformed;
-  // },
 };

@@ -15,7 +15,6 @@ export const buildSfaListQuery = (params) => {
   // 기본 필터 구성
   const baseFilters = [
     { is_deleted: { $eq: false } },
-    // 날짜 범위 필터
     {
       recognition_date: {
         $gte: dateRange.startDate,
@@ -23,8 +22,6 @@ export const buildSfaListQuery = (params) => {
       },
     },
   ];
-
-  // console.log(`>> buildSfaListQuery - filters : `, filters);
 
   // 확률 필터 추가
   if (probability) {
@@ -38,15 +35,29 @@ export const buildSfaListQuery = (params) => {
     }
   }
 
-  // 나머지 필터 추가
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
-      baseFilters.push({ [key]: { $eq: value } });
-    }
-  });
+  // 검색 필터 추가
+  if (filters.name)
+    baseFilters.push({ sfa: { name: { $contains: filters.name } } });
+  if (filters.customer)
+    baseFilters.push({ sfa: { customer: { $eq: filters.customer } } });
+  if (filters.sfaSalesType)
+    baseFilters.push({
+      sfa: { sfa_sales_type: { id: { $eq: filters.sfaSalesType } } },
+    });
+  if (filters.sfaClassification)
+    baseFilters.push({
+      sfa: { sfa_classification: { id: { $eq: filters.sfaClassification } } },
+    });
+  if (filters.salesItem)
+    baseFilters.push({
+      'sfa.sfa_by_items.item_id': { $eq: filters.salesItem },
+    });
+  if (filters.team)
+    baseFilters.push({ 'sfa.sfa_by_items.team_id': { $eq: filters.team } });
+  if (filters.billingType)
+    baseFilters.push({ billing_type: { $eq: filters.billingType } });
 
-  // 쿼리 구성
-  const query = {
+  const queryObj = {
     filters: {
       $and: baseFilters,
     },
@@ -64,15 +75,9 @@ export const buildSfaListQuery = (params) => {
       sfa: {
         fields: ['name', 'sfa_by_items', 'has_partner', 'is_project'],
         populate: {
-          customer: {
-            fields: ['name'],
-          },
-          selling_partner: {
-            fields: ['name'],
-          },
-          sfa_classification: {
-            fields: ['name'],
-          },
+          customer: { fields: ['name'] },
+          selling_partner: { fields: ['name'] },
+          sfa_classification: { fields: ['name'] },
         },
       },
     },
@@ -85,7 +90,12 @@ export const buildSfaListQuery = (params) => {
     sort: ['recognition_date:asc'],
   };
 
-  return qs.stringify(query, { encodeValuesOnly: true });
+  try {
+    return qs.stringify(queryObj, { encodeValuesOnly: true });
+  } catch (error) {
+    console.error('Error in buildSfaListQuery:', error);
+    return '';
+  }
 };
 
 export const buildSfaDetailQuery = (id) => {
