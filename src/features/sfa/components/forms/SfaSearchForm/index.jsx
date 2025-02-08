@@ -1,7 +1,8 @@
 // src/features/sfa/components/SfaSearchForm/index.jsx
 import React, { useState, useEffect } from 'react';
-import { useSfa } from '../../../context/SfaProvider';
+// import { useSfa } from '../../../context/SfaProvider';
 import dayjs from 'dayjs';
+import { useSfaSearchFilter } from '../../../hooks/useSfaSearchFilter';
 import { CustomerSearchInput } from '../../../../../shared/components/customer/CustomerSearchInput';
 import { useCodebook } from '../../../../../shared/hooks/useCodebook';
 import { useTeam } from '../../../../../shared/hooks/useTeam';
@@ -18,7 +19,8 @@ import {
 } from '../../../../../shared/components/ui/index';
 
 const SfaSearchForm = () => {
-  const { executeSearch, resetSearch } = useSfa();
+  // const { executeSearch, resetSearch } = useSfa();
+  const { updateDetailFilter } = useSfaSearchFilter();
 
   const {
     data: codebook,
@@ -31,11 +33,7 @@ const SfaSearchForm = () => {
     'sfa_classification',
   ]);
 
-  const [searchFormData, setSearchFormData] = useState({
-    dateRange: {
-      startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
-      endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
-    },
+  const INITFORMDATA = {
     name: '',
     customer: '',
     sfaSalesType: '',
@@ -43,8 +41,15 @@ const SfaSearchForm = () => {
     salesItem: '',
     team: '',
     billingType: '',
-    isConfirmed: '',
     probability: '',
+  };
+
+  const [searchFormData, setSearchFormData] = useState({
+    dateRange: {
+      startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
+      endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
+    },
+    ...INITFORMDATA,
   });
 
   const { data: teams, isLoading: teamLoading } = useTeam();
@@ -58,6 +63,7 @@ const SfaSearchForm = () => {
   console.log(`>> items : `, items);
 
   const handleInputChange = (e) => {
+    console.log(`>> date time : `, e.target);
     const { name, value } = e.target;
     if (name === 'startDate' || name === 'endDate') {
       setSearchFormData((prev) => ({
@@ -81,10 +87,22 @@ const SfaSearchForm = () => {
     }
   };
 
+  /**
+   * 고객사 선택 핸들러
+   * @param {Object} customer - 선택된 고객사 정보
+   */
+  const handleCustomerSelect = (customer) => {
+    setSearchFormData((prev) => ({
+      ...prev,
+      customer: customer.id,
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(`search form : `, searchFormData);
+    // console.log(`search form : `, searchFormData);
     // executeSearch(searchFormData);
+    updateDetailFilter(searchFormData);
   };
 
   const handleReset = () => {
@@ -93,15 +111,7 @@ const SfaSearchForm = () => {
         startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
         endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
       },
-      name: '',
-      customer: '',
-      sfaSalesType: '',
-      sfaClassification: '',
-      salesItem: '',
-      team: '',
-      billingType: '',
-      isConfirmed: '',
-      probability: '',
+      ...INITFORMDATA,
     });
     // resetSearch();
   };
@@ -149,8 +159,8 @@ const SfaSearchForm = () => {
           <FormItem>
             <Label>매출유형</Label>
             <Select
-              name="salesCategory"
-              value={searchFormData.salesCategory}
+              name="sfaSalesType"
+              value={searchFormData.sfaSalesType}
               onChange={handleInputChange}
             >
               <option value="">선택하세요</option>
@@ -168,8 +178,8 @@ const SfaSearchForm = () => {
           <FormItem>
             <Label>매출처</Label>
             <CustomerSearchInput
-              // onSelect={handleCustomerSelect}
               value={searchFormData.customer}
+              onSelect={handleCustomerSelect}
               // error={errors.customer}
               // disabled={isSubmitting}
               size="small"
@@ -202,7 +212,7 @@ const SfaSearchForm = () => {
               <option value="">선택하세요</option>
               <option value="confirmed">확정</option>
               {codebook.sfa_percentage?.data?.map((item) => (
-                <option key={item.id} value={item.id}>
+                <option key={item.id} value={item.name}>
                   {item.name}
                 </option>
               ))}
@@ -216,8 +226,8 @@ const SfaSearchForm = () => {
             <Label>건명</Label>
             <Input
               type="text"
-              name="title"
-              value={searchFormData.title}
+              name="name"
+              value={searchFormData.name}
               onChange={handleInputChange}
               placeholder="건명 입력"
             />

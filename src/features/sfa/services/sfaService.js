@@ -10,6 +10,7 @@
 
 import { apiClient } from '../../../shared/api/apiClient';
 import { buildSfaListQuery, buildSfaDetailQuery } from '../api/queries';
+import { transformToDBFields } from '../utils/transformUtils';
 import dayjs from 'dayjs';
 import qs from 'qs';
 
@@ -55,6 +56,11 @@ export const sfaService = {
         startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
         endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
       };
+
+      // filters 객체 변환
+      // const transformedFilters = transformToDBFields.transformToStrapiFilter(
+      //   params.filters,
+      // );
 
       // 쿼리 파라미터 구성
       const queryParams = {

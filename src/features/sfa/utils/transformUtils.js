@@ -28,6 +28,25 @@ const toDate = (dateStr) => {
  */
 export const transformToDBFields = {
   /**
+   * 필터 필드 매핑 정의
+   */
+  FILTER_FIELD_MAP: {
+    name: 'name',
+    customer: 'customer',
+    hasPartner: 'has_partner',
+    sellingPartner: 'selling_partner',
+    sfaSalesType: 'sfa_sales_type',
+    sfaClassification: 'sfa_classification',
+    // salesItem:'sfa_by_items', team..json
+    itemAmount: 'total_price',
+    isProject: 'is_project',
+    description: 'description',
+    probability: 'probability',
+    //
+    billingType: 'billing_type',
+  },
+
+  /**
    * 매출 아이템 배열을 DB 형식으로 변환
    * @param {Array} items - salesByItems 배열
    * @returns {string} - JSON 문자열로 변환된 매출 아이템 데이터
@@ -128,5 +147,106 @@ export const transformToDBFields = {
 
     console.log('Transform base fields output:', transformed);
     return transformed;
+  },
+
+  /**
+   * 필터를 Strapi 쿼리 형식으로 변환
+   * @param {Object} filters - 변환할 필터 객체
+   * @returns {Array} - Strapi 필터 배열
+   */
+  transformToStrapiFilter: (filters) => {
+    console.group('Strapi Filter Transform');
+    console.log('Input filters:', filters);
+
+    if (!filters || typeof filters !== 'object') {
+      console.log('No filters to transform');
+      console.groupEnd();
+      return {};
+    }
+
+    const sfaFilters = {};
+
+    // 매출처 필터
+    if (filters.customer && filters.customer !== '') {
+      sfaFilters.customer = {
+        id: { $eq: filters.customer },
+      };
+    }
+
+    // 건명 필터
+    if (filters.name && filters.name !== '') {
+      sfaFilters.name = { $contains: filters.name };
+    }
+
+    // 매출구분, 매출품목 필터
+    if (filters.sfa_item && filters.sfa_item !== '') {
+      sfaFilters.sfa_item_price = {
+        $contains: `"sfa_item_name":"${filters.sfa_item}"`,
+      };
+    } else if (
+      filters.sfa_classification &&
+      filters.sfa_classification !== ''
+    ) {
+      sfaFilters.sfa_classification = {
+        id: { $eq: filters.sfa_classification },
+      };
+    }
+
+    const result =
+      Object.keys(sfaFilters).length > 0 ? { sfa: sfaFilters } : {};
+
+    console.log('Output Strapi filters:', result);
+    console.groupEnd();
+
+    return result;
+  },
+
+  /**
+   * filters 객체를 DB 필드명으로 변환
+   * @param {Object} filters - 변환할 필터 객체
+   * @returns {Object} - 변환된 필터 객체
+   * --> transformToDBFields 로 변경경
+   */
+  transformFilters: (filters) => {
+    console.group('Filters Transform');
+    console.log('Input filters:', filters);
+
+    if (!filters || typeof filters !== 'object') {
+      console.log('No filters to transform');
+      console.groupEnd();
+      return {};
+    }
+
+    // null이 아닌 값만 변환하여 새 객체 생성
+    const transformedFilters = Object.entries(filters).reduce(
+      (acc, [key, value]) => {
+        if (value == null || value === '') {
+          return acc;
+        }
+
+        const dbField = transformToDBFields.FILTER_FIELD_MAP[key];
+        if (dbField) {
+          // 숫자 타입 필드는 parseNumber 적용
+          if (
+            ['sfa_sales_type', 'sfa_classification', 'total_price'].includes(
+              dbField,
+            )
+          ) {
+            acc[dbField] = parseNumber(value);
+          } else {
+            acc[dbField] = value;
+          }
+        } else {
+          acc[key] = value;
+        }
+        return acc;
+      },
+      {},
+    );
+
+    console.log('Output transformed filters:', transformedFilters);
+    console.groupEnd();
+
+    return transformedFilters;
   },
 };

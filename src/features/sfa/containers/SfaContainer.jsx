@@ -13,8 +13,8 @@ import SfaDrawer from '../components/drawer/SfaDrawer';
 import SfaQuarterlyOverview from '../components/tables/SfaQuarterlyOverview';
 // import SfaAnnualOverview from '../components/tables/SfaAnnualOverview';
 import SfaTable from '../components/tables/SfaTable';
-// import SfaSubMenu from '../components/SfaSubMenu';
-// import SfaSearchForm from '../components/forms/SfaSearchForm';
+import SfaSubMenu from '../components/SfaSubMenu';
+import SfaSearchForm from '../components/forms/SfaSearchForm';
 
 /**
  * SFA 메인 컨테이너 컴포넌트
@@ -25,24 +25,16 @@ const SfaContainer = () => {
   const { pageLayout } = useSfa();
   const { components } = pageLayout;
 
-  // const { fetchSfaList } = useSfaSearchFilter();
-
-  // 초기 데이터 로딩
-  // useEffect(() => {
-  //   console.log('Initial data loading');
-  //   fetchSfaList();
-  // }, [fetchSfaList]);
-
   return (
     <>
       <Section>
-        {/* <SfaSubMenu /> */}
-        {/* {components.searchForm && (
+        <SfaSubMenu />
+        {components.searchForm && (
           <SfaSearchForm
           // sfaSalesTypeData={sfaSalesTypeData}
           // sfaClassificationData={sfaClassificationData}
           />
-        )} */}
+        )}
         {components.monthlyStatus && <SfaQuarterlyOverview />}
         {components.sfaTable && <SfaTable />}
         {/* {components.forecastTable && <SfaAnnualOverview />} */}

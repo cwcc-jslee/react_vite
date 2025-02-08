@@ -7,7 +7,13 @@
  * @version 1.0.0
  * @filename src/features/sfa/contexts/SfaProvider.jsx
  */
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useRef,
+} from 'react';
 import dayjs from 'dayjs';
 import { sfaService } from '../services/sfaService';
 // import { useSfaSearchFilter } from '../hooks/useSfaSearchFilter';
@@ -33,13 +39,20 @@ export const SfaProvider = ({ children }) => {
   const [sfaData, setSfaData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({
+  // filters 를 filtersRef 로 변경경
+  // const [filters, setFilters] = useState({
+  //   dateRange: {
+  //     startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
+  //     endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
+  //   },
+  //   probability: null,
+  // });
+  const filters = {
     dateRange: {
       startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
       endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
     },
-    probability: null,
-  });
+  };
 
   // 페이지네이션 상태
   const [pagination, setPagination] = useState({
@@ -67,8 +80,13 @@ export const SfaProvider = ({ children }) => {
     data: null,
   });
 
-  // 필터
-  // const { updateDetailFilter } = useSfaSearchFilter;
+  const resetFilters = () => {
+    fetchSfaList({
+      ...filters,
+      pagination: { current: 1, pageSize: pagination.pageSize },
+    });
+  };
+
   /**
    * 페이지 변경 처리
    */
@@ -174,36 +192,20 @@ export const SfaProvider = ({ children }) => {
    */
   const fetchSfaList = useCallback(
     async (customParams = {}) => {
-      console.log(`>>filters : `, filters);
       console.log(`>>customParams : `, customParams);
       setLoading(true);
       try {
         // filters에서 dateRange 관련 필드 제거
-        const { dateRange, probability, ...restFilters } = filters;
         const {
           dateRange: customDateRange,
           probability: customProbability,
           ...restCustomFilters
         } = customParams?.filters || {};
-        console.log(`>>customDateRange : `, customDateRange);
-
-        // 기본 파라미터와 커스텀 파라미터 병합
-        // const queryParams = {
-        //   pagination: {
-        //     current: customParams.pagination?.current || pagination.current,
-        //     pageSize: customParams.pagination?.pageSize || pagination.pageSize,
-        //   },
-        //   filters: {
-        //     ...restFilters,
-        //     ...restCustomFilters,
-        //   },
-        //   dateRange: customParams.dateRange || filters.dateRange,
-        // };
 
         const queryParams = {
-          dateRange: customDateRange || dateRange,
-          probability: customProbability || probability,
-          filters: { ...restFilters, ...restCustomFilters },
+          dateRange: customDateRange || filters.dateRange,
+          probability: customProbability || null,
+          filters: { ...restCustomFilters },
           pagination: {
             current: customParams.pagination?.current || pagination.current,
             pageSize: customParams.pagination?.pageSize || pagination.pageSize,
@@ -239,11 +241,12 @@ export const SfaProvider = ({ children }) => {
         setLoading(false);
       }
     },
-    [pagination.current, pagination.pageSize, filters],
+    [pagination.current, pagination.pageSize],
   );
 
   // 초기 데이터 로드
   React.useEffect(() => {
+    console.log('Initial data loading');
     fetchSfaList();
   }, [fetchSfaList]);
 
@@ -270,11 +273,11 @@ export const SfaProvider = ({ children }) => {
     // setDrawerClose,
 
     // 필터 관련
-    filters,
-    setFilters,
+    // filters,
+    // setFilters,
     // updateMonthlyFilter,
     // updateDetailFilter,
-    // resetFilters,
+    resetFilters,
 
     // 데이터 및 검색/필터 관련
     // ...searchFilter,

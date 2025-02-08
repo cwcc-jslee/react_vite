@@ -24,8 +24,6 @@ export const buildSfaListQuery = (params) => {
     },
   ];
 
-  // console.log(`>> buildSfaListQuery - filters : `, filters);
-
   // 확률 필터 추가
   if (probability) {
     if (probability === 'confirmed') {
@@ -37,13 +35,41 @@ export const buildSfaListQuery = (params) => {
       });
     }
   }
+  console.log(`>> basefilter : `, baseFilters);
 
-  // 나머지 필터 추가
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== '') {
-      baseFilters.push({ [key]: { $eq: value } });
-    }
-  });
+  // SFA 관련 필터 처리
+  const sfaFilters = {};
+
+  // 매출처 필터
+  if (filters.customer) {
+    sfaFilters.customer = { id: { $eq: filters.customer } };
+  }
+  // 건명 필터
+  if (filters.name) {
+    sfaFilters.name = { $contains: filters.name };
+  }
+  // 결제 유형형
+  if (filters.billingType) {
+    baseFilters.push({ billing_type: { $eq: filters.billingType } });
+  }
+  // 매출 구분
+  if (filters.sfaClassification) {
+    sfaFilters.sfa_classification = {
+      id: { $eq: filters.sfaClassification },
+    };
+  }
+  // 매출 유형 sfaSalesType
+  if (filters.sfaSalesType) {
+    sfaFilters.sfa_sales_type = {
+      id: { $eq: filters.sfaSalesType },
+    };
+  }
+  // 매출 품목 / 사업부
+
+  // SFA 필터가 있는 경우 baseFilters에 추가
+  if (Object.keys(sfaFilters).length > 0) {
+    baseFilters.push({ sfa: sfaFilters });
+  }
 
   // 쿼리 구성
   const query = {

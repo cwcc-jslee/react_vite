@@ -54,17 +54,7 @@ export const useSfaSearchFilter = () => {
       startDate: date.startOf('month').format('YYYY-MM-DD'),
       endDate: date.endOf('month').format('YYYY-MM-DD'),
     };
-    // filters 상태 완전히 초기화
     const newFilters = { dateRange, probability };
-
-    // probability 조건에 따라 필터 설정
-    // if (probability === 'confirmed') {
-    //   newFilters.isConfirmed = true;
-    // } else if (probability) {
-    //   newFilters.probability = probability;
-    // }
-
-    setFilters(newFilters); // 필터 상태 초기화
 
     return fetchSfaList({
       filters: newFilters, // 전체 필터 객체 전달
@@ -75,26 +65,16 @@ export const useSfaSearchFilter = () => {
   /**
    * 상세 검색 필터 업데이트 및 검색
    */
-  const updateDetailFilter = useCallback(
-    async (searchFormData) => {
-      console.group('updateDetailFilter');
-      console.log('Search Form Data:', searchFormData);
+  const updateDetailFilter = async (searchFormData) => {
+    console.group('updateDetailFilter');
+    console.log('Search Form Data:', searchFormData);
+    console.groupEnd();
 
-      setFilters((prev) => ({
-        ...prev,
-        ...searchFormData,
-      }));
-
-      setLayout('search');
-      console.groupEnd();
-
-      return fetchSfaList({
-        ...searchFormData,
-        pagination: { current: 1, pageSize: pagination.pageSize },
-      });
-    },
-    [pagination.pageSize, fetchSfaList, setLayout],
-  );
+    return fetchSfaList({
+      filters: searchFormData,
+      pagination: { current: 1, pageSize: pagination.pageSize },
+    });
+  };
 
   /**
    * 필터 초기화
