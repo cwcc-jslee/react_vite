@@ -34,25 +34,25 @@ export const useFormData = (drawerState) => {
   );
   const [selectedPaymentData, setSelectedPaymentData] = useState([]);
 
-  useEffect(() => {
-    console.log('Form Data Changed:', {
-      previous: initialFormState,
-      current: formData,
-      changes: Object.keys(formData).reduce((diff, key) => {
-        if (formData[key] !== initialFormState[key]) {
-          diff[key] = {
-            from: initialFormState[key],
-            to: formData[key],
-          };
-        }
-        return diff;
-      }, {}),
-    });
-  }, [formData]);
+  // useEffect(() => {
+  //   console.log('Form Data Changed:', {
+  //     previous: initialFormState,
+  //     current: formData,
+  //     changes: Object.keys(formData).reduce((diff, key) => {
+  //       if (formData[key] !== initialFormState[key]) {
+  //         diff[key] = {
+  //           from: initialFormState[key],
+  //           to: formData[key],
+  //         };
+  //       }
+  //       return diff;
+  //     }, {}),
+  //   });
+  // }, [formData]);
 
-  useEffect(() => {
-    console.log('Payment Data Changed:', paymentData);
-  }, [paymentData]);
+  // useEffect(() => {
+  //   console.log('Payment Data Changed:', paymentData);
+  // }, [paymentData]);
   /**
    * 매출 금액 합계 계산 Effect
    */

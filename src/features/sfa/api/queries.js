@@ -65,6 +65,21 @@ export const buildSfaListQuery = (params) => {
     };
   }
   // 매출 품목 / 사업부
+  if (filters.salesItem || filters.team) {
+    // const conditions = [];
+
+    if (!filters.salesItem || !filters.team) {
+      sfaFilters.sfa_by_items = {
+        $contains: filters.salesItem ? filters.salesItem : filters.team,
+      };
+    }
+    // 두 조건 모두 있는 경우 -> 수정필요..and 시 오류 발생
+    else {
+      sfaFilters.sfa_by_items = {
+        $and: [{ $contains: filters.salesItem }, { $contains: filters.team }],
+      };
+    }
+  }
 
   // SFA 필터가 있는 경우 baseFilters에 추가
   if (Object.keys(sfaFilters).length > 0) {

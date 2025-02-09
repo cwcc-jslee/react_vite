@@ -60,10 +60,9 @@ const SfaSearchForm = () => {
       refetch(searchFormData.sfaClassification);
     }
   }, [searchFormData.sfaClassification]);
-  console.log(`>> items : `, items);
 
   const handleInputChange = (e) => {
-    console.log(`>> date time : `, e.target);
+    console.log(`>> handleInputChange : `, e.target.value);
     const { name, value } = e.target;
     if (name === 'startDate' || name === 'endDate') {
       setSearchFormData((prev) => ({
@@ -195,7 +194,7 @@ const SfaSearchForm = () => {
             >
               <option value="">선택하세요</option>
               {items?.data?.map((item) => (
-                <option key={item.id} value={item.id}>
+                <option key={item.id} value={item.name}>
                   {item.name}
                 </option>
               ))}
@@ -242,7 +241,7 @@ const SfaSearchForm = () => {
             >
               <option value="">선택하세요</option>
               {teams?.data?.map((item) => (
-                <option key={item.id} value={item.id}>
+                <option key={item.id} value={item.name}>
                   {item.name}
                 </option>
               ))}

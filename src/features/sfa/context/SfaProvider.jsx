@@ -192,7 +192,7 @@ export const SfaProvider = ({ children }) => {
    */
   const fetchSfaList = useCallback(
     async (customParams = {}) => {
-      console.log(`>>customParams : `, customParams);
+      // console.log(`>>customParams : `, customParams);
       setLoading(true);
       try {
         // filters에서 dateRange 관련 필드 제거
@@ -213,7 +213,7 @@ export const SfaProvider = ({ children }) => {
         };
 
         // API 호출
-        console.log('Query Params:', queryParams);
+        // console.log('Query Params:', queryParams);
         const response = await sfaService.getSfaList(queryParams);
 
         // 데이터 업데이트

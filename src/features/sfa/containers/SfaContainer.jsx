@@ -39,7 +39,7 @@ const SfaContainer = () => {
         {components.sfaTable && <SfaTable />}
         {/* {components.forecastTable && <SfaAnnualOverview />} */}
       </Section>
-      {/* <SfaDrawer /> */}
+      <SfaDrawer />
     </>
   );
 };
