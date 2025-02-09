@@ -78,6 +78,7 @@ export const useSfaForm = () => {
       setIsSubmitting(true);
 
       // processMode에 따른 API 호출
+      // update : id, ducumentId, sfa
       const response =
         processMode === 'create'
           ? await sfaSubmitService.addSfaPayment(
@@ -86,7 +87,7 @@ export const useSfaForm = () => {
             )
           : await sfaSubmitService.updateSfaPayment(
               targetId, //payment documentId
-              formData.salesByPayments,
+              formData.salesByPayments[0],
             );
 
       notification.success({
@@ -120,20 +121,6 @@ export const useSfaForm = () => {
     }
   };
 
-  const resetPaymentForm = () => {
-    console.log('Reset 전 selectedPaymentIds:', selectedPaymentIds);
-
-    try {
-      resetForm();
-
-      setSelectedPaymentIds(INITIAL_PAYMENT_ID_STATE);
-
-      console.log('Reset 후 확인');
-    } catch (error) {
-      console.error('Reset 중 오류 발생:', error);
-    }
-  };
-
   return {
     ...formState,
     validateForm,
@@ -142,6 +129,5 @@ export const useSfaForm = () => {
     processPaymentSubmit,
     // data: formState,
     // actions: formActions,
-    resetPaymentForm,
   };
 };

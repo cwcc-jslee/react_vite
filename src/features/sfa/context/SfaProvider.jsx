@@ -250,6 +250,28 @@ export const SfaProvider = ({ children }) => {
     fetchSfaList();
   }, [fetchSfaList]);
 
+  /**
+   * SFA 상세 조회
+   */
+  const fetchSfaDetail = async (id) => {
+    // setLoading(true);
+    try {
+      const response = await sfaService.getSfaDetail(id);
+      setDrawerState({
+        visible: true,
+        controlMode: 'view',
+        featureMode: null,
+        data: response,
+      });
+      // return response.data[0];
+    } catch (err) {
+      setError(err.message);
+      return null;
+    } finally {
+      // setLoading(false);
+    }
+  };
+
   const value = {
     // // 데이터 관련
     sfaData,
@@ -257,7 +279,7 @@ export const SfaProvider = ({ children }) => {
     error,
     pagination,
     fetchSfaList,
-    // fetchSfaDetail,
+    fetchSfaDetail,
     setPage,
     setPageSize,
     setPageTotalSize,

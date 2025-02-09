@@ -147,6 +147,10 @@ export const SfaProvider = ({ children }) => {
   };
 
   /**
+   * SFA 상세 조회 버튼 클릭
+   */
+
+  /**
    * 페이지네이션 관련 함수들
    */
   const setPage = (page) => {

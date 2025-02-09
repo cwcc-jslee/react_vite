@@ -5,6 +5,7 @@
  */
 import React, { useState, useRef, useEffect } from 'react';
 import { useFormValidation } from '../../hooks/useFormValidation.js';
+import { useSfaForm } from '../../hooks/useSfaForm.js';
 import SalesByPayment from '../elements/SalesByPayment.jsx';
 // import { useSfaForm } from '../../hooks/useSfaForm.js';
 import {
@@ -16,32 +17,32 @@ import {
 /**
  * SFA 결제매출 등록/수정 폼 컴포넌트
  */
-const SfaPaymentForm = ({
-  data,
-  formData,
-  controlMode,
-  featureMode,
-  handleAddPayment,
-  handlePaymentChange,
-  handleRemovePayment,
-  isSubmitting,
-  errors,
-  paymentData,
-  percentageData,
-  isPaymentDataLoading,
-  processPaymentSubmit,
-  selectedPaymentIds,
-  resetPaymentForm,
-}) => {
+const SfaPaymentForm = ({ data, controlMode, featureMode }) => {
+  const formProps = useSfaForm();
+  const {
+    formData,
+    handleAddPayment,
+    handlePaymentChange,
+    handleRemovePayment,
+    isSubmitting,
+    errors,
+    paymentData,
+    percentageData,
+    isPaymentDataLoading,
+    processPaymentSubmit,
+    selectedPaymentIds,
+    resetPaymentForm,
+  } = formProps;
+
   // 폼 상태를 로컬로 관리하여 불필요한 리렌더링 방지
-  const [localFormData, setLocalFormData] = useState(formData);
-  const formRef = useRef(null);
+  // const [localFormData, setLocalFormData] = useState(formData);
+  // const formRef = useRef(null);
   const { validatePayments } = useFormValidation(formData);
 
   // formData가 변경될 때만 localFormData 업데이트
-  useEffect(() => {
-    setLocalFormData(formData);
-  }, [formData]);
+  // useEffect(() => {
+  //   setLocalFormData(formData);
+  // }, [formData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -57,23 +58,23 @@ const SfaPaymentForm = ({
     // const isValid = validateForm();
     // if (!isValid) return;
 
-    // submit
-    await processPaymentSubmit(sfaId);
+    // submit() || processMode, targetId, sfaId
+    await processPaymentSubmit('create', sfaId, sfaId);
   };
 
   const handleLocalPaymentChange = (index, field, value) => {
     // 로컬 상태 먼저 업데이트
-    setLocalFormData((prev) => {
-      const updatedPayments = [...prev.salesByPayments];
-      updatedPayments[index] = {
-        ...updatedPayments[index],
-        [field]: value,
-      };
-      return {
-        ...prev,
-        salesByPayments: updatedPayments,
-      };
-    });
+    // setLocalFormData((prev) => {
+    //   const updatedPayments = [...prev.salesByPayments];
+    //   updatedPayments[index] = {
+    //     ...updatedPayments[index],
+    //     [field]: value,
+    //   };
+    //   return {
+    //     ...prev,
+    //     salesByPayments: updatedPayments,
+    //   };
+    // });
 
     // 부모 컴포넌트에 변경 사항 전달
     handlePaymentChange(index, field, value);

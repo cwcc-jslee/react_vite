@@ -22,7 +22,7 @@ import SfaSearchForm from '../components/forms/SfaSearchForm';
  */
 const SfaContainer = () => {
   // 레이아웃 관련 상태 가져오기
-  const { pageLayout } = useSfa();
+  const { pageLayout, drawerState } = useSfa();
   const { components } = pageLayout;
 
   return (
@@ -39,7 +39,7 @@ const SfaContainer = () => {
         {components.sfaTable && <SfaTable />}
         {/* {components.forecastTable && <SfaAnnualOverview />} */}
       </Section>
-      <SfaDrawer />
+      {drawerState.visible && <SfaDrawer />}
     </>
   );
 };

@@ -9,14 +9,15 @@ import PropTypes from 'prop-types';
 import { useSelector } from 'react-redux';
 import { selectCodebookByType } from '../../../codebook/store/codebookSlice.js';
 import { useSfa } from '../../context/SfaProvider.jsx';
+import { useSfaForm } from '../../hooks/useSfaForm.js';
 import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer.jsx';
 import ActionMenuBar from '../../../../shared/components/ui/button/ActionMenuBar.jsx';
 import SfaAddForm from '../forms/SfaAddForm/index.jsx';
 import SfaDetailTable from '../tables/SfaDetailTable.jsx';
-import SfaDetailPaymentTable from '../tables/SfaDetailPaymentTable.jsx';
-import { useSfaForm } from '../../hooks/useSfaForm.js';
+// import SfaDetailPaymentTable from '../tables/SfaDetailPaymentTable.jsx';
 import EditableSfaDetail from '../tables/EditableSfaDetail.jsx';
-import SfaPaymentForm from '../forms/SfaPaymentForm.jsx';
+import SfaAddPaymentForm from '../forms/SfaAddPaymentForm.jsx';
+import SfaPaymentSection from '../compose/SfaPaymentSection.jsx';
 
 const SfaDrawer = () => {
   // Codebook 데이터 조회
@@ -24,15 +25,7 @@ const SfaDrawer = () => {
   const sfaClassificationData = useSelector(
     selectCodebookByType('sfa_classification'),
   );
-  const formProps = useSfaForm(); // Custom hook을 통한 form 관련 로직 분리
-  const {
-    // formData,
-    // handleAddPayment,
-    togglePaymentSelection,
-    // handleEditPayment,
-    resetPaymentForm,
-    // selectedPaymentData,
-  } = formProps;
+  const { togglePaymentSelection, resetPaymentForm } = useSfaForm(); // Custom hook을 통한 form 관련 로직 분리
 
   const { drawerState, setDrawer, setDrawerClose } = useSfa();
   const { visible, controlMode, featureMode, data } = drawerState;
@@ -114,15 +107,15 @@ const SfaDrawer = () => {
   const ViewContent = ({ data }) => (
     <>
       <SfaDetailTable data={data} />
-      <SfaDetailPaymentTable
+      {/* <SfaDetailPaymentTable
         data={data.sfa_by_payments || []}
         controlMode="view"
-        // onEdit={(item) =>
-        //   setDrawer({
-        //     detailMode: 'sales-edit',
-        //     editData: item,
-        //   })
-        // }
+      /> */}
+      <SfaPaymentSection
+        data={data}
+        controlMode={controlMode}
+        featureMode={featureMode}
+        togglePaymentSelection={togglePaymentSelection}
       />
     </>
   );
@@ -139,29 +132,25 @@ const SfaDrawer = () => {
         // onUpdate={handleFieldUpdate}
       />
 
-      {(featureMode === 'editPayment' || featureMode === 'addPayment') && (
-        <SfaPaymentForm
-          {...formProps}
+      {featureMode === 'addPayment' && (
+        <SfaAddPaymentForm
           data={data}
           controlMode={controlMode}
           featureMode={featureMode}
-          // selectedPaymentData={selectedPaymentData}
-          // formData={formData}
         />
       )}
-
-      <SfaDetailPaymentTable
+      <SfaPaymentSection
+        data={data}
+        controlMode={controlMode}
+        featureMode={featureMode}
+        togglePaymentSelection={togglePaymentSelection}
+      />
+      {/* <SfaDetailPaymentTable
         data={data.sfa_by_payments || []}
         controlMode="edit"
         featureMode={featureMode}
         togglePaymentSelection={togglePaymentSelection}
-        // onEdit={(item) =>
-        //   setDrawer({
-        //     detailMode: 'sales-edit',
-        //     editData: item,
-        //   })
-        // }
-      />
+      /> */}
     </>
   );
 

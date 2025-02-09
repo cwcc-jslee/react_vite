@@ -4,6 +4,7 @@
  * 결제 구분, 확정여부, 매출확률, 매출액, 이익/마진 등의 정보를 관리
  */
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { useCodebook } from '../../../../shared/hooks/useCodebook';
 import { Trash2 } from 'lucide-react';
 import {
   Group,
@@ -22,9 +23,6 @@ const SalesByPayment = ({
   onChange,
   onRemove,
   isSubmitting,
-  paymentData,
-  percentageData,
-  isPaymentDataLoading,
 }) => {
   // 매출액 임시 입력 상태 관리를 위한 state 추가
   const [displayValues, setDisplayValues] = useState({});
@@ -32,6 +30,12 @@ const SalesByPayment = ({
   // 입력 중인 금액을 관리하는 상태
   const [inputAmounts, setInputAmounts] = useState({});
   const inputRefs = useRef([]);
+  // 결제구분, 매출확률 codebook
+  const {
+    data: codebooks,
+    isLoading: isLoadingCodebook,
+    error,
+  } = useCodebook(['re_payment_method', 'sfa_percentage']);
 
   // 이익/마진 금액 자동 계산 useEffect 수정
   useEffect(() => {
@@ -65,14 +69,14 @@ const SalesByPayment = ({
   //   }
   // }, [payments]);
 
-  useEffect(() => {
-    console.log('SalesByPayment rendered:', {
-      payments,
-      isSubmitting,
-      paymentData,
-      percentageData,
-    });
-  }, [payments, isSubmitting, paymentData, percentageData]);
+  // useEffect(() => {
+  //   console.log('SalesByPayment rendered:', {
+  //     payments,
+  //     isSubmitting,
+  //     // paymentData,
+  //     // percentageData,
+  //   });
+  // }, [payments, isSubmitting]);
 
   // 금액 입력 처리
   const handleAmountChange = (index, value) => {
@@ -166,11 +170,11 @@ const SalesByPayment = ({
             <Select
               value={payment.billingType}
               onChange={(e) => onChange(index, 'billingType', e.target.value)}
-              disabled={isSubmitting || isPaymentDataLoading}
+              disabled={isSubmitting || isLoadingCodebook}
               required
             >
               <option value="">결제구분 선택</option>
-              {paymentData?.data?.map((method) => (
+              {codebooks?.re_payment_method?.data?.map((method) => (
                 <option key={method.id} value={method.code}>
                   {method.name}
                 </option>
@@ -191,11 +195,11 @@ const SalesByPayment = ({
               value={payment.probability}
               onChange={(e) => onChange(index, 'probability', e.target.value)}
               disabled={
-                isSubmitting || isPaymentDataLoading || payment.isConfirmed
+                isSubmitting || isLoadingCodebook || payment.isConfirmed
               }
             >
               <option value="">매출확률 선택</option>
-              {percentageData?.data?.map((percent) => (
+              {codebooks?.sfa_percentage?.data?.map((percent) => (
                 <option key={percent.id} value={percent.code}>
                   {percent.name}
                 </option>

@@ -34,21 +34,21 @@ export const useFormData = (drawerState) => {
   );
   const [selectedPaymentData, setSelectedPaymentData] = useState([]);
 
-  // useEffect(() => {
-  //   console.log('Form Data Changed:', {
-  //     previous: initialFormState,
-  //     current: formData,
-  //     changes: Object.keys(formData).reduce((diff, key) => {
-  //       if (formData[key] !== initialFormState[key]) {
-  //         diff[key] = {
-  //           from: initialFormState[key],
-  //           to: formData[key],
-  //         };
-  //       }
-  //       return diff;
-  //     }, {}),
-  //   });
-  // }, [formData]);
+  useEffect(() => {
+    console.log('Form Data Changed:', {
+      previous: initialFormState,
+      current: formData,
+      changes: Object.keys(formData).reduce((diff, key) => {
+        if (formData[key] !== initialFormState[key]) {
+          diff[key] = {
+            from: initialFormState[key],
+            to: formData[key],
+          };
+        }
+        return diff;
+      }, {}),
+    });
+  }, [formData]);
 
   // useEffect(() => {
   //   console.log('Payment Data Changed:', paymentData);
@@ -388,9 +388,9 @@ export const useFormData = (drawerState) => {
     console.log('>>togglePaymentSelection>> [payment] : ', payment);
 
     try {
-      if (!isPaymentDataLoading && !paymentData.data.length) {
-        await loadPayments();
-      }
+      // if (!isPaymentDataLoading && !paymentData.data.length) {
+      //   await loadPayments();
+      // }
       setFormData((prev) => ({
         ...prev,
         salesByPayments: [
@@ -416,22 +416,15 @@ export const useFormData = (drawerState) => {
     } catch (error) {
       console.error('Failed to edit sales payment:', error);
     }
-    setSelectedPaymentIds({ id: item.id, documentId: item.documentId });
   };
 
   const resetPaymentForm = () => {
-    console.log('Reset 전 selectedPaymentIds:', selectedPaymentIds);
-
     try {
       // 순차적으로 상태 업데이트
       setFormData((prev) => ({
         ...prev,
         salesByPayments: [],
       }));
-
-      setSelectedPaymentIds(INITIAL_PAYMENT_ID_STATE);
-
-      console.log('Reset 후 확인');
     } catch (error) {
       console.error('Reset 중 오류 발생:', error);
     }

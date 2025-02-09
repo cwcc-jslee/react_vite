@@ -17,7 +17,7 @@ import {
 /**
  * SFA 결제매출 등록/수정 폼 컴포넌트
  */
-const SfaAddPaymentForm = ({ data, controlMode, featureMode }) => {
+const SfaEditPaymentForm = ({ data, controlMode, featureMode }) => {
   const formProps = useSfaForm();
   const {
     formData,
@@ -26,6 +26,9 @@ const SfaAddPaymentForm = ({ data, controlMode, featureMode }) => {
     handleRemovePayment,
     isSubmitting,
     errors,
+    paymentData,
+    percentageData,
+    isPaymentDataLoading,
     processPaymentSubmit,
     selectedPaymentIds,
     resetPaymentForm,
@@ -35,6 +38,11 @@ const SfaAddPaymentForm = ({ data, controlMode, featureMode }) => {
   // const [localFormData, setLocalFormData] = useState(formData);
   // const formRef = useRef(null);
   const { validatePayments } = useFormValidation(formData);
+
+  // formData가 변경될 때만 localFormData 업데이트
+  // useEffect(() => {
+  //   setLocalFormData(formData);
+  // }, [formData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,8 +62,30 @@ const SfaAddPaymentForm = ({ data, controlMode, featureMode }) => {
     await processPaymentSubmit('create', sfaId, sfaId);
   };
 
+  const handleLocalPaymentChange = (index, field, value) => {
+    // 로컬 상태 먼저 업데이트
+    // setLocalFormData((prev) => {
+    //   const updatedPayments = [...prev.salesByPayments];
+    //   updatedPayments[index] = {
+    //     ...updatedPayments[index],
+    //     [field]: value,
+    //   };
+    //   return {
+    //     ...prev,
+    //     salesByPayments: updatedPayments,
+    //   };
+    // });
+
+    // 부모 컴포넌트에 변경 사항 전달
+    handlePaymentChange(index, field, value);
+  };
+
   const handleCancle = async () => {
-    resetPaymentForm();
+    if (selectedPaymentIds.id === null) {
+      resetForm();
+    } else {
+      resetPaymentForm();
+    }
   };
 
   // 수정 모드일 때 결제매출 선택 UI 렌더링
@@ -110,6 +140,9 @@ const SfaAddPaymentForm = ({ data, controlMode, featureMode }) => {
           // onAdd={handleAddSalesPayment}
           onRemove={handleRemovePayment}
           isSubmitting={isSubmitting}
+          paymentData={paymentData}
+          percentageData={percentageData}
+          isPaymentDataLoading={isPaymentDataLoading}
         />
 
         {/* Submit Button */}
@@ -154,4 +187,4 @@ const SfaAddPaymentForm = ({ data, controlMode, featureMode }) => {
   );
 };
 
-export default SfaAddPaymentForm;
+export default SfaEditPaymentForm;

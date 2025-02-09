@@ -85,7 +85,7 @@ export const sfaSubmitService = {
    * @param {Object} paymentData - 수정할 결제 매출 데이터
    * @returns {Promise<Object>} 수정된 결제 매출 데이터
    */
-  async updateSalesByPayment(paymentId, paymentData) {
+  async updateSfaPayment(paymentId, paymentData) {
     console.log('[SFA] Updating payment with history:', {
       paymentId,
       paymentData,

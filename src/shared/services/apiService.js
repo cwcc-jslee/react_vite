@@ -94,9 +94,25 @@ export const apiService = {
     return apiClient.post(url, config.data, config);
   },
 
+  // put: async (url, data, options = {}) => {
+  //   const config = createApiConfig(data, options);
+  //   return apiClient.put(url, config.data, config);
+  // },
   put: async (url, data, options = {}) => {
-    const config = createApiConfig(data, options);
-    return apiClient.put(url, config.data, config);
+    // data wrapping 제거, createApiConfig에서 한 번만 wrapping되도록 함
+    return apiClient.put(
+      url,
+      { data },
+      {
+        baseURL: API_URL,
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+        ...options,
+      },
+    );
   },
 
   delete: async (url, options = {}) => {

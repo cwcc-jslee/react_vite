@@ -15,7 +15,7 @@ const SfaDetailPaymentTable = ({
   // onEdit,
   controlMode = 'view',
   featureMode,
-  togglePaymentSelection,
+  handlePaymentSelection,
 }) => {
   const renderLastColumn = () => {
     return controlMode === 'view' ? (
@@ -43,7 +43,7 @@ const SfaDetailPaymentTable = ({
         <Button
           size="sm"
           variant="outline"
-          onClick={() => togglePaymentSelection?.({ documentId, id })}
+          onClick={() => handlePaymentSelection?.({ documentId, id })}
         >
           edit
         </Button>
