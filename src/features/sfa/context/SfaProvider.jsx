@@ -157,7 +157,7 @@ export const SfaProvider = ({ children }) => {
         mode: 'forecast',
         components: {
           monthlyStatus: false,
-          sfaTable: false,
+          sfaTable: true,
           searchForm: false,
           forecastTable: true,
         },

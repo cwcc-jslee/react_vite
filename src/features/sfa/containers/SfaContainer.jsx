@@ -11,7 +11,7 @@ import SfaDrawer from '../components/drawer/SfaDrawer';
 
 // Components
 import SfaQuarterlyOverview from '../components/tables/SfaQuarterlyOverview';
-// import SfaAnnualOverview from '../components/tables/SfaAnnualOverview';
+import SfaAnnualOverview from '../components/tables/SfaAnnualOverview';
 import SfaTable from '../components/tables/SfaTable';
 import SfaSubMenu from '../components/SfaSubMenu';
 import SfaSearchForm from '../components/forms/SfaSearchForm';
@@ -35,9 +35,9 @@ const SfaContainer = () => {
           // sfaClassificationData={sfaClassificationData}
           />
         )}
+        {components.forecastTable && <SfaAnnualOverview />}
         {components.monthlyStatus && <SfaQuarterlyOverview />}
         {components.sfaTable && <SfaTable />}
-        {/* {components.forecastTable && <SfaAnnualOverview />} */}
       </Section>
       {drawerState.visible && <SfaDrawer />}
     </>

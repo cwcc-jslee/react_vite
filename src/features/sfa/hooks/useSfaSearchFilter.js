@@ -49,6 +49,7 @@ export const useSfaSearchFilter = () => {
   const updateMonthlyFilter = async (yearMonth, probability = null) => {
     console.group('updateMonthlyFilter');
     console.log('YearMonth:', yearMonth, 'Probability:', probability);
+    console.groupEnd();
     const date = dayjs(yearMonth);
     const dateRange = {
       startDate: date.startOf('month').format('YYYY-MM-DD'),
