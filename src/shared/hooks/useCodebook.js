@@ -1,6 +1,7 @@
-// src/features/shared/hooks/useSelectData.js
+// src/features/shared/hooks/useCodebook.js
 import { useState, useEffect } from 'react';
-import { api } from '../api/api';
+import { apiCommon } from '../api/apiCommon';
+// import { api } from '../api/api';
 /**
  * 여러 코드북 데이터를 동시에 조회하는 Hook
  * @param {string[]} codeTypes - 조회할 코드북 타입 배열
@@ -22,7 +23,7 @@ export const useCodebook = (codeTypes) => {
     try {
       // 모든 코드북 요청을 병렬로 처리
       const responses = await Promise.all(
-        codeTypes.map((codeType) => api.fetchCodebook(codeType)),
+        codeTypes.map((codeType) => apiCommon.getCodebook(codeType)),
       );
 
       // 응답 데이터를 코드 타입을 키로 하는 객체로 변환

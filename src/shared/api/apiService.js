@@ -1,8 +1,12 @@
-// src/shared/services/apiService.js
+// src/shared/api/apiService.js
+/**
+ * 확장 API 서비스
+ */
 import axios from 'axios';
-import { getAuthToken } from './authService';
+import { getAuthToken } from '../services/authService';
+import { ENV } from '../config/environment';
 
-const API_URL = import.meta.env.VITE_API_URL;
+// const API_URL = import.meta.env.VITE_API_URL;
 
 /**
  * API 요청 설정 생성
@@ -13,7 +17,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 export const createApiConfig = (data = null, options = {}) => {
   const token = getAuthToken();
   const config = {
-    baseURL: API_URL,
+    baseURL: ENV.api.url,
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -33,7 +37,7 @@ export const createApiConfig = (data = null, options = {}) => {
  * API 클라이언트 인스턴스
  */
 export const apiClient = axios.create({
-  baseURL: API_URL,
+  baseURL: ENV.api.url,
 });
 
 // 요청 인터셉터 설정
@@ -104,7 +108,7 @@ export const apiService = {
       url,
       { data },
       {
-        baseURL: API_URL,
+        baseURL: ENV.api.url,
         headers: {
           Authorization: `Bearer ${getAuthToken()}`,
           'Content-Type': 'application/json',

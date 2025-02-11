@@ -29,12 +29,7 @@ const SfaContainer = () => {
     <>
       <Section>
         <SfaSubMenu />
-        {components.searchForm && (
-          <SfaSearchForm
-          // sfaSalesTypeData={sfaSalesTypeData}
-          // sfaClassificationData={sfaClassificationData}
-          />
-        )}
+        {components.searchForm && <SfaSearchForm />}
         {components.forecastTable && <SfaAnnualOverview />}
         {components.monthlyStatus && <SfaQuarterlyOverview />}
         {components.sfaTable && <SfaTable />}

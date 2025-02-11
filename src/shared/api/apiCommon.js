@@ -1,13 +1,13 @@
-// src/features/sfa/api/sfaApi.js
+// src/shared/api/apiCommon.js
 import { apiClient } from './apiClient';
 import qs from 'qs';
 
-export const api = {
+export const apiCommon = {
   /**
    * 코드북 데이터를 조회합니다
    * @param {string} type - 코드북 타입
    */
-  fetchCodebook: async (type) => {
+  getCodebook: async (type) => {
     const queryObj = {
       fields: ['code', 'name', 'sort'],
       populate: {

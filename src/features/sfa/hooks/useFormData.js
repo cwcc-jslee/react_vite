@@ -1,7 +1,8 @@
 // src/features/sfa/hooks/useFormData.js
 // 구조개선(25.01.24)
 import { useState, useEffect, useCallback } from 'react';
-import { sfaApi } from '../api/sfaApi';
+import { apiCommon } from '../../../shared/api/apiCommon';
+// import { sfaApi } from '../api/sfaApi';
 import {
   FORM_LIMITS,
   initialFormState,
@@ -97,8 +98,8 @@ export const useFormData = (drawerState) => {
     setIsPaymentDataLoading(true);
     try {
       const [paymentMethods, percentages] = await Promise.all([
-        sfaApi.fetchCodebook('re_payment_method'),
-        sfaApi.fetchCodebook('sfa_percentage'),
+        apiCommon.getCodebook('re_payment_method'),
+        apiCommon.getCodebook('sfa_percentage'),
       ]);
 
       setPaymentData(paymentMethods.data);

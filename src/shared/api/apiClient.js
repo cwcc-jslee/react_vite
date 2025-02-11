@@ -1,13 +1,17 @@
 // src/shared/api/apiClient.js
+/**
+ * 기본 API 클라이언트
+ */
 import axios from 'axios';
 import { ENV } from '../config/environment';
 
 export const apiClient = axios.create({
-  baseURL: '/api', // proxy 설정과 일치
+  // baseURL: ENV.api.url,  // url 입력시 api 서버 직접 연결
+  baseURL: '/api', // proxy 설정과 일치, '/api' 로 설정해야 proxy 로 연결
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30초
+  timeout: ENV.api.timeout, // 30초
 });
 
 // 인터셉터 설정

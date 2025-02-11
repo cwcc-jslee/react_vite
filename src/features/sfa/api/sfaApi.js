@@ -144,22 +144,22 @@ export const sfaApi = {
    * 코드북 데이터를 조회합니다
    * @param {string} type - 코드북 타입
    */
-  fetchCodebook: async (type) => {
-    const queryObj = {
-      fields: ['code', 'name', 'sort'],
-      populate: {
-        codetype: {
-          fields: ['type', 'name'],
-        },
-      },
-      filters: {
-        $and: [{ used: { $eq: true } }, { codetype: { type: { $eq: type } } }],
-      },
-      sort: ['sort:asc'],
-      pagination: { start: 0, limit: 50 },
-    };
+  // fetchCodebook: async (type) => {
+  //   const queryObj = {
+  //     fields: ['code', 'name', 'sort'],
+  //     populate: {
+  //       codetype: {
+  //         fields: ['type', 'name'],
+  //       },
+  //     },
+  //     filters: {
+  //       $and: [{ used: { $eq: true } }, { codetype: { type: { $eq: type } } }],
+  //     },
+  //     sort: ['sort:asc'],
+  //     pagination: { start: 0, limit: 50 },
+  //   };
 
-    const query = qs.stringify(queryObj, { encodeValuesOnly: true });
-    return apiClient.get(`/api/codebooks?${query}`);
-  },
+  //   const query = qs.stringify(queryObj, { encodeValuesOnly: true });
+  //   return apiClient.get(`/api/codebooks?${query}`);
+  // },
 };

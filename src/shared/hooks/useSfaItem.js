@@ -1,6 +1,6 @@
 // src/shared/hooks/useSfaItem.js
 import { useState, useEffect } from 'react';
-import { api } from '../api/api';
+import { apiCommon } from '../api/apiCommon';
 
 /**
  * 매출품목 목록을 조회하는 Hook
@@ -40,7 +40,7 @@ export const useSfaItem = (initialClassificationId) => {
     setError(null);
 
     try {
-      const response = await api.getSfaItems(classificationId);
+      const response = await apiCommon.getSfaItems(classificationId);
       setData(response);
     } catch (err) {
       console.error('Failed to fetch SFA items:', err);

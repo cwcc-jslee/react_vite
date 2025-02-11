@@ -3,7 +3,8 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { Trash2 } from 'lucide-react';
 import { selectCodebookByType } from '../../../codebook/store/codebookSlice';
-import { useSelectData } from '../../../../shared/hooks/useSelectData';
+import { useCodebook } from '../../../../shared/hooks/useCodebook';
+// import { useSelectData } from '../../../../shared/hooks/useSelectData';
 import { QUERY_KEYS } from '../../../../shared/utils/queryKeys';
 import {
   Group,
@@ -36,7 +37,7 @@ const SalesByItemForm = ({
   isItemsLoading,
 }) => {
   // React Query를 사용하여 팀 데이터와 매출품목 데이터 조회
-  const { data: teamsData, isLoading: isTeamsLoading } = useSelectData(
+  const { data: teamsData, isLoading: isTeamsLoading } = useCodebook(
     QUERY_KEYS.TEAMS,
   );
   // console.log('>>> items ', items);

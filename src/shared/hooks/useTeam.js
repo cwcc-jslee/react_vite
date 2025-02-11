@@ -1,6 +1,6 @@
 // src/shared/hooks/useTeam.js
 import { useState, useEffect } from 'react';
-import { api } from '../api/api';
+import { apiCommon } from '../api/apiCommon';
 
 /**
  * 팀 목록을 조회하는 Hook
@@ -24,7 +24,7 @@ export const useTeam = () => {
     setError(null);
 
     try {
-      const response = await api.getTeams();
+      const response = await apiCommon.getTeams();
       setData(response);
     } catch (err) {
       console.error('Failed to fetch teams:', err);
