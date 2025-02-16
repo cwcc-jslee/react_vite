@@ -29,7 +29,7 @@ export const sfaApi = {
       };
 
       const query = buildSfaListQuery(queryParams);
-      const response = await apiClient.get(`/api/sfa-by-payments?${query}`);
+      const response = await apiClient.get(`/sfa-by-payments?${query}`);
 
       return {
         data: response.data.data,
@@ -50,7 +50,7 @@ export const sfaApi = {
     try {
       const query = buildSfaDetailQuery(id);
       console.log(`getSfaDetail query : ${query}`);
-      const response = await apiClient.get(`/api/sfas?${query}`);
+      const response = await apiClient.get(`/sfas?${query}`);
       return response.data;
     } catch (error) {
       console.error('Failed to fetch SFA detail:', error);
@@ -75,7 +75,7 @@ export const sfaApi = {
 
       // API 호출
       const response = await apiClient.get(
-        '/api/sfa-monthly-sales-stats/forecast',
+        '/sfa-monthly-sales-stats/forecast',
         {
           params: {
             startDate,
@@ -137,7 +137,7 @@ export const sfaApi = {
       { encodeValuesOnly: true },
     );
 
-    return apiClient.get(`/api/sfa-items?${query}`);
+    return apiClient.get(`/sfa-items?${query}`);
   },
 
   /**

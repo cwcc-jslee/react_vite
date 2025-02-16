@@ -72,7 +72,7 @@ export const sfaService = {
 
       // 쿼리 생성 및 API 호출
       const query = buildSfaListQuery(queryParams);
-      const response = await apiClient.get(`/api/sfa-by-payments?${query}`);
+      const response = await apiClient.get(`/sfa-by-payments?${query}`);
 
       return normalizeResponse(response);
     } catch (error) {
@@ -87,7 +87,7 @@ export const sfaService = {
   getSfaDetail: async (id) => {
     try {
       const query = buildSfaDetailQuery(id);
-      const response = await apiClient.get(`/api/sfas?${query}`);
+      const response = await apiClient.get(`/sfas?${query}`);
 
       if (!response.data?.data?.[0]) {
         throw new Error('SFA data not found');
@@ -107,7 +107,7 @@ export const sfaService = {
   getMonthlyStats: async (startDate, endDate) => {
     try {
       const response = await apiClient.get(
-        '/api/sfa-monthly-sales-stats/forecast',
+        '/sfa-monthly-sales-stats/forecast',
         {
           params: { startDate, endDate },
         },
@@ -153,7 +153,7 @@ export const sfaService = {
         { encodeValuesOnly: true },
       );
 
-      const response = await apiClient.get(`/api/sfa-items?${query}`);
+      const response = await apiClient.get(`/sfa-items?${query}`);
       return normalizeResponse(response);
     } catch (error) {
       handleError(error, 'Failed to fetch items');
@@ -186,7 +186,7 @@ export const sfaService = {
         { encodeValuesOnly: true },
       );
 
-      const response = await apiClient.get(`/api/codebooks?${query}`);
+      const response = await apiClient.get(`/codebooks?${query}`);
       return normalizeResponse(response);
     } catch (error) {
       handleError(error, 'Failed to fetch codebook');

@@ -13,7 +13,7 @@ export const useCustomerSearch = (initialValue = '') => {
     console.log('Fetching customers with term:', term); // 디버깅용 로그
 
     try {
-      const response = await apiClient.get('/api/customers', {
+      const response = await apiClient.get('/customers', {
         params: {
           populate: '*', // Strapi v4 이상에서 필요
           filters: {

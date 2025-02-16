@@ -18,7 +18,7 @@ export const sfaApi = {
       { encodeValuesOnly: true },
     );
 
-    return apiClient.get(`/api/sfa-items?${query}`);
+    return apiClient.get(`/sfa-items?${query}`);
   },
 
   /**
@@ -41,6 +41,6 @@ export const sfaApi = {
     };
 
     const query = qs.stringify(queryObj, { encodeValuesOnly: true });
-    return apiClient.get(`/api/codebooks?${query}`);
+    return apiClient.get(`/codebooks?${query}`);
   },
 };

@@ -28,7 +28,7 @@ export const selectDataApi = {
       },
     );
 
-    const response = await apiClient.get(`/api/sfa-items?${query}`);
+    const response = await apiClient.get(`/sfa-items?${query}`);
     return response.data;
   },
 
@@ -51,7 +51,7 @@ export const selectDataApi = {
       },
     );
 
-    const response = await apiClient.get(`/api/teams?${query}`);
+    const response = await apiClient.get(`/teams?${query}`);
     return response.data;
   },
 
@@ -60,7 +60,7 @@ export const selectDataApi = {
    * @returns {Promise} 회계연도 데이터 배열
    */
   getFiscalYears: async () => {
-    const response = await apiClient.get('/api/fiscal-years');
+    const response = await apiClient.get('/fiscal-years');
     return response.data;
   },
 
@@ -69,7 +69,7 @@ export const selectDataApi = {
    * @returns {Promise} 상태 데이터 배열
    */
   getStatus: async () => {
-    const response = await apiClient.get('/api/status');
+    const response = await apiClient.get('/status');
     return response.data;
   },
 
@@ -78,7 +78,7 @@ export const selectDataApi = {
    * @returns {Promise} 지역 데이터 배열
    */
   getRegions: async () => {
-    const response = await apiClient.get('/api/regions');
+    const response = await apiClient.get('/regions');
     return response.data;
   },
 };

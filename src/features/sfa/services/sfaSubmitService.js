@@ -25,7 +25,7 @@ export const sfaSubmitService = {
 
     try {
       const dbData = transformToDBFields.transformSfaFields(formData);
-      const response = await apiService.post('/api/sfas', dbData);
+      const response = await apiService.post('/sfas', dbData);
       return response.data;
     } catch (error) {
       console.error('[SFA] Creation error:', error);
@@ -60,7 +60,7 @@ export const sfaSubmitService = {
         console.log('[SFA] Sending payment data with history:', paymentData);
         // 새로운 엔드포인트 사용
         const response = await apiService.post(
-          '/api/sfa-by-payment-withhistory',
+          '/sfa-by-payment-withhistory',
           paymentData,
         );
         return response.data;
@@ -95,7 +95,7 @@ export const sfaSubmitService = {
       const dbData = transformToDBFields.transformSalesByPayments(paymentData);
 
       const response = await apiService.put(
-        `/api/sfa-by-payment-withhistory/${paymentId}`,
+        `/sfa-by-payment-withhistory/${paymentId}`,
         dbData,
       );
 
@@ -124,7 +124,7 @@ export const sfaSubmitService = {
       // const dbData = transformToDBFields.transformSfaFields(formData);
 
       // API 요청 수행
-      const response = await apiService.put(`/api/sfas/${id}`, formData);
+      const response = await apiService.put(`/sfas/${id}`, formData);
 
       // 정상 업데이트시 fetchSfaDetail 수행
       // const response1 = await sfaApi.getSfaDetail(1060);

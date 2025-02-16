@@ -3,7 +3,8 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { Trash2 } from 'lucide-react';
 import { selectCodebookByType } from '../../../codebook/store/codebookSlice';
-import { useCodebook } from '../../../../shared/hooks/useCodebook';
+// import { useCodebook } from '../../../../shared/hooks/useCodebook';
+import { useTeam } from '../../../../shared/hooks/useTeam';
 // import { useSelectData } from '../../../../shared/hooks/useSelectData';
 import { QUERY_KEYS } from '../../../../shared/utils/queryKeys';
 import {
@@ -37,10 +38,9 @@ const SalesByItemForm = ({
   isItemsLoading,
 }) => {
   // React Query를 사용하여 팀 데이터와 매출품목 데이터 조회
-  const { data: teamsData, isLoading: isTeamsLoading } = useCodebook(
-    QUERY_KEYS.TEAMS,
-  );
-  // console.log('>>> items ', items);
+  const { data: teamsData, isLoading: isTeamsLoading } = useTeam();
+  console.log('>>> itemsData ', itemsData);
+  console.log('>>> teamsData ', teamsData);
   if (!items?.length) return null;
 
   // 특정 인덱스의 각 필드별 에러 확인

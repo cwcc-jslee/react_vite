@@ -84,8 +84,9 @@ export const useFormData = (drawerState) => {
 
     setIsItemsLoading(true);
     try {
-      const response = await sfaApi.fetchItems(classificationId);
-      setItemsData(response.data);
+      // const response = await sfaApi.fetchItems(classificationId);
+      const response = await apiCommon.getSfaItems(classificationId);
+      setItemsData(response);
     } catch (error) {
       console.error('Failed to fetch items:', error);
       setItemsData({ data: [] });

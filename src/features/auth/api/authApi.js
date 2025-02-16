@@ -7,6 +7,6 @@ export const authApi = {
       identifier: username,
       password: password,
     };
-    return apiClient.post('/api/auth/local', payload);
+    return apiClient.post('/auth/local', payload);
   },
 };

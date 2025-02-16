@@ -15,7 +15,7 @@ export const fetchFrequentCodebooks = createAsyncThunk(
       const query = buildMultipleCodebookTypesQuery(FREQUENT_CODETYPES);
       console.log('Built query:', query);
 
-      const response = await apiClient.get(`/api/codebooks?${query}`);
+      const response = await apiClient.get(`/codebooks?${query}`);
       console.log('API Response:', response.data);
 
       if (!response.data || !Array.isArray(response.data.data)) {

@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: env.VITE_API_URL || 'http://192.168.20.101:1337',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
+          // rewrite: (path) => path.replace(/^\/api/, ''),
           configure: (proxy, options) => {
             proxy.on('proxyReq', (proxyReq, req, res) => {
               if (mode === 'development') {
@@ -51,8 +51,17 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       sourcemap: mode === 'development',
-      // 청크 크기 경고 임계값 설정
       chunkSizeWarningLimit: 1000,
+      // 환경변수를 클라이언트에서 사용할 수 있도록 설정
+      rollupOptions: {
+        output: {
+          manualChunks: undefined,
+        },
+      },
+    },
+    define: {
+      // 빌드 시 환경변수 주입
+      'process.env.VITE_API_URL': JSON.stringify(env.VITE_API_URL),
     },
   };
 });

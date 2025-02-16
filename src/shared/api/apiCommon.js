@@ -23,7 +23,7 @@ export const apiCommon = {
     };
 
     const query = qs.stringify(queryObj, { encodeValuesOnly: true });
-    return apiClient.get(`/api/codebooks?${query}`);
+    return apiClient.get(`/codebooks?${query}`);
   },
 
   /**
@@ -48,7 +48,7 @@ export const apiCommon = {
       },
     );
 
-    const response = await apiClient.get(`/api/sfa-items?${query}`);
+    const response = await apiClient.get(`/sfa-items?${query}`);
     return response.data;
   },
 
@@ -71,7 +71,7 @@ export const apiCommon = {
       },
     );
 
-    const response = await apiClient.get(`/api/teams?${query}`);
+    const response = await apiClient.get(`/teams?${query}`);
     return response.data;
   },
 };

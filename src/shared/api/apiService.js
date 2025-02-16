@@ -17,7 +17,7 @@ import { ENV } from '../config/environment';
 export const createApiConfig = (data = null, options = {}) => {
   const token = getAuthToken();
   const config = {
-    baseURL: ENV.api.url,
+    baseURL: '/api', // proxy 설정과 일치, '/api' 로 설정해야 proxy 로 연결
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -37,7 +37,7 @@ export const createApiConfig = (data = null, options = {}) => {
  * API 클라이언트 인스턴스
  */
 export const apiClient = axios.create({
-  baseURL: ENV.api.url,
+  baseURL: '/api', // proxy 설정과 일치, '/api' 로 설정해야 proxy 로 연결
 });
 
 // 요청 인터셉터 설정
@@ -108,7 +108,7 @@ export const apiService = {
       url,
       { data },
       {
-        baseURL: ENV.api.url,
+        baseURL: '/api', // proxy 설정과 일치, '/api' 로 설정해야 proxy 로 연결
         headers: {
           Authorization: `Bearer ${getAuthToken()}`,
           'Content-Type': 'application/json',
