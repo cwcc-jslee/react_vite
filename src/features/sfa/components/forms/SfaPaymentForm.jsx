@@ -37,7 +37,7 @@ const SfaPaymentForm = ({ data, controlMode, featureMode }) => {
   // 폼 상태를 로컬로 관리하여 불필요한 리렌더링 방지
   // const [localFormData, setLocalFormData] = useState(formData);
   // const formRef = useRef(null);
-  const { validatePayments } = useFormValidation(formData);
+  const { validatePaymentForm } = useFormValidation(formData);
 
   // formData가 변경될 때만 localFormData 업데이트
   // useEffect(() => {
@@ -51,9 +51,8 @@ const SfaPaymentForm = ({ data, controlMode, featureMode }) => {
     console.log(`***** sfaId : `, sfaId);
 
     // 유효성 검사 수행
-    const paymentErrors = validatePayments(formData.salesByPayments);
-    console.log(`***** paymentErrors : ${paymentErrors}`);
-    if (paymentErrors.length > 0) return;
+    const isValid = validatePaymentForm(formData.salesByPayments);
+    if (!isValid) return;
 
     // const isValid = validateForm();
     // if (!isValid) return;

@@ -111,6 +111,34 @@ export const useFormValidation = (formData) => {
     return true;
   };
 
+  // 결제 매출 폼만 검증 (수정/추가 시)
+  const validatePaymentForm = (payments) => {
+    const paymentErrors = validatePayments(payments);
+
+    if (paymentErrors.length > 0) {
+      // 결제 항목 오류만 상태 업데이트
+      // setValidationErrors((prev) => ({
+      //   ...prev,
+      //   [ERROR_GROUPS.PAYMENTS]: paymentErrors,
+      // }));
+      console.log(`validatePaymentForm error : `, paymentErrors);
+
+      // 오류 알림 표시
+      const errors = {
+        [ERROR_GROUPS.PAYMENTS]: paymentErrors,
+      };
+      showErrorNotification(errors);
+      return false;
+    }
+
+    // 오류 없음
+    // setValidationErrors((prev) => ({
+    //   ...prev,
+    //   [ERROR_GROUPS.PAYMENTS]: [],
+    // }));
+    return true;
+  };
+
   // 결제매출 전용 검증
   const validatePayments = (payments) => {
     const errors = [];
@@ -153,6 +181,7 @@ export const useFormValidation = (formData) => {
     validationErrors,
     // 함수
     validateForm,
+    validatePaymentForm,
     validatePayments, // 결제매출 등록시 사용
     checkAmounts,
   };

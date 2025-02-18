@@ -19,9 +19,9 @@ import {
 const menuItems = [
   { key: '/', label: 'HOME' },
   { key: '/sfa', label: 'SFA' },
+  { key: '/customer', label: 'CUSTOMER' },
   { key: '/project', label: 'PROJECT' },
   { key: '/work', label: 'WORK' },
-  { key: '/customer', label: 'CUSTOMER' },
 ];
 
 const DefaultLayout = ({ children }) => {

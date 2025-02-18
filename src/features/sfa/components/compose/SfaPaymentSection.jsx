@@ -32,7 +32,7 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
     resetPaymentForm,
   } = useSfaForm();
 
-  const { validatePayments } = useFormValidation(formData);
+  const { validatePaymentForm } = useFormValidation(formData);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,9 +41,8 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
     // console.log(`***** sfaId : `, sfaId);
 
     // 유효성 검사 수행
-    const paymentErrors = validatePayments(formData.salesByPayments);
-    console.log(`***** paymentErrors : ${paymentErrors}`);
-    if (paymentErrors.length > 0) return;
+    const isValid = validatePaymentForm(formData.salesByPayments);
+    if (!isValid) return;
 
     // const isValid = validateForm();
     // if (!isValid) return;
