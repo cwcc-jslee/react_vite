@@ -141,55 +141,55 @@ export const sfaService = {
    * 아이템 목록 조회
    * @param {string} classificationId - 분류 ID
    */
-  getItems: async (classificationId) => {
-    try {
-      const query = qs.stringify(
-        {
-          filters: {
-            sfa_classification: { id: { $eq: classificationId } },
-          },
-          sort: ['sort:asc'],
-        },
-        { encodeValuesOnly: true },
-      );
+  // getItems: async (classificationId) => {
+  //   try {
+  //     const query = qs.stringify(
+  //       {
+  //         filters: {
+  //           sfa_classification: { id: { $eq: classificationId } },
+  //         },
+  //         sort: ['sort:asc'],
+  //       },
+  //       { encodeValuesOnly: true },
+  //     );
 
-      const response = await apiClient.get(`/sfa-items?${query}`);
-      return normalizeResponse(response);
-    } catch (error) {
-      handleError(error, 'Failed to fetch items');
-    }
-  },
+  //     const response = await apiClient.get(`/sfa-items?${query}`);
+  //     return normalizeResponse(response);
+  //   } catch (error) {
+  //     handleError(error, 'Failed to fetch items');
+  //   }
+  // },
 
   /**
    * 코드북 데이터 조회
    * @param {string} type - 코드북 타입
    */
-  getCodebook: async (type) => {
-    try {
-      const query = qs.stringify(
-        {
-          fields: ['code', 'name', 'sort'],
-          populate: {
-            codetype: {
-              fields: ['type', 'name'],
-            },
-          },
-          filters: {
-            $and: [
-              { used: { $eq: true } },
-              { codetype: { type: { $eq: type } } },
-            ],
-          },
-          sort: ['sort:asc'],
-          pagination: { start: 0, limit: 50 },
-        },
-        { encodeValuesOnly: true },
-      );
+  // getCodebook: async (type) => {
+  //   try {
+  //     const query = qs.stringify(
+  //       {
+  //         fields: ['code', 'name', 'sort'],
+  //         populate: {
+  //           codetype: {
+  //             fields: ['type', 'name'],
+  //           },
+  //         },
+  //         filters: {
+  //           $and: [
+  //             { used: { $eq: true } },
+  //             { codetype: { type: { $eq: type } } },
+  //           ],
+  //         },
+  //         sort: ['sort:asc'],
+  //         pagination: { start: 0, limit: 50 },
+  //       },
+  //       { encodeValuesOnly: true },
+  //     );
 
-      const response = await apiClient.get(`/codebooks?${query}`);
-      return normalizeResponse(response);
-    } catch (error) {
-      handleError(error, 'Failed to fetch codebook');
-    }
-  },
+  //     const response = await apiClient.get(`/codebooks?${query}`);
+  //     return normalizeResponse(response);
+  //   } catch (error) {
+  //     handleError(error, 'Failed to fetch codebook');
+  //   }
+  // },
 };

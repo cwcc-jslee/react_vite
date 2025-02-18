@@ -1,52 +1,39 @@
 /**
- * SFA 컨텍스트 및 Provider 컴포넌트
- * - SFA 데이터 및 UI 상태 관리
+ * CUSTOMER 컨텍스트 및 Provider 컴포넌트
+ * - CUSTOMER 데이터 및 UI 상태 관리
  * - 전역 상태 관리 및 데이터 공유
  *
  * @date 25.02.07
  * @version 1.0.0
- * @filename src/features/sfa/contexts/SfaProvider.jsx
+ * @filename src/features/customer/contexts/CustomerProvider.jsx
  */
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import dayjs from 'dayjs';
-import { sfaService } from '../services/sfaService';
-// import { useSfaSearchFilter } from '../hooks/useSfaSearchFilter';
+import { customerService } from '../services/customerService';
 
-const SfaContext = createContext(null);
+const CustomerContext = createContext(null);
 
 /**
- * SFA Context Hook
+ * CUSTOER Context Hook
  */
-export const useSfa = () => {
-  const context = useContext(SfaContext);
+export const useCustomer = () => {
+  const context = useContext(CustomerContext);
   if (!context) {
-    throw new Error('useSfa must be used within SfaProvider');
+    throw new Error('useCustomer must be used within CustomerProvider');
   }
   return context;
 };
 
 /**
- * SFA Provider 컴포넌트
+ * CUSTOMER Provider 컴포넌트
  */
-export const SfaProvider = ({ children }) => {
+export const CustomerProvider = ({ children }) => {
   // 데이터 상태
-  const [sfaData, setSfaData] = useState([]);
+  const [fetchData, setFetchData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  // filters 를 filtersRef 로 변경경
-  // const [filters, setFilters] = useState({
-  //   dateRange: {
-  //     startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
-  //     endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
-  //   },
-  //   probability: null,
-  // });
-  const filters = {
-    dateRange: {
-      startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
-      endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
-    },
-  };
+
+  const filters = {};
 
   // 페이지네이션 상태
   const [pagination, setPagination] = useState({
@@ -59,10 +46,9 @@ export const SfaProvider = ({ children }) => {
   const [pageLayout, setPageLayout] = useState({
     mode: 'default',
     components: {
-      monthlyStatus: true,
-      sfaTable: true,
-      searchForm: false,
-      forecastTable: false,
+      customerTable: true,
+      //   searchForm: false,
+      //   forecastTable: false,
     },
   });
 
@@ -75,7 +61,7 @@ export const SfaProvider = ({ children }) => {
   });
 
   const resetFilters = () => {
-    fetchSfaList({
+    fetchCustomerList({
       ...filters,
       pagination: { current: 1, pageSize: pagination.pageSize },
     });
@@ -85,7 +71,7 @@ export const SfaProvider = ({ children }) => {
    * 페이지 변경 처리
    */
   const setPage = (page) => {
-    console.group('SfaProvider - setPage');
+    console.group('CustomerProvider - setPage');
     console.log('Current:', pagination.current, 'New:', page);
 
     setPagination((prev) => ({
@@ -100,7 +86,7 @@ export const SfaProvider = ({ children }) => {
    * 페이지 크기 변경 처리
    */
   const setPageSize = (newSize) => {
-    console.group('SfaProvider - setPageSize');
+    console.group('CustomerProvider - setPageSize');
     console.log('Current:', pagination.pageSize, 'New:', newSize);
 
     setPagination((prev) => ({
@@ -113,7 +99,7 @@ export const SfaProvider = ({ children }) => {
   };
 
   const setPageTotalSize = (size) => {
-    console.group('SfaProvider - setPageTotalSize');
+    console.group('CustomerProvider - setPageTotalSize');
     console.log('Totalsize:', pagination.total, 'New:', size);
 
     setPagination((prev) => ({
@@ -132,28 +118,25 @@ export const SfaProvider = ({ children }) => {
       default: {
         mode: 'default',
         components: {
-          monthlyStatus: true,
-          sfaTable: true,
-          searchForm: false,
-          forecastTable: false,
+          customerTable: true,
+          //   searchForm: false,
+          //   forecastTable: false,
         },
       },
       search: {
         mode: 'search',
         components: {
-          monthlyStatus: false,
-          sfaTable: true,
-          searchForm: true,
-          forecastTable: false,
+          customerTable: true,
+          //   searchForm: true,
+          //   forecastTable: false,
         },
       },
       forecast: {
         mode: 'forecast',
         components: {
-          monthlyStatus: false,
-          sfaTable: true,
-          searchForm: false,
-          forecastTable: true,
+          customerTable: true,
+          //   searchForm: false,
+          //   forecastTable: true,
         },
       },
     };
@@ -181,25 +164,15 @@ export const SfaProvider = ({ children }) => {
   };
 
   /**
-   * SFA 목록 조회
+   * CUSTOMER 목록 조회
    * @param {Object} customParams - 추가 파라미터 (선택사항)
    */
-  const fetchSfaList = useCallback(
+  const fetchCustomerList = useCallback(
     async (customParams = {}) => {
       // console.log(`>>customParams : `, customParams);
       setLoading(true);
       try {
-        // filters에서 dateRange 관련 필드 제거
-        const {
-          dateRange: customDateRange,
-          probability: customProbability,
-          ...restCustomFilters
-        } = customParams?.filters || {};
-
         const queryParams = {
-          dateRange: customDateRange || filters.dateRange,
-          probability: customProbability || null,
-          filters: { ...restCustomFilters },
           pagination: {
             current: customParams.pagination?.current || pagination.current,
             pageSize: customParams.pagination?.pageSize || pagination.pageSize,
@@ -207,11 +180,11 @@ export const SfaProvider = ({ children }) => {
         };
 
         // API 호출
-        // console.log('Query Params:', queryParams);
-        const response = await sfaService.getSfaList(queryParams);
+        console.log('Query Params:', queryParams);
+        const response = await customerService.getCustomerList(queryParams);
 
         // 데이터 업데이트
-        setSfaData(response.data);
+        setFetchData(response.data);
 
         // 페이지네이션 정보 업데이트
         if (pagination.total !== response.meta.pagination.total) {
@@ -229,7 +202,7 @@ export const SfaProvider = ({ children }) => {
         // 에러 처리
         const errorMessage = err.response?.data?.error?.message || err.message;
         setError(errorMessage);
-        setSfaData([]);
+        setFetchData([]);
         // return [];
       } finally {
         setLoading(false);
@@ -241,39 +214,36 @@ export const SfaProvider = ({ children }) => {
   // 초기 데이터 로드
   React.useEffect(() => {
     console.log('Initial data loading');
-    fetchSfaList();
-  }, [fetchSfaList]);
+    fetchCustomerList();
+  }, [fetchCustomerList]);
 
   /**
-   * SFA 상세 조회
+   * CUSTOMER 상세 조회
    */
-  const fetchSfaDetail = async (id) => {
-    // setLoading(true);
-    try {
-      const response = await sfaService.getSfaDetail(id);
-      setDrawerState({
-        visible: true,
-        controlMode: 'view',
-        featureMode: null,
-        data: response,
-      });
-      // return response.data[0];
-    } catch (err) {
-      setError(err.message);
-      return null;
-    } finally {
-      // setLoading(false);
-    }
-  };
+  //   const fetchCustomerDetail = async (id) => {
+  //     try {
+  //         const response = await customerService.getCustomerDetail(id);
+  //       setDrawerState({
+  //         visible: true,
+  //         controlMode: 'view',
+  //         featureMode: null,
+  //         data: response,
+  //       });
+  //     } catch (err) {
+  //       setError(err.message);
+  //       return null;
+  //     } finally {
+  //     }
+  //   };
 
   const value = {
     // // 데이터 관련
-    sfaData,
+    fetchData,
     loading,
     error,
     pagination,
-    fetchSfaList,
-    fetchSfaDetail,
+    fetchCustomerList,
+    // fetchCustomerDetail,
     setPage,
     setPageSize,
     setPageTotalSize,
@@ -283,24 +253,7 @@ export const SfaProvider = ({ children }) => {
     pageLayout,
     setLayout,
 
-    // // 드로어 관련
-    // drawerState,
-    // setDrawer,
-    // setDrawerClose,
-
-    // 필터 관련
-    // filters,
-    // setFilters,
-    // updateMonthlyFilter,
-    // updateDetailFilter,
     resetFilters,
-
-    // 데이터 및 검색/필터 관련
-    // ...searchFilter,
-
-    // 레이아웃 관련
-    // pageLayout,
-    // setLayout,
 
     // 드로어 관련
     drawerState,
@@ -309,8 +262,12 @@ export const SfaProvider = ({ children }) => {
 
     //
     setLoading,
-    setSfaData,
+    setFetchData,
   };
 
-  return <SfaContext.Provider value={value}>{children}</SfaContext.Provider>;
+  return (
+    <CustomerContext.Provider value={value}>
+      {children}
+    </CustomerContext.Provider>
+  );
 };
