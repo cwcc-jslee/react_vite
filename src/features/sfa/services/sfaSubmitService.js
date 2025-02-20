@@ -111,6 +111,35 @@ export const sfaSubmitService = {
   },
 
   /**
+   * SFA 결제 매출 삭제 기능
+   * is_deleted 필드 업데이트트
+   * @param {string} paymentId - 수정할 결제 매출 ID
+   */
+  async deleteSfaPayment(paymentId) {
+    console.log('[SFA] Delete payment :', {
+      paymentId,
+    });
+
+    try {
+      const dbData = { is_deleted: true };
+
+      const response = await apiService.put(
+        `/sfa-by-payments/${paymentId}`,
+        dbData,
+      );
+
+      console.log('[SFA] Delete payment : ', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('[SFA] Delete payment error:', error);
+      throw new Error(
+        error.response?.data?.error?.message ||
+          '결제 매출 데이터 삭제 중 오류가 발생했습니다.',
+      );
+    }
+  },
+
+  /**
    * SFA 기본 필드 수정
    * @param {string} id - SFA ID
    * @param {Object} formData - 수정할 데이터

@@ -16,6 +16,7 @@ const SfaDetailPaymentTable = ({
   controlMode = 'view',
   featureMode,
   handlePaymentSelection,
+  handleDeletePayment,
 }) => {
   const renderLastColumn = () => {
     return controlMode === 'view' ? (
@@ -46,6 +47,13 @@ const SfaDetailPaymentTable = ({
           onClick={() => handlePaymentSelection?.({ documentId, id })}
         >
           edit
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => handleDeletePayment?.({ documentId, id })}
+        >
+          del
         </Button>
       </Table.Td>
     ) : (

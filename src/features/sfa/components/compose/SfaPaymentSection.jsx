@@ -37,18 +37,19 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const sfaId = data.id;
-    // console.log(`***** form : `, formData.salesByPayments);
-    // console.log(`***** sfaId : `, sfaId);
 
     // 유효성 검사 수행
     const isValid = validatePaymentForm(formData.salesByPayments);
     if (!isValid) return;
 
-    // const isValid = validateForm();
-    // if (!isValid) return;
-
-    // submit() || processMode, targetId, sfaId
     await processPaymentSubmit('update', selectedPayment.id, sfaId);
+  };
+
+  // 결제 매출 정보 삭제
+  const handleDeletePayment = async (paymentInfo) => {
+    console.log(`>> handlepayment delete : `, paymentInfo);
+    const sfaId = data.id;
+    await processPaymentSubmit('delete', paymentInfo.documentId, sfaId);
   };
 
   // 수정 취소 핸들러
@@ -155,6 +156,7 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
           featureMode={featureMode}
           onView={handleViewAction}
           handlePaymentSelection={handlePaymentSelection}
+          handleDeletePayment={handleDeletePayment}
         />
       </div>
     </>

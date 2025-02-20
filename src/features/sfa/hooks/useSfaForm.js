@@ -22,16 +22,6 @@ export const useSfaForm = () => {
   const { validateForm, validatePayments, checkAmounts } =
     useFormValidation(formData);
 
-  //
-  // const formState = useDrawerFormData();
-  // const formActions = useFormAction();
-  // 금액 일치 확인
-  // const checkAmounts = () => {
-  //   const itemAmount = parseInt(formData.itemAmount) || 0;
-  //   const paymentAmount = parseInt(formData.paymentAmount) || 0;
-  //   return itemAmount === paymentAmount;
-  // };
-
   // 폼 제출 처리
   const processSubmit = async (hasPartner, isProject) => {
     const enrichedFormData = {
@@ -78,23 +68,29 @@ export const useSfaForm = () => {
       setIsSubmitting(true);
 
       // processMode에 따른 API 호출
-      // update : id, ducumentId, sfa
-      const response =
-        processMode === 'create'
-          ? await sfaSubmitService.addSfaPayment(
-              targetId, //sfaId
-              formData.salesByPayments,
-            )
-          : await sfaSubmitService.updateSfaPayment(
-              targetId, //payment documentId
-              formData.salesByPayments[0],
-            );
+      let response;
+      let actionDescription;
+
+      if (processMode === 'create') {
+        response = await sfaSubmitService.addSfaPayment(
+          targetId, // sfaId
+          formData.salesByPayments,
+        );
+        actionDescription = '등록';
+      } else if (processMode === 'update') {
+        response = await sfaSubmitService.updateSfaPayment(
+          targetId, // payment documentId
+          formData.salesByPayments[0],
+        );
+        actionDescription = '수정';
+      } else if (processMode === 'delete') {
+        response = await sfaSubmitService.deleteSfaPayment(targetId);
+        actionDescription = '삭제';
+      }
 
       notification.success({
         message: '저장 성공',
-        description: `성공적으로 ${
-          processMode === 'create' ? '등록' : '수정'
-        }되었습니다.`,
+        description: `성공적으로 ${actionDescription}되었습니다.`,
       });
 
       // 데이터 갱신 및 뷰 모드로 전환
@@ -120,6 +116,8 @@ export const useSfaForm = () => {
       setIsSubmitting(false);
     }
   };
+
+  // 결제 매출 삭제 로직 -> is_deleted : true
 
   return {
     ...formState,
