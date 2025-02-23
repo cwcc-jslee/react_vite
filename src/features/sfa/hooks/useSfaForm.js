@@ -19,8 +19,7 @@ export const useSfaForm = () => {
   const { setDrawerClose, setDrawer, drawerState } = useSfa();
   const formState = useFormData(drawerState);
   const { formData, setIsSubmitting, setErrors } = formState;
-  const { validateForm, validatePayments, checkAmounts } =
-    useFormValidation(formData);
+  const { validateForm, checkAmounts } = useFormValidation(formData);
 
   // 폼 제출 처리
   const processSubmit = async (hasPartner, isProject) => {

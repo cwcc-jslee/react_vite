@@ -74,4 +74,12 @@ export const notification = {
     const normalizedConfig = normalizeConfig(config);
     alert(`ℹ️ ${normalizedConfig.message}\n${normalizedConfig.description}`);
   },
+
+  //onfirm은 사용자의 응답(확인/취소)을 기다려야 하는 양방향 상호작용이 필요
+  confirm: (config) => {
+    const normalizedConfig = normalizeConfig(config);
+    return window.confirm(
+      `${normalizedConfig.message}\n${normalizedConfig.description}`,
+    );
+  },
 };

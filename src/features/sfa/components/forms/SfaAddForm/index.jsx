@@ -5,6 +5,8 @@ import { formatDisplayNumber } from '../../../../../shared/utils/format/number';
 import SalesByItem from '../../elements/SalesByItem.jsx';
 import SalesByPayment from '../../elements/SalesByPayment.jsx';
 import { useSfaForm } from '../../../hooks/useSfaForm.js';
+import useModal from '../../../../../shared/hooks/useModal.js';
+import ModalRenderer from '../../../../../shared/components/ui/modal/ModalRenderer.jsx';
 import {
   Form,
   FormItem,
@@ -18,7 +20,6 @@ import {
   Checkbox,
   Switch,
   Message,
-  Modal,
 } from '../../../../../shared/components/ui';
 
 const SfaAddForm = ({ sfaSalesTypeData, sfaClassificationData }) => {
@@ -47,6 +48,9 @@ const SfaAddForm = ({ sfaSalesTypeData, sfaClassificationData }) => {
   const [isProject, setIsProject] = useState(false);
   const [showAmountConfirm, setShowAmountConfirm] = useState(false);
 
+  // useModal 훅 사용
+  const { modalState, openModal, closeModal, handleConfirm } = useModal();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     // 유효성 검사 수행
@@ -55,25 +59,39 @@ const SfaAddForm = ({ sfaSalesTypeData, sfaClassificationData }) => {
 
     // 금액 일치 여부 확인
     if (!checkAmounts()) {
-      setShowAmountConfirm(true);
+      // setShowAmountConfirm(true);
+      // 금액 불일치 모달 열기
+      openAmountConfirmModal();
     } else {
       await processSubmit(hasPartner, isProject);
     }
   };
 
-  // 금액 확인 모달 내용 컴포넌트
-  const AmountConfirmContent = () => (
-    <div className="space-y-4">
-      <p className="text-base">
-        사업부매출금액과 결제매출금액이 일치하지 않습니다.
-      </p>
-      <div className="space-y-2">
-        <p>• 사업부매출금액: {formatDisplayNumber(formData.itemAmount)}원</p>
-        <p>• 결제매출금액: {formatDisplayNumber(formData.paymentAmount)}원</p>
+  // 금액 불일치 확인 모달 열기
+  const openAmountConfirmModal = () => {
+    const message = (
+      <div className="space-y-4">
+        <p className="text-base">
+          사업부매출금액과 결제매출금액이 일치하지 않습니다.
+        </p>
+        <div className="space-y-2">
+          <p>• 사업부매출금액: {formatDisplayNumber(formData.itemAmount)}원</p>
+          <p>• 결제매출금액: {formatDisplayNumber(formData.paymentAmount)}원</p>
+        </div>
+        <p className="text-gray-600">금액이 다르더라도 진행하시겠습니까?</p>
       </div>
-      <p className="text-gray-600">금액이 다르더라도 진행하시겠습니까?</p>
-    </div>
-  );
+    );
+
+    openModal(
+      'confirm',
+      '금액 불일치 확인',
+      message,
+      { hasPartner, isProject },
+      async (data) => {
+        await processSubmit(data.hasPartner, data.isProject);
+      },
+    );
+  };
 
   return (
     <>
@@ -323,33 +341,11 @@ const SfaAddForm = ({ sfaSalesTypeData, sfaClassificationData }) => {
       </Form>
 
       {/* 금액 비교 확인 모달 */}
-      <Modal
-        isOpen={showAmountConfirm}
-        onClose={() => setShowAmountConfirm(false)}
-        title="금액 불일치 확인"
-        size="md"
-        footer={
-          <>
-            <Button
-              variant="outline"
-              onClick={() => setShowAmountConfirm(false)}
-            >
-              아니오
-            </Button>
-            <Button
-              variant="primary"
-              onClick={async () => {
-                setShowAmountConfirm(false);
-                await processSubmit(hasPartner, isProject);
-              }}
-            >
-              예
-            </Button>
-          </>
-        }
-      >
-        <AmountConfirmContent />
-      </Modal>
+      <ModalRenderer
+        modalState={modalState}
+        closeModal={closeModal}
+        handleConfirm={handleConfirm}
+      />
     </>
   );
 };

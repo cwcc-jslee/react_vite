@@ -10,6 +10,8 @@ import { useSfaForm } from '../../hooks/useSfaForm';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import SalesByPayment from '../elements/SalesByPayment';
 import { Form, Group, Button } from '../../../../shared/components/ui';
+import ModalRenderer from '../../../../shared/components/ui/modal/ModalRenderer';
+import useModal from '../../../../shared/hooks/useModal';
 
 /**
  * @param {Object} props
@@ -32,6 +34,18 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
     resetPaymentForm,
   } = useSfaForm();
 
+  // useModal 훅 사용
+  const {
+    modalState,
+    openDeleteModal,
+    openSuccessModal,
+    openErrorModal,
+    openInfoModal,
+    openWarningModal,
+    closeModal,
+    handleConfirm,
+  } = useModal();
+
   const { validatePaymentForm } = useFormValidation(formData);
 
   const handleSubmit = async (e) => {
@@ -45,11 +59,60 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
     await processPaymentSubmit('update', selectedPayment.id, sfaId);
   };
 
+  // 삭제 확인 모달 표시 처리
+  const confirmDeletePayment = (paymentInfo) => {
+    // 삭제 전 사용자 확인을 위한 모달 표시
+    openDeleteModal(
+      '결제 매출 삭제 확인',
+      <div className="space-y-4">
+        <p>
+          다음 결제 매출 정보를 정말 삭제하시겠습니까? 이 작업은 되돌릴 수
+          없습니다.
+        </p>
+        <div className="bg-gray-50 p-3 rounded border border-gray-200">
+          <p>
+            <strong>결제 ID:</strong> {paymentInfo.id}
+          </p>
+          {paymentInfo.amount && (
+            <p>
+              <strong>결제 금액:</strong> {paymentInfo.amount.toLocaleString()}
+              원
+            </p>
+          )}
+          {paymentInfo.paymentMethod && (
+            <p>
+              <strong>결제 방법:</strong> {paymentInfo.paymentMethod}
+            </p>
+          )}
+        </div>
+      </div>,
+      paymentInfo,
+      handleDeletePayment, // 확인 시 실행할 삭제 함수
+    );
+  };
+
   // 결제 매출 정보 삭제
   const handleDeletePayment = async (paymentInfo) => {
     console.log(`>> handlepayment delete : `, paymentInfo);
-    const sfaId = data.id;
-    await processPaymentSubmit('delete', paymentInfo.documentId, sfaId);
+    // notification 실행
+
+    try {
+      const sfaId = data.id;
+      await processPaymentSubmit('delete', paymentInfo.documentId, sfaId);
+      // 성공 알림 표시
+      openSuccessModal(
+        '삭제 완료',
+        '결제 매출 정보가 성공적으로 삭제되었습니다.',
+      );
+    } catch (error) {
+      // 실패 알림 표시
+      openErrorModal(
+        '삭제 실패',
+        `결제 매출 정보 삭제 중 오류가 발생했습니다: ${
+          error.message || '알 수 없는 오류'
+        }`,
+      );
+    }
   };
 
   // 수정 취소 핸들러
@@ -156,9 +219,16 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
           featureMode={featureMode}
           onView={handleViewAction}
           handlePaymentSelection={handlePaymentSelection}
-          handleDeletePayment={handleDeletePayment}
+          handleDeletePayment={confirmDeletePayment}
         />
       </div>
+
+      {/* 모달 렌더러 컴포넌트 */}
+      <ModalRenderer
+        modalState={modalState}
+        closeModal={closeModal}
+        handleConfirm={handleConfirm}
+      />
     </>
   );
 };
