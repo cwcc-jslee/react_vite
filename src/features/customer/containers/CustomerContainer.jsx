@@ -8,6 +8,7 @@ import { Section } from '../../../shared/components/ui/layout/components';
 import CustomerSubMenu from '../components/CustomerSubMenu';
 import CustomerTable from '../components/table/CustomerTable';
 import CustomerStatisticsOverview from '../components/table/CustomerStatisticsOverview';
+import CustomerDrawer from '../components/drawer/CustomerDrawer';
 
 /**
  * CUSTOMER 메인 컨테이너 컴포넌트
@@ -24,12 +25,9 @@ const CustomerContainer = () => {
         <CustomerSubMenu />
         <CustomerStatisticsOverview />
         <br></br>
-        {/* {components.searchForm && <SfaSearchForm />}
-        {components.forecastTable && <SfaAnnualOverview />}
-        {components.monthlyStatus && <SfaQuarterlyOverview />} */}
         {components.customerTable && <CustomerTable />}
       </Section>
-      {/* {drawerState.visible && <CustomerDrawer />} */}
+      {drawerState.visible && <CustomerDrawer />}
     </>
   );
 };

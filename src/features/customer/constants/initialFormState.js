@@ -1,0 +1,16 @@
+export const initialFormState = {
+  name: '',
+  coClassfication: '',
+  businessNumber: '',
+  homepage: '',
+  businessType: '',
+  businessItem: '',
+  representativeName: '',
+  commencementDate: '',
+  region: '',
+  city: '',
+  address: '',
+  employee: '',
+  businessScale: '',
+  funnel: '',
+};

@@ -51,11 +51,34 @@ export const Form = ({ children, maxWidth = '2xl', className = '' }) => {
 /**
  * FormItem: 라벨과 입력 필드를 포함하는 개별 폼 아이템
  */
-export const FormItem = ({ children, fullWidth, className = '' }) => {
+// export const FormItem = ({ children, fullWidth, className = '' }) => {
+//   const widthClass = fullWidth ? 'col-span-2' : '';
+//   return (
+//     <div
+//       className={`grid grid-cols-[80px,1fr] gap-4 items-center ${widthClass} ${className}`}
+//     >
+//       {children}
+//     </div>
+//   );
+// };
+export const FormItem = ({
+  children,
+  fullWidth = false,
+  direction = 'horizontal',
+  className = '',
+}) => {
+  const directionStyles =
+    direction === 'horizontal'
+      ? 'grid grid-cols-[80px,1fr] gap-4 items-center'
+      : 'flex flex-col gap-2';
   const widthClass = fullWidth ? 'col-span-2' : '';
+
+  // baseStyles에서 w-full 제거하여 className으로 너비 제어 가능하도록 수정
+  const baseStyles = '';
+
   return (
     <div
-      className={`grid grid-cols-[80px,1fr] gap-4 items-center ${widthClass} ${className}`}
+      className={`${baseStyles} ${directionStyles} ${widthClass} ${className}`}
     >
       {children}
     </div>
