@@ -11,7 +11,7 @@ import { useCustomer } from '../../context/CustomerProvider.jsx';
 // import { useSfaForm } from '../../hooks/useSfaForm.js';
 import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer.jsx';
 import ActionMenuBar from '../../../../shared/components/ui/button/ActionMenuBar.jsx';
-import CustomerAddForm from '../form/CusotmerAddForm.jsx';
+import CustomerAddForm from '../forms/CusotmerAddForm';
 
 const CustomerDrawer = () => {
   // Codebook 데이터 조회

@@ -12,7 +12,7 @@ export const customerSubmitService = {
     try {
       const dbData = transformToDBFields.transformCustomerFields(formData);
       console.log('[Customer] transformToDBFields :', dbData);
-      // const response = await apiService.post('/customers', dbData);
+      const response = await apiService.post('/customers', dbData);
 
       return response.data;
     } catch (error) {

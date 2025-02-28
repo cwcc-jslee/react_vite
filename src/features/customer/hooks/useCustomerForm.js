@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useCustomer } from '../context/CustomerProvider';
 import { initialFormState } from '../constants/initialFormState';
 import { createCustomer } from '../services/customerSubmitService';
+import { notification } from '../../../shared/services/notification';
 /**
  * Customer Form 관련 로직을 관리하는 Custom Hook
  */
 export const useCustomerForm = () => {
+  const { setDrawerClose } = useCustomer();
   // 폼 데이터 상태 관리
   const [formData, setFormData] = useState(initialFormState);
   // 에러 상태 관리

@@ -503,3 +503,54 @@ Table.Title = ({ children, className = '' }) => (
     {children}
   </h3>
 );
+
+/**
+ * Badge: 라벨, 상태, 카테고리 등을 표시하는 작은 시각적 요소
+ * @param {Object} props
+ * @param {React.ReactNode} props.children - 배지 내부 콘텐츠
+ * @param {'default' | 'secondary' | 'outline' | 'destructive' | 'success' | 'warning' | 'error' | 'info' | 'gray'} [props.variant='default'] - 배지 스타일 변형
+ * @param {'sm' | 'md' | 'lg'} [props.size='md'] - 배지 크기
+ * @param {string} [props.className] - 추가 CSS 클래스
+ */
+export const Badge = ({
+  children,
+  variant = 'default',
+  size = 'md',
+  className = '',
+  ...props
+}) => {
+  const baseStyles =
+    'inline-flex items-center font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2';
+
+  const variantStyles = {
+    default: 'bg-blue-600 text-white hover:bg-blue-700',
+    secondary: 'bg-gray-600 text-white hover:bg-gray-700',
+    outline:
+      'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+    destructive: 'bg-red-600 text-white hover:bg-red-700',
+    success:
+      'bg-green-100 text-green-800 border border-green-200 hover:bg-green-200',
+    warning:
+      'bg-yellow-100 text-yellow-800 border border-yellow-200 hover:bg-yellow-200',
+    error: 'bg-red-100 text-red-800 border border-red-200 hover:bg-red-200',
+    info: 'bg-blue-100 text-blue-800 border border-blue-200 hover:bg-blue-200',
+    gray: 'bg-gray-100 text-gray-800 border border-gray-200 hover:bg-gray-200',
+  };
+
+  const sizeStyles = {
+    sm: 'text-xs px-2 py-0.5 rounded',
+    md: 'text-sm px-2.5 py-0.5 rounded-md',
+    lg: 'text-base px-3 py-1 rounded-md',
+  };
+
+  return (
+    <span
+      className={`${baseStyles} ${
+        variantStyles[variant] || variantStyles.default
+      } ${sizeStyles[size] || sizeStyles.md} ${className}`}
+      {...props}
+    >
+      {children}
+    </span>
+  );
+};

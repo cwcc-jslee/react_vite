@@ -19,6 +19,7 @@ import {
   Checkbox,
   TextArea,
 } from '../../../../shared/components/ui';
+import { useCustomer } from '../../context/CustomerProvider';
 import { useCustomerForm } from '../../hooks/useCustomerForm';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import {
@@ -27,9 +28,11 @@ import {
   formatBusinessNumber,
 } from '../../../../shared/services/businessNumberUtils';
 import { notification } from '../../../../shared/services/notification';
+import CoFunnelInput from '../elements/CoFunnelInput';
 
 const CustomerAddForm = () => {
-  const { formData, errors, updateFormField, processSubmit } =
+  const { resetFilters } = useCustomer();
+  const { formData, errors, isSubmitting, updateFormField, processSubmit } =
     useCustomerForm();
   const { validationErrors, validateForm, clearErrors } = useFormValidation();
   const {
@@ -69,6 +72,8 @@ const CustomerAddForm = () => {
       console.log(`cuatomer 폼 데이터 제출`, formData);
       // api 호출 로직 구현
       await processSubmit();
+      // 폼 초기화
+      resetFilters();
     } else {
       // 에러 출력
       showErrorNotification(validation.errors);
@@ -159,6 +164,7 @@ const CustomerAddForm = () => {
               placeholder="고객명을 입력하세요"
               onChange={updateFormField}
               value={formData?.name}
+              disabled={isSubmitting}
             />
           </FormItem>
 
@@ -171,6 +177,7 @@ const CustomerAddForm = () => {
               name="coClassification"
               value={formData.coClassification}
               onChange={updateFormField}
+              disabled={isSubmitting}
             >
               <option value="">선택하세요</option>
               {codebooks?.co_classification?.data?.map((item) => (
@@ -188,6 +195,7 @@ const CustomerAddForm = () => {
               name="businessScale"
               value={formData.businessScale}
               onChange={updateFormField}
+              disabled={isSubmitting}
             >
               <option value="">선택하세요</option>
               {codebooks?.business_scale?.data?.map((item) => (
@@ -211,13 +219,13 @@ const CustomerAddForm = () => {
               value={displayBusinessNumber(formData.businessNumber)}
               onChange={handleBusinessNumberChange}
               maxLength={12} // 하이픈 포함 최대 길이
+              disabled={isSubmitting}
             />
           </FormItem>
-
           {/* 유입경로 */}
-          <FormItem direction="vertical" className="flex-1">
+          <FormItem direction="vertical" className="w-2/3">
             <Label className="text-left">유입경로</Label>
-            <Select
+            {/* <Select
               name="coFunnel"
               value={formData.coFunnel}
               onChange={updateFormField}
@@ -228,10 +236,14 @@ const CustomerAddForm = () => {
                   {item.name}
                 </option>
               ))}
-            </Select>
-          </FormItem>
-          <FormItem direction="vertical" className="flex-1">
-            <Label className="text-left">유입경로suffix</Label>
+            </Select> */}
+            <CoFunnelInput
+              codebooks={codebooks}
+              formData={formData}
+              updateFormField={updateFormField}
+              isLoading={isLoadingCodebook}
+              isSubmitting={isSubmitting}
+            />
           </FormItem>
         </Group>
 
@@ -255,6 +267,7 @@ const CustomerAddForm = () => {
                         e.target.checked,
                       )
                     }
+                    disabled={isSubmitting}
                   />
                   <span className="text-sm">{type.name}</span>
                 </div>
@@ -268,6 +281,7 @@ const CustomerAddForm = () => {
               name="employee"
               value={formData.employee}
               onChange={updateFormField}
+              disabled={isSubmitting}
             >
               <option value="">선택하세요</option>
               {codebooks?.employee?.data?.map((item) => (
@@ -288,6 +302,7 @@ const CustomerAddForm = () => {
               name="commencementDate"
               value={formData.commencementDate}
               onChange={updateFormField}
+              disabled={isSubmitting}
             />
           </FormItem>
 
@@ -299,6 +314,7 @@ const CustomerAddForm = () => {
               placeholder="대표자명"
               value={formData.representativeName}
               onChange={updateFormField}
+              disabled={isSubmitting}
             />
           </FormItem>
 
@@ -311,6 +327,7 @@ const CustomerAddForm = () => {
               placeholder="https://example.com"
               value={formData.homepage}
               onChange={updateFormField}
+              disabled={isSubmitting}
             />
           </FormItem>
         </Group>
@@ -323,6 +340,7 @@ const CustomerAddForm = () => {
               name="region"
               value={formData.region}
               onChange={updateFormField}
+              disabled={isSubmitting}
             >
               <option value="">선택하세요</option>
               {codebooks?.region?.data?.map((item) => (
@@ -341,6 +359,7 @@ const CustomerAddForm = () => {
               placeholder="시/군/구"
               value={formData.city}
               onChange={updateFormField}
+              disabled={isSubmitting}
             />
           </FormItem>
 
@@ -352,6 +371,7 @@ const CustomerAddForm = () => {
               placeholder="상세주소를 입력하세요"
               value={formData.address}
               onChange={updateFormField}
+              disabled={isSubmitting}
             />
           </FormItem>
         </Group>
@@ -363,7 +383,10 @@ const CustomerAddForm = () => {
             <div className="flex items-center space-x-4">
               {supportPrograms.map((program) => (
                 <div key={program.id} className="flex items-center space-x-2">
-                  <Checkbox name={`supportProgram_${program.id}`} />
+                  <Checkbox
+                    name={`supportProgram_${program.id}`}
+                    disabled={isSubmitting}
+                  />
                   <span className="text-sm">{program.name}</span>
                 </div>
               ))}
@@ -380,6 +403,7 @@ const CustomerAddForm = () => {
               placeholder="비고 사항을 입력하세요"
               value={formData.description}
               onChange={updateFormField}
+              disabled={isSubmitting}
             />
           </FormItem>
         </Group>
@@ -389,7 +413,7 @@ const CustomerAddForm = () => {
           <Button
             type="submit"
             variant="primary"
-            //   disabled={isSubmitting}
+            disabled={isSubmitting}
             className="w-full"
             onClick={(e) => {
               // 버튼 클릭 시에도 이벤트 전파 방지
@@ -397,8 +421,7 @@ const CustomerAddForm = () => {
               handleSubmit(e);
             }}
           >
-            {/* {isSubmitting ? '처리중...' : '저장'} */}
-            저장
+            {isSubmitting ? '처리중...' : '저장'}
           </Button>
         </Group>
       </Form>

@@ -64,7 +64,7 @@ export const transformToDBFields = {
       co_classification: parseNumber(formData.coClassification),
       business_scale: parseNumber(formData.businessScale),
       business_number: normalizeBusinessNumber(formData.businessNumber),
-      //   co_funnel: formData.coFunnel,
+      funnel: JSON.stringify(formData.funnel),
       homepage: formData.homepage,
       business_type: JSON.stringify(formData.businessType),
       employee: parseNumber(formData.employee),
