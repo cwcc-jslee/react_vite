@@ -29,7 +29,8 @@ import {
 import { notification } from '../../../../shared/services/notification';
 
 const CustomerAddForm = () => {
-  const { formData, errors, updateFormField } = useCustomerForm();
+  const { formData, errors, updateFormField, processSubmit } =
+    useCustomerForm();
   const { validationErrors, validateForm, clearErrors } = useFormValidation();
   const {
     data: codebooks,
@@ -54,7 +55,7 @@ const CustomerAddForm = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // 유효성 검사 수행
     const validation = validateForm(formData);
@@ -67,6 +68,7 @@ const CustomerAddForm = () => {
       // Submit 로직 구현 예정
       console.log(`cuatomer 폼 데이터 제출`, formData);
       // api 호출 로직 구현
+      await processSubmit();
     } else {
       // 에러 출력
       showErrorNotification(validation.errors);
@@ -93,6 +95,36 @@ const CustomerAddForm = () => {
       target: {
         name: 'businessNumber',
         value: normalizedValue,
+      },
+    });
+  };
+
+  // 다중 선택 필드 변경 처리 (체크박스)
+  const handleMultiSelectChange = (fieldName, item, isChecked) => {
+    // 현재 선택된 항목 배열 가져오기 (없으면 빈 배열)
+    const currentItems = formData[fieldName] || [];
+
+    let updatedItems;
+    if (isChecked) {
+      // 체크된 경우: 이미 있는지 확인 후 추가
+      const exists = currentItems.some(
+        (existingItem) => existingItem.id === item.id,
+      );
+      updatedItems = exists
+        ? currentItems
+        : [...currentItems, { id: item.id, name: item.name }];
+    } else {
+      // 체크 해제된 경우: 배열에서 제거
+      updatedItems = currentItems.filter(
+        (existingItem) => existingItem.id !== item.id,
+      );
+    }
+
+    // formData 업데이트
+    updateFormField({
+      target: {
+        name: fieldName,
+        value: updatedItems,
       },
     });
   };
@@ -198,29 +230,32 @@ const CustomerAddForm = () => {
               ))}
             </Select>
           </FormItem>
-
-          {/* 홈페이지 */}
           <FormItem direction="vertical" className="flex-1">
-            <Label className="text-left">홈페이지</Label>
-            <Input
-              type="url"
-              name="homepage"
-              placeholder="https://example.com"
-              value={formData.homepage}
-              onChange={updateFormField}
-            />
+            <Label className="text-left">유입경로suffix</Label>
           </FormItem>
         </Group>
 
         {/* 3열: 업태, 종업원 */}
         <Group direction="horizontal" spacing="lg">
+          {/* 업태 (다중선택) */}
           <FormItem direction="vertical" className="flex-1">
             <Label className="text-left">업태 (다중선택)</Label>
-            <div className="flex items-center space-x-4">
-              {/* 수직 -> 수평 배치로 변경 */}
+            <div className="flex flex-wrap items-center gap-4">
               {codebooks?.business_type?.data?.map((type) => (
                 <div key={type.id} className="flex items-center space-x-2">
-                  <Checkbox name={`businessType_${type.id}`} />
+                  <Checkbox
+                    name={`businessType_${type.id}`}
+                    checked={formData.businessType?.some(
+                      (item) => item.id === type.id,
+                    )}
+                    onChange={(e) =>
+                      handleMultiSelectChange(
+                        'businessType',
+                        { id: type.id, name: type.name },
+                        e.target.checked,
+                      )
+                    }
+                  />
                   <span className="text-sm">{type.name}</span>
                 </div>
               ))}
@@ -267,8 +302,16 @@ const CustomerAddForm = () => {
             />
           </FormItem>
 
+          {/* 홈페이지 */}
           <FormItem direction="vertical" className="flex-1">
-            {/* 여백 맞춤을 위한 빈 FormItem */}
+            <Label className="text-left">홈페이지</Label>
+            <Input
+              type="url"
+              name="homepage"
+              placeholder="https://example.com"
+              value={formData.homepage}
+              onChange={updateFormField}
+            />
           </FormItem>
         </Group>
 
@@ -332,7 +375,12 @@ const CustomerAddForm = () => {
         <Group>
           <FormItem direction="vertical" className="w-full">
             <Label className="text-left">비고</Label>
-            <TextArea name="description" placeholder="비고 사항을 입력하세요" />
+            <TextArea
+              name="description"
+              placeholder="비고 사항을 입력하세요"
+              value={formData.description}
+              onChange={updateFormField}
+            />
           </FormItem>
         </Group>
 

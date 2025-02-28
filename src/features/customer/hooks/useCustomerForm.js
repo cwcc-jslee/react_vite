@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { initialFormState } from '../constants/initialFormState';
+import { createCustomer } from '../services/customerSubmitService';
 /**
  * Customer Form 관련 로직을 관리하는 Custom Hook
  */
@@ -52,6 +53,40 @@ export const useCustomerForm = () => {
     setErrors({});
   };
 
+  // 폼 제출 처리
+  const processSubmit = async () => {
+    try {
+      setIsSubmitting(true);
+      const response = await createCustomer(formData);
+
+      if (!response || !response.success) {
+        throw new Error(response?.message || '저장에 실패했습니다.');
+      }
+
+      notification.success({
+        message: '저장 성공',
+        description: '성공적으로 저장되었습니다.',
+      });
+
+      setDrawerClose();
+    } catch (error) {
+      console.error('Form submission error:', error);
+      const errorMessage = error?.message || '저장 중 오류가 발생했습니다.';
+
+      setErrors((prev) => ({
+        ...prev,
+        submit: errorMessage,
+      }));
+
+      notification.error({
+        message: '저장 실패',
+        description: errorMessage,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return {
     // 폼 상태관리
     formData,
@@ -62,6 +97,7 @@ export const useCustomerForm = () => {
     //
     isSubmitting,
     setIsSubmitting,
+    processSubmit,
     //
     resetForm,
   };

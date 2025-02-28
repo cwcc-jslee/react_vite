@@ -3,8 +3,8 @@ export const initialFormState = {
   coClassfication: '',
   businessNumber: '',
   homepage: '',
-  businessType: '',
-  businessItem: '',
+  businessType: [],
+  businessItem: [],
   representativeName: '',
   commencementDate: '',
   region: '',
@@ -12,5 +12,5 @@ export const initialFormState = {
   address: '',
   employee: '',
   businessScale: '',
-  funnel: '',
+  funnel: [],
 };
