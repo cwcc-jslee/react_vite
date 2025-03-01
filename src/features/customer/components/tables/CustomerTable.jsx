@@ -17,7 +17,7 @@ const COLUMNS = [
   { key: 'region', title: '지역', align: 'center' },
   { key: 'city', title: '시/군/구', align: 'center' },
   { key: 'funnel', title: '유입경로', align: 'center' },
-  { key: 'created_at', title: '등록일', align: 'center' },
+  { key: 'createdAt', title: '등록일', align: 'center' },
   { key: 'action', title: 'Action', align: 'center' },
 ];
 
@@ -96,7 +96,7 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
     <tr className="hover:bg-gray-50">
       <td className="px-3 py-2 text-center text-sm">{item.id}</td>
       <td className="px-3 py-2 text-center text-sm">
-        {formatValue(item.co_classification)}
+        {formatValue(item?.co_classification?.name)}
       </td>
       <td className="px-3 py-2 text-sm">{item.name || '-'}</td>
       <td className="px-3 py-2 text-center text-sm">
@@ -123,8 +123,8 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
         {getNameFromArray(item.funnel)}
       </td>
       <td className="px-3 py-2 text-center text-sm">
-        {item.created_at
-          ? new Date(item.created_at).toLocaleDateString('ko-KR')
+        {item?.createdAt
+          ? new Date(item.createdAt).toLocaleDateString('ko-KR')
           : '-'}
       </td>
       <td className="px-3 py-2 text-center">

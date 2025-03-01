@@ -12,6 +12,8 @@ import { useCustomer } from '../../context/CustomerProvider.jsx';
 import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer.jsx';
 import ActionMenuBar from '../../../../shared/components/ui/button/ActionMenuBar.jsx';
 import CustomerAddForm from '../forms/CusotmerAddForm';
+import CustomerDetailTable from '../tables/CustomerDetailTable.jsx';
+import EditableCustomerDetailTable from '../tables/EditableCustomerDetailTable.jsx';
 
 const CustomerDrawer = () => {
   // Codebook 데이터 조회
@@ -25,15 +27,6 @@ const CustomerDrawer = () => {
   const { visible, controlMode, featureMode, data } = drawerState;
 
   const controlMenus = [
-    {
-      key: 'add',
-      label: 'add',
-      active: controlMode === 'add',
-      onClick: () => {
-        // setActiveControl('view');
-        setDrawer({ controlMode: 'add' });
-      },
-    },
     {
       key: 'view',
       label: 'View',
@@ -76,7 +69,19 @@ const CustomerDrawer = () => {
     //   sfaClassificationData={sfaClassificationData}
     />
   );
-  const ViewContent = ({ data }) => <></>;
+  const ViewContent = ({ data }) => (
+    <>
+      <CustomerDetailTable data={data} />
+    </>
+  );
+  const EditContent = ({ data }) => (
+    <>
+      <EditableCustomerDetailTable
+        data={data}
+        editable={true} // 편집 가능 여부 설정
+      />
+    </>
+  );
 
   return (
     <BaseDrawer
@@ -95,6 +100,8 @@ const CustomerDrawer = () => {
     >
       {/* {renderDrawerContent()} */}
       {controlMode === 'add' && <AddContent />}
+      {controlMode === 'view' && <ViewContent data={data?.data[0]} />}
+      {controlMode === 'edit' && <EditContent data={data?.data[0]} />}
     </BaseDrawer>
   );
 };

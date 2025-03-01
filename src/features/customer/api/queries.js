@@ -49,3 +49,48 @@ export const buildCustomerListQuery = (params) => {
 
   return qs.stringify(query, { encodeValuesOnly: true });
 };
+
+export const buildCustomerDetailQuery = (id) => {
+  return qs.stringify(
+    {
+      filters: {
+        id: { $eq: id },
+      },
+      fields: [
+        'name',
+        'business_type',
+        'business_item',
+        'funnel',
+        'city',
+        'business_number',
+        'homepage',
+        'representative_name',
+        'commencement_date',
+        'address',
+        'support_program',
+        'description',
+        'createdAt',
+      ],
+      populate: {
+        co_classification: {
+          fields: ['name'],
+        },
+        business_scale: {
+          fields: ['name'],
+        },
+        region: {
+          fields: ['name'],
+        },
+        employee: {
+          fields: ['name'],
+        },
+        // customer_year_datas: {
+        //   fields: ['name'],
+        // },
+      },
+    },
+    {
+      encodeValuesOnly: true,
+    },
+  );
+};

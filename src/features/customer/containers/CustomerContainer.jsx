@@ -6,8 +6,8 @@ import { Section } from '../../../shared/components/ui/layout/components';
 
 // Components
 import CustomerSubMenu from '../components/CustomerSubMenu';
-import CustomerTable from '../components/table/CustomerTable';
-import CustomerStatisticsOverview from '../components/table/CustomerStatisticsOverview';
+import CustomerTable from '../components/tables/CustomerTable';
+import CustomerStatisticsOverview from '../components/tables/CustomerStatisticsOverview';
 import CustomerDrawer from '../components/drawer/CustomerDrawer';
 
 /**

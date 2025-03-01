@@ -157,25 +157,6 @@ export const buildSfaDetailQuery = (id) => {
         sfa_sales_type: {
           fields: ['name'],
         },
-        // proposal: {
-        //   fields: ['name'],
-        // },
-        // sfa_service_prices: {
-        //   filters: {
-        //     deleted: {
-        //       $eq: false,
-        //     },
-        //   },
-        //   fields: ['price'],
-        //   populate: {
-        //     sfa_item: {
-        //       fields: ['name'],
-        //     },
-        //     team: {
-        //       fields: ['name'],
-        //     },
-        //   },
-        // },
         sfa_by_payments: {
           filters: {
             is_deleted: {

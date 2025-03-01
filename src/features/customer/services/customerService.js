@@ -9,7 +9,10 @@
  */
 
 import { apiClient } from '../../../shared/api/apiClient';
-import { buildCustomerListQuery } from '../api/queries';
+import {
+  buildCustomerListQuery,
+  buildCustomerDetailQuery,
+} from '../api/queries';
 import {
   normalizeResponse,
   normalizeError,
@@ -43,6 +46,20 @@ export const customerService = {
 
       // 쿼리 생성 및 API 호출
       const query = buildCustomerListQuery(queryParams);
+      const response = await apiClient.get(`/customers?${query}`);
+
+      return normalizeResponse(response);
+    } catch (error) {
+      handleError(error, 'Failed to fetch Customer list');
+    }
+  },
+  /**
+   * CUSTOMER 상세 조회
+   */
+  getCustomerDetail: async (id) => {
+    try {
+      // 쿼리 생성 및 API 호출
+      const query = buildCustomerDetailQuery(id);
       const response = await apiClient.get(`/customers?${query}`);
 
       return normalizeResponse(response);

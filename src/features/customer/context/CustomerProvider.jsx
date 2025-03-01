@@ -220,21 +220,22 @@ export const CustomerProvider = ({ children }) => {
   /**
    * CUSTOMER 상세 조회
    */
-  //   const fetchCustomerDetail = async (id) => {
-  //     try {
-  //         const response = await customerService.getCustomerDetail(id);
-  //       setDrawerState({
-  //         visible: true,
-  //         controlMode: 'view',
-  //         featureMode: null,
-  //         data: response,
-  //       });
-  //     } catch (err) {
-  //       setError(err.message);
-  //       return null;
-  //     } finally {
-  //     }
-  //   };
+  const fetchCustomerDetail = async (id) => {
+    try {
+      const response = await customerService.getCustomerDetail(id);
+      console.log(`fetchCustomer : `, response);
+      setDrawerState({
+        visible: true,
+        controlMode: 'view',
+        featureMode: null,
+        data: response,
+      });
+    } catch (err) {
+      // setError(err.message);
+      return null;
+    } finally {
+    }
+  };
 
   const value = {
     // // 데이터 관련
@@ -243,7 +244,7 @@ export const CustomerProvider = ({ children }) => {
     error,
     pagination,
     fetchCustomerList,
-    // fetchCustomerDetail,
+    fetchCustomerDetail,
     setPage,
     setPageSize,
     setPageTotalSize,
