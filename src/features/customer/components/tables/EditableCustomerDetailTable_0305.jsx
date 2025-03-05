@@ -14,8 +14,15 @@ import {
   Checkbox,
   Group,
 } from '../../../../shared/components/ui/index';
-import { displayBusinessNumber } from '../../../../shared/services/businessNumberUtils';
-import { useEditableField } from '../../hooks/useEditableField';
+import {
+  displayBusinessNumber,
+  formatBusinessNumber,
+  normalizeBusinessNumber,
+} from '../../../../shared/services/businessNumberUtils';
+import { isEqual } from '../../../../shared/utils/objectUtils';
+import useFormValidation from '../../hooks/useFormValidation';
+import { customerSubmitService } from '../../services/customerSubmitService';
+import { useCustomer } from '../../context/CustomerProvider';
 import ModalRenderer from '../../../../shared/components/ui/modal/ModalRenderer';
 import useModal from '../../../../shared/hooks/useModal';
 
@@ -23,6 +30,16 @@ import useModal from '../../../../shared/hooks/useModal';
  * 섹션별 인라인 편집이 가능한 고객사 상세 정보 컴포넌트
  */
 const EditableCustomerDetailTable = ({ data, editable = true }) => {
+  // // 수정 중인 섹션 상태 관리
+  // const [editingSection, setEditingSection] = useState(null);
+  // // 수정 중인 필드 데이터 관리
+  // const [editedData, setEditedData] = useState({});
+  // // 초기 데이터 백업 (변경점 비교용)
+  // const [originalSectionData, setOriginalSectionData] = useState({});
+  // // 유입경로 입력을 위한 상태
+  // const [selectedFunnel, setSelectedFunnel] = useState('');
+  // const [suffixInput, setSuffixInput] = useState('');
+
   const {
     data: codebooks,
     isLoading: isLoadingCodebook,
@@ -36,25 +53,49 @@ const EditableCustomerDetailTable = ({ data, editable = true }) => {
     'region',
   ]);
 
-  const {
-    editingSection,
-    editedData,
-    startEditing,
-    cancelEditing,
-    saveEditing,
-    handleChange,
-    handleBusinessNumberChange,
-    handleAddFunnel,
-    handleRemoveFunnel,
-    handleMultiSelectChange,
-    handleDeleteCustomer,
-    selectedFunnel,
-    setSelectedFunnel,
-    suffixInput,
-    setSuffixInput,
-  } = useEditableField(data);
+  const { validateSectionFields } = useFormValidation();
+  const { setDrawerClose, fetchCustomerDetail, fetchCustomerList } =
+    useCustomer();
 
   if (!data) return null;
+
+  // 변경된 필드만 추출하는 함수
+  const getChangedFields = () => {
+    const changes = {};
+
+    // 필드 매핑 (프론트엔드 필드명 -> 백엔드 필드명)
+    const fieldMapping = {
+      coClassification: 'co_classification',
+      businessScale: 'business_scale',
+      businessNumber: 'business_number',
+      businessType: 'business_type',
+      commencementDate: 'commencement_date',
+      representativeName: 'representative_name',
+      funnel: 'funnel',
+      supportPrograms: 'support_program',
+    };
+
+    // 각 필드 비교
+    Object.keys(editedData).forEach((key) => {
+      const originalKey = fieldMapping[key] || key;
+      const originalValue =
+        key === 'coClassification' || key === 'businessScale'
+          ? originalSectionData[key]
+          : originalSectionData[originalKey];
+
+      if (!isEqual(editedData[key], originalValue)) {
+        // 변경된 필드만 추가
+        if (key === 'coClassification' || key === 'businessScale') {
+          // ID 형태로 저장된 필드는 객체 형태로 변환
+          changes[originalKey] = { id: editedData[key] };
+        } else {
+          changes[originalKey] = editedData[key];
+        }
+      }
+    });
+
+    return changes;
+  };
 
   // useModal 훅 사용
   const {
@@ -66,30 +107,269 @@ const EditableCustomerDetailTable = ({ data, editable = true }) => {
     handleConfirm,
   } = useModal();
 
-  // // 삭제 확인 모달 표시 처리
-  const confirmDeleteCustomer = (customerInfo) => {
-    // 삭제 전 사용자 확인을 위한 모달 표시
-    openDeleteModal(
-      '고객사 삭제 확인',
-      <div className="space-y-4">
-        <p>
-          다음 고객사 정보를 정말 삭제하시겠습니까? 이 작업은 되돌릴 수
-          없습니다.
-        </p>
-        <div className="bg-gray-50 p-3 rounded border border-gray-200">
-          <p>
-            <strong>고객사 ID:</strong> {customerInfo.id}
-          </p>
+  // 섹션 편집 시작
+  // startEditing 함수 수정 부분
 
-          <p>
-            <strong>고객명:</strong> {data.name}
-          </p>
-        </div>
-      </div>,
-      customerInfo,
-      handleDeleteCustomer, // 확인 시 실행할 삭제 함수
-    );
-  };
+  // // 섹션 편집 시작
+  // const startEditing = (section) => {
+  //   // 초기 편집 데이터 설정 - 데이터 구조 맞추기
+  //   const initialEditData = {
+  //     // 기본 필드 추가
+  //     name: data.name,
+  //     email: data.email,
+  //     phone: data.phone,
+  //     address: data.address,
+  //     city: data.city,
+  //     homepage: data.homepage,
+  //     description: data.description,
+
+  //     // 필드명 일관성 유지 (API 형식과 폼 필드명 매칭)
+  //     coClassification: data.co_classification?.id,
+  //     businessScale: data.business_scale?.id,
+  //     businessNumber: data.business_number,
+  //     businessType: data.business_type || [],
+  //     commencementDate: data.commencement_date,
+  //     representativeName: data.representative_name,
+  //     funnel: data.funnel || [],
+  //     supportPrograms: data.support_program || [],
+  //     employee: data.employee?.id,
+  //     region: data.region?.id,
+  //   };
+
+  //   // 초기 데이터 백업 (변경점 비교용)
+  //   const originalData = {
+  //     name: data.name,
+  //     email: data.email,
+  //     phone: data.phone,
+  //     address: data.address,
+  //     city: data.city,
+  //     homepage: data.homepage,
+  //     description: data.description,
+
+  //     coClassification: data.co_classification?.id,
+  //     businessScale: data.business_scale?.id,
+  //     business_number: data.business_number,
+  //     business_type: data.business_type || [],
+  //     commencement_date: data.commencement_date,
+  //     representative_name: data.representative_name,
+  //     funnel: data.funnel || [],
+  //     support_program: data.support_program || [],
+  //     employee: data.employee?.id,
+  //     region: data.region?.id,
+  //   };
+
+  //   console.log('편집 시작 - 초기 데이터:', initialEditData);
+  //   console.log('전달 받은 data', data);
+
+  //   setEditedData(initialEditData);
+  //   setOriginalSectionData(originalData);
+  //   setEditingSection(section);
+
+  //   // 입력 필드 초기화
+  //   setSelectedFunnel('');
+  //   setSuffixInput('');
+  // };
+
+  // // 편집 취소
+  // const cancelEditing = () => {
+  //   setEditingSection(null);
+  //   setEditedData({});
+  //   setOriginalSectionData({});
+
+  //   // 입력 필드 초기화
+  //   setSelectedFunnel('');
+  //   setSuffixInput('');
+  // };
+
+  // // 편집 저장
+  // const saveEditing = async () => {
+  //   try {
+  //     // 변경된 필드만 추출
+  //     const changedFields = getChangedFields();
+  //     // 현재 편집 중인 섹션의 필드 검증
+  //     const validation = validateSectionFields(editedData, editingSection);
+  //     console.log(`폼검증 결과 : `, validation);
+  //     if (!validation.isValid) {
+  //       // 검증 실패 처리
+  //       console.log('폼 검증 실패:', validation.errors);
+  //       // setValidationErrors(validation.errors);
+  //       notification.error({
+  //         message: '입력 오류',
+  //         description: '입력한 내용을 확인해주세요.',
+  //       });
+  //       return;
+  //     }
+
+  //     // 변경된 필드가 있는 경우에만 업데이트
+  //     if (Object.keys(changedFields).length > 0) {
+  //       // 업데이트할 데이터 생성
+  //       // const updateData = {
+  //       //   id: data.id, // 항상 ID는 포함
+  //       //   documentId: data.documentId,
+  //       //   ...changedFields,
+  //       // };
+  //       // 업데이트트
+  //       console.log('변경된 필드만 업데이트:', changedFields);
+  //       // onUpdate(updateData);
+  //       await customerSubmitService.updateCustomerBase(
+  //         data.documentId,
+  //         changedFields,
+  //       );
+
+  //       // 상태 초기화
+  //       setEditingSection(null);
+  //       setEditedData({});
+  //       setOriginalSectionData({});
+  //       const updateData = await fetchCustomerDetail(data.id);
+  //       setDrawer({ controlMode: 'view', data: updateData.data[0] });
+  //     } else {
+  //       console.log('변경된 필드가 없습니다.');
+  //     }
+  //   } catch (error) {
+  //     // 에러처리리
+  //   }
+  // };
+
+  // // 필드 값 변경 처리
+  // const handleChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setEditedData((prev) => ({
+  //     ...prev,
+  //     [name]: value,
+  //   }));
+  // };
+
+  // // 사업자번호 입력 처리
+  // const handleBusinessNumberChange = (e) => {
+  //   const formattedValue = formatBusinessNumber(e.target.value);
+  //   // 화면에는 형식이 적용된 값을 표시
+  //   e.target.value = formattedValue;
+  //   // 저장을 위해 정규화된 값을 form 데이터에 업데이트
+  //   const normalizedValue = normalizeBusinessNumber(formattedValue);
+  //   setEditedData((prev) => ({
+  //     ...prev,
+  //     businessNumber: normalizedValue,
+  //   }));
+  // };
+
+  // // 다중 선택 필드 변경 처리 (체크박스)
+  // const handleMultiSelectChange = (fieldName, item, isChecked) => {
+  //   // 현재 선택된 항목 배열 가져오기 (없으면 빈 배열)
+  //   const currentItems = editedData[fieldName] || [];
+
+  //   let updatedItems;
+  //   if (isChecked) {
+  //     // 체크된 경우: 이미 있는지 확인 후 추가
+  //     const exists = currentItems.some(
+  //       (existingItem) => existingItem.id === item.id,
+  //     );
+  //     updatedItems = exists
+  //       ? currentItems
+  //       : [...currentItems, { id: item.id, name: item.name }];
+  //   } else {
+  //     // 체크 해제된 경우: 배열에서 제거
+  //     updatedItems = currentItems.filter(
+  //       (existingItem) => existingItem.id !== item.id,
+  //     );
+  //   }
+
+  //   // 상태 업데이트
+  //   setEditedData((prev) => ({
+  //     ...prev,
+  //     [fieldName]: updatedItems,
+  //   }));
+  // };
+
+  // // 유입경로 추가
+  // const handleAddFunnel = () => {
+  //   if (!selectedFunnel) return;
+
+  //   // 선택된 유입경로 정보 가져오기
+  //   const funnelItem = codebooks?.co_funnel?.data?.find(
+  //     (item) => String(item.id) === String(selectedFunnel),
+  //   );
+
+  //   if (!funnelItem) return;
+
+  //   // 추가할 유입경로 객체 생성
+  //   const newFunnel = {
+  //     // id: funnelItem.id,
+  //     name: funnelItem.name,
+  //     suffix: suffixInput.trim(), // 입력된 suffix 추가
+  //   };
+
+  //   // 현재 유입경로 배열 가져오기
+  //   const currentFunnels = [...(editedData.funnel || [])];
+
+  //   // 업데이트된 배열로 상태 갱신
+  //   setEditedData((prev) => ({
+  //     ...prev,
+  //     funnel: [...currentFunnels, newFunnel],
+  //   }));
+
+  //   // 입력 필드 초기화
+  //   setSelectedFunnel('');
+  //   setSuffixInput('');
+  // };
+
+  // // 유입경로 제거
+  // const handleRemoveFunnel = (index) => {
+  //   const currentFunnels = [...(editedData.funnel || [])];
+  //   currentFunnels.splice(index, 1);
+
+  //   setEditedData((prev) => ({
+  //     ...prev,
+  //     funnel: currentFunnels,
+  //   }));
+  // };
+
+  // // 삭제 확인 모달 표시 처리
+  // const confirmDeleteCustomer = (customerInfo) => {
+  //   // 삭제 전 사용자 확인을 위한 모달 표시
+  //   openDeleteModal(
+  //     '고객사 삭제 확인',
+  //     <div className="space-y-4">
+  //       <p>
+  //         다음 고객사 정보를 정말 삭제하시겠습니까? 이 작업은 되돌릴 수
+  //         없습니다.
+  //       </p>
+  //       <div className="bg-gray-50 p-3 rounded border border-gray-200">
+  //         <p>
+  //           <strong>고객사 ID:</strong> {customerInfo.id}
+  //         </p>
+
+  //         <p>
+  //           <strong>고객명:</strong> {data.name}
+  //         </p>
+  //       </div>
+  //     </div>,
+  //     customerInfo,
+  //     handleDeleteCustomer, // 확인 시 실행할 삭제 함수
+  //   );
+  // };
+
+  // // 결제 매출 정보 삭제
+  // const handleDeleteCustomer = async (customerInfo) => {
+  //   console.log(`>> handlepayment delete : `, customerInfo.id);
+  //   // notification 실행
+
+  //   try {
+  //     await customerSubmitService.deleteCustomer(customerInfo.documentId);
+  //     // 성공 알림 표시
+  //     openSuccessModal('삭제 완료', '고객 정보가 성공적으로 삭제되었습니다.');
+  //     // 고객사 정보 & Drawer close
+  //     fetchCustomerList();
+  //     setDrawerClose();
+  //   } catch (error) {
+  //     // 실패 알림 표시
+  //     openErrorModal(
+  //       '삭제 실패',
+  //       `고객 정보 삭제 중 오류가 발생했습니다: ${
+  //         error.message || '알 수 없는 오류'
+  //       }`,
+  //     );
+  //   }
+  // };
 
   // 코드북 기반 Select 필드 렌더링
   const renderSelectField = (name, codebookKey) => (
@@ -168,14 +448,14 @@ const EditableCustomerDetailTable = ({ data, editable = true }) => {
             onKeyDown={(e) => {
               if (e.key === 'Enter' && selectedFunnel) {
                 e.preventDefault();
-                handleAddFunnel(codebooks);
+                handleAddFunnel();
               }
             }}
           />
         </div>
         <Button
           type="button"
-          onClick={() => handleAddFunnel(codebooks)}
+          onClick={handleAddFunnel}
           disabled={!selectedFunnel}
           variant="outline"
           className="whitespace-nowrap"
@@ -205,7 +485,7 @@ const EditableCustomerDetailTable = ({ data, editable = true }) => {
               {editingSection === 'basic' ? (
                 <Input
                   name="name"
-                  value={editedData?.name || ''}
+                  value={editedData.name || ''}
                   onChange={handleChange}
                   className="w-full"
                 />
