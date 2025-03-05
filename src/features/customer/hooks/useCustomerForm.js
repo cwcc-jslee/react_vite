@@ -90,6 +90,62 @@ export const useCustomerForm = () => {
     }
   };
 
+  // 고객사폼 삭제제 처리 로직
+  const processDeleteSubmit = async (processMode, targetId) => {
+    try {
+      setIsSubmitting(true);
+
+      // processMode에 따른 API 호출
+      let response;
+      let actionDescription;
+
+      // if (processMode === 'create') {
+      //   response = await sfaSubmitService.addSfaPayment(
+      //     targetId, // sfaId
+      //     formData.salesByPayments,
+      //   );
+      //   actionDescription = '등록';
+      // } else if (processMode === 'update') {
+      //   response = await sfaSubmitService.updateSfaPayment(
+      //     targetId, // payment documentId
+      //     formData.salesByPayments[0],
+      //   );
+      //   actionDescription = '수정';
+      // } else
+      if (processMode === 'delete') {
+        response = await sfaSubmitService.deleteSfaPayment(targetId);
+        actionDescription = '삭제';
+      }
+
+      notification.success({
+        message: '저장 성공',
+        description: `성공적으로 ${actionDescription}되었습니다.`,
+      });
+
+      // 데이터 갱신 및 뷰 모드로 전환
+      // const updateData = await sfaApi.getSfaDetail(sfaId);
+      // setDrawer({
+      //   controlMode: 'view',
+      //   data: updateData.data[0],
+      // });
+    } catch (error) {
+      console.error('Payment submission error:', error);
+      const errorMessage = error?.message || '저장 중 오류가 발생했습니다.';
+
+      setErrors((prev) => ({
+        ...prev,
+        submit: errorMessage,
+      }));
+
+      notification.error({
+        message: '저장 실패',
+        description: errorMessage,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return {
     // 폼 상태관리
     formData,

@@ -23,6 +23,52 @@ export const customerSubmitService = {
       );
     }
   },
+  /**
+   * Customer 기본 필드 수정
+   * @param {string} id - Customer ID
+   * @param {Object} formData - 수정할 데이터
+   */
+  async updateCustomerBase(id, formData) {
+    console.log('[Cusotmer] Updating field with formData:', formData);
+
+    try {
+      // API 요청 수행
+      const response = await apiService.put(`/customers/${id}`, formData);
+      return response.data;
+    } catch (error) {
+      console.error('[Customer] Update error:', error);
+      throw new Error(
+        error.response?.data?.error?.message ||
+          '데이터 저장 중 오류가 발생했습니다.',
+      );
+    }
+  },
+
+  /**
+   * Customer 삭제 기능
+   * is_deleted 필드 업데이트트
+   * @param {string} customerId - 삭제할 고객 ID
+   */
+  async deleteCustomer(customerId) {
+    console.log('[Customer] Delete customer :', {
+      customerId,
+    });
+
+    try {
+      const dbData = { is_deleted: true };
+
+      const response = await apiService.put(`/customers/${customerId}`, dbData);
+
+      console.log('[Customer] Delete customer : ', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('[Customer] Delete customer error:', error);
+      throw new Error(
+        error.response?.data?.error?.message ||
+          '고객 정보 삭제 중 오류가 발생했습니다.',
+      );
+    }
+  },
 };
 
 /**

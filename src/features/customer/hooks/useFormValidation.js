@@ -185,10 +185,59 @@ export const useFormValidation = (initialErrors = {}) => {
     };
   };
 
+  const validateSectionFields = (editedData, section) => {
+    // 현재 편집 중인 섹션의 필드들만 검증
+    let errors = {};
+    let isValid = true;
+    console.log(`validateSectionFields 실행 [${section}] : `, editedData);
+    // 섹션별 검증 로직
+    switch (section) {
+      case 'basic':
+        // 사업자번호 형식 검증 (변경된 경우만)
+        if (editedData?.businessNumber) {
+          if (
+            editedData.businessNumber &&
+            !isValidBusinessNumber(editedData.businessNumber)
+          ) {
+            errors.businessNumber = '올바른 사업자 번호 형식이 아닙니다.';
+            isValid = false;
+          }
+        }
+        // 추가 필드별 검증 로직
+        if (editedData?.name) {
+          const trimmedValue = editedData.name.trim();
+          if (trimmedValue.length < 3) {
+            errors.name = '고객명은 최소 3자 이상 입력해야 합니다.';
+            isValid = false;
+          }
+        }
+        break;
+
+      case 'contact':
+        // 홈페이지 URL 형식 검증 (변경된 경우만)
+        if (editedData.homepage !== originalData.homepage) {
+          if (editedData.homepage) {
+            try {
+              new URL(editedData.homepage);
+            } catch (e) {
+              errors.homepage = '올바른 URL 형식이 아닙니다.';
+              isValid = false;
+            }
+          }
+        }
+        break;
+
+      // 다른 섹션들에 대한 검증 로직
+    }
+    // console.log(`응답 [${isValid}] : `, errors);
+    return { isValid, errors };
+  };
+
   return {
     validationErrors,
     validateForm,
     validateField,
+    validateSectionFields,
     clearErrors,
     setValidationErrors,
     setFieldError,
