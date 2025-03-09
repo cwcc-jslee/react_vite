@@ -22,6 +22,7 @@ const menuItems = [
   { key: '/project', label: 'PROJECT' },
   { key: '/work', label: 'WORK' },
   { key: '/customer', label: 'CUSTOMER' },
+  { key: '/contact', label: 'CONTACT' },
 ];
 
 const DefaultLayout = ({ children }) => {

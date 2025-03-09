@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useCustomer } from '../context/CustomerProvider';
-import { initialFormState } from '../constants/initialFormState';
+import { customerInitialState } from '../../../shared/constants/initialFormState';
 import { createCustomer } from '../services/customerSubmitService';
 import { notification } from '../../../shared/services/notification';
 /**
@@ -9,19 +9,19 @@ import { notification } from '../../../shared/services/notification';
 export const useCustomerForm = () => {
   const { setDrawerClose } = useCustomer();
   // 폼 데이터 상태 관리
-  const [formData, setFormData] = useState(initialFormState);
+  const [formData, setFormData] = useState(customerInitialState);
   // 에러 상태 관리
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     console.log('Form Data Changed:', {
-      previous: initialFormState,
+      previous: customerInitialState,
       current: formData,
       changes: Object.keys(formData).reduce((diff, key) => {
-        if (formData[key] !== initialFormState[key]) {
+        if (formData[key] !== customerInitialState[key]) {
           diff[key] = {
-            from: initialFormState[key],
+            from: customerInitialState[key],
             to: formData[key],
           };
         }
@@ -52,7 +52,7 @@ export const useCustomerForm = () => {
    * 모든 필드를 초기 상태로 리셋
    */
   const resetForm = () => {
-    setFormData(initialFormState);
+    setFormData(customerInitialState);
     setErrors({});
   };
 

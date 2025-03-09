@@ -17,7 +17,7 @@ export const Header = ({ children, className = '' }) => (
 
 export const Content = ({ children, className = '' }) => (
   <main
-    className={`ml-60 flex-1 p-3 bg-slate-50 min-h-[calc(100vh-64px)] mt-16 overflow-y-auto ${className}`}
+    className={`ml-60 flex-1 p-3 bg-slate-50 min-h-[calc(100vh-64px)] mt-[0px] overflow-y-auto ${className}`}
   >
     {children}
   </main>

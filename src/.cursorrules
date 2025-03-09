@@ -1,0 +1,13 @@
+## Component Guidelines
+
+### Component Stracture
+ - 기본 구조는 features, shared 로 작성
+ - UI 컴포넌트위치 : /src/shared/components/ui/index.jsx
+ - 리액트 18.2, Node v20.18.1, 웹서버 vite 6.0.7, API 서버 Strapi 5.4
+
+
+## Best Practices
+ - 컴포넌트는 재사용 가능하도록 설계
+ - 컴포넌트 이름은 카멜케이스로 작성
+ - (함수명) 기본 동작은 2단계로 간단하게, 구체적인 구분이 필요한 경우만 3단계 사용
+ - (함수명) : 2단계(동사+대상), 3단계(동사+대상+행위/상태)

@@ -20,8 +20,9 @@ const menuItems = [
   { key: '/', label: 'HOME' },
   { key: '/sfa', label: 'SFA' },
   { key: '/customer', label: 'CUSTOMER' },
+  { key: '/contact', label: 'CONTACT' },
   { key: '/project', label: 'PROJECT' },
-  { key: '/work', label: 'WORK' },
+  // { key: '/work', label: 'WORK' },
 ];
 
 const DefaultLayout = ({ children }) => {

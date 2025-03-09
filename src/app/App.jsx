@@ -7,11 +7,14 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 // Lazy load pages
+const LoginPage = React.lazy(() => import('../features/auth/pages/LoginPage'));
 const SfaPage = React.lazy(() => import('../features/sfa/pages/SfaPage'));
 const CustomerPage = React.lazy(() =>
   import('../features/customer/pages/CustomerPage'),
 );
-const LoginPage = React.lazy(() => import('../features/auth/pages/LoginPage'));
+const ContactPage = React.lazy(() =>
+  import('../features/contact/pages/ContactPage'),
+);
 
 // QueryClient 설정
 const queryClient = new QueryClient({
@@ -48,6 +51,7 @@ const App = () => {
               <Route path="/" element={<Navigate to="/sfa" replace />} />
               <Route path="/sfa" element={<SfaPage />} />
               <Route path="/customer" element={<CustomerPage />} />
+              <Route path="/contact" element={<ContactPage />} />
             </Routes>
           </Suspense>
         </DefaultLayout>
