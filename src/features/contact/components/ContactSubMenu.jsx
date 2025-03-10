@@ -17,6 +17,9 @@ const ContactSubMenu = () => {
 
   return (
     <Group direction="horizontal" spacing="sm" className="mb-5">
+      <Button variant="outline" onClick={() => setLayout('default')}>
+        Main
+      </Button>
       <Button
         variant="outline"
         onClick={() => setDrawer({ visible: true, controlMode: 'add' })}
@@ -24,11 +27,11 @@ const ContactSubMenu = () => {
         등록
       </Button>
 
-      {/* <Button variant="outline" onClick={() => setLayout('search')}>
-        조회
-      </Button>
+      {/* <Button variant="outline" onClick={() => setLayout('upload')}>
+        일괄등록
+      </Button> */}
 
-      <Button
+      {/* <Button
         variant="outline"
         onClick={() => {
           resetFilters();

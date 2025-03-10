@@ -9,6 +9,7 @@ import ContactSubMenu from '../components/ContactSubMenu';
 import ContactSearchForm from '../components/forms/ContactSearchForm';
 import ContactTable from '../components/tables/ContactTable';
 import ContactDrawer from '../components/drawer/ContactDrawer';
+// import ContactExcelUpload from '../components/upload/ContactExcelUpload';
 
 /**
  * CUSTOMER 메인 컨테이너 컴포넌트
@@ -26,8 +27,9 @@ const ContactContainer = () => {
       <Section>
         <ContactSubMenu />
         <br></br>
-        <ContactSearchForm />
-        <ContactTable />
+        {components.contactTable && <ContactSearchForm />}
+        {components.contactTable && <ContactTable />}
+        {/* {components.contactExcelUpload && <ContactExcelUpload />} */}
       </Section>
       {drawerState.visible && <ContactDrawer />}
     </>

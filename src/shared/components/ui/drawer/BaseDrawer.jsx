@@ -110,7 +110,8 @@ const BaseDrawer = ({
             </div>
 
             {/* Menu Area */}
-            {menu && controlMode !== 'add' && (
+            {/* menu && controlMode !== 'add' && */}
+            {menu && (
               <div className="border-b border-gray-200 px-4 py-2">{menu}</div>
             )}
 

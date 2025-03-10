@@ -9,6 +9,7 @@ import { useContact } from '../../context/ContactProvider.jsx';
 import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer.jsx';
 import ActionMenuBar from '../../../../shared/components/ui/button/ActionMenuBar.jsx';
 import ContactAddForm from '../forms/ContactAddForm';
+import ContactExcelUpload from '../upload/ContactExcelUpload.jsx';
 
 const ContactDrawer = () => {
   // Codebook 데이터 조회
@@ -24,21 +25,21 @@ const ContactDrawer = () => {
 
   const controlMenus = [
     {
-      key: 'view',
-      label: 'View',
-      active: controlMode === 'view',
+      key: 'add',
+      label: 'add',
+      active: featureMode === 'add',
       onClick: () => {
         // setActiveControl('view');
-        setDrawer({ controlMode: 'view' });
+        setDrawer({ featureMode: 'add' });
       },
     },
     {
-      key: 'edit',
-      label: 'Edit',
-      active: controlMode === 'edit',
+      key: 'upload',
+      label: 'upload',
+      active: featureMode === 'upload',
       onClick: () => {
         // setActiveControl('edit');
-        setDrawer({ controlMode: 'edit' });
+        setDrawer({ featureMode: 'upload' });
       },
     },
   ];
@@ -74,7 +75,10 @@ const ContactDrawer = () => {
       controlMode={controlMode}
     >
       {/* {renderDrawerContent()} */}
-      {controlMode === 'add' && <ContactAddForm />}
+      {controlMode === 'add' && featureMode === 'add' && <ContactAddForm />}
+      {controlMode === 'add' && featureMode === 'upload' && (
+        <ContactExcelUpload />
+      )}
       {/* {controlMode === 'view' && <ViewContent data={data?.data[0]} />}
       {controlMode === 'edit' && <EditContent data={data?.data[0]} />} */}
     </BaseDrawer>

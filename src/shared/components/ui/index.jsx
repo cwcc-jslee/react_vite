@@ -554,3 +554,167 @@ export const Badge = ({
     </span>
   );
 };
+
+// Card, List, ListItem 컴포넌트 추가 (index.jsx 파일에 추가)
+
+/**
+ * Card: 콘텐츠를 담는 카드 컴포넌트
+ * @param {Object} props
+ * @param {React.ReactNode} props.children - 카드 내부 콘텐츠
+ * @param {'default' | 'primary' | 'outline'} [props.variant='default'] - 카드 스타일 변형
+ * @param {string} [props.className] - 추가 CSS 클래스
+ */
+export const Card = ({
+  children,
+  variant = 'default',
+  className = '',
+  ...props
+}) => {
+  const baseStyles = 'rounded-lg shadow-sm overflow-hidden';
+
+  const variantStyles = {
+    default: 'bg-white border border-gray-200',
+    primary: 'bg-blue-50 border border-blue-200',
+    outline: 'bg-transparent border border-gray-300',
+  };
+
+  return (
+    <div
+      className={`${baseStyles} ${variantStyles[variant]} ${className}`}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
+
+/**
+ * Card.Header: 카드 헤더 컴포넌트
+ */
+Card.Header = ({ children, className = '', ...props }) => {
+  return (
+    <div
+      className={`px-6 py-4 border-b border-gray-200 ${className}`}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
+
+/**
+ * Card.Title: 카드 제목 컴포넌트
+ */
+Card.Title = ({ children, className = '', ...props }) => {
+  return (
+    <h3
+      className={`text-lg font-semibold text-gray-900 ${className}`}
+      {...props}
+    >
+      {children}
+    </h3>
+  );
+};
+
+/**
+ * Card.Content: 카드 내용 컴포넌트
+ */
+Card.Content = ({ children, className = '', ...props }) => {
+  return (
+    <div className={`px-6 py-4 ${className}`} {...props}>
+      {children}
+    </div>
+  );
+};
+
+/**
+ * Card.Footer: 카드 푸터 컴포넌트
+ */
+Card.Footer = ({ children, className = '', ...props }) => {
+  return (
+    <div
+      className={`px-6 py-4 bg-gray-50 border-t border-gray-200 ${className}`}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
+
+/**
+ * List: 항목 목록을 표시하는 컴포넌트
+ * @param {Object} props
+ * @param {React.ReactNode} props.children - 리스트 항목들
+ * @param {'ul' | 'ol'} [props.as='ul'] - HTML 태그 유형
+ * @param {'none' | 'disc' | 'decimal'} [props.type='none'] - 리스트 스타일 유형
+ * @param {string} [props.className] - 추가 CSS 클래스
+ */
+export const List = ({
+  children,
+  as = 'ul',
+  type = 'none',
+  className = '',
+  ...props
+}) => {
+  const Component = as;
+
+  const listStyles = {
+    none: 'list-none',
+    disc: 'list-disc pl-5',
+    decimal: 'list-decimal pl-5',
+  };
+
+  return (
+    <Component
+      className={`space-y-1 ${listStyles[type]} ${className}`}
+      {...props}
+    >
+      {children}
+    </Component>
+  );
+};
+
+/**
+ * ListItem: 목록의 개별 항목 컴포넌트
+ * @param {Object} props
+ * @param {React.ReactNode} props.children - 항목 내용
+ * @param {string} [props.className] - 추가 CSS 클래스
+ */
+export const ListItem = ({ children, className = '', ...props }) => {
+  return (
+    <li className={`text-gray-700 ${className}`} {...props}>
+      {children}
+    </li>
+  );
+};
+
+/**
+ * Alert: 알림 메시지 컴포넌트 --> notification modal 컴포넌트 별도 존재..삭제할지..확인피요
+ * @param {Object} props
+ * @param {React.ReactNode} props.children - 알림 내용
+ * @param {'default' | 'destructive' | 'success' | 'warning' | 'info'} [props.variant='default'] - 알림 스타일
+ * @param {string} [props.className] - 추가 CSS 클래스
+ */
+export const Alert = ({
+  children,
+  variant = 'default',
+  className = '',
+  ...props
+}) => {
+  const variantStyles = {
+    default: 'bg-gray-100 border-gray-300 text-gray-800',
+    destructive: 'bg-red-100 border-red-300 text-red-800',
+    success: 'bg-green-100 border-green-300 text-green-800',
+    warning: 'bg-yellow-100 border-yellow-300 text-yellow-800',
+    info: 'bg-blue-100 border-blue-300 text-blue-800',
+  };
+
+  return (
+    <div
+      className={`p-4 rounded-md border-l-4 ${variantStyles[variant]} ${className}`}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};

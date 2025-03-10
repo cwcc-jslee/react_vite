@@ -117,27 +117,29 @@ export const ContactProvider = ({ children }) => {
       default: {
         mode: 'default',
         components: {
+          contactSearchForm: true,
           contactTable: true,
+          contactExcelUpload: false,
           //   searchForm: false,
           //   forecastTable: false,
         },
       },
-      search: {
-        mode: 'search',
+      upload: {
+        mode: 'upload',
         components: {
-          contactTable: true,
-          //   searchForm: true,
-          //   forecastTable: false,
+          contactSearchForm: false,
+          contactTable: false,
+          contactExcelUpload: true,
         },
       },
-      forecast: {
-        mode: 'forecast',
-        components: {
-          contactTable: true,
-          //   searchForm: false,
-          //   forecastTable: true,
-        },
-      },
+      // forecast: {
+      //   mode: 'forecast',
+      //   components: {
+      //     contactTable: true,
+      //     //   searchForm: false,
+      //     //   forecastTable: true,
+      //   },
+      // },
     };
 
     setPageLayout(layouts[mode] || layouts.default);
