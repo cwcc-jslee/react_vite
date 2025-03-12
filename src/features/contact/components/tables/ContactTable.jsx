@@ -7,13 +7,14 @@ import { StateDisplay } from '../../../../shared/components/ui/state/StateDispla
 import { Pagination } from '../../../../shared/components/ui/pagination/Pagination';
 
 const COLUMNS = [
-  { key: 'name', title: '유형', align: 'left' }, // 고객,파트너, 공급업체, 자문위원 등
-  { key: 'name1', title: '이름', align: 'left' },
-  { key: 'funnel', title: '회사명', align: 'center' },
-  { key: 'region', title: '직위', align: 'center' },
-  { key: 'city', title: '부서', align: 'center' },
-  { key: 'business_item', title: '휴대폰번호', align: 'center' },
-  { key: 'business_type', title: '이메일', align: 'center' },
+  { key: 'contact_type', title: '유형', align: 'left' }, // 고객,파트너, 공급업체, 자문위원 등
+  { key: 'full_name', title: '이름', align: 'left' },
+  { key: 'customer', title: '회사명', align: 'center' },
+  // { key: 'position', title: '직위', align: 'center' },
+  // { key: 'department', title: '부서', align: 'center' },
+  { key: 'mobile', title: '휴대폰번호', align: 'center' },
+  { key: 'email', title: '이메일', align: 'center' },
+  { key: 'tag', title: 'tag', align: 'center' },
   { key: 'createdAt', title: '등록일', align: 'center' },
   { key: 'action', title: 'Action', align: 'center' },
 ];
@@ -91,26 +92,18 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
 
   return (
     <tr className="hover:bg-gray-50">
-      <td className="px-3 py-2 text-center text-sm">{item.id}</td>
       <td className="px-3 py-2 text-center text-sm">
-        {formatValue(item?.co_classification?.name)}
+        {formatValue(item?.contact_type?.name)}
       </td>
-      <td className="px-3 py-2 text-sm">{item.name || '-'}</td>
-      <td className="px-3 py-2 text-center text-sm">
-        {formatBusinessType(item.business_type)}
+      <td className="px-3 py-2 text-center text-sm">{item.full_name}</td>
+      <td className="px-3 py-2 text-sm">
+        {formatBusinessType(item?.customer?.name)}
       </td>
-      <td className="px-3 py-2 text-center text-sm">
-        {formatValue(item.business_item)}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">
-        {formatValue(item.region)}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">
-        {formatValue(item.city)}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">
-        {getNameFromArray(item.funnel)}
-      </td>
+      {/* <td className="px-3 py-2 text-center text-sm">{item.position}</td> */}
+      {/* <td className="px-3 py-2 text-center text-sm">{item.department}</td> */}
+      <td className="px-3 py-2 text-center text-sm">{item.mobile}</td>
+      <td className="px-3 py-2 text-center text-sm">{item.email}</td>
+      <td className="px-3 py-2 text-center text-sm"></td>
       <td className="px-3 py-2 text-center text-sm">
         {item?.createdAt
           ? new Date(item.createdAt).toLocaleDateString('ko-KR')

@@ -7,8 +7,9 @@
  * @version 1.0.0
  * @filename src/features/Contact/contexts/ContactProvider.jsx
  */
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import dayjs from 'dayjs';
+import { contactService } from '../services/contactService';
 
 const ContactContext = createContext(null);
 
@@ -54,8 +55,10 @@ export const ContactProvider = ({ children }) => {
   // 드로어 상태
   const [drawerState, setDrawerState] = useState({
     visible: false,
-    controlMode: null,
-    featureMode: null,
+    controlMode: null, // 삭제예정 - baseMode 로 변경
+    featureMode: null, // 삭제예정 - subMode 로 변경
+    baseMode: null,
+    subMode: null,
     data: null,
   });
 
@@ -132,14 +135,6 @@ export const ContactProvider = ({ children }) => {
           contactExcelUpload: true,
         },
       },
-      // forecast: {
-      //   mode: 'forecast',
-      //   components: {
-      //     contactTable: true,
-      //     //   searchForm: false,
-      //     //   forecastTable: true,
-      //   },
-      // },
     };
 
     setPageLayout(layouts[mode] || layouts.default);
@@ -162,6 +157,43 @@ export const ContactProvider = ({ children }) => {
       featureMode: null,
       data: null,
     });
+  };
+
+  /**
+   * Contact 목록 조회
+   * @param {Object} queryParams - 추가 파라미터 (선택사항)
+   */
+  const fetchContactList = async (queryParams = {}) => {
+    console.log(`>>queryParams : `, queryParams);
+    setLoading(true);
+    try {
+      // API 호출
+      const response = await contactService.getContactList(queryParams);
+
+      // 데이터 업데이트
+      setFetchData(response.data);
+
+      // 페이지네이션 정보 업데이트
+      if (pagination.total !== response.meta.pagination.total) {
+        setPagination((prev) => ({
+          ...prev,
+          total: response.meta.pagination.total,
+        }));
+      }
+
+      // 에러 상태 초기화
+      setError(null);
+
+      return response.data;
+    } catch (err) {
+      // 에러 처리
+      const errorMessage = err.response?.data?.error?.message || err.message;
+      setError(errorMessage);
+      setFetchData([]);
+      // return [];
+    } finally {
+      setLoading(false);
+    }
   };
 
   const value = {
@@ -188,6 +220,8 @@ export const ContactProvider = ({ children }) => {
     //
     setLoading,
     setFetchData,
+    //
+    fetchContactList,
   };
 
   return (

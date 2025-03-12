@@ -22,7 +22,7 @@ const ContactSubMenu = () => {
       </Button>
       <Button
         variant="outline"
-        onClick={() => setDrawer({ visible: true, controlMode: 'add' })}
+        onClick={() => setDrawer({ visible: true, baseMode: 'addSingle' })}
       >
         등록
       </Button>

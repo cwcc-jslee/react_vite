@@ -6,8 +6,8 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { selectCodebookByType } from '../../../codebook/store/codebookSlice.js';
 import { useContact } from '../../context/ContactProvider.jsx';
-import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer.jsx';
-import ActionMenuBar from '../../../../shared/components/ui/button/ActionMenuBar.jsx';
+import Drawer from '../../../../shared/components/ui/drawer/Drawer.jsx';
+import DrawerActionMenu from '../../../../shared/components/ui/button/DrawerActionMenu.jsx';
 import ContactAddForm from '../forms/ContactAddForm';
 import ContactExcelUpload from '../upload/ContactExcelUpload.jsx';
 
@@ -19,69 +19,67 @@ const ContactDrawer = () => {
   );
 
   const { drawerState, setDrawer, setDrawerClose } = useContact();
-  const { visible, controlMode, featureMode, data } = drawerState;
+  const { visible, baseMode, subMode, data } = drawerState;
 
   console.log(`ContactDrawer's drawerState: `, drawerState);
 
-  const controlMenus = [
+  const baseMenus = [
     {
       key: 'add',
-      label: 'add',
-      active: featureMode === 'add',
+      label: '단일 등록',
+      active: baseMode === 'addSingle',
       onClick: () => {
         // setActiveControl('view');
-        setDrawer({ featureMode: 'add' });
+        setDrawer({ baseMode: 'addSingle' });
       },
     },
     {
       key: 'upload',
-      label: 'upload',
-      active: featureMode === 'upload',
+      label: '일괄 등록',
+      active: baseMode === 'addBulk',
       onClick: () => {
         // setActiveControl('edit');
-        setDrawer({ featureMode: 'upload' });
+        setDrawer({ baseMode: 'addBulk' });
       },
     },
   ];
 
-  const functionMenus = [];
+  const subMenus = [];
 
   // Drawer 헤더 타이틀 설정
   const getHeaderTitle = () => {
-    if (controlMode) {
+    if (baseMode) {
       const titles = {
-        add: '담당자 등록',
+        addSingle: '담당자 등록',
+        addBulk: '담당자 일괄괄등록',
         view: '담당자 상세정보',
         edit: '담당자 수정',
       };
-      return titles[controlMode] || '';
+      return titles[baseMode] || '';
     }
     return '';
   };
 
   return (
-    <BaseDrawer
+    <Drawer
       visible={visible}
       title={getHeaderTitle()}
       onClose={setDrawerClose}
-      menu={
-        <ActionMenuBar
-          controlMenus={controlMenus}
-          functionMenus={functionMenus}
-        />
-      }
       width="900px"
       enableOverlayClick={false}
-      controlMode={controlMode}
     >
-      {/* {renderDrawerContent()} */}
-      {controlMode === 'add' && featureMode === 'add' && <ContactAddForm />}
-      {controlMode === 'add' && featureMode === 'upload' && (
-        <ContactExcelUpload />
+      {/* 메뉴 영역 */}
+      {(baseMenus.length > 0 || subMode.length > 0) && (
+        <div className="border-b border-gray-200 px-4 py-2">
+          <DrawerActionMenu baseMenus={baseMenus} subMenus={subMenus} />
+        </div>
       )}
+      {/* {renderDrawerContent()} */}
+      {baseMode === 'addSingle' && <ContactAddForm />}
+      {baseMode === 'addBulk' && <ContactExcelUpload />}
       {/* {controlMode === 'view' && <ViewContent data={data?.data[0]} />}
       {controlMode === 'edit' && <EditContent data={data?.data[0]} />} */}
-    </BaseDrawer>
+    </Drawer>
   );
 };
 

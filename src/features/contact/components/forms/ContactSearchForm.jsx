@@ -1,7 +1,8 @@
 // src/features/contact/components/ContactSearchForm/index.jsx
 import React, { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
-// import { useContactSearchFilter } from '../../../hooks/useContactSearchFilter';
+import { useContact } from '../../context/ContactProvider';
+import { useContactSearchFilter } from '../../hooks/useContactSearchFilter';
 import { CustomerSearchInput } from '../../../../shared/components/customer/CustomerSearchInput';
 // import { useCodebook } from '../../../../../shared/hooks/useCodebook';
 // import { useContactItem } from '../../../../../shared/hooks/useContactItem';
@@ -17,8 +18,8 @@ import {
 } from '../../../../shared/components/ui/index';
 
 const ContactSearchForm = () => {
-  // const { executeSearch, resetSearch } = useContact();
-  // const { updateDetailFilter } = useContactSearchFilter();
+  const { setFetchData } = useContact();
+  const { updateDetailFilter } = useContactSearchFilter();
 
   // const {
   //   data: codebook,
@@ -32,14 +33,10 @@ const ContactSearchForm = () => {
   // ]);
 
   const INITFORMDATA = {
-    name: '',
+    fullName: '',
     customer: '',
-    sfaSalesType: '',
-    sfaClassification: '',
-    salesItem: '',
-    team: '',
-    billingType: '',
-    probability: '',
+    contactType: '',
+    memo: '',
   };
 
   const [searchFormData, setSearchFormData] = useState({
@@ -76,20 +73,16 @@ const ContactSearchForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // console.log(`search form : `, searchFormData);
+    console.log(`search form : `, searchFormData);
     // executeSearch(searchFormData);
     updateDetailFilter(searchFormData);
   };
 
   const handleReset = () => {
     setSearchFormData({
-      dateRange: {
-        startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
-        endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
-      },
       ...INITFORMDATA,
     });
-    // resetSearch();
+    setFetchData([]);
   };
 
   return (
@@ -101,10 +94,10 @@ const ContactSearchForm = () => {
             <Label>이름</Label>
             <Input
               type="text"
-              name="name"
-              value={searchFormData.name}
+              name="fullName"
+              value={searchFormData.fullName}
               onChange={handleInputChange}
-              placeholder="건명 입력"
+              placeholder="이름 입력"
             />
           </FormItem>
 
@@ -140,12 +133,12 @@ const ContactSearchForm = () => {
         <Stack direction="horizontal" spacing="lg">
           <FormItem>
             <Label>메모</Label>
-            <CustomerSearchInput
-              // value={searchFormData.customer}
-              // onSelect={handleCustomerSelect}
-              // error={errors.customer}
-              // disabled={isSubmitting}
-              size="small"
+            <Input
+              type="text"
+              name="memo"
+              value={searchFormData.memo}
+              onChange={handleInputChange}
+              placeholder=""
             />
           </FormItem>
 
