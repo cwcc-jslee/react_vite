@@ -1,30 +1,77 @@
 // src/features/project/components/composes/ProjectAddSection.jsx
-import React from 'react';
+import React, { useState } from 'react';
+import TaskCard from '../ui/TaskCard';
 import { FiPlus } from 'react-icons/fi';
 import useProjectTask from '../../hooks/useProjectTask';
-import TaskCard from '../ui/TaskCard'; // 수정된 TaskCard 가져오기
+
+// 수정 가능한 제목 컴포넌트
+const EditableTitle = ({ title, onTitleChange, columnIndex }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTitle, setEditedTitle] = useState(title);
+
+  // 수정 모드 전환
+  const handleTitleClick = () => {
+    setIsEditing(true);
+  };
+
+  // 제목 변경 처리
+  const handleTitleChange = (e) => {
+    setEditedTitle(e.target.value);
+  };
+
+  // 제목 저장
+  const handleTitleSave = () => {
+    onTitleChange(columnIndex, editedTitle);
+    setIsEditing(false);
+  };
+
+  // 키보드 이벤트 처리
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleTitleSave();
+    } else if (e.key === 'Escape') {
+      setEditedTitle(title); // 원래 값으로 복원
+      setIsEditing(false);
+    }
+  };
+
+  // 외부 클릭 시 저장
+  const handleBlur = () => {
+    handleTitleSave();
+  };
+
+  return isEditing ? (
+    <input
+      type="text"
+      value={editedTitle}
+      onChange={handleTitleChange}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+      className="font-semibold text-zinc-800 mb-3 pl-1 w-full bg-white border border-indigo-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      autoFocus
+    />
+  ) : (
+    <h2
+      className="font-semibold text-zinc-800 mb-3 pl-1 cursor-pointer hover:text-indigo-700"
+      onClick={handleTitleClick}
+    >
+      {title}
+    </h2>
+  );
+};
 
 // 칸반 컬럼 컴포넌트
 const KanbanColumn = ({
-  column,
+  title,
+  tasks,
   columnIndex,
-  startEditingColumnTitle,
-  editState,
-  handleEditChange,
-  saveEdit,
-  cancelEdit,
+  onTitleChange,
+  onTaskClick,
   onAddTask,
-  startEditing,
-  toggleTaskCompletion,
-  deleteTask, // 작업 삭제 함수 추가
 }) => {
-  const isEditingTitle =
-    editState.isEditing &&
-    editState.columnIndex === columnIndex &&
-    editState.field === 'columnTitle';
-
   // 작업 추가 버튼 클릭 핸들러
   const handleAddTaskClick = () => {
+    // 새 작업 추가 로직
     const newTask = {
       title: '새 작업',
       days: '',
@@ -36,32 +83,16 @@ const KanbanColumn = ({
 
   return (
     <div className="flex-shrink-0 w-72 h-full flex flex-col">
+      {/* 컬럼 전체를 감싸는 하나의 div - 테두리 제거 */}
       <div className="flex flex-col h-full border-0 rounded-md bg-gray-50 shadow-sm mx-2">
+        {/* 제목 및 작업 추가 버튼 박스 (고정 크기) */}
         <div className="p-3 border-b">
-          {/* 컬럼 제목 */}
-          {isEditingTitle ? (
-            <input
-              type="text"
-              value={editState.value}
-              onChange={(e) => handleEditChange(e.target.value)}
-              onBlur={saveEdit}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') saveEdit();
-                if (e.key === 'Escape') cancelEdit();
-              }}
-              className="font-semibold text-zinc-800 mb-3 pl-1 w-full bg-white border border-indigo-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              autoFocus
-            />
-          ) : (
-            <h2
-              className="font-semibold text-zinc-800 mb-3 pl-1 cursor-pointer hover:text-indigo-700"
-              onClick={() => startEditingColumnTitle(columnIndex)}
-            >
-              {column.title}
-            </h2>
-          )}
+          <EditableTitle
+            title={title}
+            onTitleChange={onTitleChange}
+            columnIndex={columnIndex}
+          />
 
-          {/* 작업 추가 버튼 */}
           <button
             className="w-full h-10 flex items-center justify-center text-indigo-600 border-2 border-indigo-600 rounded-sm"
             onClick={handleAddTaskClick}
@@ -71,21 +102,13 @@ const KanbanColumn = ({
           </button>
         </div>
 
-        {/* 작업 카드 목록 */}
+        {/* 작업 카드 목록 박스 (세로 고정 크기) */}
         <div className="flex-grow overflow-y-auto p-3">
-          {column.tasks.map((task, taskIndex) => (
+          {tasks.map((task, index) => (
             <TaskCard
-              key={taskIndex}
-              task={task}
-              columnIndex={columnIndex}
-              taskIndex={taskIndex}
-              startEditing={startEditing}
-              editState={editState}
-              handleEditChange={handleEditChange}
-              saveEdit={saveEdit}
-              cancelEdit={cancelEdit}
-              toggleTaskCompletion={toggleTaskCompletion}
-              deleteTask={deleteTask} // 작업 삭제 함수 전달
+              key={index}
+              {...task}
+              onClick={() => onTaskClick(columnIndex, index, task)}
             />
           ))}
         </div>
@@ -163,16 +186,10 @@ const ProjectAddSection = () => {
   // 커스텀 훅 사용
   const {
     columns,
-    editState,
-    startEditing,
-    startEditingColumnTitle,
-    handleEditChange,
-    saveEdit,
-    cancelEdit,
+    handleColumnTitleChange,
+    handleTaskClick,
     addTask,
     addColumn,
-    toggleTaskCompletion,
-    deleteTask, // 작업 삭제 함수 가져오기
   } = useProjectTask(initialColumns);
 
   // 새 버킷(컬럼) 추가 핸들러
@@ -206,17 +223,12 @@ const ProjectAddSection = () => {
         {columns.map((column, index) => (
           <KanbanColumn
             key={index}
-            column={column}
+            title={column.title}
+            tasks={column.tasks}
             columnIndex={index}
-            startEditingColumnTitle={startEditingColumnTitle}
-            editState={editState}
-            handleEditChange={handleEditChange}
-            saveEdit={saveEdit}
-            cancelEdit={cancelEdit}
+            onTitleChange={handleColumnTitleChange}
+            onTaskClick={handleTaskClick}
             onAddTask={addTask}
-            startEditing={startEditing}
-            toggleTaskCompletion={toggleTaskCompletion}
-            deleteTask={deleteTask} // 작업 삭제 함수 전달
           />
         ))}
 

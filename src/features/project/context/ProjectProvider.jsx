@@ -50,12 +50,6 @@ export const ProjectProvider = ({ children }) => {
       projectAddSection: false,
       //   forecastTable: false,
     },
-    mode: 'projectadd',
-    components: {
-      projectTable: false,
-      projectAddSection: true,
-      //   forecastTable: false,
-    },
   });
 
   // 드로어 상태
@@ -125,18 +119,16 @@ export const ProjectProvider = ({ children }) => {
         mode: 'default',
         components: {
           projectTable: true,
-          //   searchForm: false,
-          //   forecastTable: false,
+          projectAddSection: false,
         },
       },
-      // upload: {
-      //   mode: 'upload',
-      //   components: {
-      //     projectSearchForm: false,
-      //     projectTable: false,
-      //     projectExcelUpload: true,
-      //   },
-      // },
+      projectadd: {
+        mode: 'projectadd',
+        components: {
+          projectTable: false,
+          projectAddSection: true,
+        },
+      },
     };
 
     setPageLayout(layouts[mode] || layouts.default);
