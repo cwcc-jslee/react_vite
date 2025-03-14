@@ -20,10 +20,7 @@ const ProjectMenu = () => {
       <Button variant="outline" onClick={() => setLayout('default')}>
         현황
       </Button>
-      <Button
-        variant="outline"
-        onClick={() => setDrawer({ visible: true, baseMode: 'add' })}
-      >
+      <Button variant="outline" onClick={() => setLayout('projectadd')}>
         등록
       </Button>
       {/* <Button

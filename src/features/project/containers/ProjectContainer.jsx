@@ -7,6 +7,7 @@ import { Section } from '../../../shared/components/ui/layout/components';
 // Components
 import ProjectMenu from '../components/ProjectMenu';
 import ProjectTable from '../components/tables/ProjectTable';
+import ProjectAddSection from '../components/compose/ProjectAddSection';
 // import ProjectDrawer from '../components/drawer/ProjectDrawer';
 
 /**
@@ -26,6 +27,7 @@ const ProjectContainer = () => {
         <ProjectMenu />
         <br></br>
         {components.projectTable && <ProjectTable />}
+        {components.projectAddSection && <ProjectAddSection />}
       </Section>
       {/* {drawerState.visible && <ProjectDrawer />} */}
     </>

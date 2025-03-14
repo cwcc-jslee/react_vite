@@ -47,7 +47,13 @@ export const ProjectProvider = ({ children }) => {
     mode: 'default',
     components: {
       projectTable: true,
-      //   searchForm: false,
+      projectAddSection: false,
+      //   forecastTable: false,
+    },
+    mode: 'projectadd',
+    components: {
+      projectTable: false,
+      projectAddSection: true,
       //   forecastTable: false,
     },
   });
