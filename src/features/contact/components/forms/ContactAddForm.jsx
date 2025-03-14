@@ -42,18 +42,18 @@ const ContactAddForm = () => {
     handleCustomerSelect,
   } = useContactForm();
 
-  const {
-    data: codebooks,
-    isLoading: isLoadingCodebook,
-    error,
-  } = useCodebook([
-    'co_classification',
-    'business_scale',
-    'co_funnel',
-    'employee',
-    'business_type',
-    'region',
-  ]);
+  // const {
+  //   data: codebooks,
+  //   isLoading: isLoadingCodebook,
+  //   error,
+  // } = useCodebook([
+  //   'co_classification',
+  //   'business_scale',
+  //   'co_funnel',
+  //   'employee',
+  //   'business_type',
+  //   'region',
+  // ]);
 
   const showErrorNotification = (errors) => {
     const firstError = Object.values(errors)[0];
@@ -103,18 +103,18 @@ const ContactAddForm = () => {
   };
 
   // 로딩 상태 표시
-  if (isLoadingCodebook) {
-    return <div className="text-center py-8">코드북 데이터 로딩 중...</div>;
-  }
+  // if (isLoadingCodebook) {
+  //   return <div className="text-center py-8">코드북 데이터 로딩 중...</div>;
+  // }
 
   // 에러 상태 표시
-  if (error) {
-    return (
-      <div className="text-center py-8 text-red-500">
-        코드북 데이터 로딩 오류: {error.message}
-      </div>
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <div className="text-center py-8 text-red-500">
+  //       코드북 데이터 로딩 오류: {error.message}
+  //     </div>
+  //   );
+  // }
 
   return (
     <>
@@ -259,11 +259,11 @@ const ContactAddForm = () => {
               disabled={isSubmitting}
             >
               <option value="">선택하세요</option>
-              {codebooks?.contact_type?.data?.map((item) => (
+              {/* {codebooks?.contact_type?.data?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
-              ))}
+              ))} */}
             </Select>
           </FormItem>
 
@@ -277,11 +277,11 @@ const ContactAddForm = () => {
               disabled={isSubmitting}
             >
               <option value="">선택하세요</option>
-              {codebooks?.relationship_status?.data?.map((item) => (
+              {/* {codebooks?.relationship_status?.data?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
-              ))}
+              ))} */}
             </Select>
           </FormItem>
 
@@ -307,7 +307,7 @@ const ContactAddForm = () => {
           <FormItem direction="vertical" className="flex-1">
             <Label className="text-left">tags (다중선택)</Label>
             <div className="flex flex-wrap items-center gap-4">
-              {codebooks?.tags?.data?.map((type) => (
+              {/* {codebooks?.tags?.data?.map((type) => (
                 <div key={type.id} className="flex items-center space-x-2">
                   <Checkbox
                     name={`tags${type.id}`}
@@ -323,7 +323,7 @@ const ContactAddForm = () => {
                   />
                   <span className="text-sm">{type.name}</span>
                 </div>
-              ))}
+              ))} */}
             </div>
           </FormItem>
         </Group>

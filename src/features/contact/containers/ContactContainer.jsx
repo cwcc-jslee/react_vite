@@ -9,10 +9,9 @@ import ContactSubMenu from '../components/ContactSubMenu';
 import ContactSearchForm from '../components/forms/ContactSearchForm';
 import ContactTable from '../components/tables/ContactTable';
 import ContactDrawer from '../components/drawer/ContactDrawer';
-// import ContactExcelUpload from '../components/upload/ContactExcelUpload';
 
 /**
- * CUSTOMER 메인 컨테이너 컴포넌트
+ * Contact 메인 컨테이너 컴포넌트
  * 페이지 레이아웃과 주요 컴포넌트들을 관리
  */
 const ContactContainer = () => {

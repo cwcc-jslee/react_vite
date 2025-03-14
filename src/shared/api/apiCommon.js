@@ -60,8 +60,8 @@ export const apiCommon = {
     const query = qs.stringify(
       {
         filters: {
-          used: {
-            $eq: true,
+          is_deleted: {
+            $eq: false,
           },
         },
         sort: ['sort:asc'],

@@ -102,6 +102,24 @@ const SfaAddForm = ({ sfaSalesTypeData, sfaClassificationData }) => {
         method="POST"
         action="#"
       >
+        <Group direction="horizontal" className="gap-6">
+          <FormItem className="flex-1">
+            {/* flex-1 추가로 균등한 너비 */}
+            <Label>거래유형</Label>
+            <Select
+              name=""
+              // value={formData.sfaSalesType}
+              // onChange={updateFormField}
+              disabled={true}
+            >
+              <option value="">계약/투자</option>
+            </Select>
+          </FormItem>
+
+          <FormItem className="flex-1">
+            <Label></Label>
+          </FormItem>
+        </Group>
         {/* <Form onSubmit={handleFormSubmit} className="space-y-6"> */}
         {/* Sales Type and Classification */}
         <Group direction="horizontal" className="gap-6">
@@ -125,7 +143,7 @@ const SfaAddForm = ({ sfaSalesTypeData, sfaClassificationData }) => {
           </FormItem>
 
           <FormItem className="flex-1">
-            <Label required>매출구분</Label>
+            <Label required>품목유형</Label>
             <Select
               name="sfaClassification"
               value={formData.sfaClassification}

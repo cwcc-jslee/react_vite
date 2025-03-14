@@ -15,6 +15,9 @@ const CustomerPage = React.lazy(() =>
 const ContactPage = React.lazy(() =>
   import('../features/contact/pages/ContactPage'),
 );
+const ProjectPage = React.lazy(() =>
+  import('../features/project/pages/ProjectPage'),
+);
 
 // QueryClient 설정
 const queryClient = new QueryClient({
@@ -52,6 +55,7 @@ const App = () => {
               <Route path="/sfa" element={<SfaPage />} />
               <Route path="/customer" element={<CustomerPage />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/project" element={<ProjectPage />} />
             </Routes>
           </Suspense>
         </DefaultLayout>
