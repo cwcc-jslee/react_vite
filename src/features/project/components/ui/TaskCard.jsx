@@ -1,5 +1,7 @@
 // TaskCard 컴포넌트 수정 - 메뉴 추가
 import React, { useState, useRef, useEffect } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import {
   FiSquare,
   FiCheckSquare,
@@ -8,6 +10,7 @@ import {
   FiMoreVertical,
   FiTrash2,
 } from 'react-icons/fi';
+import { ko } from 'date-fns/locale';
 
 // 작업 카드 컴포넌트
 const TaskCard = ({
@@ -31,6 +34,7 @@ const TaskCard = ({
     pjt_progress,
   } = task;
   const isCompleted = pjt_progress === '100';
+  const [selectedDate, setSelectedDate] = useState(null);
 
   // 메뉴 상태 관리
   const [menuOpen, setMenuOpen] = useState(false);
@@ -66,6 +70,18 @@ const TaskCard = ({
     setMenuOpen(false);
   };
 
+  // 날짜 변경 핸들러
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    const formattedDate = date
+      ? `${String(date.getMonth() + 1).padStart(2, '0')}.${String(
+          date.getDate(),
+        ).padStart(2, '0')}.`
+      : '';
+    handleEditChange(formattedDate);
+    saveEdit();
+  };
+
   return (
     <div className="w-full mb-2 relative group">
       <div className="max-w-full rounded-sm border-0 shadow-sm bg-white">
@@ -96,78 +112,47 @@ const TaskCard = ({
         </div>
 
         <div className="flex-col justify-between pr-3 flex">
-          <div className="text-ellipsis flex items-center overflow-hidden">
-            {/* 체크박스 */}
-            <span className="basis-10 h-10 flex items-center justify-center text-black">
-              <button
-                className="cursor-pointer justify-center flex w-8 h-8"
-                onClick={() => toggleTaskCompletion(columnIndex, taskIndex)}
+          {/* 클릭 가능한 메인 영역 */}
+          <div
+            className="flex-1 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+            onClick={() => {
+              // TODO: 팝업 표시 로직 구현 예정
+              console.log('Task clicked:', task);
+            }}
+          >
+            <div className="text-ellipsis flex items-center overflow-hidden">
+              {/* 체크박스 */}
+              <span
+                className="flex items-center justify-center w-10 h-10"
+                onClick={(e) => e.stopPropagation()}
               >
-                {isCompleted ? (
-                  <FiCheckSquare
-                    size={20}
-                    className="text-indigo-600"
-                    style={{ fill: '#4F46E5', stroke: 'white' }}
-                  />
-                ) : (
-                  <FiSquare size={20} className="text-zinc-600" />
-                )}
-              </button>
-            </span>
+                <button
+                  className="flex items-center justify-center w-8 h-8 cursor-pointer"
+                  onClick={() => toggleTaskCompletion(columnIndex, taskIndex)}
+                >
+                  {isCompleted ? (
+                    <FiCheckSquare
+                      size={20}
+                      className="text-indigo-600"
+                      style={{ fill: '#4F46E5', stroke: 'white' }}
+                    />
+                  ) : (
+                    <FiSquare size={20} className="text-zinc-600" />
+                  )}
+                </button>
+              </span>
 
-            {/* 제목 */}
-            <div
-              className="inline-block overflow-hidden h-10 flex items-center cursor-pointer hover:text-indigo-700"
-              onClick={() =>
-                startEditing(columnIndex, taskIndex, 'title', title)
-              }
-            >
-              {isEditingField('title') ? (
-                <input
-                  type="text"
-                  value={editState.value}
-                  onChange={(e) => handleEditChange(e.target.value)}
-                  onBlur={saveEdit}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') saveEdit();
-                    if (e.key === 'Escape') cancelEdit();
-                  }}
-                  className="bg-white border border-indigo-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 px-1"
-                  autoFocus
-                />
-              ) : (
-                title
-              )}
+              {/* 제목 - 수정 불가능하게 변경 */}
+              <div className="flex items-center min-h-[40px] select-none">
+                <span className="truncate">{title}</span>
+              </div>
             </div>
-          </div>
 
-          {/* 일수 */}
-          <div className="pl-8 text-ellipsis flex min-h-6 overflow-hidden text-xs text-zinc-600">
-            <div
-              className="pt-1 align-middle inline-block overflow-hidden m-1 cursor-pointer hover:text-indigo-700"
-              onClick={() =>
-                startEditing(columnIndex, taskIndex, 'days', days || '')
-              }
-            >
-              {isEditingField('days') ? (
-                <input
-                  type="number"
-                  value={editState.value}
-                  onChange={(e) => handleEditChange(e.target.value)}
-                  onBlur={saveEdit}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') saveEdit();
-                    if (e.key === 'Escape') cancelEdit();
-                  }}
-                  className="bg-white border border-indigo-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 px-1 w-16"
-                  min="0"
-                  autoFocus
-                />
-              ) : days ? (
-                `${days}일`
-              ) : (
-                '일수 추가'
-              )}
+            {/* 일수 - 수정 불가능하게 변경 */}
+            <div className="pl-8 text-ellipsis flex min-h-6 overflow-hidden text-xs text-zinc-600 select-none">
+              <div className="pt-1 align-middle inline-block overflow-hidden m-1">
+                {days ? `${days}일` : null}
+              </div>
             </div>
           </div>
         </div>
@@ -176,9 +161,9 @@ const TaskCard = ({
           <>
             <div className="bg-gray-200 h-px mx-3 my-1" />
             <div className="justify-between flex h-9 mt-1">
-              {/* 날짜 */}
+              {/* 날짜 - 이벤트 전파 중지 */}
               {dueDate && (
-                <div className="pl-2 flex">
+                <div className="pl-2 flex" onClick={(e) => e.stopPropagation()}>
                   <div className="flex">
                     <div
                       className={`${
@@ -187,44 +172,57 @@ const TaskCard = ({
                           : 'text-indigo-600'
                       } items-center cursor-pointer flex-grow inline-flex h-6 rounded-sm`}
                     >
-                      <span className="items-center justify-center px-1 flex m-1">
-                        <FiCalendar size={16} />
-                      </span>
-                      <span
-                        className="text-xs pl-1 pr-2 cursor-pointer"
-                        onClick={() =>
-                          startEditing(
-                            columnIndex,
-                            taskIndex,
-                            'dueDate',
-                            dueDate,
-                          )
+                      <DatePicker
+                        selected={selectedDate}
+                        onChange={handleDateChange}
+                        dateFormat="MM.dd."
+                        locale={ko}
+                        customInput={
+                          <div className="flex items-center cursor-pointer">
+                            <span className="items-center justify-center px-1 flex m-1">
+                              <FiCalendar size={16} />
+                            </span>
+                            <span className="text-xs pl-1 pr-2">{dueDate}</span>
+                          </div>
                         }
-                      >
-                        {isEditingField('dueDate') ? (
-                          <input
-                            type="text"
-                            value={editState.value}
-                            onChange={(e) => handleEditChange(e.target.value)}
-                            onBlur={saveEdit}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') saveEdit();
-                              if (e.key === 'Escape') cancelEdit();
-                            }}
-                            className="bg-white border border-indigo-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 px-1 w-16"
-                            autoFocus
-                          />
-                        ) : (
-                          dueDate
-                        )}
-                      </span>
+                        popperClassName="react-datepicker-popper z-50"
+                        className="react-datepicker-input"
+                        popperPlacement="auto"
+                        usePopper={true}
+                        popperModifiers={[
+                          {
+                            name: 'preventOverflow',
+                            options: {
+                              boundary: 'viewport',
+                              padding: 8,
+                            },
+                          },
+                          {
+                            name: 'offset',
+                            options: {
+                              offset: [0, 8],
+                            },
+                          },
+                          {
+                            name: 'computeStyles',
+                            options: {
+                              gpuAcceleration: false,
+                              adaptive: false,
+                            },
+                          },
+                        ]}
+                        container={document.body}
+                      />
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* 사용자 */}
-              <div className="items-baseline pr-3 flex">
+              {/* 사용자 - 이벤트 전파 중지 */}
+              <div
+                className="items-baseline pr-3 flex"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="items-center flex w-full">
                   <div className="flex-grow float-left">
                     <div className="float-left w-auto">
