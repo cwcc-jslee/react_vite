@@ -53,6 +53,32 @@ export const apiCommon = {
   },
 
   /**
+   * 고객사별 SFA 목록을 조회하는 함수
+   * @param {number} customerId - 고객사 ID
+   * @returns {Promise} SFA 데이터 배열
+   */
+  getSfas: async (customerId) => {
+    const query = qs.stringify(
+      {
+        filters: {
+          customer: {
+            id: {
+              $eq: customerId,
+            },
+          },
+        },
+        sort: ['id:asc'],
+      },
+      {
+        encodeValuesOnly: true,
+      },
+    );
+
+    const response = await apiClient.get(`/sfas?${query}`);
+    return response.data;
+  },
+
+  /**
    * 팀 목록을 조회하는 함수
    * @returns {Promise} 팀 데이터 배열
    */
