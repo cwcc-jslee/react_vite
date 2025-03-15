@@ -10,8 +10,6 @@ import {
   FiTrash2,
   FiArrowLeft,
   FiArrowRight,
-  FiChevronUp,
-  FiChevronDown,
 } from 'react-icons/fi';
 import TaskCard from './TaskCard';
 
@@ -34,22 +32,12 @@ const KanbanColumn = ({
 }) => {
   // 메뉴 상태 관리
   const [menuOpen, setMenuOpen] = useState(false);
-  // 완료된 작업 섹션 접힘/펼침 상태
-  const [completedExpanded, setCompletedExpanded] = useState(true); // 기본값을 true로 변경
   const menuRef = useRef(null);
 
   const isEditingTitle =
     editState.isEditing &&
     editState.columnIndex === columnIndex &&
     editState.field === 'columnTitle';
-
-  // 작업을 완료된 것과 진행 중인 것으로 분류
-  const completedTasks = column.tasks.filter(
-    (task) => task.pjt_progress === '100',
-  );
-  const pendingTasks = column.tasks.filter(
-    (task) => task.pjt_progress !== '100',
-  );
 
   // 메뉴 외부 클릭 시 닫기
   useEffect(() => {
@@ -65,11 +53,6 @@ const KanbanColumn = ({
     };
   }, []);
 
-  // completedExpanded 상태 변경 시 콘솔 로그 출력
-  useEffect(() => {
-    console.log('completedExpanded 상태 변경:', completedExpanded);
-  }, [completedExpanded]);
-
   // 작업 추가 버튼 클릭 핸들러
   const handleAddTaskClick = () => {
     const newTask = {
@@ -79,6 +62,12 @@ const KanbanColumn = ({
     };
 
     onAddTask(columnIndex, newTask);
+  };
+
+  // 컬럼 삭제 핸들러
+  const handleDeleteColumn = () => {
+    deleteColumn(columnIndex);
+    setMenuOpen(false);
   };
 
   // 컬럼 이동 핸들러
@@ -187,79 +176,24 @@ const KanbanColumn = ({
 
         {/* 작업 카드 목록 - 전체 높이를 채우도록 수정 */}
         <div
-          className="flex-grow overflow-y-auto px-3 py-2"
+          className="flex-grow overflow-y-auto p-3"
           style={{ minHeight: '10rem' }}
         >
-          {/* 진행 중인 작업 목록 */}
-          {pendingTasks.map((task, taskIndex) => {
-            // 실제 전체 tasks 배열에서의 인덱스 계산
-            const actualIndex = column.tasks.findIndex((t) => t === task);
-            return (
-              <TaskCard
-                key={actualIndex}
-                task={task}
-                columnIndex={columnIndex}
-                taskIndex={actualIndex}
-                startEditing={startEditing}
-                editState={editState}
-                handleEditChange={handleEditChange}
-                saveEdit={saveEdit}
-                cancelEdit={cancelEdit}
-                toggleTaskCompletion={toggleTaskCompletion}
-                deleteTask={deleteTask}
-              />
-            );
-          })}
-          {/* 완료된 작업이 있는 경우 완료됨 섹션 표시 */}
-          {completedTasks.length > 0 && (
-            <div className="mt-4 bg-gray-50 rounded-md">
-              {/* 완료됨 섹션 헤더 */}
-              <div
-                className="flex items-center py-2 px-3 cursor-pointer text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setCompletedExpanded(!completedExpanded);
-                }}
-              >
-                {completedExpanded ? (
-                  <FiChevronUp className="mr-2" size={16} />
-                ) : (
-                  <FiChevronDown className="mr-2" size={16} />
-                )}
-                <span className="text-sm font-medium">
-                  완료됨 ({completedTasks.length})
-                </span>
-              </div>
-
-              {/* 완료된 작업 목록 (펼쳐진 경우에만 표시) */}
-              {completedExpanded && (
-                <div className="mt-1 pb-2">
-                  {completedTasks.map((task, taskIndex) => {
-                    // 실제 전체 tasks 배열에서의 인덱스 계산
-                    const actualIndex = column.tasks.findIndex(
-                      (t) => t === task,
-                    );
-                    return (
-                      <TaskCard
-                        key={actualIndex}
-                        task={task}
-                        columnIndex={columnIndex}
-                        taskIndex={actualIndex}
-                        startEditing={startEditing}
-                        editState={editState}
-                        handleEditChange={handleEditChange}
-                        saveEdit={saveEdit}
-                        cancelEdit={cancelEdit}
-                        toggleTaskCompletion={toggleTaskCompletion}
-                        deleteTask={deleteTask}
-                      />
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
+          {column.tasks.map((task, taskIndex) => (
+            <TaskCard
+              key={taskIndex}
+              task={task}
+              columnIndex={columnIndex}
+              taskIndex={taskIndex}
+              startEditing={startEditing}
+              editState={editState}
+              handleEditChange={handleEditChange}
+              saveEdit={saveEdit}
+              cancelEdit={cancelEdit}
+              toggleTaskCompletion={toggleTaskCompletion}
+              deleteTask={deleteTask}
+            />
+          ))}
         </div>
       </div>
     </div>

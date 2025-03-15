@@ -1,4 +1,7 @@
 // src/features/project/hooks/useProjectTask.js
+// 칸반 보드의 상태 관리 및 작업 관련 로직을 담당하는 커스텀 훅
+// 컬럼과 작업의 CRUD 기능 및 이동 기능을 제공합니다
+
 import { useState } from 'react';
 
 const useProjectTask = (initialColumns) => {
@@ -13,12 +16,14 @@ const useProjectTask = (initialColumns) => {
     value: '',
   });
 
+  const [completedExpanded, setCompletedExpanded] = useState(false);
+
   // 칸반 컬럼 제목 변경 함수
   const handleColumnTitleChange = (columnIndex, newTitle) => {
     const updatedColumns = [...columns];
     updatedColumns[columnIndex] = {
       ...updatedColumns[columnIndex],
-      title: newTitle,
+      bucket: newTitle, // title -> bucket으로 변경
     };
     setColumns(updatedColumns);
   };
@@ -34,6 +39,8 @@ const useProjectTask = (initialColumns) => {
     });
   };
 
+  // DatePicker 기능 제거로 포털 설정 제거
+
   // 컬럼 제목 편집 시작
   const startEditingColumnTitle = (columnIndex) => {
     setEditState({
@@ -41,7 +48,7 @@ const useProjectTask = (initialColumns) => {
       columnIndex,
       taskIndex: null,
       field: 'columnTitle',
-      value: columns[columnIndex].title,
+      value: columns[columnIndex].bucket, // title -> bucket으로 변경
     });
   };
 
@@ -63,7 +70,7 @@ const useProjectTask = (initialColumns) => {
 
     if (field === 'columnTitle') {
       // 컬럼 제목 업데이트
-      updatedColumns[columnIndex].title = value;
+      updatedColumns[columnIndex].bucket = value; // title -> bucket으로 변경
     } else if (taskIndex !== null) {
       // 작업 필드 업데이트
       updatedColumns[columnIndex].tasks[taskIndex] = {
@@ -142,9 +149,35 @@ const useProjectTask = (initialColumns) => {
     setColumns([...columns, newColumn]);
   };
 
+  const toggleCompletedSection = () => {
+    setCompletedExpanded(!completedExpanded);
+  };
+
   // 컬럼 삭제
   const deleteColumn = (columnIndex) => {
     const updatedColumns = columns.filter((_, index) => index !== columnIndex);
+    setColumns(updatedColumns);
+  };
+
+  // 컬럼 이동 (왼쪽/오른쪽)
+  const moveColumn = (columnIndex, direction) => {
+    if (
+      (direction === 'left' && columnIndex === 0) ||
+      (direction === 'right' && columnIndex === columns.length - 1)
+    ) {
+      return; // 이동 불가능한 경우
+    }
+
+    const updatedColumns = [...columns];
+    const targetIndex =
+      direction === 'left' ? columnIndex - 1 : columnIndex + 1;
+
+    // 두 컬럼의 위치 교환
+    [updatedColumns[columnIndex], updatedColumns[targetIndex]] = [
+      updatedColumns[targetIndex],
+      updatedColumns[columnIndex],
+    ];
+
     setColumns(updatedColumns);
   };
 
@@ -188,8 +221,10 @@ const useProjectTask = (initialColumns) => {
     updateTask,
     deleteTask,
     toggleTaskCompletion,
+    toggleCompletedSection,
     addColumn,
     deleteColumn,
+    moveColumn,
     moveTask,
   };
 };

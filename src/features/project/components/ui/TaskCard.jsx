@@ -1,7 +1,8 @@
-// TaskCard 컴포넌트 수정 - 메뉴 추가
+// src/shared/components/ui/TaskCard.jsx
+// 칸반 보드의 개별 작업 카드를 표현하는 컴포넌트
+// 작업 완료 토글, 날짜 선택, 담당자 표시, 작업 삭제 기능을 제공합니다
+
 import React, { useState, useRef, useEffect } from 'react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
 import {
   FiSquare,
   FiCheckSquare,
@@ -10,7 +11,6 @@ import {
   FiMoreVertical,
   FiTrash2,
 } from 'react-icons/fi';
-import { ko } from 'date-fns/locale';
 
 // 작업 카드 컴포넌트
 const TaskCard = ({
@@ -23,18 +23,12 @@ const TaskCard = ({
   saveEdit,
   cancelEdit,
   toggleTaskCompletion,
-  deleteTask, // 작업 삭제 함수 추가
+  deleteTask,
 }) => {
-  const {
-    title,
-    days,
-    dueDate,
-    isDueDateRed,
-    assignedUsers = [],
-    pjt_progress,
-  } = task;
+  const { title, days, dueDate, assignedUsers = [], pjt_progress } = task;
   const isCompleted = pjt_progress === '100';
-  const [selectedDate, setSelectedDate] = useState(null);
+
+  // 날짜 선택 기능 제거로 상태 불필요
 
   // 메뉴 상태 관리
   const [menuOpen, setMenuOpen] = useState(false);
@@ -70,16 +64,39 @@ const TaskCard = ({
     setMenuOpen(false);
   };
 
-  // 날짜 변경 핸들러
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-    const formattedDate = date
-      ? `${String(date.getMonth() + 1).padStart(2, '0')}.${String(
-          date.getDate(),
-        ).padStart(2, '0')}.`
-      : '';
-    handleEditChange(formattedDate);
-    saveEdit();
+  // 날짜 변경 핸들러 - 기능 제거
+
+  // 화면에 표시할 날짜 포맷팅 (MM.DD 형식)
+  const formatDisplayDate = (dateString) => {
+    if (!dateString) return '';
+
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+
+      return `${String(date.getMonth() + 1).padStart(2, '0')}.${String(
+        date.getDate(),
+      ).padStart(2, '0')}.`;
+    } catch (e) {
+      return dateString; // 파싱 실패시 원본 반환
+    }
+  };
+
+  // 마감일이 지났는지 확인
+  const isOverdue = () => {
+    if (!dueDate) return false;
+
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // 오늘 날짜의 시작
+
+      const dueDateObj = new Date(dueDate);
+      dueDateObj.setHours(0, 0, 0, 0); // 마감일의 시작
+
+      return dueDateObj < today;
+    } catch (e) {
+      return false;
+    }
   };
 
   return (
@@ -161,58 +178,25 @@ const TaskCard = ({
           <>
             <div className="bg-gray-200 h-px mx-3 my-1" />
             <div className="justify-between flex h-9 mt-1">
-              {/* 날짜 - 이벤트 전파 중지 */}
+              {/* 날짜 - 달력 기능 제거, 단순 표시만 */}
               {dueDate && (
-                <div className="pl-2 flex" onClick={(e) => e.stopPropagation()}>
+                <div className="pl-2 flex">
                   <div className="flex">
                     <div
                       className={`${
-                        isDueDateRed
+                        isOverdue()
                           ? 'bg-red-600 text-white'
                           : 'text-indigo-600'
-                      } items-center cursor-pointer flex-grow inline-flex h-6 rounded-sm`}
+                      } items-center flex-grow inline-flex h-6 rounded-sm`}
                     >
-                      <DatePicker
-                        selected={selectedDate}
-                        onChange={handleDateChange}
-                        dateFormat="MM.dd."
-                        locale={ko}
-                        customInput={
-                          <div className="flex items-center cursor-pointer">
-                            <span className="items-center justify-center px-1 flex m-1">
-                              <FiCalendar size={16} />
-                            </span>
-                            <span className="text-xs pl-1 pr-2">{dueDate}</span>
-                          </div>
-                        }
-                        popperClassName="react-datepicker-popper z-50"
-                        className="react-datepicker-input"
-                        popperPlacement="auto"
-                        usePopper={true}
-                        popperModifiers={[
-                          {
-                            name: 'preventOverflow',
-                            options: {
-                              boundary: 'viewport',
-                              padding: 8,
-                            },
-                          },
-                          {
-                            name: 'offset',
-                            options: {
-                              offset: [0, 8],
-                            },
-                          },
-                          {
-                            name: 'computeStyles',
-                            options: {
-                              gpuAcceleration: false,
-                              adaptive: false,
-                            },
-                          },
-                        ]}
-                        container={document.body}
-                      />
+                      <div className="flex items-center">
+                        <span className="items-center justify-center px-1 flex m-1">
+                          <FiCalendar size={16} />
+                        </span>
+                        <span className="text-xs pl-1 pr-2">
+                          {formatDisplayDate(dueDate)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
