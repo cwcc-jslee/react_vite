@@ -27,7 +27,7 @@ export const apiCommon = {
   },
 
   /**
-   * 매출품목 목록을 조회하는 함수
+   * 매출품목 목록을 조회하는 함수 --> 변경예정 getCodebookItems
    * @param {number} classificationId - 매출구분 ID
    * @returns {Promise} 매출품목 데이터 배열
    */
@@ -53,11 +53,35 @@ export const apiCommon = {
   },
 
   /**
+   * 매출품목 목록을 조회하는 함수 --> 변경예정 getCodebookItems
+   * @param {number} classificationId - 매출구분 ID
+   * @returns {Promise} 매출품목 데이터 배열
+   */
+  getCodebookItems: async (itemtype) => {
+    const query = qs.stringify(
+      {
+        filters: {
+          name: {
+            $eq: itemtype,
+          },
+        },
+        sort: ['sort:asc'],
+      },
+      {
+        encodeValuesOnly: true,
+      },
+    );
+
+    const response = await apiClient.get(`/codebook-items?${query}`);
+    return response.data;
+  },
+
+  /**
    * 고객사별 SFA 목록을 조회하는 함수
    * @param {number} customerId - 고객사 ID
    * @returns {Promise} SFA 데이터 배열
    */
-  getSfas: async (customerId) => {
+  getSfasByCustomer: async (customerId) => {
     const query = qs.stringify(
       {
         filters: {
@@ -98,6 +122,30 @@ export const apiCommon = {
     );
 
     const response = await apiClient.get(`/teams?${query}`);
+    return response.data;
+  },
+
+  /**
+   * 프로텍트 테스트 템플릿릿 조회하는 함수
+   * @param {string} type - 서비스 이름(ex.홈페이지, 영상상)
+   * @returns {Promise} 프로젝트 테스크 데이터 배열
+   */
+  getTaskTemplete: async (type) => {
+    const query = qs.stringify(
+      {
+        filters: {
+          name: {
+            $eq: type,
+          },
+        },
+        sort: ['sort:asc'],
+      },
+      {
+        encodeValuesOnly: true,
+      },
+    );
+
+    const response = await apiClient.get(`/codebook-project-tasks?${query}`);
     return response.data;
   },
 };

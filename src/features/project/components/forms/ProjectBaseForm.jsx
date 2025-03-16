@@ -2,42 +2,77 @@
 // 프로젝트 정보 입력을 위한 폼 컴포넌트
 // 고객사, SFA, 프로젝트명, 서비스, 사업부 정보를 입력 받습니다
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { apiCommon } from '../../../../shared/api/apiCommon';
+import { projectApiService } from '../../services/projectApiService';
 import { CustomerSearchInput } from '../../../../shared/components/customer/CustomerSearchInput';
-import { useSfa } from '../../../../shared/hooks/useSfa';
+import { useSelectData } from '../../../../shared/hooks/useSelectData';
 
 // 프로젝트 정보 입력 폼 컴포넌트
-const ProjectBaseForm = ({ projectInfo, onInfoChange }) => {
+const ProjectBaseForm = ({ projectInfo, onInfoChange, onTemplateSelect }) => {
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
-  const { data: sfaList, isLoading: isSfaLoading } = useSfa(selectedCustomerId);
+  const [selectedTemplateId, setSelectedTemplateId] = useState(null);
 
-  // SFA 옵션 목록
+  // API 데이터 조회
+  const {
+    data: sfaData,
+    isLoading: isSfaLoading,
+    refetch: refetchSfa,
+  } = useSelectData(apiCommon.getSfasByCustomer, selectedCustomerId);
+
+  const { data: teamsData, isLoading: isTeamsLoading } = useSelectData(
+    apiCommon.getTeams,
+  );
+
+  const { data: serviceData, isLoading: isServiceLoading } = useSelectData(
+    apiCommon.getCodebookItems,
+    '서비스',
+  );
+
+  const { data: taskTempleteData, isLoading: isTaskTempleteLoading } =
+    useSelectData(projectApiService.getTaskTemplate);
+
+  // 템플릿 상세 정보 조회
+  const {
+    data: templateDetailData,
+    isLoading: isTemplateDetailLoading,
+    refetch: refetchTemplateDetail,
+  } = useSelectData(projectApiService.getTaskTemplate, selectedTemplateId);
+
+  // SFA 옵션 목록 생성
   const sfaOptions = [
     { value: '', label: '선택하세요' },
-    ...(sfaList?.data || []).map((sfa) => ({
-      value: sfa?.id.toString(),
+    ...(sfaData?.data || []).map((sfa) => ({
+      value: sfa?.id?.toString() || '',
       label: sfa?.name || '이름 없음',
     })),
   ];
 
-  // 서비스 옵션 목록
-  const serviceOptions = [
+  // 팀 옵션 목록 생성
+  const teamOptions = [
     { value: '', label: '선택하세요' },
-    { value: 'web', label: '웹사이트' },
-    { value: 'app', label: '모바일앱' },
-    { value: 'design', label: '디자인' },
-    { value: 'marketing', label: '마케팅' },
-    { value: 'maintenance', label: '유지보수' },
+    ...(teamsData?.data || []).map((team) => ({
+      value: team?.id?.toString() || '',
+      label: team?.name || '이름 없음',
+    })),
   ];
 
-  // 사업부 옵션 목록
-  const departmentOptions = [
+  // 서비스 옵션 목록 생성 (코드북 아이템 특수 구조 처리)
+  const serviceOptions = [
     { value: '', label: '선택하세요' },
-    { value: 'dev1', label: '개발1팀' },
-    { value: 'dev2', label: '개발2팀' },
-    { value: 'design', label: '디자인팀' },
-    { value: 'marketing', label: '마케팅팀' },
-    { value: 'planning', label: '기획팀' },
+    ...(serviceData?.data?.[0]?.structure || []).map((item) => ({
+      value: item?.id?.toString() || '',
+      label: item?.name || '이름 없음',
+    })),
+  ];
+
+  // task templete 옵션 목록
+  const templeteOptions = [
+    { value: '', label: '선택하세요' },
+    ...(taskTempleteData?.data || []).map((item) => ({
+      value: item?.id?.toString() || '',
+      label: item?.name || '이름 없음',
+    })),
   ];
 
   // 입력 값 변경 핸들러
@@ -52,9 +87,19 @@ const ProjectBaseForm = ({ projectInfo, onInfoChange }) => {
   const handleCustomerSelect = (customer) => {
     if (customer?.id) {
       setSelectedCustomerId(customer.id);
-      handleChange('customer', customer);
-      // SFA 선택값 초기화
-      handleChange('sfa', '');
+      // handleChange('customer', customer);
+      // handleChange('sfa', '');
+    }
+  };
+
+  // 템플릿 선택 핸들러
+  const handleTemplateSelect = (e) => {
+    const templateId = e.target.value;
+    handleChange('template', templateId);
+
+    // 템플릿 ID가 있을 경우 onTemplateSelect 콜백 호출
+    if (templateId && onTemplateSelect) {
+      onTemplateSelect(templateId);
     }
   };
 
@@ -110,8 +155,8 @@ const ProjectBaseForm = ({ projectInfo, onInfoChange }) => {
             서비스
           </label>
           <select
-            value={projectInfo.service || ''}
-            onChange={(e) => handleChange('service', e.target.value)}
+            // value={projectInfo.service || ''}
+            // onChange={(e) => handleChange('service', e.target.value)}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           >
             {serviceOptions.map((option) => (
@@ -128,11 +173,11 @@ const ProjectBaseForm = ({ projectInfo, onInfoChange }) => {
             사업부
           </label>
           <select
-            value={projectInfo.department || ''}
-            onChange={(e) => handleChange('department', e.target.value)}
+            // value={projectInfo.department || ''}
+            // onChange={(e) => handleChange('department', e.target.value)}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           >
-            {departmentOptions.map((option) => (
+            {teamOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -145,16 +190,23 @@ const ProjectBaseForm = ({ projectInfo, onInfoChange }) => {
             템플릿
           </label>
           <select
-            value={projectInfo.department || ''}
-            onChange={(e) => handleChange('department', e.target.value)}
+            // value={projectInfo.department || ''}
+            onChange={handleTemplateSelect}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           >
-            {departmentOptions.map((option) => (
+            {templeteOptions.map((option) => (
               <option key={option.value} value={option.value}>
-                {option.label}
+                {isTaskTempleteLoading && option.value === ''
+                  ? '로딩 중...'
+                  : option.label}
               </option>
             ))}
           </select>
+          {isTemplateDetailLoading && selectedTemplateId && (
+            <p className="text-xs text-indigo-600 mt-1">
+              템플릿 작업 로딩 중...
+            </p>
+          )}
         </div>
       </div>
     </div>

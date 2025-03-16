@@ -5,7 +5,6 @@ import { Trash2 } from 'lucide-react';
 import { selectCodebookByType } from '../../../codebook/store/codebookSlice';
 // import { useCodebook } from '../../../../shared/hooks/useCodebook';
 import { useTeam } from '../../../../shared/hooks/useTeam';
-// import { useSelectData } from '../../../../shared/hooks/useSelectData';
 import { QUERY_KEYS } from '../../../../shared/utils/queryKeys';
 import {
   Group,

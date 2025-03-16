@@ -27,7 +27,8 @@ const TaskCard = ({
   toggleTaskCompletion,
   deleteTask,
 }) => {
-  const { title, days, dueDate, assignedUsers = [], pjt_progress } = task;
+  console.log(`>> task `, task);
+  const { name, days, dueDate, assignedUsers = [], pjt_progress } = task;
   const isCompleted = pjt_progress === '100';
 
   // 메뉴 상태 관리
@@ -186,7 +187,7 @@ const TaskCard = ({
 
                 {/* 제목 */}
                 <div className="flex items-center min-h-[40px] select-none">
-                  <span className="truncate">{title}</span>
+                  <span className="truncate">{name}</span>
                 </div>
               </div>
 
@@ -282,7 +283,7 @@ const TaskCard = ({
       {showDeleteDialog && (
         <ConfirmDialog
           title="작업 삭제"
-          message={`"${title}" 작업을 삭제하시겠습니까?`}
+          message={`"${name}" 작업을 삭제하시겠습니까?`}
           confirmLabel="삭제"
           cancelLabel="취소"
           icon={<FiAlertTriangle className="text-red-500" size={24} />}

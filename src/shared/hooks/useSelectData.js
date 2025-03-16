@@ -1,36 +1,56 @@
 // src/shared/hooks/useSelectData.js
-import { useQuery } from '@tanstack/react-query';
-import { selectDataApi } from '../api/selectDataApi';
-import { QUERY_KEYS } from '../utils/queryKeys';
+// API 함수를 직접 전달받는 재사용 가능한 데이터 조회 훅
+// 다양한 API 엔드포인트에서 데이터를 가져와 상태를 관리합니다
+
+import { useState, useEffect, useCallback } from 'react';
 
 /**
- * 선택 데이터를 관리하는 커스텀 훅
- * @param {string} type - 데이터 타입 (teams, fiscalYears 등)
- * @param {Object} options - React Query 옵션
- * @returns {Object} 쿼리 결과 객체
+ * API 함수를 전달받아 데이터를 조회하고 상태를 관리하는 훅
  */
-export const useSelectData = (type, options = {}) => {
-  // API 함수 선택
-  const getApiFunction = () => {
-    switch (type) {
-      case QUERY_KEYS.TEAMS:
-        return selectDataApi.getTeams;
-      case QUERY_KEYS.FISCAL_YEARS:
-        return selectDataApi.getFiscalYears;
-      case QUERY_KEYS.STATUS:
-        return selectDataApi.getStatus;
-      case QUERY_KEYS.REGIONS:
-        return selectDataApi.getRegions;
-      default:
-        throw new Error(`Unknown data type: ${type}`);
-    }
-  };
+export const useSelectData = (apiFn, params = null) => {
+  const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  return useQuery({
-    queryKey: [type],
-    queryFn: getApiFunction(),
-    staleTime: 5 * 60 * 1000, // 5분
-    cacheTime: 30 * 60 * 1000, // 30분
-    ...options,
-  });
+  // API 호출 함수
+  const fetchData = useCallback(async () => {
+    // 파라미터가 필요한 API인데 파라미터가 없으면 빈 데이터 반환
+    if (params === null && apiFn.length > 0) {
+      setData([]);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await apiFn(params);
+      setData(response);
+    } catch (err) {
+      console.error('API 데이터 조회 실패:', err);
+      setError(err);
+      setData([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [apiFn, params]);
+
+  // 초기 데이터 로드 및 의존성 변경 시 재로드
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // 데이터 재조회 함수
+  const refetch = useCallback(() => {
+    return fetchData();
+  }, [fetchData]);
+
+  return {
+    data,
+    isLoading,
+    error,
+    refetch,
+  };
 };
+
+export default useSelectData;

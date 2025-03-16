@@ -9,7 +9,7 @@
  */
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import dayjs from 'dayjs';
-import { projectService } from '../services/projectService';
+import { projectApiService } from '../services/projectApiService';
 
 const ProjectContext = createContext(null);
 
@@ -169,7 +169,7 @@ export const ProjectProvider = ({ children }) => {
           },
         };
         // API 호출
-        const response = await projectService.getProjectList(queryParams);
+        const response = await projectApiService.getProjectList(queryParams);
 
         // 데이터 업데이트
         setFetchData(response.data);

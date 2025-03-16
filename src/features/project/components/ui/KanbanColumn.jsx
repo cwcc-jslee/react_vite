@@ -73,7 +73,7 @@ const KanbanColumn = ({
   // 작업 추가 버튼 클릭 핸들러
   const handleAddTaskClick = () => {
     const newTask = {
-      title: '새 작업',
+      name: '새 작업',
       days: '',
       dueDate: '',
     };

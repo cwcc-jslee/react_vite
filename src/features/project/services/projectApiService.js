@@ -28,7 +28,7 @@ const handleError = (error, customMessage) => {
   );
 };
 
-export const projectService = {
+export const projectApiService = {
   /**
    * 프로젝트트 목록 조회
    * @param {Object} params - 검색 파라미터
@@ -64,4 +64,40 @@ export const projectService = {
   //       handleError(error, 'Failed to fetch Project list');
   //     }
   //   },
+
+  /**
+   * 프로젝트트 Task 템플릿 조회
+   */
+  getTaskTemplate: async (templateId = null) => {
+    let query;
+
+    if (templateId === null) {
+      // 템플릿 ID가 없을 때: 템플릿 목록 조회
+      query = qs.stringify(
+        {
+          filters: {
+            is_deleted: { $eq: false },
+          },
+          fields: ['name'],
+          sort: ['sort:asc'],
+        },
+        { encodeValuesOnly: true },
+      );
+    } else {
+      // 템플릿 ID가 있을 때: 특정 템플릿 상세 정보 조회
+      query = qs.stringify(
+        {
+          filters: {
+            id: { $eq: templateId },
+            // is_deleted: { $eq: false },
+          },
+          fields: ['name', 'structure'],
+        },
+        { encodeValuesOnly: true },
+      );
+    }
+
+    const response = await apiClient.get(`/codebook-project-tasks?${query}`);
+    return response.data;
+  },
 };
