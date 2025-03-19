@@ -176,9 +176,11 @@ export const Select = React.forwardRef(
  * TextArea: 여러 줄 텍스트 입력 필드
  */
 export const TextArea = React.forwardRef(
-  ({ error, className = '', ...props }, ref) => {
-    const baseStyles =
-      'w-full min-h-[100px] px-3 py-2 text-sm border rounded-md transition-colors';
+  ({ error, className = '', rows = 4, autoHeight = false, ...props }, ref) => {
+    // 높이 관련 스타일 결정
+    const heightStyles = autoHeight ? 'min-h-[100px]' : '';
+
+    const baseStyles = `w-full px-3 py-2 text-sm border rounded-md transition-colors ${heightStyles}`;
     const stateStyles = error
       ? 'border-red-500 focus:ring-red-500'
       : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500';
@@ -186,6 +188,7 @@ export const TextArea = React.forwardRef(
     return (
       <textarea
         ref={ref}
+        rows={rows}
         className={`${baseStyles} ${stateStyles} ${className}
         disabled:bg-gray-50 disabled:cursor-not-allowed
         focus:outline-none focus:ring-2 focus:ring-opacity-50`}

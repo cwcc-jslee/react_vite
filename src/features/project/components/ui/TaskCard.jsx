@@ -31,8 +31,8 @@ const TaskCard = ({
   deleteTask,
   onOpenTaskEditModal,
 }) => {
-  const { name, days, dueDate, assignedUsers = [], pjt_progress } = task;
-  const isCompleted = pjt_progress === '100';
+  const { name, days, dueDate, assignedUsers = [], pjtProgress } = task;
+  const isCompleted = pjtProgress === '100';
 
   // 메뉴 상태 관리
   const [menuOpen, setMenuOpen] = useState(false);

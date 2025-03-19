@@ -45,16 +45,16 @@ export const projectTaskInitialState = [
         days: '65',
         dueDate: '2025-03-01',
         isDueDateRed: false,
-        pjt_progress: '100',
+        pjtProgress: '100',
       },
       {
         name: '내부 조율',
         days: '1',
-        dueDate: '2025-03-07',
+        dueDate: '2025-03-28',
         pjt_progress: '100',
       },
-      { name: '미팅 및 보고' },
-      { name: '품질 관리' },
+      { name: '미팅 및 보고', taskScheduleType: true },
+      { name: '품질 관리', taskScheduleType: false },
     ],
   },
   {
@@ -62,6 +62,9 @@ export const projectTaskInitialState = [
     tasks: [
       {
         name: '프로젝트 준비',
+        taskScheduleType: true,
+        priorityLevel: '',
+        taskProgress: '',
         days: '5',
         dueDate: '2025-03-07',
         assignedUsers: ['red-900', 'indigo-500'],
