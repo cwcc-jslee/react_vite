@@ -19,7 +19,6 @@ import ConfirmDialog from './ConfirmDialog';
 
 // 칸반 컬럼 컴포넌트
 const KanbanColumn = ({
-  codebooks,
   column,
   columnIndex,
   totalColumns,
@@ -213,7 +212,6 @@ const KanbanColumn = ({
               return (
                 <TaskCard
                   key={actualIndex}
-                  codebooks={codebooks}
                   task={task}
                   columnIndex={columnIndex}
                   taskIndex={actualIndex}

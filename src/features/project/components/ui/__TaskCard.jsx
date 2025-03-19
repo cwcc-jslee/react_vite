@@ -1,4 +1,4 @@
-// src/features/project/components/ui/TaskCard.jsx
+// src/shared/components/ui/TaskCard.jsx
 // 칸반 보드의 개별 작업 카드를 표현하는 컴포넌트
 // 작업 완료 토글, 날짜 선택, 담당자 표시, 작업 삭제 기능을 제공합니다
 
@@ -14,12 +14,9 @@ import {
 } from 'react-icons/fi';
 import ConfirmDialog from './ConfirmDialog';
 
-/**
- * 작업 카드 컴포넌트
- */
+// 작업 카드 컴포넌트
 const TaskCard = ({
   task,
-  codebooks,
   columnIndex,
   taskIndex,
   startEditing,
@@ -29,8 +26,8 @@ const TaskCard = ({
   cancelEdit,
   toggleTaskCompletion,
   deleteTask,
-  onOpenTaskEditModal,
 }) => {
+  console.log(`>> task `, task);
   const { name, days, dueDate, assignedUsers = [], pjt_progress } = task;
   const isCompleted = pjt_progress === '100';
 
@@ -127,12 +124,6 @@ const TaskCard = ({
     }
   };
 
-  // 작업 카드 클릭 핸들러
-  const handleTaskCardClick = () => {
-    // 중앙화된 모달을 열도록 부모 컴포넌트의 함수 호출
-    onOpenTaskEditModal(task, columnIndex, taskIndex);
-  };
-
   return (
     <>
       <div className="w-full mb-2 relative group">
@@ -167,7 +158,10 @@ const TaskCard = ({
             {/* 클릭 가능한 메인 영역 */}
             <div
               className="flex-1 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
-              onClick={handleTaskCardClick}
+              onClick={() => {
+                // TODO: 작업 상세 보기 구현
+                console.log('Task clicked:', task);
+              }}
             >
               <div className="text-ellipsis flex items-center overflow-hidden">
                 {/* 체크박스 */}

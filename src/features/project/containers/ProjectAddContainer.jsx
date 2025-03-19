@@ -1,26 +1,29 @@
-// src/features/project/components/composes/ProjectAddSection.jsx
+// src/features/project/containers/ProjectAddContainer.jsx
 // 프로젝트 관리를 위한 칸반 보드 메인 컨테이너 컴포넌트
 // 프로젝트 정보 입력 폼과 칸반 보드를 통합하여 제공합니다
 
 import React, { useEffect, useState } from 'react';
 import { FiPlus } from 'react-icons/fi';
 // import { useProject } from '../../context/ProjectProvider';
-import { projectTaskInitialState } from '../../../../shared/constants/initialFormState';
-import { projectApiService } from '../../services/projectApiService';
-import useProjectTask from '../../hooks/useProjectTask';
-import KanbanColumn from '../ui/KanbanColumn';
-import ProjectBaseForm from '../forms/ProjectBaseForm';
+import { projectTaskInitialState } from '../../../shared/constants/initialFormState';
+import { projectApiService } from '../services/projectApiService';
+import { useCodebook } from '../../../shared/hooks/useCodebook';
+import useProjectTask from '../hooks/useProjectTask';
+import useModal from '../../../shared/hooks/useModal';
+// 컴포넌트
+import KanbanColumn from '../components/ui/KanbanColumn';
+import ProjectAddBaseForm from '../components/forms/ProjectAddBaseForm';
+import ModalRenderer from '../../../shared/components/ui/modal/ModalRenderer';
+import ProjectTaskForm from '../components/emements/ProjectTaskForm';
 
-const ProjectAddSection = () => {
-  // 로컬 스토리지에서 저장된 칸반 데이터 불러오기
-  // const getSavedColumns = () => {
-  //   if (typeof window !== 'undefined') {
-  //     const savedColumns = localStorage.getItem('kanbanColumns');
-  //     return savedColumns ? JSON.parse(savedColumns) : projectTaskInitialState;
-  //   }
-  //   return projectTaskInitialState;
-  // };
-
+/**
+ * 프로젝트 추가 컨테이너 컴포넌트
+ * 프로젝트 기본 정보 입력 폼과 칸반 보드를 통합하여 제공
+ * 모든 모달 관리를 중앙화하여 일관된 UI 경험을 제공
+ *
+ * @returns {React.ReactElement} 프로젝트 추가 화면
+ */
+const ProjectAddContainer = () => {
   // 프로젝트 정보 상태 관리
   const [projectInfo, setProjectInfo] = useState({
     customer: '',
@@ -30,23 +33,27 @@ const ProjectAddSection = () => {
     department: '',
   });
 
-  // 프로젝트 정보 변경 핸들러
-  const handleProjectInfoChange = (newInfo) => {
-    setProjectInfo(newInfo);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('projectInfo', JSON.stringify(newInfo));
-    }
-  };
+  // 현재 선택된 작업 정보 상태
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedColumnIndex, setSelectedColumnIndex] = useState(null);
+  const [selectedTaskIndex, setSelectedTaskIndex] = useState(null);
 
-  // 페이지 로드 시 저장된 프로젝트 정보 불러오기
-  // useEffect(() => {
-  //   if (typeof window !== 'undefined') {
-  //     const savedInfo = localStorage.getItem('projectInfo');
-  //     if (savedInfo) {
-  //       setProjectInfo(JSON.parse(savedInfo));
-  //     }
-  //   }
-  // }, []);
+  // 모달 관련 커스텀 훅 사용
+  const { modalState, openModal, closeModal, handleConfirm } = useModal();
+
+  // API 데이터 상태 조회
+  const {
+    data: codebooks,
+    isLoading: isLoadingCodebook,
+    error,
+  } = useCodebook([
+    'priority_level', // 우선순위(긴급,중요,중간,낮음)
+    'task_progress', // 작업진행률
+  ]);
+
+  const handleProjectInfoChange = () => {
+    //
+  };
 
   // 커스텀 훅 사용
   const {
@@ -112,6 +119,33 @@ const ProjectAddSection = () => {
     addColumn(newColumn);
   };
 
+  /**
+   * 작업 수정 모달을 여는 핸들러
+   *
+   * @param {Object} task - 수정할 작업 객체
+   * @param {number} columnIndex - 작업이 속한 컬럼의 인덱스
+   * @param {number} taskIndex - 컬럼 내 작업의 인덱스
+   */
+  const handleOpenTaskEditModal = (task, columnIndex, taskIndex) => {
+    // 선택된 작업 정보 저장
+    setSelectedTask(task);
+    setSelectedColumnIndex(columnIndex);
+    setSelectedTaskIndex(taskIndex);
+
+    // 모달 열기
+    openModal(
+      'form',
+      '작업 수정',
+      <ProjectTaskForm codebooks={codebooks} task={task} />,
+      null,
+      null,
+      null,
+      {
+        size: 'xl',
+      },
+    );
+  };
+
   return (
     <div className="w-full h-full">
       <style
@@ -128,7 +162,7 @@ const ProjectAddSection = () => {
 
       {/* 프로젝트 정보 폼 */}
       <div className="w-full mb-4">
-        <ProjectBaseForm
+        <ProjectAddBaseForm
           projectInfo={projectInfo}
           onInfoChange={handleProjectInfoChange}
           onTemplateSelect={handleTemplateSelect}
@@ -142,6 +176,7 @@ const ProjectAddSection = () => {
         {columns.map((column, index) => (
           <KanbanColumn
             key={index}
+            codebooks={codebooks}
             column={column}
             columnIndex={index}
             totalColumns={columns.length}
@@ -157,6 +192,7 @@ const ProjectAddSection = () => {
             deleteTask={deleteTask}
             deleteColumn={deleteColumn}
             moveColumn={moveColumn}
+            onOpenTaskEditModal={handleOpenTaskEditModal}
           />
         ))}
 
@@ -170,8 +206,15 @@ const ProjectAddSection = () => {
           </button>
         </div>
       </div>
+
+      {/* 중앙 관리되는 모달 렌더러 */}
+      <ModalRenderer
+        modalState={modalState}
+        closeModal={closeModal}
+        handleConfirm={handleConfirm}
+      />
     </div>
   );
 };
 
-export default ProjectAddSection;
+export default ProjectAddContainer;

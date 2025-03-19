@@ -1,4 +1,4 @@
-// src/shared/components/ui/KanbanColumn.jsx
+// src/features/project/components/ui/KanbanColumn.jsx
 // 칸반 보드의 개별 컬럼(버킷)을 표현하는 컴포넌트
 // 버킷 제목 편집, 작업 관리, 컬럼 이동 및 삭제 기능을 제공합니다
 
@@ -17,8 +17,12 @@ import {
 import TaskCard from './TaskCard';
 import ConfirmDialog from './ConfirmDialog';
 
-// 칸반 컬럼 컴포넌트
+/**
+ * 칸반 컬럼 컴포넌트
+ *
+ */
 const KanbanColumn = ({
+  codebooks,
   column,
   columnIndex,
   totalColumns,
@@ -33,6 +37,7 @@ const KanbanColumn = ({
   deleteTask,
   deleteColumn,
   moveColumn,
+  onOpenTaskEditModal,
 }) => {
   // 메뉴 상태 관리
   const [menuOpen, setMenuOpen] = useState(false);
@@ -212,6 +217,7 @@ const KanbanColumn = ({
               return (
                 <TaskCard
                   key={actualIndex}
+                  codebooks={codebooks}
                   task={task}
                   columnIndex={columnIndex}
                   taskIndex={actualIndex}
@@ -222,6 +228,7 @@ const KanbanColumn = ({
                   cancelEdit={cancelEdit}
                   toggleTaskCompletion={toggleTaskCompletion}
                   deleteTask={deleteTask}
+                  onOpenTaskEditModal={onOpenTaskEditModal}
                 />
               );
             })}
@@ -268,6 +275,7 @@ const KanbanColumn = ({
                           cancelEdit={cancelEdit}
                           toggleTaskCompletion={toggleTaskCompletion}
                           deleteTask={deleteTask}
+                          onOpenTaskEditModal={onOpenTaskEditModal}
                         />
                       );
                     })}

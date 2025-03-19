@@ -9,7 +9,11 @@ import { CustomerSearchInput } from '../../../../shared/components/customer/Cust
 import { useSelectData } from '../../../../shared/hooks/useSelectData';
 
 // 프로젝트 정보 입력 폼 컴포넌트
-const ProjectBaseForm = ({ projectInfo, onInfoChange, onTemplateSelect }) => {
+const ProjectAddBaseForm = ({
+  projectInfo,
+  onInfoChange,
+  onTemplateSelect,
+}) => {
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState(null);
 
@@ -213,4 +217,4 @@ const ProjectBaseForm = ({ projectInfo, onInfoChange, onTemplateSelect }) => {
   );
 };
 
-export default ProjectBaseForm;
+export default ProjectAddBaseForm;
