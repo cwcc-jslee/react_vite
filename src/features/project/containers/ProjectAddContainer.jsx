@@ -72,6 +72,8 @@ const ProjectAddContainer = () => {
     deleteTask,
     deleteColumn,
     moveColumn,
+    saveTaskEditor,
+    updateTask,
   } = useProjectTask(projectTaskInitialState);
 
   console.log(`>> columns : `, columns);
@@ -134,9 +136,18 @@ const ProjectAddContainer = () => {
 
     // 모달 열기
     openModal(
-      'form',
+      'custom',
       '작업 수정',
-      <ProjectTaskForm codebooks={codebooks} task={task} />,
+      <ProjectTaskForm
+        task={task}
+        codebooks={codebooks}
+        onSave={(updatedTask) => {
+          console.log(`>> onSave : `, updatedTask);
+          updateTask(columnIndex, taskIndex, updatedTask);
+          closeModal();
+        }}
+        onCancel={closeModal}
+      />,
       null,
       null,
       null,

@@ -19,14 +19,31 @@ import {
   Switch,
 } from '../../../../shared/components/ui';
 import { FiChevronUp, FiChevronDown, FiPlus } from 'react-icons/fi';
+import useTaskEditor from '../../hooks/useTaskEditor';
 
 /**
  * 프로젝트 작업 수정 폼 컴포넌트
  *
  */
-const ProjectTaskForm = ({ codebooks, task, onSave }) => {
-  // 작입일정 구분
-  const [isScheduled, setIsScheduled] = useState(true);
+const ProjectTaskForm = ({ codebooks, task, onSave, onCancel }) => {
+  const {
+    taskFormData,
+    checklists,
+    assignedUsers,
+    errors,
+    handleSwitchChange,
+    handleInputChange,
+    getEditedTask,
+    addChecklistItem,
+    toggleChecklistItem,
+    deleteChecklistItem,
+    handleSubmit,
+  } = useTaskEditor(task);
+
+  console.log('Task planEndDate:', task.planEndDate);
+  console.log('TaskFormData planEndDate:', taskFormData?.planEndDate);
+  console.log('TaskFormData :', taskFormData);
+
   // 새 체크리스트 항목을 위한 상태
   const [newChecklistItem, setNewChecklistItem] = useState('');
   // 체크리스트 입력 필드 활성화 상태
@@ -47,6 +64,8 @@ const ProjectTaskForm = ({ codebooks, task, onSave }) => {
   const pendingChecklists = sampleChecklists.filter(
     (item) => !item.isCompleted,
   );
+
+  const isScheduled = taskFormData.taskScheduleType;
 
   // 새 체크리스트 항목 추가 핸들러
   const handleNewChecklistItemKeyDown = (e) => {
@@ -75,8 +94,8 @@ const ProjectTaskForm = ({ codebooks, task, onSave }) => {
           <Input
             type="text"
             name="name"
-            // onChange={updateFormField}
-            value={task?.name}
+            onChange={handleInputChange}
+            value={taskFormData?.name}
             // disabled={isSubmitting}
           />
         </FormItem>
@@ -88,17 +107,16 @@ const ProjectTaskForm = ({ codebooks, task, onSave }) => {
         <FormItem direction="vertical" className="flex-1">
           <Label className="text-left">작업일정 구분</Label>
           <Switch
-            checked={isScheduled}
-            onChange={() => setIsScheduled(!isScheduled)}
-            // disabled={isSubmitting}
+            checked={taskFormData.taskScheduleType}
+            onChange={handleSwitchChange}
           />
         </FormItem>
         <FormItem direction="vertical" className="flex-1">
           <Label className="text-left">우선순위</Label>
           <Select
             name="priorityLevel"
-            // value={formData.employee}
-            // onChange={updateFormField}
+            value={taskFormData?.priorityLevel?.id}
+            onChange={handleInputChange}
             // disabled={isSubmitting}
           >
             <option value="">선택하세요</option>
@@ -113,8 +131,8 @@ const ProjectTaskForm = ({ codebooks, task, onSave }) => {
           <Label className="text-left">진행상태</Label>
           <Select
             name="taskProgress"
-            // value={formData.employee}
-            // onChange={updateFormField}
+            value={taskFormData?.taskProgress?.id}
+            onChange={handleInputChange}
             // disabled={isSubmitting}
           >
             <option value="">선택하세요</option>
@@ -137,8 +155,8 @@ const ProjectTaskForm = ({ codebooks, task, onSave }) => {
             <Input
               type="date"
               name="planStartDate"
-              // value={formData.commencementDate}
-              // onChange={updateFormField}
+              value={taskFormData?.planStartDate}
+              onChange={handleInputChange}
               // disabled={isSubmitting}
             />
           </FormItem>
@@ -148,9 +166,9 @@ const ProjectTaskForm = ({ codebooks, task, onSave }) => {
             </Label>
             <Input
               type="date"
-              name="commencementDate"
-              // value={formData.commencementDate}
-              // onChange={updateFormField}
+              name="planEndDate"
+              value={taskFormData?.planEndDate || ''}
+              onChange={handleInputChange}
               // disabled={isSubmitting}
             />
           </FormItem>
@@ -161,7 +179,7 @@ const ProjectTaskForm = ({ codebooks, task, onSave }) => {
               type="text"
               name="dueDate"
               // onChange={updateFormField}
-              value={task?.days ? `${task.days}일` : ''}
+              // value={task?.days ? `${task.days}일` : ''}
               disabled={true}
             />
           </FormItem>
@@ -194,7 +212,7 @@ const ProjectTaskForm = ({ codebooks, task, onSave }) => {
           <Input
             type="number"
             name="workDays"
-            value={task?.days || ''}
+            // value={task?.days || ''}
             // onChange={updateFormField}
             // disabled={isSubmitting}
           />
@@ -334,6 +352,14 @@ const ProjectTaskForm = ({ codebooks, task, onSave }) => {
           />
         </FormItem>
       </Group>
+
+      {/* 직접 버튼 추가 */}
+      <div className="flex justify-end gap-2 mt-4">
+        <Button onClick={onCancel} variant="outline">
+          취소
+        </Button>
+        <Button onClick={() => onSave(getEditedTask())}>저장</Button>
+      </div>
     </>
   );
 };

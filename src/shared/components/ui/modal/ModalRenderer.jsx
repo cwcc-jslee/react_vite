@@ -320,6 +320,9 @@ const ModalRenderer = ({ modalState, closeModal, handleConfirm }) => {
             확인
           </Button>
         );
+      case 'custom':
+        // custom 타입에서는 푸터를 렌더링하지 않음
+        return null;
       default:
         return (
           <Button variant="primary" onClick={closeModal} className="px-4 py-2">

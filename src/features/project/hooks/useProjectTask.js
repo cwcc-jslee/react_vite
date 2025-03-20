@@ -116,17 +116,26 @@ const useProjectTask = (initialColumns) => {
     });
   }, []);
 
-  // 작업 업데이트
-  const updateTask = useCallback((columnIndex, taskIndex, updatedFields) => {
+  // 작업 업데이트 함수 개선
+  const updateTask = useCallback((columnIndex, taskIndex, updatedTask) => {
     setColumns((prevColumns) => {
       const updatedColumns = [...prevColumns];
       updatedColumns[columnIndex].tasks[taskIndex] = {
         ...updatedColumns[columnIndex].tasks[taskIndex],
-        ...updatedFields,
+        ...updatedTask,
       };
       return updatedColumns;
     });
   }, []);
+
+  // useTaskEditor에서 제출된 데이터를 처리하는 함수
+  const saveTaskEditor = useCallback(
+    (columnIndex, taskIndex, formData) => {
+      updateTask(columnIndex, taskIndex, formData);
+      return Promise.resolve(); // 비동기 작업을 시뮬레이션하여 useTaskEditor에서 처리할 수 있게 함
+    },
+    [updateTask],
+  );
 
   // 작업 삭제
   const deleteTask = useCallback((columnIndex, taskIndex) => {
@@ -211,6 +220,7 @@ const useProjectTask = (initialColumns) => {
     handleColumnTitleChange,
     addTask,
     updateTask,
+    saveTaskEditor,
     deleteTask,
     toggleTaskCompletion,
     toggleCompletedSection,

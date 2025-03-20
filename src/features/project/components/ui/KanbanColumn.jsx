@@ -80,7 +80,7 @@ const KanbanColumn = ({
     const newTask = {
       name: '새 작업',
       days: '',
-      dueDate: '',
+      planEndDate: '',
     };
 
     onAddTask(columnIndex, newTask);

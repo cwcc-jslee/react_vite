@@ -31,8 +31,8 @@ const TaskCard = ({
   deleteTask,
   onOpenTaskEditModal,
 }) => {
-  const { name, days, dueDate, assignedUsers = [], pjtProgress } = task;
-  const isCompleted = pjtProgress === '100';
+  const { name, days, planEndDate, assignedUsers = [], taskProgress } = task;
+  const isCompleted = taskProgress?.code === '100';
 
   // 메뉴 상태 관리
   const [menuOpen, setMenuOpen] = useState(false);
@@ -106,11 +106,11 @@ const TaskCard = ({
 
   // 마감일이 지났는지 확인
   const isOverdue = () => {
-    if (!dueDate) return false;
+    if (!planEndDate) return false;
 
     try {
       // 이미 포맷된 날짜 문자열인 경우
-      if (dueDate.match(/^\d{2}\.\d{2}\.$/)) {
+      if (planEndDate.match(/^\d{2}\.\d{2}\.$/)) {
         // 현재는 단순히 시각적으로만 표시하므로 임시 반환
         return false;
       }
@@ -118,10 +118,10 @@ const TaskCard = ({
       const today = new Date();
       today.setHours(0, 0, 0, 0); // 오늘 날짜의 시작
 
-      const dueDateObj = new Date(dueDate);
-      dueDateObj.setHours(0, 0, 0, 0); // 마감일의 시작
+      const planEndDateObj = new Date(planEndDate);
+      planEndDateObj.setHours(0, 0, 0, 0); // 마감일의 시작
 
-      return dueDateObj < today;
+      return planEndDateObj < today;
     } catch (e) {
       return false;
     }
@@ -206,12 +206,12 @@ const TaskCard = ({
             </div>
           </div>
 
-          {(dueDate || assignedUsers.length > 0) && (
+          {(planEndDate || assignedUsers.length > 0) && (
             <>
               <div className="bg-gray-200 h-px mx-3 my-1" />
               <div className="justify-between flex h-9 mt-1">
                 {/* 날짜 */}
-                {dueDate && (
+                {planEndDate && (
                   <div className="pl-2 flex">
                     <div className="flex">
                       <div
@@ -226,7 +226,7 @@ const TaskCard = ({
                             <FiCalendar size={16} />
                           </span>
                           <span className="text-xs pl-1 pr-2">
-                            {formatDisplayDate(dueDate)}
+                            {formatDisplayDate(planEndDate)}
                           </span>
                         </div>
                       </div>

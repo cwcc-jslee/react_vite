@@ -187,6 +187,11 @@ const useModal = () => {
     });
   };
 
+  // 커스텀 폼 모달 하단 버튼 제거
+  const openCustomModal = (title, message, data = null, options = {}) => {
+    openModal('custom', title, message, data, null, null, options);
+  };
+
   // 모달 업데이트 (이미 열린 모달의 내용 변경 시)
   const updateModalData = (newData) => {
     setModalState((prevState) => ({
@@ -242,6 +247,7 @@ const useModal = () => {
     openErrorModal,
     openConfirmModal,
     openFormModal,
+    openCustomModal,
     updateModalData,
     updateFormField,
     setFormFieldError,
