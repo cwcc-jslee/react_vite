@@ -24,7 +24,7 @@ import ConfirmDialog from './ConfirmDialog';
 const KanbanColumn = ({
   codebooks,
   column,
-  columnIndex,
+  bucketIndex,
   totalColumns,
   startEditingColumnTitle,
   editState,
@@ -50,7 +50,7 @@ const KanbanColumn = ({
 
   const isEditingTitle =
     editState.isEditing &&
-    editState.columnIndex === columnIndex &&
+    editState.bucketIndex === bucketIndex &&
     editState.field === 'columnTitle';
 
   // 작업을 완료된 것과 진행 중인 것으로 분류
@@ -83,18 +83,18 @@ const KanbanColumn = ({
       planEndDate: '',
     };
 
-    onAddTask(columnIndex, newTask);
+    onAddTask(bucketIndex, newTask);
   };
 
   // 컬럼 이동 핸들러
   const handleMoveColumn = (direction) => {
-    moveColumn(columnIndex, direction);
+    moveColumn(bucketIndex, direction);
     setMenuOpen(false);
   };
 
   // 컬럼 삭제 확인 핸들러
   const handleDeleteConfirm = () => {
-    deleteColumn(columnIndex);
+    deleteColumn(bucketIndex);
     setShowDeleteDialog(false);
   };
 
@@ -126,7 +126,7 @@ const KanbanColumn = ({
               ) : (
                 <h2
                   className="font-semibold text-zinc-800 mb-3 pl-1 cursor-pointer hover:text-indigo-700 flex-grow"
-                  onClick={() => startEditingColumnTitle(columnIndex)}
+                  onClick={() => startEditingColumnTitle(bucketIndex)}
                 >
                   {column.bucket}
                 </h2>
@@ -152,7 +152,7 @@ const KanbanColumn = ({
                 <button
                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                   onClick={() => {
-                    startEditingColumnTitle(columnIndex);
+                    startEditingColumnTitle(bucketIndex);
                     setMenuOpen(false);
                   }}
                 >
@@ -172,7 +172,7 @@ const KanbanColumn = ({
                 </button>
 
                 {/* 왼쪽으로 이동 버튼 (첫 번째 컬럼이 아닐 때만 표시) */}
-                {columnIndex > 0 && (
+                {bucketIndex > 0 && (
                   <button
                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                     onClick={() => handleMoveColumn('left')}
@@ -183,7 +183,7 @@ const KanbanColumn = ({
                 )}
 
                 {/* 오른쪽으로 이동 버튼 (마지막 컬럼이 아닐 때만 표시) */}
-                {columnIndex < totalColumns - 1 && (
+                {bucketIndex < totalColumns - 1 && (
                   <button
                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                     onClick={() => handleMoveColumn('right')}
@@ -219,7 +219,7 @@ const KanbanColumn = ({
                   key={actualIndex}
                   codebooks={codebooks}
                   task={task}
-                  columnIndex={columnIndex}
+                  bucketIndex={bucketIndex}
                   taskIndex={actualIndex}
                   startEditing={startEditing}
                   editState={editState}
@@ -266,7 +266,7 @@ const KanbanColumn = ({
                         <TaskCard
                           key={actualIndex}
                           task={task}
-                          columnIndex={columnIndex}
+                          bucketIndex={bucketIndex}
                           taskIndex={actualIndex}
                           startEditing={startEditing}
                           editState={editState}

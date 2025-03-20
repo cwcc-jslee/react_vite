@@ -20,7 +20,7 @@ import ConfirmDialog from './ConfirmDialog';
 const TaskCard = ({
   task,
   codebooks,
-  columnIndex,
+  bucketIndex,
   taskIndex,
   startEditing,
   editState,
@@ -45,7 +45,7 @@ const TaskCard = ({
   const isEditingField = (field) => {
     return (
       editState.isEditing &&
-      editState.columnIndex === columnIndex &&
+      editState.bucketIndex === bucketIndex &&
       editState.taskIndex === taskIndex &&
       editState.field === field
     );
@@ -73,7 +73,7 @@ const TaskCard = ({
 
   // 작업 삭제 확인
   const handleDeleteConfirm = () => {
-    deleteTask(columnIndex, taskIndex);
+    deleteTask(bucketIndex, taskIndex);
     setShowDeleteDialog(false);
   };
 
@@ -130,7 +130,7 @@ const TaskCard = ({
   // 작업 카드 클릭 핸들러
   const handleTaskCardClick = () => {
     // 중앙화된 모달을 열도록 부모 컴포넌트의 함수 호출
-    onOpenTaskEditModal(task, columnIndex, taskIndex);
+    onOpenTaskEditModal(task, bucketIndex, taskIndex);
   };
 
   return (
@@ -177,7 +177,7 @@ const TaskCard = ({
                 >
                   <button
                     className="flex items-center justify-center w-8 h-8 cursor-pointer"
-                    onClick={() => toggleTaskCompletion(columnIndex, taskIndex)}
+                    onClick={() => toggleTaskCompletion(bucketIndex, taskIndex)}
                   >
                     {isCompleted ? (
                       <FiCheckSquare

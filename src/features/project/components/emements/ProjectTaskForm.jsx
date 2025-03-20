@@ -185,50 +185,51 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel }) => {
           </FormItem>
         </Group>
       )}
-      <Group direction="horizontal" spacing="lg" className="mb-6">
-        <FormItem direction="vertical" className="flex-1">
-          <Label className="text-left">인원</Label>
-          <Input
-            type="number"
-            name="personnelCount"
-            // value={formData.commencementDate}
-            // onChange={updateFormField}
-            // disabled={isSubmitting}
-          />
-        </FormItem>
-        <FormItem direction="vertical" className="flex-1">
-          <Label className="text-left">투입률</Label>
-          <Input
-            type="text"
-            name="allocationRate"
-            // value={formData.commencementDate}
-            // onChange={updateFormField}
-            // disabled={isSubmitting}
-            placeholder="0 - 1"
-          />
-        </FormItem>
-        <FormItem direction="vertical" className="flex-1">
-          <Label className="text-left">작업일</Label>
-          <Input
-            type="number"
-            name="workDays"
-            // value={task?.days || ''}
-            // onChange={updateFormField}
-            // disabled={isSubmitting}
-          />
-        </FormItem>
-        <FormItem direction="vertical" className="flex-1">
-          <Label className="text-left">계획시간</Label>
-          <Input
-            type="number"
-            name="totalPlannedHours"
-            // value={formData.commencementDate}
-            // onChange={updateFormField}
-            disabled={true}
-          />
-        </FormItem>
-      </Group>
-
+      {isScheduled && (
+        <Group direction="horizontal" spacing="lg" className="mb-6">
+          <FormItem direction="vertical" className="flex-1">
+            <Label className="text-left">인원</Label>
+            <Input
+              type="number"
+              name="personnelCount"
+              // value={formData.commencementDate}
+              // onChange={updateFormField}
+              // disabled={!taskFormData.taskScheduleType}
+            />
+          </FormItem>
+          <FormItem direction="vertical" className="flex-1">
+            <Label className="text-left">투입률</Label>
+            <Input
+              type="text"
+              name="allocationRate"
+              // value={formData.commencementDate}
+              // onChange={updateFormField}
+              // disabled={!taskFormData.taskScheduleType}
+              placeholder="0 - 1"
+            />
+          </FormItem>
+          <FormItem direction="vertical" className="flex-1">
+            <Label className="text-left">작업일</Label>
+            <Input
+              type="number"
+              name="workDays"
+              // value={task?.days || ''}
+              // onChange={updateFormField}
+              // disabled={!taskFormData.taskScheduleType}
+            />
+          </FormItem>
+          <FormItem direction="vertical" className="flex-1">
+            <Label className="text-left">계획시간</Label>
+            <Input
+              type="number"
+              name="totalPlannedHours"
+              // value={formData.commencementDate}
+              // onChange={updateFormField}
+              disabled={true}
+            />
+          </FormItem>
+        </Group>
+      )}
       {/* 작업할당 */}
       <Group direction="horizontal" spacing="lg" className="mb-6">
         {/* 체크 리스트트 */}

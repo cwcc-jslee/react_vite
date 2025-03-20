@@ -6,11 +6,11 @@ import { useState, useCallback } from 'react';
 
 const useProjectTask = (initialColumns) => {
   // 칸반 컬럼 상태 관리
-  const [columns, setColumns] = useState(initialColumns);
+  const [projectBuckets, setProjectBuckets] = useState(initialColumns);
   // 편집 상태 관리
   const [editState, setEditState] = useState({
     isEditing: false,
-    columnIndex: null,
+    bucketIndex: null,
     taskIndex: null,
     field: null,
     value: '',
@@ -20,11 +20,11 @@ const useProjectTask = (initialColumns) => {
   const [completedExpanded, setCompletedExpanded] = useState(true);
 
   // 칸반 컬럼 제목 변경 함수
-  const handleColumnTitleChange = useCallback((columnIndex, newTitle) => {
-    setColumns((prevColumns) => {
+  const handleColumnTitleChange = useCallback((bucketIndex, newTitle) => {
+    setProjectBuckets((prevColumns) => {
       const updatedColumns = [...prevColumns];
-      updatedColumns[columnIndex] = {
-        ...updatedColumns[columnIndex],
+      updatedColumns[bucketIndex] = {
+        ...updatedColumns[bucketIndex],
         bucket: newTitle,
       };
       return updatedColumns;
@@ -33,10 +33,10 @@ const useProjectTask = (initialColumns) => {
 
   // 작업 필드 변경 시작
   const startEditing = useCallback(
-    (columnIndex, taskIndex, field, initialValue) => {
+    (bucketIndex, taskIndex, field, initialValue) => {
       setEditState({
         isEditing: true,
-        columnIndex,
+        bucketIndex,
         taskIndex,
         field,
         value: initialValue,
@@ -47,16 +47,16 @@ const useProjectTask = (initialColumns) => {
 
   // 컬럼 제목 편집 시작
   const startEditingColumnTitle = useCallback(
-    (columnIndex) => {
+    (bucketIndex) => {
       setEditState({
         isEditing: true,
-        columnIndex,
+        bucketIndex,
         taskIndex: null,
         field: 'columnTitle',
-        value: columns[columnIndex].bucket,
+        value: projectBuckets[bucketIndex].bucket,
       });
     },
-    [columns],
+    [projectBuckets],
   );
 
   // 편집 값 변경
@@ -69,20 +69,20 @@ const useProjectTask = (initialColumns) => {
 
   // 편집 저장
   const saveEdit = useCallback(() => {
-    const { isEditing, columnIndex, taskIndex, field, value } = editState;
+    const { isEditing, bucketIndex, taskIndex, field, value } = editState;
 
     if (!isEditing) return;
 
-    setColumns((prevColumns) => {
+    setProjectBuckets((prevColumns) => {
       const updatedColumns = [...prevColumns];
 
       if (field === 'columnTitle') {
         // 컬럼 제목 업데이트
-        updatedColumns[columnIndex].bucket = value;
+        updatedColumns[bucketIndex].bucket = value;
       } else if (taskIndex !== null) {
         // 작업 필드 업데이트
-        updatedColumns[columnIndex].tasks[taskIndex] = {
-          ...updatedColumns[columnIndex].tasks[taskIndex],
+        updatedColumns[bucketIndex].tasks[taskIndex] = {
+          ...updatedColumns[bucketIndex].tasks[taskIndex],
           [field]: value,
         };
       }
@@ -97,7 +97,7 @@ const useProjectTask = (initialColumns) => {
   const cancelEdit = useCallback(() => {
     setEditState({
       isEditing: false,
-      columnIndex: null,
+      bucketIndex: null,
       taskIndex: null,
       field: null,
       value: '',
@@ -105,23 +105,23 @@ const useProjectTask = (initialColumns) => {
   }, []);
 
   // 새 작업 추가
-  const addTask = useCallback((columnIndex, newTask) => {
-    setColumns((prevColumns) => {
+  const addTask = useCallback((bucketIndex, newTask) => {
+    setProjectBuckets((prevColumns) => {
       const updatedColumns = [...prevColumns];
-      updatedColumns[columnIndex] = {
-        ...updatedColumns[columnIndex],
-        tasks: [...updatedColumns[columnIndex].tasks, newTask],
+      updatedColumns[bucketIndex] = {
+        ...updatedColumns[bucketIndex],
+        tasks: [...updatedColumns[bucketIndex].tasks, newTask],
       };
       return updatedColumns;
     });
   }, []);
 
   // 작업 업데이트 함수 개선
-  const updateTask = useCallback((columnIndex, taskIndex, updatedTask) => {
-    setColumns((prevColumns) => {
+  const updateTask = useCallback((bucketIndex, taskIndex, updatedTask) => {
+    setProjectBuckets((prevColumns) => {
       const updatedColumns = [...prevColumns];
-      updatedColumns[columnIndex].tasks[taskIndex] = {
-        ...updatedColumns[columnIndex].tasks[taskIndex],
+      updatedColumns[bucketIndex].tasks[taskIndex] = {
+        ...updatedColumns[bucketIndex].tasks[taskIndex],
         ...updatedTask,
       };
       return updatedColumns;
@@ -130,33 +130,33 @@ const useProjectTask = (initialColumns) => {
 
   // useTaskEditor에서 제출된 데이터를 처리하는 함수
   const saveTaskEditor = useCallback(
-    (columnIndex, taskIndex, formData) => {
-      updateTask(columnIndex, taskIndex, formData);
+    (bucketIndex, taskIndex, formData) => {
+      updateTask(bucketIndex, taskIndex, formData);
       return Promise.resolve(); // 비동기 작업을 시뮬레이션하여 useTaskEditor에서 처리할 수 있게 함
     },
     [updateTask],
   );
 
   // 작업 삭제
-  const deleteTask = useCallback((columnIndex, taskIndex) => {
-    setColumns((prevColumns) => {
+  const deleteTask = useCallback((bucketIndex, taskIndex) => {
+    setProjectBuckets((prevColumns) => {
       const updatedColumns = [...prevColumns];
-      updatedColumns[columnIndex].tasks = updatedColumns[
-        columnIndex
+      updatedColumns[bucketIndex].tasks = updatedColumns[
+        bucketIndex
       ].tasks.filter((_, index) => index !== taskIndex);
       return updatedColumns;
     });
   }, []);
 
   // 작업 완료 상태 토글
-  const toggleTaskCompletion = useCallback((columnIndex, taskIndex) => {
-    setColumns((prevColumns) => {
+  const toggleTaskCompletion = useCallback((bucketIndex, taskIndex) => {
+    setProjectBuckets((prevColumns) => {
       const updatedColumns = [...prevColumns];
-      const task = updatedColumns[columnIndex].tasks[taskIndex];
+      const task = updatedColumns[bucketIndex].tasks[taskIndex];
 
       // 완료 상태 토글
       const isCompleted = task.pjt_progress === '100';
-      updatedColumns[columnIndex].tasks[taskIndex] = {
+      updatedColumns[bucketIndex].tasks[taskIndex] = {
         ...task,
         pjt_progress: isCompleted ? '0' : '100',
       };
@@ -167,7 +167,7 @@ const useProjectTask = (initialColumns) => {
 
   // 새 컬럼 추가
   const addColumn = useCallback((newColumn) => {
-    setColumns((prevColumns) => [...prevColumns, newColumn]);
+    setProjectBuckets((prevColumns) => [...prevColumns, newColumn]);
   }, []);
 
   // 완료된 작업 섹션 접기/펼치기 토글
@@ -176,30 +176,30 @@ const useProjectTask = (initialColumns) => {
   }, []);
 
   // 컬럼 삭제
-  const deleteColumn = useCallback((columnIndex) => {
-    setColumns((prevColumns) =>
-      prevColumns.filter((_, index) => index !== columnIndex),
+  const deleteColumn = useCallback((bucketIndex) => {
+    setProjectBuckets((prevColumns) =>
+      prevColumns.filter((_, index) => index !== bucketIndex),
     );
   }, []);
 
   // 컬럼 이동 (왼쪽/오른쪽)
-  const moveColumn = useCallback((columnIndex, direction) => {
-    setColumns((prevColumns) => {
+  const moveColumn = useCallback((bucketIndex, direction) => {
+    setProjectBuckets((prevColumns) => {
       if (
-        (direction === 'left' && columnIndex === 0) ||
-        (direction === 'right' && columnIndex === prevColumns.length - 1)
+        (direction === 'left' && bucketIndex === 0) ||
+        (direction === 'right' && bucketIndex === prevColumns.length - 1)
       ) {
         return prevColumns; // 이동 불가능한 경우
       }
 
       const updatedColumns = [...prevColumns];
       const targetIndex =
-        direction === 'left' ? columnIndex - 1 : columnIndex + 1;
+        direction === 'left' ? bucketIndex - 1 : bucketIndex + 1;
 
       // 두 컬럼의 위치 교환
-      [updatedColumns[columnIndex], updatedColumns[targetIndex]] = [
+      [updatedColumns[bucketIndex], updatedColumns[targetIndex]] = [
         updatedColumns[targetIndex],
-        updatedColumns[columnIndex],
+        updatedColumns[bucketIndex],
       ];
 
       return updatedColumns;
@@ -209,8 +209,8 @@ const useProjectTask = (initialColumns) => {
   // 작업 이동 함수 제거
 
   return {
-    columns,
-    setColumns,
+    projectBuckets,
+    setProjectBuckets,
     editState,
     startEditing,
     startEditingColumnTitle,
