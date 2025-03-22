@@ -46,7 +46,8 @@ export const projectTaskInitialState = [
         taskScheduleType: false,
         planEndDate: '2025-03-01',
         isDueDateRed: false,
-        taskProgress: { id: 97, code: '100', name: '100%' },
+        // taskProgress: { id: 97, code: '100', name: '100%' },
+        taskProgress: 97, // 100%
       },
       {
         name: '내부 조율',
@@ -63,8 +64,10 @@ export const projectTaskInitialState = [
       {
         name: '프로젝트 준비',
         taskScheduleType: true,
-        priorityLevel: { id: 118, name: '긴급' },
-        taskProgress: { id: 97, code: '100', name: '100%' },
+        // priorityLevel: { id: 118, name: '긴급' },
+        // taskProgress: { id: 97, code: '100', name: '100%' },
+        priorityLevel: 118, // '긴급'
+        taskProgress: 97, // 100%
         days: '5',
         planEndDate: '2025-03-07',
         assignedUsers: ['red-900', 'indigo-500'],
@@ -72,8 +75,8 @@ export const projectTaskInitialState = [
       {
         name: '사이트 기획',
         days: '5',
-        priorityLevel: { id: 115, name: '낮음' },
-        taskProgress: { id: 94, code: '50', name: '50%' },
+        priorityLevel: 115, // '낮음'
+        taskProgress: 94, // 50%
         planEndDate: '2025-03-14',
         isDueDateRed: false,
       },

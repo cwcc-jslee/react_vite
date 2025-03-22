@@ -25,6 +25,15 @@ const useTaskEditor = (
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // 상태 변경 감지 및 콘솔 출력
+  useEffect(() => {
+    console.log('>>>> taskFormData 상태 변경:', taskFormData);
+  }, [taskFormData]);
+
+  useEffect(() => {
+    console.log('>>>> checklists 상태 변경:', checklists);
+  }, [checklists]);
+
   // 초기 데이터로 상태 초기화
   useEffect(() => {
     if (initialTask) {
@@ -36,14 +45,11 @@ const useTaskEditor = (
             : true,
         days: initialTask.days || '',
         dueDate: initialTask.dueDate || '',
-        taskProgress: initialTask?.taskProgress || {
-          id: 91,
-          code: '0',
-          name: '0%',
-        },
-        priorityLevel: initialTask?.priorityLevel || { id: 116, name: '중간' },
+        taskProgress: initialTask?.taskProgress || 91,
+        priorityLevel: initialTask?.priorityLevel || 116,
         planStartDate: initialTask?.planStartDate || '',
         planEndDate: initialTask?.planEndDate || '',
+        planningTimeData: initialTask?.planningTimeData || {},
         // 기타 필요한 필드 추가
       });
 
@@ -63,13 +69,61 @@ const useTaskEditor = (
     console.log(`taskFormData 변경: ${name} = ${value}`);
   };
 
-  // 통합 핸들러 함수
+  // 필드 변경 핸들러 함수 (일반 필드와 중첩 객체 필드 모두 처리)
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setTaskFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+
+    // 필드 이름에 점(.)이 포함되어 있는지 확인 - 중첩 객체 접근 방식 지원
+    if (name.includes('.')) {
+      // 예: planningTimeData.personnelCount
+      const [objectName, fieldName] = name.split('.');
+
+      setTaskFormData((prev) => ({
+        ...prev,
+        [objectName]: {
+          ...(prev[objectName] || {}),
+          [fieldName]:
+            type === 'number'
+              ? value === ''
+                ? ''
+                : Number(value)
+              : type === 'checkbox'
+              ? checked
+              : value,
+        },
+      }));
+    } else if (name.includes('planningTimeData.')) {
+      // 별도의 속성명 처리 (예: planningTimeData.personnelCount)
+      const fieldName = name.replace('planningTimeData.', '');
+
+      setTaskFormData((prev) => ({
+        ...prev,
+        planningTimeData: {
+          ...(prev.planningTimeData || {}),
+          [fieldName]:
+            type === 'number'
+              ? value === ''
+                ? ''
+                : Number(value)
+              : type === 'checkbox'
+              ? checked
+              : value,
+        },
+      }));
+    } else {
+      // 일반 필드 처리 (기존 로직)
+      setTaskFormData((prev) => ({
+        ...prev,
+        [name]:
+          type === 'number'
+            ? value === ''
+              ? ''
+              : Number(value)
+            : type === 'checkbox'
+            ? checked
+            : value,
+      }));
+    }
   };
 
   // 특정 필드용 핸들러
@@ -217,6 +271,7 @@ const useTaskEditor = (
     assignedUsers,
     errors,
     isSubmitting,
+    setTaskFormData,
     handleSwitchChange,
     handleChange,
     handleInputChange,

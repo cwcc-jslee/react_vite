@@ -82,6 +82,7 @@ const ProjectUserSelector = ({
       id: user.id,
       username: user.username || '',
     });
+    setShowUserPopup(false);
   };
 
   // 사용자 제거 처리
@@ -108,38 +109,40 @@ const ProjectUserSelector = ({
 
   return (
     <div className="relative" ref={selectorRef}>
-      {/* 사용자 선택 버튼 */}
-      <button
-        type="button"
-        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 px-3 py-2 rounded-md"
-        onClick={toggleUserPopup}
-      >
-        <FiUserPlus size={20} />
-        <span>작업 할당</span>
-      </button>
+      {/* 사용자 선택 버튼과 할당된 사용자를 가로로 배치 */}
+      <div className="flex items-center">
+        {/* 사용자 선택 버튼 */}
+        <button
+          type="button"
+          className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 px-3 py-2 rounded-md"
+          onClick={toggleUserPopup}
+        >
+          <FiUserPlus size={20} />
+        </button>
 
-      {/* 할당된 사용자 표시 */}
-      <div className="flex gap-2 ml-4">
-        {assignedUsers.map((user, index) => (
-          <div
-            key={user.id || index}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white bg-indigo-600 relative group"
-          >
-            {user.username?.substring(0, 1) || index + 1}
-            <button
-              type="button"
-              className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={() => handleRemoveUser(user.id)}
+        {/* 할당된 사용자 표시 - 버튼 옆에 배치 */}
+        <div className="flex gap-2 ml-2">
+          {assignedUsers.map((user, index) => (
+            <div
+              key={user.id || index}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-white bg-indigo-600 relative group"
             >
-              ×
-            </button>
-          </div>
-        ))}
+              {user.username?.substring(1, 3) || index + 1}
+              <button
+                type="button"
+                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => handleRemoveUser(user.id)}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* 사용자 선택 팝업 */}
       {showUserPopup && (
-        <div className="absolute z-10 bg-white border border-gray-200 shadow-lg rounded-md w-64 max-h-96 overflow-y-auto mt-2">
+        <div className="absolute z-10 bg-white border border-gray-200 shadow-lg rounded-md w-64 max-h-96 overflow-y-auto mt-2 left-0">
           {/* 검색 입력 필드 */}
           <div className="p-2 border-b border-gray-200">
             <div className="relative">

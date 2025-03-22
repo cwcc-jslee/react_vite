@@ -2,7 +2,7 @@
 // 칸반 보드의 상태 관리 및 작업 관련 로직을 담당하는 커스텀 훅
 // 컬럼과 작업의 CRUD 기능 및 이동 기능을 제공합니다
 
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 const useProjectTask = (initialColumns) => {
   // 칸반 컬럼 상태 관리
@@ -15,6 +15,10 @@ const useProjectTask = (initialColumns) => {
     field: null,
     value: '',
   });
+
+  useEffect(() => {
+    console.log('>>>> projectBuckets 상태 변경:', projectBuckets);
+  }, [projectBuckets]);
 
   // 완료된 작업 섹션 표시 상태
   const [completedExpanded, setCompletedExpanded] = useState(true);

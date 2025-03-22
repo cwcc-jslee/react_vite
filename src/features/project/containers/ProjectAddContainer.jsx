@@ -134,17 +134,27 @@ const ProjectAddContainer = () => {
               newTask.taskScheduleType = false;
             } else {
               newTask.taskScheduleType = true;
+              // 인원, 투입률, 작업일 초기화
+              if (!('priorityLevel' in newTask)) {
+                newTask.planningTimeData = {
+                  // personnelCount: 0,
+                  // allocationRate: 0,
+                  // workDays: 0,
+                };
+              }
             }
 
             // priority_level이 없으면 기본값 추가
-            if (!('priority_level' in task) && !('priorityLevel' in newTask)) {
-              newTask.priority_level = { id: 116, name: '중간' };
+            if (!('priorityLevel' in newTask)) {
+              newTask.priorityLevel = 116; //  '중간'
             }
 
             // task_progress가 없으면 기본값 추가
-            if (!('task_progress' in task) && !('taskProgress' in newTask)) {
-              newTask.task_progress = { id: 91, code: '0', name: '0%' };
+            if (!('taskProgress' in newTask)) {
+              newTask.taskProgress = 91; //'0%'
             }
+
+            //
 
             return newTask;
           });
