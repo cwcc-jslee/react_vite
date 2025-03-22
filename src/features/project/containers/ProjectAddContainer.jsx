@@ -7,7 +7,9 @@ import { FiPlus } from 'react-icons/fi';
 // import { useProject } from '../../context/ProjectProvider';
 import { projectTaskInitialState } from '../../../shared/constants/initialFormState';
 import { projectApiService } from '../services/projectApiService';
+import { apiCommon } from '../../../shared/api/apiCommon';
 import { useCodebook } from '../../../shared/hooks/useCodebook';
+import useSelectData from '../../../shared/hooks/useSelectData';
 import useProjectTask from '../hooks/useProjectTask';
 import useModal from '../../../shared/hooks/useModal';
 // 컴포넌트
@@ -50,6 +52,12 @@ const ProjectAddContainer = () => {
     'priority_level', // 우선순위(긴급,중요,중간,낮음)
     'task_progress', // 작업진행률
   ]);
+
+  // API 사용자 정보 조회
+  const { data: usersData, isLoading: isUsersLoading } = useSelectData(
+    apiCommon.getUsers,
+  );
+  console.log(`>> 사용자 조회 : `, usersData);
 
   const handleProjectInfoChange = () => {
     //
@@ -205,6 +213,7 @@ const ProjectAddContainer = () => {
       <ProjectTaskForm
         task={task}
         codebooks={codebooks}
+        usersData={usersData}
         onSave={(updatedTask) => {
           console.log(`>> onSave : `, updatedTask);
           updateTask(bucketIndex, taskIndex, updatedTask);
@@ -248,11 +257,11 @@ const ProjectAddContainer = () => {
         className="kanban-container flex h-full overflow-x-auto"
         style={{ minHeight: '600px' }}
       >
-        {projectBuckets.map((column, index) => (
+        {projectBuckets.map((bucket, index) => (
           <KanbanColumn
             key={index}
             codebooks={codebooks}
-            column={column}
+            bucket={bucket}
             bucketIndex={index}
             totalColumns={projectBuckets.length}
             startEditingColumnTitle={startEditingColumnTitle}

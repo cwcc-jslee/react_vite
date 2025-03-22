@@ -23,7 +23,7 @@ import ConfirmDialog from './ConfirmDialog';
  */
 const KanbanColumn = ({
   codebooks,
-  column,
+  bucket,
   bucketIndex,
   totalColumns,
   startEditingColumnTitle,
@@ -51,13 +51,13 @@ const KanbanColumn = ({
   const isEditingTitle =
     editState.isEditing &&
     editState.bucketIndex === bucketIndex &&
-    editState.field === 'columnTitle';
+    editState.field === 'bucketTitle';
 
   // 작업을 완료된 것과 진행 중인 것으로 분류
-  const completedTasks = column.tasks.filter(
+  const completedTasks = bucket.tasks.filter(
     (task) => task.pjt_progress === '100',
   );
-  const pendingTasks = column.tasks.filter(
+  const pendingTasks = bucket.tasks.filter(
     (task) => task.pjt_progress !== '100',
   );
 
@@ -126,9 +126,9 @@ const KanbanColumn = ({
               ) : (
                 <h2
                   className="font-semibold text-zinc-800 mb-3 pl-1 cursor-pointer hover:text-indigo-700 flex-grow"
-                  onClick={() => startEditingColumnTitle(bucketIndex)}
+                  // onClick={() => startEditingColumnTitle(bucketIndex)}
                 >
-                  {column.bucket}
+                  {bucket.bucket}
                 </h2>
               )}
 
@@ -213,7 +213,7 @@ const KanbanColumn = ({
             {/* 진행 중인 작업 목록 */}
             {pendingTasks.map((task, taskIndex) => {
               // 실제 전체 tasks 배열에서의 인덱스 계산
-              const actualIndex = column.tasks.findIndex((t) => t === task);
+              const actualIndex = bucket.tasks.findIndex((t) => t === task);
               return (
                 <TaskCard
                   key={actualIndex}
@@ -259,7 +259,7 @@ const KanbanColumn = ({
                   <div className="mt-1 pb-2">
                     {completedTasks.map((task, taskIndex) => {
                       // 실제 전체 tasks 배열에서의 인덱스 계산
-                      const actualIndex = column.tasks.findIndex(
+                      const actualIndex = bucket.tasks.findIndex(
                         (t) => t === task,
                       );
                       return (
@@ -291,7 +291,7 @@ const KanbanColumn = ({
       {showDeleteDialog && (
         <ConfirmDialog
           title="버킷 삭제"
-          message={`"${column.bucket}" 버킷과 모든 작업을 삭제하시겠습니까?`}
+          message={`"${bucket.bucket}" 버킷과 모든 작업을 삭제하시겠습니까?`}
           confirmLabel="삭제"
           cancelLabel="취소"
           icon={<FiAlertTriangle className="text-red-500" size={24} />}

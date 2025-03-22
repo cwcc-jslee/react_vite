@@ -148,4 +148,37 @@ export const apiCommon = {
     const response = await apiClient.get(`/codebook-project-tasks?${query}`);
     return response.data;
   },
+
+  /**
+   * 등록된 사용자 전체 조회회 함수
+   * @param {string} type - 서비스 이름(ex.홈페이지, 영상상)
+   * @returns {Promise} 프로젝트 테스크 데이터 배열
+   */
+  getUsers: async () => {
+    const query = qs.stringify(
+      {
+        filters: {
+          $and: [
+            {
+              blocked: {
+                $eq: false,
+              },
+            },
+            {
+              confirmed: {
+                $eq: true,
+              },
+            },
+          ],
+        },
+        sort: ['username:asc'],
+      },
+      {
+        encodeValuesOnly: true,
+      },
+    );
+
+    const response = await apiClient.get(`/users?${query}`);
+    return response.data;
+  },
 };

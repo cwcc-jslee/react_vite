@@ -85,7 +85,7 @@ const useTaskEditor = (
     if (!description.trim()) return;
 
     const newItem = {
-      id: Date.now(), // 임시 ID (실제 구현에서는 서버에서 할당될 수 있음)
+      index: checklists.length, // 배열의 현재 길이를 id로 사용
       description: description.trim(),
       isCompleted: false,
     };
@@ -96,19 +96,66 @@ const useTaskEditor = (
   const toggleChecklistItem = (id) => {
     setChecklists((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, isCompleted: !item.isCompleted } : item,
+        item.id === id || item.index === id
+          ? { ...item, isCompleted: !item.isCompleted }
+          : item,
       ),
     );
   };
 
   const deleteChecklistItem = (id) => {
-    setChecklists((prev) => prev.filter((item) => item.id !== id));
+    setChecklists((prev) =>
+      prev.filter((item) => !(item.id === id || item.index === id)),
+    );
   };
 
   // 사용자 할당 관련 함수들
   const assignUser = (user) => {
-    if (!assignedUsers.some((u) => u.id === user.id)) {
-      setAssignedUsers((prev) => [...prev, user]);
+    try {
+      console.log('useTaskEditor: 할당 시도하는 사용자:', user);
+
+      if (!user || typeof user !== 'object') {
+        alert('유효하지 않은 사용자 객체');
+        console.error('useTaskEditor: 사용자 객체가 유효하지 않습니다:', user);
+        return false;
+      }
+
+      // 필수 필드가 있는지 확인
+      if (user.id === undefined) {
+        alert('사용자 ID가 없습니다');
+        console.error('useTaskEditor: 사용자 ID가 없습니다:', user);
+        return false;
+      }
+
+      // 이미 할당된 사용자인지 확인
+      const isAlreadyAssigned = assignedUsers.some((u) => u.id === user.id);
+      console.log('useTaskEditor: 이미 할당됨?', isAlreadyAssigned);
+
+      if (isAlreadyAssigned) {
+        alert('이미 할당된 사용자입니다');
+        return false;
+      }
+
+      // 필요한 필드만 추출하여 통일된 구조로 저장
+      const newUser = {
+        id: user.id,
+        username: user.username || user.name || String(user.id),
+      };
+
+      console.log('useTaskEditor: 추가할 사용자:', newUser);
+
+      // 강제로 상태 업데이트 - 직접 배열에 추가
+      setAssignedUsers([...assignedUsers, newUser]);
+
+      // 성공 메시지
+      alert(`사용자 "${newUser.username}"가 할당되었습니다`);
+      console.log('useTaskEditor: 사용자 할당 성공');
+
+      return true;
+    } catch (error) {
+      alert('사용자 할당 중 오류가 발생했습니다');
+      console.error('useTaskEditor: 사용자 할당 중 오류:', error);
+      return false;
     }
   };
 

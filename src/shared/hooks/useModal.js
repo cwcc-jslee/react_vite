@@ -58,6 +58,7 @@ const useModal = () => {
       titleClassName: options.titleClassName || '',
       bodyClassName: options.bodyClassName || '',
       footerClassName: options.footerClassName || '',
+      zIndex: options.zIndex || 9999,
     });
   };
 
