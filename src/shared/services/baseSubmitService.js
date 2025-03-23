@@ -4,24 +4,20 @@ import { apiService } from '../api/apiService';
 /**
  * 기본 제출 서비스 팩토리 함수
  * @param {string} endpoint - API 엔드포인트 (예: '/customers')
- * @param {Function} transformer - 폼 데이터를 DB 형식으로 변환하는 함수
  * @returns {Object} - 서비스 메서드들을 담은 객체
  */
-export const baseSubmitService = (endpoint, transformer) => {
+export const baseSubmitService = (endpoint) => {
   const entityName = endpoint.replace('/', ''); // '/customers' -> 'customers'
 
   /**
    * 기본 데이터 생성
-   * @param {Object} formData - 폼 데이터
+   * @param {Object} formData - 폼 데이터 (이미 변환된 상태)
    */
   const createBase = async (formData) => {
     console.log(`[${entityName}] Creating base with formData:`, formData);
 
     try {
-      const dbData = transformer ? transformer(formData) : formData;
-      console.log(`[${entityName}] Transformed data:`, dbData);
-
-      const response = await apiService.post(endpoint, dbData);
+      const response = await apiService.post(endpoint, formData);
       return response.data;
     } catch (error) {
       console.error(`[${entityName}] Creation error:`, error);
@@ -35,14 +31,13 @@ export const baseSubmitService = (endpoint, transformer) => {
   /**
    * 기본 필드 수정
    * @param {string} id - 엔티티 ID
-   * @param {Object} formData - 수정할 데이터
+   * @param {Object} formData - 수정할 데이터 (이미 변환된 상태)
    */
   const updateBase = async (id, formData) => {
     console.log(`[${entityName}] Updating with formData:`, formData);
 
     try {
-      const dbData = transformer ? transformer(formData) : formData;
-      const response = await apiService.put(`${endpoint}/${id}`, dbData);
+      const response = await apiService.put(`${endpoint}/${id}`, formData);
       return response.data;
     } catch (error) {
       console.error(`[${entityName}] Update error:`, error);
@@ -103,7 +98,7 @@ export const baseSubmitService = (endpoint, transformer) => {
 /**
  * 제네릭 엔티티 생성 함수
  * @param {Object} service - 사용할 서비스 객체
- * @param {Object} formData - 폼 데이터
+ * @param {Object} formData - 폼 데이터 (이미 변환된 상태)
  * @param {string} entityName - 엔티티 이름 (로깅용)
  */
 export const createEntity = async (

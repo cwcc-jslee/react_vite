@@ -34,8 +34,15 @@ import { notification } from '../../../shared/services/notification';
  */
 const ProjectAddContainer = () => {
   // 프로젝트 정보 상태 관리
-  const { formData, errors, isSubmitting, setErrors, updateFormField } =
-    useProjectForm();
+  const {
+    formData,
+    errors,
+    isSubmitting,
+    setIsSubmitting,
+    setErrors,
+    updateFormField,
+    processSubmit,
+  } = useProjectForm();
   const [projectInfo, setProjectInfo] = useState({
     customer: '',
     sfa: '',
@@ -60,13 +67,16 @@ const ProjectAddContainer = () => {
   } = useCodebook([
     'priority_level', // 우선순위(긴급,중요,중간,낮음)
     'task_progress', // 작업진행률
+    'fy', // 회계년도
+    'importance_level', //중요도
+    'pjt_status', // 프로젝트 상태
   ]);
 
   // API 사용자 정보 조회
   const { data: usersData, isLoading: isUsersLoading } = useSelectData(
     apiCommon.getUsers,
   );
-  console.log(`>> 사용자 조회 : `, usersData);
+  // console.log(`>> 사용자 조회 : `, usersData);
 
   // 커스텀 훅 사용
   const {
@@ -89,7 +99,7 @@ const ProjectAddContainer = () => {
     updateTask,
   } = useProjectTask(projectTaskInitialState);
 
-  console.log(`>> projectBuckets : `, projectBuckets);
+  // console.log(`>> projectBuckets : `, projectBuckets);
 
   /**
    * 템플릿 선택 시 작업이 처리되는 핸들러
@@ -291,7 +301,15 @@ const ProjectAddContainer = () => {
     }
 
     // 3. 폼 제출 진행
-    console.log(`3단계 폼제출 진행..`);
+    try {
+      await processSubmit();
+
+      // 3-1. 제출 후 폼 초기화 및 필터 리셋
+      // resetFilters();
+    } catch (error) {
+      // processSubmit에서 이미 오류 알림을 표시하므로 여기서는 추가 처리 필요 없음
+      console.error('제출 과정에서 오류 발생:', error);
+    }
   };
 
   // 프로젝트 저장 처리 함수
@@ -375,6 +393,7 @@ const ProjectAddContainer = () => {
         <div className="w-72 flex-shrink-0 pr-4 h-full overflow-y-auto flex flex-col">
           <ProjectAddBaseForm
             formData={formData}
+            codebooks={codebooks}
             updateFormField={updateFormField}
             handleTemplateSelect={handleTemplateSelect}
           />

@@ -16,7 +16,7 @@ const ProjectMenu = () => {
   const { setLayout, setDrawer, resetFilters } = useProject();
 
   return (
-    <Group direction="horizontal" spacing="sm" className="mb-5">
+    <Group direction="horizontal" spacing="sm" className="mb-1 mt-1 py-1">
       <Button variant="outline" onClick={() => setLayout('default')}>
         현황
       </Button>

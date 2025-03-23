@@ -9,11 +9,11 @@ export const useForm = (initialState) => {
   const [errors, setErrors] = useState({});
 
   // 개발 모드에서 폼 데이터 변경 로깅 (디버깅용)
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Form Data Changed:', formData);
-    }
-  }, [formData]);
+  // useEffect(() => {
+  //   if (process.env.NODE_ENV === 'development') {
+  //     console.log('Form Data Changed:', formData);
+  //   }
+  // }, [formData]);
 
   /**
    * 입력값 변경 핸들러

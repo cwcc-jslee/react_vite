@@ -8,6 +8,7 @@ import { normalizeBusinessNumber } from '../services/businessNumberUtils';
 
 /**
  * 모든 엔티티를 위한 DB 필드 변환 유틸리티
+ * 참고: Project 엔티티는 이제 useProjectForm에서 직접 변환됩니다.
  */
 export const transformToDBFields = {
   /**
@@ -46,15 +47,14 @@ export const transformToDBFields = {
       expectedDate: 'expected_date',
     },
 
-    // Project 필드 매핑
+    // Project 필드 매핑 (참조용으로 유지)
     PROJECT: {
       name: 'name',
-      code: 'code',
-      customerId: 'customer_id',
-      startDate: 'start_date',
-      endDate: 'end_date',
-      status: 'status',
-      budget: 'budget',
+      sfa: 'sfa',
+      planStartDate: 'plan_start_date',
+      planEndDate: 'plan_end_date',
+      service: 'service',
+      team: 'team',
     },
   },
 
@@ -148,6 +148,29 @@ export const transformToDBFields = {
 
     return filteredData;
   },
+
+  /**
+   * Project 데이터 변환 - 이제 useProjectForm.js에서 처리됨
+   * 참조용으로 주석 처리합니다.
+   */
+  // transformProject: (formData) => {
+  //   console.log('Transform Project fields input:', formData);
+  //
+  //   const transformed = {
+  //     name: formData.name,
+  //     sfa: formData.sfa?.id,
+  //     plan_start_date: formData.planStartDate,
+  //     plan_end_date: formData.planEndDate,
+  //     service: formData.service,
+  //     team: formData.team,
+  //     // 추가 필드가 있으면 여기에 매핑
+  //   };
+  //
+  //   const filteredData = removeEmptyFields(transformed);
+  //   console.log('Transform Project fields output:', filteredData);
+  //
+  //   return filteredData;
+  // },
 };
 
 // 기본 내보내기

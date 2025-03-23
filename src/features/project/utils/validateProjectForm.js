@@ -23,7 +23,11 @@ export const validateProjectForm = (formData) => {
     isValid = false;
   }
 
-  // 서비스, 사업부 검사
+  // fy, 서비스, 사업부 검사
+  if (!formData.fy) {
+    errors.push('사업년도를 선택해주세요.');
+    isValid = false;
+  }
   if (!formData.service) {
     errors.push('서비스를 선택해주세요.');
     isValid = false;

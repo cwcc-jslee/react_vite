@@ -7,10 +7,12 @@
 import { useState, useCallback } from 'react';
 import { useProject } from '../context/ProjectProvider';
 import { projectInitialState } from '../../../shared/constants/initialFormState';
-// import { submitProjectData } from '../services/projectSubmitService';
+import { submitProjectData } from '../services/projectSubmitService';
 import { useForm } from '../../../shared/hooks/useForm';
 import { formatFullName } from '../../../shared/utils/nameUtils';
+import { convertKeysToSnakeCase } from '../../../shared/utils/transformUtils';
 // import { validateProjectForm } from '../utils/projectFormValidation';
+import { notification } from '../../../shared/services/notification';
 
 /**
  * Project Form 관련 로직을 관리하는 Custom Hook
@@ -36,6 +38,30 @@ export const useProjectForm = () => {
   }, [formHook.formData]);
 
   /**
+   * 데이터를 API 제출 전에 정리하는 함수
+   * 불필요한 임시 필드 제거 및 데이터 정리
+   *
+   * @param {Object} data - 원본 폼 데이터
+   * @returns {Object} 정리된 데이터
+   */
+  const prepareData = useCallback((data) => {
+    // 깊은 복사로 원본 데이터 유지
+    const clonedData = JSON.parse(JSON.stringify(data));
+
+    // 1. 불필요한 임시 필드 제거
+    const { __temp, ...cleanData } = clonedData;
+
+    // 2. null이나 빈 문자열인 경우 해당 키 삭제
+    Object.keys(cleanData).forEach((key) => {
+      if (cleanData[key] === '' || cleanData[key] === null) {
+        delete cleanData[key];
+      }
+    });
+
+    return cleanData;
+  }, []);
+
+  /**
    * 폼 제출 처리 함수
    * 제출 상태 관리 및 서비스 레이어 호출
    */
@@ -43,11 +69,21 @@ export const useProjectForm = () => {
     try {
       setIsSubmitting(true);
 
-      // 서비스 레이어 호출 (제출)
-      // const response = await submitProjectData(formHook.formData);
+      // 1. 불필요한 필드 제거, null 빈문자열 필드 제거 및 데이터 정리
+      const preparedData = prepareData(formHook.formData);
 
-      // 제출 성공 후처리
-      handleSubmitSuccess(response);
+      // 2. 카멜케이스를 스네이크케이스로 변환
+      const snakeCaseData = convertKeysToSnakeCase(preparedData);
+      console.log(`스네이크케이스 변환 결과:`, snakeCaseData);
+
+      // 3. API 호출 (내부에서 추가 변환 없이 바로 사용)
+      const response = await submitProjectData(snakeCaseData);
+
+      // 4. 성공 알림
+      notification.success({
+        message: '프로젝트 등록 성공',
+        description: '프로젝트 정보가 성공적으로 저장되었습니다.',
+      });
 
       return response;
     } catch (error) {
@@ -61,7 +97,7 @@ export const useProjectForm = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [formHook.formData]);
+  }, [formHook.formData, prepareData]);
 
   /**
    * 제출 성공 후 실행할 처리
@@ -74,7 +110,7 @@ export const useProjectForm = () => {
       // }
 
       // 드로어 닫기
-      setDrawerClose();
+      // setDrawerClose();
 
       return response;
     },
@@ -180,5 +216,6 @@ export const useProjectForm = () => {
     validateForm,
     handleCustomerSelect,
     handleMultiSelectChange,
+    prepareData, // 필요시 외부에 노출
   };
 };

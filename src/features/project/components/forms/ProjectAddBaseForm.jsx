@@ -7,10 +7,23 @@ import { apiCommon } from '../../../../shared/api/apiCommon';
 import { projectApiService } from '../../services/projectApiService';
 import { CustomerSearchInput } from '../../../../shared/components/customer/CustomerSearchInput';
 import { useSelectData } from '../../../../shared/hooks/useSelectData';
+import {
+  Form,
+  FormItem,
+  Group,
+  Stack,
+  Label,
+  Input,
+  Select,
+  Button,
+  Checkbox,
+  TextArea,
+} from '../../../../shared/components/ui';
 
 // 프로젝트 정보 입력 폼 컴포넌트
 const ProjectAddBaseForm = ({
   formData,
+  codebooks,
   updateFormField,
   handleTemplateSelect,
   onTemplateSelect,
@@ -123,19 +136,74 @@ const ProjectAddBaseForm = ({
         </div>
 
         {/* 프로젝트명 입력 필드 */}
-        <div className="w-full">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <FormItem direction="vertical" className="flex-1">
+          <Label required className="text-left">
             프로젝트명
-          </label>
-          <input
-            type="text"
+          </Label>
+          <TextArea
             name="name"
             value={formData.name || ''}
             onChange={updateFormField}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            placeholder="프로젝트명을 입력하세요"
+            rows={2}
+            // disabled={isSubmitting}
           />
-        </div>
+        </FormItem>
+        <FormItem direction="vertical" className="flex-1">
+          <Label required className="text-left">
+            사업년도
+          </Label>
+          <Select
+            name="fy"
+            value={formData.fy}
+            onChange={updateFormField}
+            // disabled={isSubmitting}
+          >
+            <option value="">선택하세요</option>
+            {codebooks?.fy?.data?.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </Select>
+        </FormItem>
+
+        {/* 중요도, 프로젝트 상태 */}
+        <FormItem direction="vertical" className="flex-1">
+          <Label required className="text-left">
+            상태
+          </Label>
+          <Select
+            name="pjtStatus"
+            value={formData.pjtStatus}
+            onChange={updateFormField}
+            // disabled={isSubmitting}
+          >
+            <option value="">선택하세요</option>
+            {codebooks?.pjt_status?.data?.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </Select>
+        </FormItem>
+        <FormItem direction="vertical" className="flex-1">
+          <Label required className="text-left">
+            중요도
+          </Label>
+          <Select
+            name="importanceLevel"
+            value={formData.importanceLevel}
+            onChange={updateFormField}
+            // disabled={isSubmitting}
+          >
+            <option value="">선택하세요</option>
+            {codebooks?.importance_level?.data?.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </Select>
+        </FormItem>
 
         {/* 서비스 선택 필드 */}
         <div className="w-full">
@@ -174,6 +242,31 @@ const ProjectAddBaseForm = ({
             ))}
           </select>
         </div>
+
+        {/* 계획 시작일 / 계획 종료일 */}
+
+        <FormItem direction="vertical" className="flex-1">
+          <Label required className="text-left">
+            계획 시작일
+          </Label>
+          <Input
+            type="date"
+            name="planStartDate"
+            value={formData?.planStartDate}
+            onChange={updateFormField}
+          />
+        </FormItem>
+        <FormItem direction="vertical" className="flex-1">
+          <Label required className="text-left">
+            계획 종료일
+          </Label>
+          <Input
+            type="date"
+            name="planEndDate"
+            value={formData?.planEndDate || ''}
+            onChange={updateFormField}
+          />
+        </FormItem>
 
         {/* 템플릿 선택 필드 */}
         <div className="w-full">

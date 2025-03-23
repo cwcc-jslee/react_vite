@@ -107,36 +107,39 @@ export const removeEmptyFieldsDeep = (obj) => {
 };
 
 /**
- * camelCase 키를 snake_case로 변환
- * @param {Object} obj - camelCase 키를 가진 객체
- * @returns {Object} snake_case 키를 가진 객체
+ * 카멜케이스(camelCase)를 스네이크케이스(snake_case)로 변환하는 함수
+ *
+ * @param {string} str - 변환할 카멜케이스 문자열
+ * @returns {string} 스네이크케이스로 변환된 문자열
  */
-export const camelToSnakeCase = (obj) => {
-  if (obj === null || obj === undefined || typeof obj !== 'object') {
-    return obj;
+export const camelToSnakeCase = (str) => {
+  return str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+};
+
+/**
+ * 객체의 모든 키를 카멜케이스에서 스네이크케이스로 재귀적으로 변환하는 함수
+ *
+ * @param {Object|Array} data - 변환할 객체 또는 배열
+ * @returns {Object|Array} 키가 스네이크케이스로 변환된 객체 또는 배열
+ */
+export const convertKeysToSnakeCase = (data) => {
+  if (data === null || data === undefined || typeof data !== 'object') {
+    return data;
   }
 
-  if (Array.isArray(obj)) {
-    return obj.map((item) => camelToSnakeCase(item));
+  // 배열인 경우 각 요소에 대해 재귀 호출
+  if (Array.isArray(data)) {
+    return data.map((item) => convertKeysToSnakeCase(item));
   }
 
-  const result = {};
-
-  for (const key in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, key)) {
-      // camelCase를 snake_case로 변환
-      const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
-
-      // 값이 객체인 경우 재귀적으로 처리
-      const value = obj[key];
-      result[snakeKey] =
-        typeof value === 'object' && value !== null
-          ? camelToSnakeCase(value)
-          : value;
-    }
-  }
-
-  return result;
+  // 객체인 경우 각 키를 변환하고 값에 대해 재귀 호출
+  return Object.fromEntries(
+    Object.entries(data).map(([key, value]) => {
+      const snakeKey = camelToSnakeCase(key);
+      const transformedValue = convertKeysToSnakeCase(value);
+      return [snakeKey, transformedValue];
+    }),
+  );
 };
 
 /**
