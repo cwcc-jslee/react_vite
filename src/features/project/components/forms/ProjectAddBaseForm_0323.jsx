@@ -10,9 +10,8 @@ import { useSelectData } from '../../../../shared/hooks/useSelectData';
 
 // 프로젝트 정보 입력 폼 컴포넌트
 const ProjectAddBaseForm = ({
-  formData,
-  updateFormField,
-  handleTemplateSelect,
+  projectInfo,
+  onInfoChange,
   onTemplateSelect,
 }) => {
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
@@ -80,6 +79,14 @@ const ProjectAddBaseForm = ({
     })),
   ];
 
+  // 입력 값 변경 핸들러
+  const handleChange = (field, value) => {
+    onInfoChange({
+      ...projectInfo,
+      [field]: value,
+    });
+  };
+
   // 고객사 선택 핸들러
   const handleCustomerSelect = (customer) => {
     if (customer?.id) {
@@ -89,11 +96,22 @@ const ProjectAddBaseForm = ({
     }
   };
 
+  // 템플릿 선택 핸들러
+  const handleTemplateSelect = (e) => {
+    const templateId = e.target.value;
+    handleChange('template', templateId);
+
+    // 템플릿 ID가 있을 경우 onTemplateSelect 콜백 호출
+    if (templateId && onTemplateSelect) {
+      onTemplateSelect(templateId);
+    }
+  };
+
   return (
-    <div className="bg-white p-4 rounded-md shadow-sm h-full">
-      <div className="flex flex-col space-y-4">
+    <div className="bg-white p-4 mb-6 rounded-md shadow-sm">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* 고객사 입력 필드 */}
-        <div className="w-full">
+        <div className="col-span-1">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             고객사
           </label>
@@ -101,14 +119,13 @@ const ProjectAddBaseForm = ({
         </div>
 
         {/* SFA 선택 필드 */}
-        <div className="w-full">
+        <div className="col-span-1">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             SFA
           </label>
           <select
-            name="sfa"
-            value={formData.sfa || ''}
-            onChange={updateFormField}
+            value={projectInfo.sfa || ''}
+            onChange={(e) => handleChange('sfa', e.target.value)}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             disabled={isSfaLoading || !selectedCustomerId}
           >
@@ -123,29 +140,27 @@ const ProjectAddBaseForm = ({
         </div>
 
         {/* 프로젝트명 입력 필드 */}
-        <div className="w-full">
+        <div className="col-span-1">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             프로젝트명
           </label>
           <input
             type="text"
-            name="name"
-            value={formData.name || ''}
-            onChange={updateFormField}
+            value={projectInfo.projectName || ''}
+            onChange={(e) => handleChange('projectName', e.target.value)}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             placeholder="프로젝트명을 입력하세요"
           />
         </div>
 
         {/* 서비스 선택 필드 */}
-        <div className="w-full">
+        <div className="col-span-1">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             서비스
           </label>
           <select
-            name="service"
-            value={formData.service || ''}
-            onChange={updateFormField}
+            // value={projectInfo.service || ''}
+            // onChange={(e) => handleChange('service', e.target.value)}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           >
             {serviceOptions.map((option) => (
@@ -157,14 +172,13 @@ const ProjectAddBaseForm = ({
         </div>
 
         {/* 사업부 선택 필드 */}
-        <div className="w-full">
+        <div className="col-span-1">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             사업부
           </label>
           <select
-            name="team"
-            value={formData.team || ''}
-            onChange={updateFormField}
+            // value={projectInfo.department || ''}
+            // onChange={(e) => handleChange('department', e.target.value)}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           >
             {teamOptions.map((option) => (
@@ -174,14 +188,14 @@ const ProjectAddBaseForm = ({
             ))}
           </select>
         </div>
-
-        {/* 템플릿 선택 필드 */}
-        <div className="w-full">
+        {/* 사업부 선택 필드 */}
+        <div className="col-span-1">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             템플릿
           </label>
           <select
-            onChange={(e) => handleTemplateSelect(e.target.value)}
+            // value={projectInfo.department || ''}
+            onChange={handleTemplateSelect}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           >
             {templeteOptions.map((option) => (

@@ -319,8 +319,6 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
               type="text"
               name="planningTimeData.personnelCount"
               value={taskFormData?.planningTimeData?.personnelCount || ''}
-              min="1"
-              max="10"
               onChange={handleInputChange}
               // disabled={!taskFormData.taskScheduleType}
             />

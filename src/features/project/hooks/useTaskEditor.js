@@ -223,7 +223,7 @@ const useTaskEditor = (
       ...initialTask,
       ...taskFormData,
       projectTaskChecklists: checklists,
-      assignedUsers,
+      users: assignedUsers,
     };
   };
 

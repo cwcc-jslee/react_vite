@@ -105,7 +105,7 @@ const KanbanColumn = ({
 
   return (
     <>
-      <div className="flex-shrink-0 w-72 h-full flex flex-col">
+      <div className="flex-shrink-0 w-72 h-full flex flex-col kanban-column">
         <div className="flex flex-col h-full border-0 rounded-md bg-gray-50 shadow-sm mx-2">
           <div className="p-3 border-b relative group">
             {/* 컬럼 제목 */}
@@ -205,11 +205,8 @@ const KanbanColumn = ({
             </button>
           </div>
 
-          {/* 작업 카드 목록 - 전체 높이를 채우도록 수정 */}
-          <div
-            className="flex-grow overflow-y-auto px-3 py-2"
-            style={{ minHeight: '10rem' }}
-          >
+          {/* 작업 카드 목록 - 스크롤 가능하도록 수정 */}
+          <div className="flex-grow overflow-y-auto px-3 py-2 kanban-column-content">
             {/* 진행 중인 작업 목록 */}
             {pendingTasks.map((task, taskIndex) => {
               // 실제 전체 tasks 배열에서의 인덱스 계산
@@ -232,6 +229,7 @@ const KanbanColumn = ({
                 />
               );
             })}
+
             {/* 완료된 작업이 있는 경우 완료됨 섹션 표시 */}
             {completedTasks.length > 0 && (
               <div className="mt-4 bg-gray-50 rounded-md">

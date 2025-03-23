@@ -9,14 +9,21 @@ import { projectTaskInitialState } from '../../../shared/constants/initialFormSt
 import { projectApiService } from '../services/projectApiService';
 import { apiCommon } from '../../../shared/api/apiCommon';
 import { useCodebook } from '../../../shared/hooks/useCodebook';
+import { useProjectForm } from '../hooks/useProjectForm';
 import useSelectData from '../../../shared/hooks/useSelectData';
 import useProjectTask from '../hooks/useProjectTask';
+import {
+  validateProjectForm,
+  validateProjectTaskForm,
+} from '../utils/validateProjectForm';
 import useModal from '../../../shared/hooks/useModal';
 // 컴포넌트
 import KanbanColumn from '../components/ui/KanbanColumn';
 import ProjectAddBaseForm from '../components/forms/ProjectAddBaseForm';
 import ModalRenderer from '../../../shared/components/ui/modal/ModalRenderer';
 import ProjectTaskForm from '../components/emements/ProjectTaskForm';
+// 알림 서비스 추가
+import { notification } from '../../../shared/services/notification';
 
 /**
  * 프로젝트 추가 컨테이너 컴포넌트
@@ -27,12 +34,14 @@ import ProjectTaskForm from '../components/emements/ProjectTaskForm';
  */
 const ProjectAddContainer = () => {
   // 프로젝트 정보 상태 관리
+  const { formData, errors, isSubmitting, setErrors, updateFormField } =
+    useProjectForm();
   const [projectInfo, setProjectInfo] = useState({
     customer: '',
     sfa: '',
-    projectName: '',
+    name: '',
     service: '',
-    department: '',
+    team: '',
   });
 
   // 현재 선택된 작업 정보 상태
@@ -58,10 +67,6 @@ const ProjectAddContainer = () => {
     apiCommon.getUsers,
   );
   console.log(`>> 사용자 조회 : `, usersData);
-
-  const handleProjectInfoChange = () => {
-    //
-  };
 
   // 커스텀 훅 사용
   const {
@@ -211,6 +216,7 @@ const ProjectAddContainer = () => {
    * @param {number} taskIndex - 컬럼 내 작업의 인덱스
    */
   const handleOpenTaskEditModal = (task, bucketIndex, taskIndex) => {
+    console.log(`>> TaskCard on click : `, task);
     // 선택된 작업 정보 저장
     setSelectedTask(task);
     setSelectedColumnIndex(bucketIndex);
@@ -240,8 +246,103 @@ const ProjectAddContainer = () => {
     );
   };
 
+  /**
+   * 폼 제출 이벤트 핸들러
+   * 유효성 검사 후 제출 프로세스 시작
+   */
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+
+    // 1. 기본 폼 유효성 검사
+    const { isValid, errors: validationErrors } = validateProjectForm(formData);
+
+    // 유효성 검사 실패 시 오류 표시
+    if (!isValid) {
+      setErrors(validationErrors);
+
+      // 첫 번째 오류 메시지로 알림 표시
+      const formError = Object.values(validationErrors)[0];
+      notification.error({
+        message: '기본폼 등록 오류',
+        description: formError,
+        // duration: 3,
+      });
+
+      return;
+    }
+
+    // 2. Task 폼 유효성 검사
+    const { isValid: isTasksValid, errors: validationTasksErrors } =
+      validateProjectTaskForm(projectBuckets);
+
+    // 유효성 검사 실패 시 오류 표시
+    if (!isTasksValid) {
+      setErrors(validationTasksErrors);
+
+      // 첫 번째 오류 메시지로 알림 표시
+      const tasksError = Object.values(validationTasksErrors)[0];
+      notification.error({
+        message: 'TASK 등록 오류',
+        description: tasksError,
+        // duration: 3,
+      });
+
+      return;
+    }
+
+    // 3. 폼 제출 진행
+    console.log(`3단계 폼제출 진행..`);
+  };
+
+  // 프로젝트 저장 처리 함수
+  const handleSaveProject = () => {
+    // 프로젝트 기본 정보 유효성 검사
+    const formErrors = validateProjectForm();
+
+    // 칸반 보드 작업 유효성 검사
+    const taskErrors = validateKanbanTasks();
+
+    // 모든 오류 모음
+    const allErrors = [...formErrors, ...taskErrors];
+
+    if (allErrors.length > 0) {
+      // 오류가 있는 경우 알림 표시
+      notification.error({
+        message: '프로젝트 저장 실패',
+        description: (
+          <div>
+            <p>다음 문제를 해결해주세요:</p>
+            <ul className="pl-4 mt-2 list-disc">
+              {allErrors.slice(0, 5).map((error, index) => (
+                <li key={index}>{error}</li>
+              ))}
+              {allErrors.length > 5 && (
+                <li>그 외 {allErrors.length - 5}개의 문제가 더 있습니다.</li>
+              )}
+            </ul>
+          </div>
+        ),
+        // duration: 10, // 10초 표시
+      });
+
+      console.error('유효성 검사 실패:', allErrors);
+      return;
+    }
+
+    // 유효성 검사 통과 시 저장 진행
+    console.log('프로젝트 저장 성공!');
+    console.log('프로젝트 정보:', formData);
+    console.log('작업 정보:', projectBuckets);
+
+    // TODO: 실제 API 호출로 저장 로직 구현
+    notification.success({
+      message: '저장 성공',
+      description: '프로젝트가 성공적으로 저장되었습니다.',
+    });
+  };
+
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full flex flex-col">
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -250,54 +351,100 @@ const ProjectAddContainer = () => {
               overflow-x: auto !important;
             }
           }
+          
+          /* 개별 칸반 컬럼의 스크롤 설정 */
+          .kanban-column {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+          }
+          
+          .kanban-column-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+          }
         `,
         }}
       />
 
-      {/* 프로젝트 정보 폼 */}
-      <div className="w-full mb-4">
-        <ProjectAddBaseForm
-          projectInfo={projectInfo}
-          onInfoChange={handleProjectInfoChange}
-          onTemplateSelect={handleTemplateSelect}
-        />
-      </div>
-
-      <div
-        className="kanban-container flex h-full overflow-x-auto"
-        style={{ minHeight: '600px' }}
-      >
-        {projectBuckets.map((bucket, index) => (
-          <KanbanColumn
-            key={index}
-            codebooks={codebooks}
-            bucket={bucket}
-            bucketIndex={index}
-            totalColumns={projectBuckets.length}
-            startEditingColumnTitle={startEditingColumnTitle}
-            editState={editState}
-            handleEditChange={handleEditChange}
-            saveEdit={saveEdit}
-            cancelEdit={cancelEdit}
-            onAddTask={addTask}
-            startEditing={startEditing}
-            toggleTaskCompletion={toggleTaskCompletion}
-            toggleCompletedSection={toggleCompletedSection}
-            deleteTask={deleteTask}
-            deleteColumn={deleteColumn}
-            moveColumn={moveColumn}
-            onOpenTaskEditModal={handleOpenTaskEditModal}
+      {/* 전체 컨테이너를 수평 레이아웃으로 변경 */}
+      <div className="flex flex-row h-full flex-grow overflow-hidden">
+        {/* 왼쪽 사이드바 - 프로젝트 정보 폼 */}
+        <div className="w-72 flex-shrink-0 pr-4 h-full overflow-y-auto flex flex-col">
+          <ProjectAddBaseForm
+            formData={formData}
+            updateFormField={updateFormField}
+            handleTemplateSelect={handleTemplateSelect}
           />
-        ))}
 
-        <div className="flex-shrink-0 w-72 h-full flex items-start p-2">
-          <button
-            className="w-full h-10 bg-indigo-600 text-white border-2 border-indigo-600 rounded-sm flex items-center justify-center text-sm"
-            onClick={handleAddColumnClick}
-          >
-            <FiPlus className="mr-2" size={18} />
-            <span>버킷 추가</span>
-          </button>
+          {/* 버튼 컨테이너 */}
+          <div className="bg-white p-4 rounded-md shadow-sm mt-4">
+            <div className="flex flex-row gap-2">
+              <button
+                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                onClick={() => {
+                  // 폼 초기화 로직
+                  setProjectInfo({
+                    customer: '',
+                    sfa: '',
+                    projectName: '',
+                    service: '',
+                    department: '',
+                  });
+                }}
+              >
+                초기화
+              </button>
+
+              <button
+                className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                onClick={handleFormSubmit}
+              >
+                저장
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 오른쪽 칸반 보드 컨테이너 */}
+        <div
+          className="kanban-container flex h-full overflow-x-auto overflow-y-hidden flex-grow"
+          style={{ height: 'calc(100vh - 200px)' }}
+        >
+          {projectBuckets.map((bucket, index) => (
+            <KanbanColumn
+              key={index}
+              codebooks={codebooks}
+              bucket={bucket}
+              bucketIndex={index}
+              totalColumns={projectBuckets.length}
+              startEditingColumnTitle={startEditingColumnTitle}
+              editState={editState}
+              handleEditChange={handleEditChange}
+              saveEdit={saveEdit}
+              cancelEdit={cancelEdit}
+              onAddTask={addTask}
+              startEditing={startEditing}
+              toggleTaskCompletion={toggleTaskCompletion}
+              toggleCompletedSection={toggleCompletedSection}
+              deleteTask={deleteTask}
+              deleteColumn={deleteColumn}
+              moveColumn={moveColumn}
+              onOpenTaskEditModal={handleOpenTaskEditModal}
+            />
+          ))}
+
+          <div className="flex-shrink-0 w-72 h-full flex items-start p-2">
+            <button
+              className="w-full h-10 bg-indigo-600 text-white border-2 border-indigo-600 rounded-sm flex items-center justify-center text-sm"
+              onClick={handleAddColumnClick}
+            >
+              <FiPlus className="mr-2" size={18} />
+              <span>버킷 추가</span>
+            </button>
+          </div>
         </div>
       </div>
 

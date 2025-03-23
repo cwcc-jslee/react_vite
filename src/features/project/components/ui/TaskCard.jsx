@@ -31,7 +31,14 @@ const TaskCard = ({
   deleteTask,
   onOpenTaskEditModal,
 }) => {
-  const { name, days, planEndDate, assignedUsers = [], taskProgress } = task;
+  const {
+    name,
+    days,
+    planEndDate,
+    assignedUsers = [],
+    users = [],
+    taskProgress,
+  } = task;
   const isCompleted = taskProgress?.code === '100';
 
   // 메뉴 상태 관리
@@ -206,7 +213,7 @@ const TaskCard = ({
             </div>
           </div>
 
-          {(planEndDate || assignedUsers.length > 0) && (
+          {(planEndDate || users.length > 0) && (
             <>
               <div className="bg-gray-200 h-px mx-3 my-1" />
               <div className="justify-between flex h-9 mt-1">
@@ -243,7 +250,7 @@ const TaskCard = ({
                     <div className="flex-grow float-left">
                       <div className="float-left w-auto">
                         <div className="flex">
-                          {assignedUsers.length === 0 ? (
+                          {users.length === 0 ? (
                             <button className="text-neutral-800 cursor-pointer pr-1 w-8 h-4 mr-1 rounded-full">
                               <span className="items-center justify-center flex h-full">
                                 <span className="items-center justify-center flex h-4 m-1">
@@ -253,7 +260,7 @@ const TaskCard = ({
                             </button>
                           ) : (
                             <ul className="flex list-none overflow-hidden -m-1">
-                              {assignedUsers.map((color, index) => (
+                              {users.map((color, index) => (
                                 <li key={index} className="inline-flex m-1">
                                   <div className="self-center text-center rounded-full">
                                     <div className="w-6 h-6">

@@ -35,6 +35,15 @@ export const contactInitialState = {
   tags: [],
 };
 
+// Project 모듈 초기 상태
+export const projectInitialState = {
+  name: '',
+  customer: '',
+  sfa: '',
+  service: '',
+  team: '',
+};
+
 // Proejct Task 초기 상태
 export const projectTaskInitialState = [
   {

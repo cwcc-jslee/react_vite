@@ -5,16 +5,18 @@
  */
 
 import { useState, useCallback } from 'react';
+import { useProject } from '../context/ProjectProvider';
 import { projectInitialState } from '../../../shared/constants/initialFormState';
-import { submitProjectData } from '../services/projectSubmitService';
+// import { submitProjectData } from '../services/projectSubmitService';
 import { useForm } from '../../../shared/hooks/useForm';
 import { formatFullName } from '../../../shared/utils/nameUtils';
-import { validateProjectForm } from '../utils/projectFormValidation';
+// import { validateProjectForm } from '../utils/projectFormValidation';
 
 /**
  * Project Form 관련 로직을 관리하는 Custom Hook
  */
 export const useProjectForm = () => {
+  const { setDrawerClose } = useProject();
   // 공통 useForm 훅 사용
   const formHook = useForm(projectInitialState);
   //   formData,
@@ -30,7 +32,7 @@ export const useProjectForm = () => {
    * @returns {Object} { isValid, errors } 형태의 객체
    */
   const validateForm = useCallback(() => {
-    return validateProjectForm(formHook.formData);
+    // return validateProjectForm(formHook.formData);
   }, [formHook.formData]);
 
   /**
@@ -42,7 +44,7 @@ export const useProjectForm = () => {
       setIsSubmitting(true);
 
       // 서비스 레이어 호출 (제출)
-      const response = await submitProjectData(formHook.formData);
+      // const response = await submitProjectData(formHook.formData);
 
       // 제출 성공 후처리
       handleSubmitSuccess(response);
@@ -86,28 +88,12 @@ export const useProjectForm = () => {
   const updateProjectField = useCallback(
     (e) => {
       const { name, value } = e.target;
+      formHook.updateFormField(e);
 
-      // lastName 또는 firstName 변경 시 fullName 자동 업데이트
-      if (name === 'lastName' || name === 'firstName') {
-        formHook.setFormData((prev) => {
-          const newData = { ...prev, [name]: value };
-          // formatFullName 함수 사용하여 fullName 생성
-          const fullName = formatFullName(
-            name === 'lastName' ? value : newData.lastName,
-            name === 'firstName' ? value : newData.firstName,
-          );
-
-          return { ...newData, fullName };
-        });
-      } else {
-        // 다른 필드는 기본 updateFormField 사용
-        formHook.updateFormField(e);
-      }
-
-      // 해당 필드에 오류가 있었다면 초기화
-      if (formHook.errors[name]) {
-        formHook.setErrors((prev) => ({ ...prev, [name]: undefined }));
-      }
+      // // 해당 필드에 오류가 있었다면 초기화
+      // if (formHook.errors[name]) {
+      //   formHook.setErrors((prev) => ({ ...prev, [name]: undefined }));
+      // }
     },
     [formHook],
   );
