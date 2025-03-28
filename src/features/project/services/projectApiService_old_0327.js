@@ -50,6 +50,20 @@ export const projectApiService = {
       handleError(error, 'Failed to fetch Project list');
     }
   },
+  /**
+   * 프로젝트트 상세 조회
+   */
+  //   getProjectDetail: async (id) => {
+  //     try {
+  //       // 쿼리 생성 및 API 호출
+  //       const query = buildProjectDetailQuery(id);
+  //       const response = await apiClient.get(`/projects?${query}`);
+
+  //       return normalizeResponse(response);
+  //     } catch (error) {
+  //       handleError(error, 'Failed to fetch Project list');
+  //     }
+  //   },
 
   /**
    * 프로젝트트 Task 템플릿 조회

@@ -1,9 +1,15 @@
 // src/features/project/components/table/ProjectTable.jsx
-import React from 'react';
-import { useProject } from '../../context/ProjectProvider';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Button } from '../../../../shared/components/ui';
 import { Card } from '../../../../shared/components/ui/card/Card';
 import { Pagination } from '../../../../shared/components/ui/pagination/Pagination';
+import {
+  fetchProjects,
+  setPage,
+  setPageSize,
+  fetchProjectDetail,
+} from '../../store/projectSlice';
 
 const COLUMNS = [
   { key: 'id', title: 'ID', align: 'left' },
@@ -18,6 +24,7 @@ const COLUMNS = [
   { key: 'action', title: 'Action', align: 'center' },
 ];
 
+// 테이블 로딩 상태 컴포넌트
 const TableLoadingIndicator = ({ columnsCount }) => {
   return (
     <tr>
@@ -33,6 +40,7 @@ const TableLoadingIndicator = ({ columnsCount }) => {
   );
 };
 
+// 테이블 빈 상태 컴포넌트
 const TableEmptyState = ({ columnsCount }) => {
   return (
     <tr>
@@ -45,6 +53,7 @@ const TableEmptyState = ({ columnsCount }) => {
   );
 };
 
+// 테이블 에러 상태 컴포넌트
 const TableErrorState = ({ columnsCount, message }) => {
   return (
     <tr>
@@ -59,9 +68,15 @@ const TableErrorState = ({ columnsCount, message }) => {
   );
 };
 
+// 테이블 행 컴포넌트
 const TableRow = ({ item, index, pageSize, currentPage }) => {
+  const dispatch = useDispatch();
   const actualIndex = (currentPage - 1) * pageSize + index + 1;
-  const { fetchProjectDetail } = useProject();
+
+  // 프로젝트 상세정보 조회 핸들러
+  const handleViewDetail = () => {
+    dispatch(fetchProjectDetail(item.id));
+  };
 
   // business_type 표시를 위한 헬퍼 함수
   const formatBusinessType = (types) => {
@@ -92,22 +107,22 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
   return (
     <tr className="hover:bg-gray-50">
       <td className="px-3 py-2 text-center text-sm">{item.id}</td>
-      <td className="px-3 py-2 text-center text-sm">{item?.customer?.name}</td>
-      <td className="px-3 py-2 text-sm">{item.name}</td>
-      <td className="px-3 py-2 text-center text-sm">{'-'}</td>
-      <td className="px-3 py-2 text-center text-sm">{'-'}</td>
-      <td className="px-3 py-2 text-center text-sm">{'-'}</td>
-      <td className="px-3 py-2 text-center text-sm">{item.plan_start_date}</td>
       <td className="px-3 py-2 text-center text-sm">
-        {item.last_workupdate_date}
+        {item?.customer?.name || '-'}
+      </td>
+      <td className="px-3 py-2 text-sm">{item.name || '-'}</td>
+      <td className="px-3 py-2 text-center text-sm">{'-'}</td>
+      <td className="px-3 py-2 text-center text-sm">{'-'}</td>
+      <td className="px-3 py-2 text-center text-sm">{'-'}</td>
+      <td className="px-3 py-2 text-center text-sm">
+        {item.plan_start_date || '-'}
+      </td>
+      <td className="px-3 py-2 text-center text-sm">
+        {item.last_workupdate_date || '-'}
       </td>
       <td className="px-3 py-2 text-center text-sm">{'-'}</td>
       <td className="px-3 py-2 text-center">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => fetchProjectDetail(item.id)}
-        >
+        <Button variant="outline" size="sm" onClick={handleViewDetail}>
           View
         </Button>
       </td>
@@ -116,10 +131,32 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
 };
 
 const ProjectTable = () => {
-  const { fetchData, loading, error, pagination, setPage, setPageSize } =
-    useProject();
+  const dispatch = useDispatch();
 
-  console.log(`ProjectTable's fetchData : `, fetchData);
+  // Redux 상태에서 필요한 데이터 추출
+  const items = useSelector((state) => state.project.items);
+  const status = useSelector((state) => state.project.status);
+  const error = useSelector((state) => state.project.error);
+  const pagination = useSelector((state) => state.project.pagination);
+
+  // 컴포넌트 마운트 시 데이터 로드
+  useEffect(() => {
+    dispatch(fetchProjects());
+  }, [dispatch, pagination.current, pagination.pageSize]);
+
+  // 페이지 변경 핸들러
+  const handlePageChange = (page) => {
+    dispatch(setPage(page));
+  };
+
+  // 페이지 크기 변경 핸들러
+  const handlePageSizeChange = (pageSize) => {
+    dispatch(setPageSize(pageSize));
+  };
+
+  const loading = status === 'loading';
+
+  console.log(`ProjectTable's items : `, items);
 
   return (
     <Card>
@@ -145,14 +182,14 @@ const ProjectTable = () => {
               <TableLoadingIndicator columnsCount={COLUMNS.length} />
             ) : error ? (
               <TableErrorState columnsCount={COLUMNS.length} message={error} />
-            ) : !fetchData?.length ? (
+            ) : !items?.length ? (
               <TableEmptyState columnsCount={COLUMNS.length} />
             ) : (
-              fetchData.map((item, index) => (
+              items.map((item, index) => (
                 <TableRow
                   key={item.id}
                   item={item}
-                  index={item.id}
+                  index={index}
                   pageSize={pagination.pageSize}
                   currentPage={pagination.current}
                 />
@@ -162,13 +199,13 @@ const ProjectTable = () => {
         </table>
       </div>
 
-      {!loading && !error && fetchData?.length > 0 && (
+      {!loading && !error && items?.length > 0 && (
         <Pagination
           current={pagination.current}
           pageSize={pagination.pageSize}
           total={pagination.total}
-          onPageChange={setPage}
-          onPageSizeChange={setPageSize}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
         />
       )}
     </Card>

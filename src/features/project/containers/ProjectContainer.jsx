@@ -1,15 +1,13 @@
 // src/features/project/containers/ProjectContainer.jsx
 
 import React, { useEffect } from 'react';
-import { useProject } from '../context/ProjectProvider';
+import { useSelector } from 'react-redux';
+import { fetchProjects } from '../store/projectSlice';
 import { Section } from '../../../shared/components/ui/layout/components';
 
 // Components
-import ProjectMenu from '../components/ProjectMenu';
 import ProjectTable from '../components/tables/ProjectTable';
-// import ProjectAddSection from '../components/compose/ProjectAddSection';
 import ProjectAddContainer from './ProjectAddContainer';
-// import ProjectDrawer from '../components/drawer/ProjectDrawer';
 
 /**
  * Project 메인 컨테이너 컴포넌트
@@ -17,16 +15,13 @@ import ProjectAddContainer from './ProjectAddContainer';
  */
 const ProjectContainer = () => {
   // 레이아웃 관련 상태 가져오기
-  const { pageLayout, drawerState } = useProject();
-  const { components } = pageLayout;
+  const components = useSelector((state) => state.ui.pageLayout.components);
 
-  console.log(`DrawerState : `, drawerState);
+  console.log(`DrawerState : `, components);
 
   return (
     <>
       <Section>
-        <ProjectMenu />
-        <br></br>
         {components.projectTable && <ProjectTable />}
         {components.projectAddSection && <ProjectAddContainer />}
       </Section>

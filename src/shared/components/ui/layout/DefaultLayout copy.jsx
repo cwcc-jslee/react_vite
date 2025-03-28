@@ -4,11 +4,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../../../features/auth/store/authSlice';
 import { fetchFrequentCodebooks } from '../../../../features/codebook/store/codebookSlice';
-import {
-  MENU_ITEMS,
-  PAGE_MENUS,
-  DEFAULT_MENU_IDS,
-} from '../../../constants/navigation';
 import { Button } from '../index.jsx';
 import {
   Layout,
@@ -19,8 +14,91 @@ import {
   Navigation,
   NavList,
   NavItem,
+  Breadcrumb,
 } from './components.jsx';
-import BreadcrumbWithMenu from './BreadcrumbWithMenu.jsx';
+
+// 메뉴 아이템에 아이콘 추가
+const menuItems = [
+  {
+    key: '/',
+    label: 'HOME',
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-5 w-5"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+      </svg>
+    ),
+  },
+  {
+    key: '/sfa',
+    label: 'SFA',
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-5 w-5"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fillRule="evenodd"
+          d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 0l-2 2a1 1 0 101.414 1.414L8 10.414l1.293 1.293a1 1 0 001.414 0l4-4z"
+          clipRule="evenodd"
+        />
+      </svg>
+    ),
+  },
+  {
+    key: '/customer',
+    label: 'CUSTOMER',
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-5 w-5"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 12.094A5.973 5.973 0 004 15v1H1v-1a3 3 0 013.75-2.906z" />
+      </svg>
+    ),
+  },
+  {
+    key: '/contact',
+    label: 'CONTACT',
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-5 w-5"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+      </svg>
+    ),
+  },
+  {
+    key: '/project',
+    label: 'PROJECT',
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-5 w-5"
+        viewBox="0 0 20 20"
+        fill="currentColor"
+      >
+        <path
+          fillRule="evenodd"
+          d="M3 3a1 1 0 00-1 1v12a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H3zm1 2h10v10H4V5zm2 3a1 1 0 011-1h4a1 1 0 110 2H7a1 1 0 01-1-1zm0 3a1 1 0 011-1h4a1 1 0 110 2H7a1 1 0 01-1-1z"
+          clipRule="evenodd"
+        />
+      </svg>
+    ),
+  },
+  // { key: '/work', label: 'WORK' },
+];
 
 // 현재 경로에 기반한 브레드크럼 생성 함수
 const getBreadcrumbItems = (path) => {
@@ -44,21 +122,12 @@ const getBreadcrumbItems = (path) => {
   return items;
 };
 
-// 현재 페이지 식별자 추출 함수
-const getCurrentPageFromPath = (path) => {
-  const segments = path.split('/').filter(Boolean);
-  return segments.length > 0 ? segments[0] : '';
-};
-
 const DefaultLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { status, error } = useSelector((state) => state.codebook);
-
-  // 현재 페이지 식별자 추출
-  const currentPage = getCurrentPageFromPath(location.pathname);
 
   // 사이드바 접힘/펼침 상태
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -139,13 +208,10 @@ const DefaultLayout = ({ children }) => {
         <Sider collapsed={sidebarCollapsed} onToggle={toggleSidebar}>
           <Navigation>
             <NavList>
-              {MENU_ITEMS.map((item) => (
+              {menuItems.map((item) => (
                 <NavItem
                   key={item.key}
-                  active={
-                    location.pathname === item.key ||
-                    location.pathname.startsWith(item.key + '/')
-                  }
+                  active={location.pathname === item.key}
                   onClick={() => navigate(item.key)}
                   collapsed={sidebarCollapsed}
                   icon={item.icon}
@@ -157,21 +223,11 @@ const DefaultLayout = ({ children }) => {
           </Navigation>
         </Sider>
 
-        <Content
-          sidebarCollapsed={sidebarCollapsed}
-          removeContentPadding={true}
-        >
-          {/* 상단 영역 (브레드크럼 + 메뉴) */}
-          <div className="border-b border-gray-200">
-            <BreadcrumbWithMenu
-              breadcrumbItems={breadcrumbItems}
-              currentPage={currentPage}
-              pageMenus={PAGE_MENUS}
-            />
-          </div>
+        <Content sidebarCollapsed={sidebarCollapsed}>
+          {/* 브레드크럼 추가 */}
+          <Breadcrumb items={breadcrumbItems} />
 
-          {/* 본문 영역 (필터 + 콘텐츠) */}
-          <div className="p-0">{children}</div>
+          {children}
         </Content>
       </div>
     </Layout>
