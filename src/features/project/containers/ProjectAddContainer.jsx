@@ -30,6 +30,7 @@ import ModalRenderer from '../../../shared/components/ui/modal/ModalRenderer';
 import ProjectTaskForm from '../components/emements/ProjectTaskForm';
 // 알림 서비스 추가
 import { notification } from '../../../shared/services/notification';
+import ProjectMenuFields from '../components/forms/ProjectMenuFields';
 
 /**
  * 프로젝트 추가 컨테이너 컴포넌트
@@ -111,8 +112,16 @@ const ProjectAddContainer = () => {
    * @param {any} value - 필드 값
    */
   const updateField = useCallback(
-    (name, value) => {
-      dispatch(updateFormField({ name, value }));
+    (nameOrEvent, valueOrNothing) => {
+      // 이벤트 객체인 경우
+      if (nameOrEvent && nameOrEvent.target) {
+        const { name, value } = nameOrEvent.target;
+        dispatch(updateFormField({ name, value }));
+      }
+      // name, value 형태로 직접 호출한 경우
+      else {
+        dispatch(updateFormField({ name: nameOrEvent, value: valueOrNothing }));
+      }
     },
     [dispatch],
   );
@@ -463,6 +472,10 @@ const ProjectAddContainer = () => {
         `,
         }}
       />
+      <ProjectMenuFields
+        handleTemplateSelect={handleTemplateSelect}
+        updateField={updateField}
+      />
 
       {/* 전체 컨테이너를 수평 레이아웃으로 변경 */}
       <div className="flex flex-row h-full flex-grow overflow-hidden">
@@ -471,12 +484,12 @@ const ProjectAddContainer = () => {
           <ProjectAddBaseForm
             formData={formData}
             codebooks={codebooks}
-            updateFormField={handleInputChange}
-            handleTemplateSelect={handleTemplateSelect}
+            // updateFormField={handleInputChange}
+            updateField={updateField}
           />
 
           {/* 버튼 컨테이너 */}
-          <div className="bg-white p-4 rounded-md shadow-sm mt-4">
+          {/* <div className="bg-white p-4 rounded-md shadow-sm mt-4">
             <div className="flex flex-row gap-2">
               <button
                 className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
@@ -492,13 +505,13 @@ const ProjectAddContainer = () => {
                 저장
               </button>
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* 오른쪽 칸반 보드 컨테이너 */}
         <div
           className="kanban-container flex h-full overflow-x-auto overflow-y-hidden flex-grow"
-          style={{ height: 'calc(100vh - 200px)' }}
+          style={{ height: 'calc(100vh - 250px)' }}
         >
           {projectBuckets.map((bucket, index) => (
             <KanbanColumn

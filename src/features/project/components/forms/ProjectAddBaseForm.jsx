@@ -24,7 +24,7 @@ import {
 const ProjectAddBaseForm = ({
   formData,
   codebooks,
-  updateFormField,
+  updateField,
   handleTemplateSelect,
   onTemplateSelect,
 }) => {
@@ -106,22 +106,22 @@ const ProjectAddBaseForm = ({
     <div className="bg-white p-4 rounded-md shadow-sm h-full">
       <div className="flex flex-col space-y-4">
         {/* 고객사 입력 필드 */}
-        <div className="w-full">
+        {/* <div className="w-full">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             고객사
           </label>
           <CustomerSearchInput onSelect={handleCustomerSelect} size="small" />
-        </div>
+        </div> */}
 
         {/* SFA 선택 필드 */}
-        <div className="w-full">
+        {/* <div className="w-full">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             SFA
           </label>
           <select
             name="sfa"
             value={formData.sfa || ''}
-            onChange={updateFormField}
+            onChange={updateField}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             disabled={isSfaLoading || !selectedCustomerId}
           >
@@ -133,7 +133,7 @@ const ProjectAddBaseForm = ({
               </option>
             ))}
           </select>
-        </div>
+        </div> */}
 
         {/* 프로젝트명 입력 필드 */}
         <FormItem direction="vertical" className="flex-1">
@@ -143,7 +143,7 @@ const ProjectAddBaseForm = ({
           <TextArea
             name="name"
             value={formData.name || ''}
-            onChange={updateFormField}
+            onChange={updateField}
             rows={2}
             // disabled={isSubmitting}
           />
@@ -155,7 +155,7 @@ const ProjectAddBaseForm = ({
           <Select
             name="fy"
             value={formData.fy}
-            onChange={updateFormField}
+            onChange={updateField}
             // disabled={isSubmitting}
           >
             <option value="">선택하세요</option>
@@ -175,7 +175,7 @@ const ProjectAddBaseForm = ({
           <Select
             name="pjtStatus"
             value={formData.pjtStatus}
-            onChange={updateFormField}
+            onChange={updateField}
             // disabled={isSubmitting}
           >
             <option value="">선택하세요</option>
@@ -193,7 +193,7 @@ const ProjectAddBaseForm = ({
           <Select
             name="importanceLevel"
             value={formData.importanceLevel}
-            onChange={updateFormField}
+            onChange={updateField}
             // disabled={isSubmitting}
           >
             <option value="">선택하세요</option>
@@ -213,7 +213,7 @@ const ProjectAddBaseForm = ({
           <select
             name="service"
             value={formData.service || ''}
-            onChange={updateFormField}
+            onChange={updateField}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           >
             {serviceOptions.map((option) => (
@@ -232,7 +232,7 @@ const ProjectAddBaseForm = ({
           <select
             name="team"
             value={formData.team || ''}
-            onChange={updateFormField}
+            onChange={updateField}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           >
             {teamOptions.map((option) => (
@@ -253,7 +253,7 @@ const ProjectAddBaseForm = ({
             type="date"
             name="planStartDate"
             value={formData?.planStartDate}
-            onChange={updateFormField}
+            onChange={updateField}
           />
         </FormItem>
         <FormItem direction="vertical" className="flex-1">
@@ -264,33 +264,9 @@ const ProjectAddBaseForm = ({
             type="date"
             name="planEndDate"
             value={formData?.planEndDate || ''}
-            onChange={updateFormField}
+            onChange={updateField}
           />
         </FormItem>
-
-        {/* 템플릿 선택 필드 */}
-        <div className="w-full">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            템플릿
-          </label>
-          <select
-            onChange={(e) => handleTemplateSelect(e.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-          >
-            {templeteOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {isTaskTempleteLoading && option.value === ''
-                  ? '로딩 중...'
-                  : option.label}
-              </option>
-            ))}
-          </select>
-          {isTemplateDetailLoading && selectedTemplateId && (
-            <p className="text-xs text-indigo-600 mt-1">
-              템플릿 작업 로딩 중...
-            </p>
-          )}
-        </div>
       </div>
     </div>
   );
