@@ -15,17 +15,17 @@ import { projectApiService } from '../services/projectApiService';
 
 // 커스텀 훅 사용
 import useProjectSubmit from '../hooks/useProjectSubmit';
-// import useProjectAPI from '../hooks/useProjectAPI';
+import useKanbanTask from '../hooks/useKanbanTask';
 
 // Redux 액션
 import { updateFormField, resetForm } from '../store/projectSlice';
+import { selectBuckets, loadTaskTemplate } from '../store/kanbanSlice';
 
 // 컴포넌트
 import KanbanColumn from '../components/ui/KanbanColumn';
 import ProjectAddBaseForm from '../components/forms/ProjectAddBaseForm';
 import ModalRenderer from '../../../shared/components/ui/modal/ModalRenderer';
 import ProjectTaskForm from '../components/emements/ProjectTaskForm';
-import ProjectMenuFields from '../components/forms/ProjectMenuFields';
 
 // 알림 서비스 추가
 import { notification } from '../../../shared/services/notification';
@@ -43,6 +43,7 @@ const ProjectAddContainer = () => {
 
   // Redux 상태 가져오기
   const { data: formData = {} } = useSelector((state) => state.project.form);
+  const buckets = useSelector((state) => state.kanban.buckets); // 칸반 데이터를 Redux에서 직접 가져옴
 
   // 현재 선택된 작업 정보 상태
   const [selectedTask, setSelectedTask] = useState(null);
@@ -70,9 +71,28 @@ const ProjectAddContainer = () => {
 
   // 프로젝트 작업 상태 관리
   const {
+    // projectBuckets,
+    // editState,
+    setProjectBuckets,
+    // startEditing,
+    // startEditingColumnTitle,
+    // handleEditChange,
+    // saveEdit,
+    // cancelEdit,
+    // addTask,
+    // addColumn,
+    // toggleTaskCompletion,
+    // toggleCompletedSection,
+    // deleteTask,
+    // deleteColumn,
+    // moveColumn,
+    // updateTask,
+  } = useProjectTask(projectTaskInitialState);
+
+  // 새로운 Redux 연결 칸반 훅 사용
+  const {
     projectBuckets,
     editState,
-    setProjectBuckets,
     startEditing,
     startEditingColumnTitle,
     handleEditChange,
@@ -86,7 +106,9 @@ const ProjectAddContainer = () => {
     deleteColumn,
     moveColumn,
     updateTask,
-  } = useProjectTask(projectTaskInitialState);
+    loadTemplate,
+    resetKanbanBoard,
+  } = useKanbanTask(projectTaskInitialState);
 
   /**
    * 폼 필드 업데이트 이벤트 핸들러
@@ -111,106 +133,22 @@ const ProjectAddContainer = () => {
    * 템플릿 선택 시 작업이 처리되는 핸들러
    * @param {string|number} templateId - 선택된 템플릿 ID
    */
+  /**
+   * 템플릿 선택 시 작업이 처리되는 핸들러
+   * Redux 액션을 사용하여 템플릿 로드
+   *
+   * @param {string|number} templateId - 선택된 템플릿 ID
+   */
   const handleTemplateSelect = async (templateId) => {
-    console.log(`>> handleTemplateSelect [id] : `, templateId);
     if (!templateId) return;
 
     try {
-      // 템플릿 상세 정보 조회
-      const response = await projectApiService.getTaskTemplate(templateId);
-
-      if (response?.data && response.data.length > 0) {
-        // 원본 템플릿 데이터
-        const originalTemplate = response.data[0]?.structure || [];
-
-        // 템플릿 데이터 형식 변환
-        const processedTemplate = originalTemplate.map((bucket) => {
-          // 각 버킷(컬럼)의 작업들 처리
-          const processedTasks = bucket.tasks.map((task) => {
-            // 새 task 객체 생성
-            const newTask = {};
-
-            // 모든 키를 순회하며 스네이크 케이스를 캐멀 케이스로 변환
-            Object.keys(task).forEach((key) => {
-              // 스네이크 케이스 감지 (_가 포함된 키)
-              if (key.includes('_')) {
-                // 스네이크 케이스를 캐멀 케이스로 변환
-                const camelKey = key.replace(/_([a-z])/g, (_, letter) =>
-                  letter.toUpperCase(),
-                );
-                newTask[camelKey] = task[key];
-              } else {
-                // 스네이크 케이스가 아닌 경우 그대로 복사
-                newTask[key] = task[key];
-              }
-            });
-
-            // 특수 처리: taskScheduleType 값에 따른 처리
-            // taskScheduleType이 ongoing이면 false, 그 외(undefined 포함)는 true
-            if (newTask.taskScheduleType === 'ongoing') {
-              newTask.taskScheduleType = false;
-            } else {
-              newTask.taskScheduleType = true;
-              // 인원, 투입률, 작업일 초기화
-              if (!('priorityLevel' in newTask)) {
-                newTask.planningTimeData = {
-                  // personnelCount: 0,
-                  // allocationRate: 0,
-                  // workDays: 0,
-                };
-              }
-            }
-
-            // priority_level이 없으면 기본값 추가
-            if (!('priorityLevel' in newTask)) {
-              newTask.priorityLevel = 116; //  '중간'
-            }
-
-            // task_progress가 없으면 기본값 추가
-            if (!('taskProgress' in newTask)) {
-              newTask.taskProgress = 91; //'0%'
-            }
-
-            return newTask;
-          });
-
-          // 각 버킷 내에서 작업들을 position 기준으로 정렬
-          const sortedTasks = [...processedTasks].sort(
-            (a, b) => (a.position || 0) - (b.position || 0),
-          );
-
-          // 처리된 작업들을 포함한 새 컬럼 객체 반환
-          return {
-            ...bucket,
-            tasks: sortedTasks,
-          };
-        });
-
-        // 버킷(컬럼)을 position 기준으로 정렬
-        const sortedBuckets = [...processedTemplate].sort(
-          (a, b) => (a.position || 0) - (b.position || 0),
-        );
-
-        console.log(`>> 처리 및 정렬된 템플릿 데이터: `, sortedBuckets);
-
-        // 정렬된 형식으로 칸반 보드 업데이트
-        setProjectBuckets(sortedBuckets);
-      }
+      // Redux 액션을 통해 템플릿 로드
+      await dispatch(loadTaskTemplate(templateId));
     } catch (error) {
       console.error('템플릿 로드 오류:', error);
-      notification.error({
-        message: '템플릿 로드 실패',
-        description: '템플릿을 불러오는 중 오류가 발생했습니다.',
-      });
     }
   };
-
-  // 칸반 데이터가 변경될 때마다 로컬 스토리지에 저장
-  useEffect(() => {
-    if (typeof window !== 'undefined' && projectBuckets.length > 0) {
-      localStorage.setItem('kanbanColumns', JSON.stringify(projectBuckets));
-    }
-  }, [projectBuckets]);
 
   /**
    * 새 버킷(컬럼) 추가 핸들러
@@ -276,21 +214,8 @@ const ProjectAddContainer = () => {
     // Redux 폼 상태 초기화
     dispatch(resetForm());
 
-    // 빈 칸반 보드로 초기화
-    setProjectBuckets([
-      {
-        bucket: '할 일',
-        tasks: [],
-      },
-      {
-        bucket: '진행 중',
-        tasks: [],
-      },
-      {
-        bucket: '완료',
-        tasks: [],
-      },
-    ]);
+    // 칸반 보드 초기화 (Redux 액션 사용)
+    resetKanbanBoard();
 
     notification.info({
       message: '폼 초기화',

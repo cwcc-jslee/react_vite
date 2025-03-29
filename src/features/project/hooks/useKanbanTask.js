@@ -1,7 +1,8 @@
 // src/features/project/hooks/useKanbanTask.js
 /**
  * 칸반 보드 작업 관리를 위한 커스텀 훅
- * project 슬라이스의 kanban 상태와 연결하여 기존 useProjectTask 훅의 인터페이스 유지
+ * Redux 상태와 연결하여 기존 useProjectTask 훅의 인터페이스를 유지하면서
+ * 상태 관리는 중앙화된 Redux로 위임합니다.
  */
 
 import { useCallback, useEffect } from 'react';
@@ -26,7 +27,7 @@ import {
   toggleCompletedSection,
   loadTaskTemplate,
   resetKanban,
-} from '../store/projectSlice'; // project 슬라이스에서 직접 임포트
+} from '../store/kanbanSlice';
 
 /**
  * 칸반 보드 작업 관리를 위한 커스텀 훅

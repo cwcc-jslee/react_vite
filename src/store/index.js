@@ -10,6 +10,7 @@ import codebookReducer from '../features/codebook/store/codebookSlice';
 // 새로 추가된 리듀서
 import uiReducer from './slices/uiSlice';
 import projectReducer from '../features/project/store/projectSlice';
+import kanbanReducer from '../features/project/store/kanbanSlice';
 // import sfaReducer from './slices/sfaSlice';
 // import customerReducer from './slices/customerSlice';
 
@@ -26,6 +27,7 @@ export const store = configureStore({
     // 새로 추가된 리듀서
     ui: uiReducer,
     project: projectReducer,
+    kanban: kanbanReducer,
     // sfa: sfaReducer, // 아직 구현되지 않은 경우 주석 처리
     // customer: customerReducer, // 아직 구현되지 않은 경우 주석 처리
   },
