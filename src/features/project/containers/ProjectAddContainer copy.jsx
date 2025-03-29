@@ -2,39 +2,41 @@
 // 프로젝트 관리를 위한 칸반 보드 메인 컨테이너 컴포넌트
 // 프로젝트 정보 입력 폼과 칸반 보드를 통합하여 제공합니다
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { FiPlus } from 'react-icons/fi';
 import { projectTaskInitialState } from '../../../shared/constants/initialFormState';
+import { projectApiService } from '../services/projectApiService';
+import { apiCommon } from '../../../shared/api/apiCommon';
 import { useCodebook } from '../../../shared/hooks/useCodebook';
 import useSelectData from '../../../shared/hooks/useSelectData';
 import useProjectTask from '../hooks/useProjectTask';
+import {
+  validateProjectForm,
+  validateProjectTaskForm,
+} from '../utils/validateProjectForm';
 import useModal from '../../../shared/hooks/useModal';
-import { apiCommon } from '../../../shared/api/apiCommon';
-import { projectApiService } from '../services/projectApiService';
-
-// 커스텀 훅 사용
-import useProjectSubmit from '../hooks/useProjectSubmit';
-// import useProjectAPI from '../hooks/useProjectAPI';
-
 // Redux 액션
-import { updateFormField, resetForm } from '../store/projectSlice';
-
+import {
+  updateFormField,
+  setFormErrors,
+  resetForm,
+  createProject,
+} from '../store/projectSlice';
 // 컴포넌트
 import KanbanColumn from '../components/ui/KanbanColumn';
 import ProjectAddBaseForm from '../components/forms/ProjectAddBaseForm';
 import ModalRenderer from '../../../shared/components/ui/modal/ModalRenderer';
 import ProjectTaskForm from '../components/emements/ProjectTaskForm';
-import ProjectMenuFields from '../components/forms/ProjectMenuFields';
-
 // 알림 서비스 추가
 import { notification } from '../../../shared/services/notification';
+import ProjectMenuFields from '../components/forms/ProjectMenuFields';
 
 /**
  * 프로젝트 추가 컨테이너 컴포넌트
  * 프로젝트 기본 정보 입력 폼과 칸반 보드를 통합하여 제공
  * 모든 모달 관리를 중앙화하여 일관된 UI 경험을 제공
- * 비즈니스 로직은 커스텀 훅으로 분리
+ * Redux를 직접 사용하여 상태 관리
  *
  * @returns {React.ReactElement} 프로젝트 추가 화면
  */
@@ -42,20 +44,35 @@ const ProjectAddContainer = () => {
   const dispatch = useDispatch();
 
   // Redux 상태 가져오기
-  const { data: formData = {} } = useSelector((state) => state.project.form);
+  const {
+    data: formData = {},
+    errors = {},
+    isSubmitting = false,
+  } = useSelector((state) => state.project.form);
+
+  // 프로젝트 정보 상태 관리
+  const [projectInfo, setProjectInfo] = useState({
+    customer: '',
+    sfa: '',
+    name: '',
+    service: '',
+    team: '',
+  });
 
   // 현재 선택된 작업 정보 상태
   const [selectedTask, setSelectedTask] = useState(null);
   const [selectedColumnIndex, setSelectedColumnIndex] = useState(null);
   const [selectedTaskIndex, setSelectedTaskIndex] = useState(null);
 
-  // 커스텀 훅 사용
+  // 모달 관련 커스텀 훅 사용
   const { modalState, openModal, closeModal, handleConfirm } = useModal();
-  const { handleFormSubmit, isSubmitting } = useProjectSubmit();
-  // const { getTaskTemplate } = useProjectAPI();
 
   // API 데이터 상태 조회
-  const { data: codebooks, isLoading: isLoadingCodebook } = useCodebook([
+  const {
+    data: codebooks,
+    isLoading: isLoadingCodebook,
+    error,
+  } = useCodebook([
     'priority_level', // 우선순위(긴급,중요,중간,낮음)
     'task_progress', // 작업진행률
     'fy', // 회계년도
@@ -68,11 +85,11 @@ const ProjectAddContainer = () => {
     apiCommon.getUsers,
   );
 
-  // 프로젝트 작업 상태 관리
+  // 커스텀 훅 사용
   const {
     projectBuckets,
     editState,
-    setProjectBuckets,
+    setProjectBuckets, // 칼럼 직접 설정 함수 추가
     startEditing,
     startEditingColumnTitle,
     handleEditChange,
@@ -85,30 +102,81 @@ const ProjectAddContainer = () => {
     deleteTask,
     deleteColumn,
     moveColumn,
+    saveTaskEditor,
     updateTask,
   } = useProjectTask(projectTaskInitialState);
 
   /**
-   * 폼 필드 업데이트 이벤트 핸들러
-   * 이벤트 객체나 (name, value) 형식 모두 처리
-   *
-   * @param {Event|string} nameOrEvent - 필드 이름 또는 이벤트 객체
-   * @param {any} valueOrNothing - 필드 값 (이벤트 객체인 경우 무시)
+   * 특정 폼 필드 업데이트 함수
+   * @param {string} name - 필드 이름
+   * @param {any} value - 필드 값
    */
-  const updateField = (nameOrEvent, valueOrNothing) => {
-    // 이벤트 객체인 경우
-    if (nameOrEvent && nameOrEvent.target) {
-      const { name, value } = nameOrEvent.target;
+  const updateField = useCallback(
+    (nameOrEvent, valueOrNothing) => {
+      // 이벤트 객체인 경우
+      if (nameOrEvent && nameOrEvent.target) {
+        const { name, value } = nameOrEvent.target;
+        dispatch(updateFormField({ name, value }));
+      }
+      // name, value 형태로 직접 호출한 경우
+      else {
+        dispatch(updateFormField({ name: nameOrEvent, value: valueOrNothing }));
+      }
+    },
+    [dispatch],
+  );
+
+  /**
+   * 이벤트에서 폼 필드 업데이트 함수
+   * @param {Event} e - 이벤트 객체
+   */
+  const handleInputChange = useCallback(
+    (e) => {
+      const { name, value } = e.target;
       dispatch(updateFormField({ name, value }));
-    }
-    // name, value 형태로 직접 호출한 경우
-    else {
-      dispatch(updateFormField({ name: nameOrEvent, value: valueOrNothing }));
-    }
-  };
+    },
+    [dispatch],
+  );
+
+  /**
+   * 에러 상태 설정 함수
+   * @param {Object} errors - 에러 객체
+   */
+  const setErrors = useCallback(
+    (errors) => {
+      dispatch(setFormErrors(errors));
+    },
+    [dispatch],
+  );
+
+  /**
+   * 폼 데이터 전처리 함수
+   * @param {Object} data - 처리할 폼 데이터
+   * @returns {Object} 처리된 데이터
+   */
+  const prepareData = useCallback((data) => {
+    // 깊은 복사로 원본 데이터 유지
+    const clonedData = JSON.parse(JSON.stringify(data));
+
+    // 불필요한 임시 필드 제거
+    const { __temp, ...cleanData } = clonedData;
+
+    // null이나 빈 문자열인 경우 해당 키 삭제
+    Object.keys(cleanData).forEach((key) => {
+      if (cleanData[key] === '' || cleanData[key] === null) {
+        delete cleanData[key];
+      }
+    });
+
+    return cleanData;
+  }, []);
 
   /**
    * 템플릿 선택 시 작업이 처리되는 핸들러
+   * 스네이크 케이스 키를 캐멀 케이스로 변환 (모든 키에 적용)
+   * taskScheduleType 값이 ongoing이면 completed=false, 그 외에는 completed=true
+   * priority_level과 task_progress가 없으면 기본값 할당
+   *
    * @param {string|number} templateId - 선택된 템플릿 ID
    */
   const handleTemplateSelect = async (templateId) => {
@@ -212,9 +280,7 @@ const ProjectAddContainer = () => {
     }
   }, [projectBuckets]);
 
-  /**
-   * 새 버킷(컬럼) 추가 핸들러
-   */
+  // 새 버킷(컬럼) 추가 핸들러
   const handleAddColumnClick = () => {
     const newColumn = {
       bucket: '새 버킷',
@@ -226,11 +292,13 @@ const ProjectAddContainer = () => {
 
   /**
    * 작업 수정 모달을 여는 핸들러
+   *
    * @param {Object} task - 수정할 작업 객체
    * @param {number} bucketIndex - 작업이 속한 컬럼의 인덱스
    * @param {number} taskIndex - 컬럼 내 작업의 인덱스
    */
   const handleOpenTaskEditModal = (task, bucketIndex, taskIndex) => {
+    console.log(`>> TaskCard on click : `, task);
     // 선택된 작업 정보 저장
     setSelectedTask(task);
     setSelectedColumnIndex(bucketIndex);
@@ -245,6 +313,7 @@ const ProjectAddContainer = () => {
         codebooks={codebooks}
         usersData={usersData}
         onSave={(updatedTask) => {
+          console.log(`>> onSave : `, updatedTask);
           updateTask(bucketIndex, taskIndex, updatedTask);
           closeModal();
         }}
@@ -260,13 +329,87 @@ const ProjectAddContainer = () => {
   };
 
   /**
-   * 폼 제출 이벤트 핸들러
-   * 커스텀 훅을 통해 유효성 검사 및 제출 처리
-   * @param {Event} e - 이벤트 객체
+   * 프로젝트 폼 제출 처리 함수
+   * @returns {Promise} 제출 결과
    */
-  const onFormSubmit = (e) => {
-    // useProjectSubmit 훅의 핸들러 호출
-    handleFormSubmit(e, projectBuckets);
+  const processSubmit = useCallback(async () => {
+    try {
+      // 데이터 전처리
+      const preparedData = prepareData(formData);
+
+      // 칸반 보드 데이터도 포함
+      preparedData.structure = projectBuckets;
+
+      // Redux 액션으로 프로젝트 생성 요청
+      const resultAction = await dispatch(createProject(preparedData));
+
+      // 성공 시
+      if (createProject.fulfilled.match(resultAction)) {
+        notification.success({
+          message: '프로젝트 등록 성공',
+          description: '프로젝트 정보가 성공적으로 저장되었습니다.',
+        });
+
+        // 폼 초기화
+        dispatch(resetForm());
+
+        return resultAction.payload;
+      }
+    } catch (error) {
+      console.error('Project submission error:', error);
+      notification.error({
+        message: '프로젝트 등록 실패',
+        description: error.message || '프로젝트 등록 중 오류가 발생했습니다.',
+      });
+    }
+  }, [formData, projectBuckets, prepareData, dispatch]);
+
+  /**
+   * 폼 제출 이벤트 핸들러
+   * 유효성 검사 후 제출 프로세스 시작
+   */
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+
+    // 1. 기본 폼 유효성 검사
+    const { isValid, errors: validationErrors } = validateProjectForm(formData);
+
+    // 유효성 검사 실패 시 오류 표시
+    if (!isValid) {
+      dispatch(setFormErrors(validationErrors));
+
+      // 첫 번째 오류 메시지로 알림 표시
+      const formError = Object.values(validationErrors)[0];
+      notification.error({
+        message: '기본폼 등록 오류',
+        description: formError,
+      });
+
+      return;
+    }
+
+    // 2. Task 폼 유효성 검사
+    const { isValid: isTasksValid, errors: validationTasksErrors } =
+      validateProjectTaskForm(projectBuckets);
+
+    // 유효성 검사 실패 시 오류 표시
+    if (!isTasksValid) {
+      // 첫 번째 오류 메시지로 알림 표시
+      const tasksError = Object.values(validationTasksErrors)[0];
+      notification.error({
+        message: 'TASK 등록 오류',
+        description: tasksError,
+      });
+
+      return;
+    }
+
+    // 3. 폼 제출 진행
+    try {
+      await processSubmit();
+    } catch (error) {
+      console.error('제출 과정에서 오류 발생:', error);
+    }
   };
 
   /**
@@ -275,6 +418,15 @@ const ProjectAddContainer = () => {
   const handleReset = () => {
     // Redux 폼 상태 초기화
     dispatch(resetForm());
+
+    // 프로젝트 정보 상태 초기화
+    setProjectInfo({
+      customer: '',
+      sfa: '',
+      name: '',
+      service: '',
+      team: '',
+    });
 
     // 빈 칸반 보드로 초기화
     setProjectBuckets([
@@ -291,11 +443,6 @@ const ProjectAddContainer = () => {
         tasks: [],
       },
     ]);
-
-    notification.info({
-      message: '폼 초기화',
-      description: '모든 입력 내용이 초기화되었습니다.',
-    });
   };
 
   return (
@@ -325,18 +472,42 @@ const ProjectAddContainer = () => {
         `,
         }}
       />
+      {/* <ProjectMenuFields
+        handleTemplateSelect={handleTemplateSelect}
+        updateField={updateField}
+      /> */}
       <ProjectAddBaseForm
         formData={formData}
         codebooks={codebooks}
         handleTemplateSelect={handleTemplateSelect}
         updateField={updateField}
-        handleFormSubmit={onFormSubmit}
-        handleReset={handleReset}
-        isSubmitting={isSubmitting}
+        handleFormSubmit={handleFormSubmit}
       />
 
       {/* 전체 컨테이너를 수평 레이아웃으로 변경 */}
       <div className="flex flex-row h-full flex-grow overflow-hidden">
+        {/* 왼쪽 사이드바 - 프로젝트 정보 폼 */}
+        <div className="w-72 flex-shrink-0 pr-4 h-full overflow-y-auto flex flex-col">
+          {/* 버튼 컨테이너 */}
+          {/* <div className="bg-white p-4 rounded-md shadow-sm mt-4">
+            <div className="flex flex-row gap-2">
+              <button
+                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                onClick={handleReset}
+              >
+                초기화
+              </button>
+
+              <button
+                className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                onClick={handleFormSubmit}
+              >
+                저장
+              </button>
+            </div>
+          </div> */}
+        </div>
+
         {/* 오른쪽 칸반 보드 컨테이너 */}
         <div
           className="kanban-container flex h-full overflow-x-auto overflow-y-hidden flex-grow"

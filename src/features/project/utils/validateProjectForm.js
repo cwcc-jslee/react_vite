@@ -36,6 +36,25 @@ export const validateProjectForm = (formData) => {
     errors.push('사업부를 선택해주세요');
     isValid = false;
   }
+  if (!formData.planStartDate) {
+    errors.push('계획 시작일을 입력해 주세요');
+    isValid = false;
+  }
+  if (!formData.planEndDate) {
+    errors.push('계획 종료일을 입력해 주세요');
+    isValid = false;
+  }
+
+  // 시작일이 종료일보다 늦으면 오류
+  if (formData.planStartDate && formData.planEndDate) {
+    const startDate = new Date(formData.planStartDate);
+    const endDate = new Date(formData.planEndDate);
+
+    if (startDate > endDate) {
+      errors.push(`종료일이 시작일보다 빠릅니다.`);
+      isValid = false;
+    }
+  }
 
   return { isValid, errors };
 };

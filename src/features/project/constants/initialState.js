@@ -29,7 +29,11 @@ export const projectReduxInitialState = {
   filters: {},
 
   // 폼은 필요할 때만 생성
-  form: { data: {}, errors: {}, isSubmitting: false },
+  form: {
+    data: { pjtStatus: 86, importanceLevel: 121 },
+    errors: {},
+    isSubmitting: false,
+  },
 };
 
 // 프로젝트 폼 초기화 함수 (재사용성 높임)

@@ -3,6 +3,7 @@
 // 고객사, SFA, 프로젝트명, 서비스, 사업부 정보를 입력 받습니다
 
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { apiCommon } from '../../../../shared/api/apiCommon';
 import { projectApiService } from '../../services/projectApiService';
 import { CustomerSearchInput } from '../../../../shared/components/customer/CustomerSearchInput';
@@ -22,14 +23,24 @@ import {
 
 // 프로젝트 정보 입력 폼 컴포넌트
 const ProjectAddBaseForm = ({
-  formData,
+  // formData,
   codebooks,
   updateField,
   handleTemplateSelect,
   onTemplateSelect,
+  handleFormSubmit,
 }) => {
+  const dispatch = useDispatch();
+
+  // Redux 상태 가져오기
+  const {
+    data: formData = {},
+    errors = {},
+    isSubmitting = false,
+  } = useSelector((state) => state.project.form);
+
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
-  const [selectedTemplateId, setSelectedTemplateId] = useState(null);
+  // const [selectedTemplateId, setSelectedTemplateId] = useState(null);
 
   // API 데이터 조회
   const {
@@ -37,6 +48,16 @@ const ProjectAddBaseForm = ({
     isLoading: isSfaLoading,
     refetch: refetchSfa,
   } = useSelectData(apiCommon.getSfasByCustomer, selectedCustomerId);
+
+  const { data: taskTempleteData, isLoading: isTaskTempleteLoading } =
+    useSelectData(projectApiService.getTaskTemplate);
+
+  // 템플릿 상세 정보 조회
+  // const {
+  //   data: templateDetailData,
+  //   isLoading: isTemplateDetailLoading,
+  //   refetch: refetchTemplateDetail,
+  // } = useSelectData(projectApiService.getTaskTemplate, selectedTemplateId);
 
   const { data: teamsData, isLoading: isTeamsLoading } = useSelectData(
     apiCommon.getTeams,
@@ -46,16 +67,6 @@ const ProjectAddBaseForm = ({
     apiCommon.getCodebookItems,
     '서비스',
   );
-
-  const { data: taskTempleteData, isLoading: isTaskTempleteLoading } =
-    useSelectData(projectApiService.getTaskTemplate);
-
-  // 템플릿 상세 정보 조회
-  const {
-    data: templateDetailData,
-    isLoading: isTemplateDetailLoading,
-    refetch: refetchTemplateDetail,
-  } = useSelectData(projectApiService.getTaskTemplate, selectedTemplateId);
 
   // SFA 옵션 목록 생성
   const sfaOptions = [
@@ -93,37 +104,31 @@ const ProjectAddBaseForm = ({
     })),
   ];
 
-  // 고객사 선택 핸들러
-  const handleCustomerSelect = (customer) => {
-    if (customer?.id) {
-      setSelectedCustomerId(customer.id);
-      // handleChange('customer', customer);
-      // handleChange('sfa', '');
-    }
-  };
-
   return (
-    <div className="bg-white p-4 rounded-md shadow-sm h-full">
-      <div className="flex flex-col space-y-4">
-        {/* 고객사 입력 필드 */}
-        {/* <div className="w-full">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+    <div>
+      {/* 고객사 입력 필드 */}
+      <Group direction="horizontal" className="gap-6">
+        <FormItem className="flex-1">
+          <Label required className="text-left">
             고객사
-          </label>
-          <CustomerSearchInput onSelect={handleCustomerSelect} size="small" />
-        </div> */}
+          </Label>
+          <CustomerSearchInput
+            // value={selectedCustomerId}
+            onSelect={(e) => setSelectedCustomerId(e.id)}
+            size="small"
+          />
+        </FormItem>
 
         {/* SFA 선택 필드 */}
-        {/* <div className="w-full">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <FormItem className="flex-1">
+          <Label required className="text-left">
             SFA
-          </label>
-          <select
+          </Label>
+          <Select
             name="sfa"
             value={formData.sfa || ''}
             onChange={updateField}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-            disabled={isSfaLoading || !selectedCustomerId}
+            // disabled={isSfaLoading || !selectedCustomerId}
           >
             {sfaOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -132,23 +137,22 @@ const ProjectAddBaseForm = ({
                   : option.label}
               </option>
             ))}
-          </select>
-        </div> */}
+          </Select>
+        </FormItem>
 
         {/* 프로젝트명 입력 필드 */}
-        <FormItem direction="vertical" className="flex-1">
+        <FormItem className="flex-1">
           <Label required className="text-left">
             프로젝트명
           </Label>
-          <TextArea
+          <Input
             name="name"
             value={formData.name || ''}
             onChange={updateField}
-            rows={2}
             // disabled={isSubmitting}
           />
         </FormItem>
-        <FormItem direction="vertical" className="flex-1">
+        <FormItem className="flex-1">
           <Label required className="text-left">
             사업년도
           </Label>
@@ -166,19 +170,18 @@ const ProjectAddBaseForm = ({
             ))}
           </Select>
         </FormItem>
+      </Group>
 
+      <Group direction="horizontal" className="gap-6">
         {/* 중요도, 프로젝트 상태 */}
-        <FormItem direction="vertical" className="flex-1">
-          <Label required className="text-left">
-            상태
-          </Label>
+        <FormItem className="flex-1">
+          <Label className="text-left">상태</Label>
           <Select
             name="pjtStatus"
             value={formData.pjtStatus}
             onChange={updateField}
             // disabled={isSubmitting}
           >
-            <option value="">선택하세요</option>
             {codebooks?.pjt_status?.data?.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
@@ -186,17 +189,14 @@ const ProjectAddBaseForm = ({
             ))}
           </Select>
         </FormItem>
-        <FormItem direction="vertical" className="flex-1">
-          <Label required className="text-left">
-            중요도
-          </Label>
+        <FormItem className="flex-1">
+          <Label className="text-left">중요도</Label>
           <Select
             name="importanceLevel"
             value={formData.importanceLevel}
             onChange={updateField}
             // disabled={isSubmitting}
           >
-            <option value="">선택하세요</option>
             {codebooks?.importance_level?.data?.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
@@ -206,46 +206,44 @@ const ProjectAddBaseForm = ({
         </FormItem>
 
         {/* 서비스 선택 필드 */}
-        <div className="w-full">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <FormItem className="flex-1">
+          <Label required className="text-left">
             서비스
-          </label>
-          <select
+          </Label>
+          <Select
             name="service"
             value={formData.service || ''}
             onChange={updateField}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           >
             {serviceOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
-          </select>
-        </div>
+          </Select>
+        </FormItem>
 
         {/* 사업부 선택 필드 */}
-        <div className="w-full">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <FormItem className="flex-1">
+          <Label required className="text-left">
             사업부
-          </label>
-          <select
+          </Label>
+          <Select
             name="team"
             value={formData.team || ''}
             onChange={updateField}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
           >
             {teamOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
-          </select>
-        </div>
-
-        {/* 계획 시작일 / 계획 종료일 */}
-
-        <FormItem direction="vertical" className="flex-1">
+          </Select>
+        </FormItem>
+      </Group>
+      {/* 계획 시작일 / 계획 종료일 */}
+      <Group direction="horizontal" className="gap-6">
+        <FormItem className="flex-1">
           <Label required className="text-left">
             계획 시작일
           </Label>
@@ -256,7 +254,7 @@ const ProjectAddBaseForm = ({
             onChange={updateField}
           />
         </FormItem>
-        <FormItem direction="vertical" className="flex-1">
+        <FormItem className="flex-1">
           <Label required className="text-left">
             계획 종료일
           </Label>
@@ -267,7 +265,54 @@ const ProjectAddBaseForm = ({
             onChange={updateField}
           />
         </FormItem>
-      </div>
+        <FormItem className="flex-1">
+          <Label className="text-left">비고</Label>
+          <Input
+            name="remark"
+            value={formData.remark || ''}
+            onChange={updateField}
+            // disabled={isSubmitting}
+          />
+        </FormItem>
+
+        {/* 템플릿 선택 필드 */}
+        <FormItem className="flex-1">
+          <Label className="text-left">템플릿</Label>
+          <Select onChange={(e) => handleTemplateSelect(e.target.value)}>
+            {templeteOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {isTaskTempleteLoading && option.value === ''
+                  ? '로딩 중...'
+                  : option.label}
+              </option>
+            ))}
+          </Select>
+          {/* {isTemplateDetailLoading && selectedTemplateId && (
+                    <p className="text-xs text-indigo-600 mt-1">
+                    템플릿 작업 로딩 중...
+                    </p>
+                    )} */}
+        </FormItem>
+      </Group>
+      {/* Submit Button */}
+      <Group direction="horizontal" className="gap-6">
+        <Button type="submit" disabled={isSubmitting} className="w-full">
+          취소
+        </Button>
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={isSubmitting}
+          className="w-full"
+          onClick={(e) => {
+            // 버튼 클릭 시에도 이벤트 전파 방지
+            e.preventDefault();
+            handleFormSubmit(e);
+          }}
+        >
+          {isSubmitting ? '처리중...' : '저장'}
+        </Button>
+      </Group>
     </div>
   );
 };
