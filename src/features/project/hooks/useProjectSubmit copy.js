@@ -97,21 +97,15 @@ export const useProjectSubmit = () => {
         setProgress(5);
         setProcessingStep('데이터 전처리');
 
-        // 2. 데이터 전처리
+        // 2. 데이터 전처리 / 불필요 필드 제거 / 형식 변경경
         const cleanBaseFormData = prepareCleanData(formData);
-        let cleanProjectBuckets =
+        const cleanProjectBuckets =
           projectBuckets && projectBuckets.length > 0
             ? JSON.parse(JSON.stringify(projectBuckets))
             : [];
 
-        // 프로젝트 기본 데이터의 관계 필드 처리 (users 등)
+        // 사용자 객체 배열을 ID 배열로 변환
         const processedFormData = processRelationFields(cleanBaseFormData);
-
-        // 버킷/태스크 데이터 전처리 (관계 필드 처리 및 데이터 형식 변환)
-        cleanProjectBuckets = processProjectBuckets(cleanProjectBuckets);
-
-        console.log(`>>> 전처리된 프로젝트 데이터:`, processedFormData);
-        console.log(`>>> 전처리된 버킷 데이터:`, cleanProjectBuckets);
 
         setProgress(10);
 
@@ -382,63 +376,12 @@ export const useProjectSubmit = () => {
   };
 
   /**
-   * 버킷과 태스크 데이터 전처리 함수
-   * 관계 필드 처리 및 데이터 형식 변환
-   *
-   * @param {Array} buckets - 버킷 데이터 배열
-   * @returns {Array} 처리된 버킷 데이터 배열
-   */
-  const processProjectBuckets = (buckets) => {
-    if (!buckets || !Array.isArray(buckets) || buckets.length === 0) {
-      return [];
-    }
-
-    // 깊은 복사로 원본 데이터 유지
-    const processedBuckets = JSON.parse(JSON.stringify(buckets));
-
-    // 각 버킷과 태스크 처리
-    processedBuckets.forEach((bucket) => {
-      // 태스크 데이터 처리
-      if (bucket.tasks && Array.isArray(bucket.tasks)) {
-        bucket.tasks = bucket.tasks.map((task) => {
-          // 1. task.users 필드 처리 (객체 배열 -> ID 배열)
-          if (
-            task.users &&
-            Array.isArray(task.users) &&
-            task.users.length > 0
-          ) {
-            if (
-              typeof task.users[0] === 'object' &&
-              task.users[0].id !== undefined
-            ) {
-              task.users = task.users.map((user) => user.id);
-            }
-          }
-
-          // 2. task_schedule_type 변환 (boolean -> string)
-          if (task.task_schedule_type !== undefined) {
-            task.task_schedule_type =
-              task.task_schedule_type === true ? 'scheduled' : 'ongoing';
-          }
-
-          // 3. 필요없는 필드 정리 및 데이터 형식 준비
-          // planning_time_data, plan_start_date, plan_end_date, due_date 등은 그대로 유지
-
-          return task;
-        });
-      }
-    });
-
-    return processedBuckets;
-  };
-
-  /**
    * 태스크 데이터로 API 제출용 페이로드 생성
-   * 이미 전처리된 태스크 데이터에 프로젝트 ID와 버킷 ID만 추가
+   * taskScheduleType 변환 처리: true -> 'scheduled', false -> 'ongoing'
    *
    * @param {string|number} projectId - 프로젝트 ID
    * @param {string|number} bucketId - 버킷 ID
-   * @param {Object} task - 전처리된 태스크 데이터
+   * @param {Object} task - 태스크 데이터
    * @returns {Object} API 제출용 태스크 페이로드
    */
   const createTaskPayload = (projectId, bucketId, task) => {
@@ -452,12 +395,32 @@ export const useProjectSubmit = () => {
       throw new Error('버킷 ID가 없어 태스크를 생성할 수 없습니다.');
     }
 
-    // 프로젝트 ID와 버킷 ID 추가 (나머지 필드는 전처리된 상태 그대로 사용)
-    return {
-      ...task,
+    // taskScheduleType 변환 (boolean -> string)
+    const scheduleType =
+      task.task_schedule_type === true ? 'scheduled' : 'ongoing';
+
+    // 페이로드 생성
+    const payload = {
       project: projectId,
-      project_task_bucket: bucketId,
+      project_task_bucket: bucketId, // 버킷 ID 지정 확인
+      name: task.name,
+      position: task.position,
+      priority_level: task.priority_level,
+      task_progress: task.task_progress,
+      task_schedule_type: scheduleType, // 'scheduled' 또는 'ongoing'
     };
+
+    // 일정 타입이 scheduled인 경우 계획 시간 데이터 포함
+    if (scheduleType === 'scheduled' && task.planning_time_data) {
+      payload.planning_time_data = task.planning_time_data;
+    }
+
+    // 날짜 정보가 있는 경우 포함
+    if (task.plan_start_date) payload.plan_start_date = task.plan_start_date;
+    if (task.plan_end_date) payload.plan_end_date = task.plan_end_date;
+    if (task.due_date) payload.due_date = task.due_date;
+
+    return payload;
   };
 
   /**
@@ -501,16 +464,13 @@ export const useProjectSubmit = () => {
 
         // 2. 데이터 전처리 (빈 값 제거)
         const cleanBaseFormData = prepareCleanData(baseFormData);
-        let cleanProjectBuckets =
+        const cleanProjectBuckets =
           projectBuckets && projectBuckets.length > 0
             ? JSON.parse(JSON.stringify(projectBuckets))
             : [];
 
         // 관계 필드 처리 (users 등)
         const processedFormData = processRelationFields(cleanBaseFormData);
-
-        // 버킷/태스크 데이터 전처리
-        cleanProjectBuckets = processProjectBuckets(cleanProjectBuckets);
 
         setProgress(20);
 

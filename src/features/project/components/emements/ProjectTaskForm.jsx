@@ -303,7 +303,7 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
             <Label className="text-left">기간</Label>
             <Input
               type="text"
-              name="dueDate"
+              // name="dueDate"
               value={task?.days ? `${task.days}일` : ''}
               disabled={true}
             />

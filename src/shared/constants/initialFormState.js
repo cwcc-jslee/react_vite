@@ -51,7 +51,7 @@ export const projectTaskInitialState = [
     tasks: [
       {
         name: '행정 업무',
-        days: '65',
+        // days: '65',
         taskScheduleType: false,
       },
       {

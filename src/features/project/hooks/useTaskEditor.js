@@ -43,8 +43,8 @@ const useTaskEditor = (
           initialTask?.taskScheduleType !== undefined
             ? initialTask.taskScheduleType
             : true,
-        days: initialTask.days || '',
-        dueDate: initialTask.dueDate || '',
+        // days: initialTask.days || '',
+        // dueDate: initialTask.dueDate || '',
         taskProgress: initialTask?.taskProgress || 91,
         priorityLevel: initialTask?.priorityLevel || 116,
         planStartDate: initialTask?.planStartDate || '',
