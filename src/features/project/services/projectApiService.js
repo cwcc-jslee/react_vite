@@ -8,6 +8,7 @@
  * @filename src/features/project/services/projectService.js
  */
 
+import { apiService } from '../../../shared/api/apiService';
 import { apiClient } from '../../../shared/api/apiClient';
 import { buildProjectListQuery } from '../api/queries';
 import {
@@ -43,7 +44,7 @@ export const projectApiService = {
 
       // 쿼리 생성 및 API 호출
       const query = buildProjectListQuery(queryParams);
-      const response = await apiClient.get(`/projects?${query}`);
+      const response = await apiService.get(`/projects?${query}`);
 
       return normalizeResponse(response);
     } catch (error) {
@@ -85,5 +86,20 @@ export const projectApiService = {
 
     const response = await apiClient.get(`/codebook-project-tasks?${query}`);
     return response.data;
+  },
+
+  /**
+   * 새 프로젝트 생성
+   * @param {Object} projectData - 저장할 프로젝트 데이터
+   * @returns {Promise} API 응답 Promise
+   */
+  createProject: async (projectData) => {
+    try {
+      const response = await apiService.post('/projects', projectData);
+      return response.data;
+    } catch (error) {
+      console.error('프로젝트 생성 실패:', error);
+      handleError(error);
+    }
   },
 };

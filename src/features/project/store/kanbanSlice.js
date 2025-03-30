@@ -5,8 +5,6 @@
  */
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { projectApiService } from '../services/projectApiService';
-import { notification } from '../../../shared/services/notification';
 
 // 초기 상태
 const initialState = {
@@ -22,119 +20,6 @@ const initialState = {
   status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
   error: null,
 };
-
-/**
- * 프로젝트 템플릿에서 작업 구조 로드
- */
-export const loadTaskTemplate = createAsyncThunk(
-  'kanban/loadTaskTemplate',
-  async (templateId, { rejectWithValue }) => {
-    try {
-      const response = await projectApiService.getTaskTemplate(templateId);
-
-      if (!response?.data || !response.data.length) {
-        return rejectWithValue('템플릿 데이터가 없습니다.');
-      }
-
-      // 원본 템플릿 데이터
-      const originalTemplate = response.data[0]?.structure || [];
-
-      // 템플릿 데이터 처리 및 변환
-      const processedTemplate = originalTemplate.map((bucket) => {
-        // 각 버킷(컬럼)의 작업들 처리
-        const processedTasks = bucket.tasks.map((task) => {
-          // 새 task 객체 생성
-          const newTask = {};
-
-          // 모든 키를 순회하며 스네이크 케이스를 캐멀 케이스로 변환
-          Object.keys(task).forEach((key) => {
-            // 스네이크 케이스 감지 (_가 포함된 키)
-            if (key.includes('_')) {
-              // 스네이크 케이스를 캐멀 케이스로 변환
-              const camelKey = key.replace(/_([a-z])/g, (_, letter) =>
-                letter.toUpperCase(),
-              );
-              newTask[camelKey] = task[key];
-            } else {
-              // 스네이크 케이스가 아닌 경우 그대로 복사
-              newTask[key] = task[key];
-            }
-          });
-
-          // 특수 처리: taskScheduleType 값에 따른 처리
-          if (newTask.taskScheduleType === 'ongoing') {
-            newTask.taskScheduleType = false;
-          } else {
-            newTask.taskScheduleType = true;
-            // 인원, 투입률, 작업일 초기화
-            if (!('priorityLevel' in newTask)) {
-              newTask.planningTimeData = {};
-            }
-          }
-
-          // priority_level이 없으면 기본값 추가
-          if (!('priorityLevel' in newTask)) {
-            newTask.priorityLevel = 116; // '중간'
-          }
-
-          // task_progress가 없으면 기본값 추가
-          if (!('taskProgress' in newTask)) {
-            newTask.taskProgress = 91; // '0%'
-          }
-
-          return newTask;
-        });
-
-        // 각 버킷 내에서 작업들을 position 기준으로 정렬
-        const sortedTasks = [...processedTasks].sort(
-          (a, b) => (a.position || 0) - (b.position || 0),
-        );
-
-        // 처리된 작업들을 포함한 새 컬럼 객체 반환
-        return {
-          ...bucket,
-          tasks: sortedTasks,
-        };
-      });
-
-      // 버킷(컬럼)을 position 기준으로 정렬
-      const sortedBuckets = [...processedTemplate].sort(
-        (a, b) => (a.position || 0) - (b.position || 0),
-      );
-
-      return sortedBuckets;
-    } catch (error) {
-      console.error('템플릿 로드 오류:', error);
-      return rejectWithValue(
-        error.response?.data?.message ||
-          '템플릿을 불러오는 중 오류가 발생했습니다.',
-      );
-    }
-  },
-);
-
-/**
- * 프로젝트 작업 구조 로드
- */
-export const loadProjectTasks = createAsyncThunk(
-  'kanban/loadProjectTasks',
-  async (projectId, { rejectWithValue }) => {
-    try {
-      const response = await projectApiService.getProjectDetail(projectId);
-
-      if (!response?.data?.structure) {
-        return rejectWithValue('프로젝트 작업 데이터가 없습니다.');
-      }
-
-      return response.data.structure;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message ||
-          '프로젝트 작업을 불러오는 중 오류가 발생했습니다.',
-      );
-    }
-  },
-);
 
 // 슬라이스 생성
 const kanbanSlice = createSlice({
@@ -385,54 +270,8 @@ const kanbanSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder
-      // 템플릿 로드
-      .addCase(loadTaskTemplate.pending, (state) => {
-        state.status = 'loading';
-      })
-      .addCase(loadTaskTemplate.fulfilled, (state, action) => {
-        state.buckets = action.payload;
-        state.status = 'succeeded';
-        state.error = null;
-
-        // 알림 표시
-        notification.success({
-          message: '템플릿 로드 성공',
-          description: '템플릿을 성공적으로 불러왔습니다.',
-        });
-      })
-      .addCase(loadTaskTemplate.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.payload;
-
-        // 알림 표시
-        notification.error({
-          message: '템플릿 로드 실패',
-          description:
-            action.payload || '템플릿을 불러오는 중 오류가 발생했습니다.',
-        });
-      })
-
-      // 프로젝트 작업 로드
-      .addCase(loadProjectTasks.pending, (state) => {
-        state.status = 'loading';
-      })
-      .addCase(loadProjectTasks.fulfilled, (state, action) => {
-        state.buckets = action.payload;
-        state.status = 'succeeded';
-        state.error = null;
-      })
-      .addCase(loadProjectTasks.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.payload;
-
-        notification.error({
-          message: '작업 로드 실패',
-          description:
-            action.payload ||
-            '프로젝트 작업을 불러오는 중 오류가 발생했습니다.',
-        });
-      });
+    builder;
+    // 프로젝트 작업 로드
   },
 });
 
@@ -456,12 +295,12 @@ export const {
 } = kanbanSlice.actions;
 
 // 셀렉터 함수들
-export const selectBuckets = (state) => state.kanban.buckets;
-export const selectEditState = (state) => state.kanban.editState;
+export const selectBuckets = (state) => state.projectTask.buckets;
+export const selectEditState = (state) => state.projectTask.editState;
 export const selectCompletedExpanded = (state) =>
-  state.kanban.completedExpanded;
-export const selectKanbanStatus = (state) => state.kanban.status;
-export const selectKanbanError = (state) => state.kanban.error;
+  state.projectTask.completedExpanded;
+export const selectKanbanStatus = (state) => state.projectTask.status;
+export const selectKanbanError = (state) => state.projectTask.error;
 
 // 리듀서 내보내기
 export default kanbanSlice.reducer;

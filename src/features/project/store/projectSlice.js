@@ -98,30 +98,27 @@ export const createProject = createAsyncThunk(
   'project/createProject',
   async (projectData, { rejectWithValue, dispatch, getState }) => {
     try {
-      // 폼 데이터 전처리
-      const preparedData = prepareFormData(projectData);
-
       // API 호출
-      const response = await projectApiService.createProject(preparedData);
+      const response = await projectApiService.createProject(projectData);
 
-      // 성공 알림
-      notification.success({
-        message: '프로젝트 등록 성공',
-        description: '프로젝트가 성공적으로 등록되었습니다.',
-      });
+      // 성공 알림 --> useProjectSubmit 에서 알림.
+      // notification.success({
+      //   message: '프로젝트 등록 성공',
+      //   description: '프로젝트가 성공적으로 등록되었습니다.',
+      // });
 
       // 성공 시 프로젝트 목록 다시 로드
       dispatch(fetchProjects());
 
       return response.data;
     } catch (error) {
-      // 에러 메시지 표시
-      notification.error({
-        message: '프로젝트 등록 실패',
-        description:
-          error.response?.data?.error?.message ||
-          '프로젝트 생성 중 오류가 발생했습니다.',
-      });
+      // 에러 메시지 표시 -> hooks 에서 처리리
+      // notification.error({
+      //   message: '프로젝트 등록 실패',
+      //   description:
+      //     error.response?.data?.error?.message ||
+      //     '프로젝트 생성 중 오류가 발생했습니다.',
+      // });
 
       return rejectWithValue(
         error.response?.data?.error?.message ||

@@ -8,18 +8,18 @@ import { FiPlus } from 'react-icons/fi';
 import { projectTaskInitialState } from '../../../shared/constants/initialFormState';
 import { useCodebook } from '../../../shared/hooks/useCodebook';
 import useSelectData from '../../../shared/hooks/useSelectData';
-import useProjectTask from '../hooks/useProjectTask';
+// import useProjectTask from '../hooks/useProjectTask';
 import useModal from '../../../shared/hooks/useModal';
 import { apiCommon } from '../../../shared/api/apiCommon';
 import { projectApiService } from '../services/projectApiService';
 
 // 커스텀 훅 사용
 import useProjectSubmit from '../hooks/useProjectSubmit';
-import useKanbanTask from '../hooks/useKanbanTask';
+import useProjectTask from '../hooks/useProjectTask';
 
 // Redux 액션
 import { updateFormField, resetForm } from '../store/projectSlice';
-import { selectBuckets, loadTaskTemplate } from '../store/kanbanSlice';
+// import { selectBuckets, loadTaskTemplate } from '../store/kanbanSlice';
 
 // 컴포넌트
 import KanbanColumn from '../components/ui/KanbanColumn';
@@ -43,12 +43,7 @@ const ProjectAddContainer = () => {
 
   // Redux 상태 가져오기
   const { data: formData = {} } = useSelector((state) => state.project.form);
-  const buckets = useSelector((state) => state.kanban.buckets); // 칸반 데이터를 Redux에서 직접 가져옴
-
-  // 현재 선택된 작업 정보 상태
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [selectedColumnIndex, setSelectedColumnIndex] = useState(null);
-  const [selectedTaskIndex, setSelectedTaskIndex] = useState(null);
+  // const buckets = useSelector((state) => state.tasks.buckets); // 칸반 데이터를 Redux에서 직접 가져옴
 
   // 커스텀 훅 사용
   const { modalState, openModal, closeModal, handleConfirm } = useModal();
@@ -69,29 +64,9 @@ const ProjectAddContainer = () => {
     apiCommon.getUsers,
   );
 
-  // 프로젝트 작업 상태 관리
-  const {
-    // projectBuckets,
-    // editState,
-    setProjectBuckets,
-    // startEditing,
-    // startEditingColumnTitle,
-    // handleEditChange,
-    // saveEdit,
-    // cancelEdit,
-    // addTask,
-    // addColumn,
-    // toggleTaskCompletion,
-    // toggleCompletedSection,
-    // deleteTask,
-    // deleteColumn,
-    // moveColumn,
-    // updateTask,
-  } = useProjectTask(projectTaskInitialState);
-
   // 새로운 Redux 연결 칸반 훅 사용
   const {
-    projectBuckets,
+    buckets,
     editState,
     startEditing,
     startEditingColumnTitle,
@@ -108,7 +83,7 @@ const ProjectAddContainer = () => {
     updateTask,
     loadTemplate,
     resetKanbanBoard,
-  } = useKanbanTask(projectTaskInitialState);
+  } = useProjectTask(projectTaskInitialState);
 
   /**
    * 폼 필드 업데이트 이벤트 핸들러
@@ -144,7 +119,8 @@ const ProjectAddContainer = () => {
 
     try {
       // Redux 액션을 통해 템플릿 로드
-      await dispatch(loadTaskTemplate(templateId));
+      // await dispatch(loadTaskTemplate(templateId));
+      await loadTemplate(templateId);
     } catch (error) {
       console.error('템플릿 로드 오류:', error);
     }
@@ -169,11 +145,6 @@ const ProjectAddContainer = () => {
    * @param {number} taskIndex - 컬럼 내 작업의 인덱스
    */
   const handleOpenTaskEditModal = (task, bucketIndex, taskIndex) => {
-    // 선택된 작업 정보 저장
-    setSelectedTask(task);
-    setSelectedColumnIndex(bucketIndex);
-    setSelectedTaskIndex(taskIndex);
-
     // 모달 열기
     openModal(
       'custom',
@@ -204,7 +175,7 @@ const ProjectAddContainer = () => {
    */
   const onFormSubmit = (e) => {
     // useProjectSubmit 훅의 핸들러 호출
-    handleFormSubmit(e, projectBuckets);
+    handleFormSubmit(e, buckets);
   };
 
   /**
@@ -267,13 +238,13 @@ const ProjectAddContainer = () => {
           className="kanban-container flex h-full overflow-x-auto overflow-y-hidden flex-grow"
           style={{ height: 'calc(100vh - 250px)' }}
         >
-          {projectBuckets.map((bucket, index) => (
+          {buckets.map((bucket, index) => (
             <KanbanColumn
               key={index}
               codebooks={codebooks}
               bucket={bucket}
               bucketIndex={index}
-              totalColumns={projectBuckets.length}
+              totalColumns={buckets.length}
               startEditingColumnTitle={startEditingColumnTitle}
               editState={editState}
               handleEditChange={handleEditChange}

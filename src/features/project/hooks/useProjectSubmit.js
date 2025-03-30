@@ -49,7 +49,7 @@ export const useProjectSubmit = () => {
     async (e, projectBuckets) => {
       if (e && e.preventDefault) e.preventDefault();
 
-      // 1. 기본 폼 유효성 검사
+      // 1-1. 기본 폼 유효성 검사
       const { isValid, errors: validationErrors } =
         validateProjectForm(formData);
 
@@ -63,8 +63,14 @@ export const useProjectSubmit = () => {
         return false;
       }
 
-      // 칸반 보드 데이터가 있는 경우 유효성 검사
-      if (projectBuckets && projectBuckets.length > 0) {
+      // 1-2. 칸반 보드 유효성 검사
+      if (projectBuckets && projectBuckets.length <= 0) {
+        notification.error({
+          message: 'Bucket 등록 확인',
+          description: tasksError,
+        });
+        return false;
+      } else if (projectBuckets && projectBuckets.length > 0) {
         const { isValid: isTasksValid, errors: validationTasksErrors } =
           validateProjectTaskForm(projectBuckets);
 
@@ -79,14 +85,18 @@ export const useProjectSubmit = () => {
       }
 
       try {
-        // 2. 데이터 분리
-        const baseFormData = { ...formData };
+        // 2. 데이터 분리 -> 분리 필요 없음..
+        console.log(`>>> 2. FormData : `, formData);
+        console.log(`>>> 2. ProjectBuckets : `, projectBuckets);
 
         // 3. 데이터 전처리 (빈 값 제거)
-        const cleanBaseFormData = prepareCleanData(baseFormData);
+        const cleanBaseFormData = prepareCleanData(formData);
         const cleanProjectBuckets = projectBuckets
           ? JSON.parse(JSON.stringify(projectBuckets))
           : null;
+
+        console.log(`>>> 3. cleanBaseFormData : `, cleanBaseFormData);
+        console.log(`>>> 3. cleanProjectBuckets : `, cleanProjectBuckets);
 
         // 4. 키 정보 스네이크케이스로 변환
         const snakeCaseBaseForm = convertKeysToSnakeCase(cleanBaseFormData);
@@ -94,18 +104,16 @@ export const useProjectSubmit = () => {
           ? convertKeysToSnakeCase(cleanProjectBuckets)
           : null;
 
-        // 전체 제출 데이터 통합
-        const submitData = {
-          ...snakeCaseBaseForm,
-        };
+        console.log(`>>> 4. snakeCaseBaseForm : `, snakeCaseBaseForm);
+        console.log(
+          `>>> 4. snakeCaseProjectBuckets : `,
+          snakeCaseProjectBuckets,
+        );
 
-        // 칸반 보드 데이터가 있으면 포함
-        if (snakeCaseProjectBuckets) {
-          submitData.structure = snakeCaseProjectBuckets;
-        }
+        // 5-1. API 제출(프로젝트)
+        const resultAction = await dispatch(createProject(snakeCaseBaseForm));
 
-        // 5. API 제출
-        const resultAction = await dispatch(createProject(submitData));
+        // 5-2. API 제출(TASKS)
 
         // 성공 시
         if (createProject.fulfilled.match(resultAction)) {
