@@ -167,14 +167,17 @@ export const projectBucketService = {
   },
 
   /**
-   * 프로젝트와 전체 구조 조회
+   * 프로젝트와 전체 구조 조회 (Strapi 5.x documentId 방식)
    * @param {string|number} projectId - 프로젝트 ID
    * @returns {Promise<Object>} 프로젝트, 버킷, 태스크 정보를 포함한 객체
    */
   getProjectWithStructure: async (projectId) => {
     try {
+      // Strapi 5.x에서는 documentId로 쿼리 필요
       const query = qs.stringify(
         {
+          // documentId 방식 사용
+          documentId: projectId,
           populate: {
             buckets: {
               sort: ['position:asc'],
@@ -189,8 +192,11 @@ export const projectBucketService = {
         { encodeValuesOnly: true },
       );
 
-      const response = await apiService.get(`/projects/${projectId}?${query}`);
-      return response.data;
+      const response = await apiService.get(`/projects?${query}`);
+      // 단일 항목 반환을 위해 첫 번째 항목만 반환
+      return response.data && response.data.length > 0
+        ? response.data[0]
+        : null;
     } catch (error) {
       console.error('Project structure fetch error:', error);
       throw new Error(

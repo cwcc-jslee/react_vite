@@ -11,6 +11,8 @@ import {
   updateProject,
   setFormErrors,
   setSubmitting,
+  resetForm,
+  resetBuckets,
 } from '../store/projectSlice';
 import { notification } from '../../../shared/services/notification';
 import {
@@ -18,7 +20,6 @@ import {
   validateProjectTaskForm,
 } from '../utils/validateProjectForm';
 import { convertKeysToSnakeCase } from '../../../shared/utils/transformUtils';
-import { projectBucketService } from '../services/projectBucketService';
 import { projectTaskService } from '../services/projectTaskService';
 
 /**
@@ -45,6 +46,7 @@ export const useProjectSubmit = () => {
    * 2. 데이터 전처리
    * 3. 프로젝트 생성
    * 4. 각 버킷별로 순차적으로 처리 (버킷 생성 -> 해당 버킷의 태스크 생성)
+   * 7. 최종 프로젝트 데이터 조회 및 리덕스 상태 초기화
    *
    * @param {Event} e - 이벤트 객체 (선택적)
    * @param {Array} projectBuckets - 버킷/태스크 데이터
@@ -136,8 +138,12 @@ export const useProjectSubmit = () => {
 
         // 5. 버킷이 없는 경우 종료
         if (snakeCaseProjectBuckets.length === 0) {
+          // 폼과 버킷 상태 초기화
+          dispatch(resetForm());
+          dispatch(resetBuckets());
+
           notification.error({
-            message: '버킷 등록 실패',
+            message: '버킷 정보 등록 실패',
             description: '버킷 정보가 없습니다.',
           });
           setProgress(100);
@@ -165,11 +171,42 @@ export const useProjectSubmit = () => {
               position: bucket.position,
             };
 
-            // 버킷 생성 API 호출
-            const bucketResponse = await projectBucketService.createBucket(
-              bucketPayload,
-            );
-            const bucketId = bucketResponse.id;
+            // 버킷 생성 API 호출 - async/await로 응답을 확실히 기다림
+            console.log(`>>> 버킷 생성 요청 시작: "${bucket.bucket}"`);
+
+            let bucketResponse;
+            try {
+              bucketResponse = await projectTaskService.createBucket(
+                bucketPayload,
+              );
+              console.log(`>>> 버킷 생성 응답 수신:`, bucketResponse);
+            } catch (error) {
+              console.error(`>>> 버킷 생성 오류:`, error);
+              throw new Error(
+                `버킷 "${bucket.bucket}" 생성 중 오류 발생: ${
+                  error.message || '알 수 없는 오류'
+                }`,
+              );
+            }
+
+            // 버킷 응답에서 bucketId 추출 확인
+            let bucketId;
+            if (bucketResponse && bucketResponse.id) {
+              bucketId = bucketResponse.id;
+            } else if (
+              bucketResponse &&
+              bucketResponse.data &&
+              bucketResponse.data.id
+            ) {
+              // 응답 구조가 다른 경우 data.id에서 추출 시도
+              bucketId = bucketResponse.data.id;
+            } else {
+              console.error(
+                '버킷 생성 응답에서 ID를 찾을 수 없습니다:',
+                bucketResponse,
+              );
+              throw new Error('버킷 ID를 찾을 수 없습니다.');
+            }
 
             // 버킷별 첫 단계 진행률 업데이트
             setProgress(20 + bucketIndex * progressPerBucket);
@@ -187,6 +224,15 @@ export const useProjectSubmit = () => {
             // 태스크가 많을 경우 병렬 처리, 적을 경우 순차 처리
             if (tasksCount > 10) {
               // 병렬 처리 (태스크가 많은 경우)
+              // bucketId 확인 후 병렬 처리
+              console.log(
+                `>>>>>> 태스크 병렬 처리 시작 - 버킷 ID: ${bucketId}`,
+              );
+              if (!bucketId) {
+                console.error('버킷 ID가 없어 태스크 생성을 건너뜁니다');
+                continue; // 다음 버킷으로 이동
+              }
+
               const taskPromises = tasks.map((task) => {
                 const taskPayload = createTaskPayload(
                   projectId,
@@ -203,11 +249,23 @@ export const useProjectSubmit = () => {
 
               for (let taskIndex = 0; taskIndex < tasksCount; taskIndex++) {
                 const task = tasks[taskIndex];
+                // bucketId가 유효한지 확인 후 태스크 페이로드 생성
+                console.log(
+                  `>>>>>> 태스크 생성 준비 - 사용 버킷 ID: ${bucketId}`,
+                );
+                if (!bucketId) {
+                  console.error('버킷 ID가 없어 태스크 생성을 건너뜁니다', {
+                    task,
+                  });
+                  continue; // 이 태스크를 건너뜀
+                }
+
                 const taskPayload = createTaskPayload(
                   projectId,
                   bucketId,
                   task,
                 );
+                console.log(`>>>>>> createTaskPayload : `, taskPayload);
 
                 await projectTaskService.createTask(taskPayload);
 
@@ -227,10 +285,15 @@ export const useProjectSubmit = () => {
           setProgress(90);
           setProcessingStep('최종 프로젝트 데이터 조회');
 
-          // 7. 최종 프로젝트 데이터 조회 --> document id 로 전환 필요..
+          // 7. 최종 프로젝트 데이터 조회
+          // strapi 5.x 버전부터 documentId로 쿼리 필요
           // const finalProjectData =
           //   await projectBucketService.getProjectWithStructure(projectId);
           // finalProject = finalProjectData;
+
+          // 폼과 버킷 상태 초기화
+          dispatch(resetForm());
+          dispatch(resetBuckets());
 
           setProgress(100);
 
@@ -270,6 +333,7 @@ export const useProjectSubmit = () => {
 
   /**
    * 태스크 데이터로 API 제출용 페이로드 생성
+   * taskScheduleType 변환 처리: true -> 'scheduled', false -> 'ongoing'
    *
    * @param {string|number} projectId - 프로젝트 ID
    * @param {string|number} bucketId - 버킷 ID
@@ -277,24 +341,42 @@ export const useProjectSubmit = () => {
    * @returns {Object} API 제출용 태스크 페이로드
    */
   const createTaskPayload = (projectId, bucketId, task) => {
-    return {
+    // 유효한 bucketId 확인
+    if (!bucketId) {
+      console.error('Error: bucketId is required for task creation', {
+        projectId,
+        bucketId,
+        task,
+      });
+      throw new Error('버킷 ID가 없어 태스크를 생성할 수 없습니다.');
+    }
+
+    // taskScheduleType 변환 (boolean -> string)
+    const scheduleType =
+      task.task_schedule_type === true ? 'scheduled' : 'ongoing';
+
+    // 페이로드 생성
+    const payload = {
       project: projectId,
-      project_task_bucket: bucketId,
+      project_task_bucket: bucketId, // 버킷 ID 지정 확인
       name: task.name,
       position: task.position,
       priority_level: task.priority_level,
       task_progress: task.task_progress,
-      task_schedule_type: task.task_schedule_type,
-      // 일정 타입이 true인 경우 계획 시간 데이터 포함
-      ...(task.task_schedule_type &&
-        task.planning_time_data && {
-          planning_time_data: task.planning_time_data,
-        }),
-      // 날짜 정보가 있는 경우 포함
-      ...(task.plan_start_date && { plan_start_date: task.plan_start_date }),
-      ...(task.plan_end_date && { plan_end_date: task.plan_end_date }),
-      ...(task.due_date && { due_date: task.due_date }),
+      task_schedule_type: scheduleType, // 'scheduled' 또는 'ongoing'
     };
+
+    // 일정 타입이 scheduled인 경우 계획 시간 데이터 포함
+    if (scheduleType === 'scheduled' && task.planning_time_data) {
+      payload.planning_time_data = task.planning_time_data;
+    }
+
+    // 날짜 정보가 있는 경우 포함
+    if (task.plan_start_date) payload.plan_start_date = task.plan_start_date;
+    if (task.plan_end_date) payload.plan_end_date = task.plan_end_date;
+    if (task.due_date) payload.due_date = task.due_date;
+
+    return payload;
   };
 
   /**
@@ -376,6 +458,12 @@ export const useProjectSubmit = () => {
 
         setProgress(100);
         setProcessingStep('');
+
+        // 폼과 버킷 상태 초기화
+        if (updateProject.fulfilled.match(resultAction)) {
+          dispatch(resetForm());
+          dispatch(resetBuckets());
+        }
 
         return updateProject.fulfilled.match(resultAction)
           ? resultAction.payload

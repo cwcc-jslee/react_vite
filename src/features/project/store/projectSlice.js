@@ -106,7 +106,7 @@ export const createProject = createAsyncThunk(
       const response = await projectApiService.createProject(projectData);
 
       // 성공 시 프로젝트 목록 다시 로드
-      // dispatch(fetchProjects());
+      dispatch(fetchProjects());
 
       return response.data;
     } catch (error) {
@@ -198,145 +198,6 @@ export const deleteProject = createAsyncThunk(
   },
 );
 
-/**
- * 버킷 생성 비동기 액션
- */
-export const createBucket = createAsyncThunk(
-  'project/createBucket',
-  async (bucketData, { rejectWithValue }) => {
-    try {
-      const response = await projectApiService.createBucket(bucketData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.error?.message ||
-          '버킷 생성 중 오류가 발생했습니다.',
-      );
-    }
-  },
-);
-
-/**
- * 태스크 생성 비동기 액션
- */
-export const createTask = createAsyncThunk(
-  'project/createTask',
-  async (taskData, { rejectWithValue }) => {
-    try {
-      const response = await projectApiService.createTask(taskData);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.error?.message ||
-          '태스크 생성 중 오류가 발생했습니다.',
-      );
-    }
-  },
-);
-
-/**
- * 프로젝트와 버킷/태스크 구조를 한 번에 생성하는 비동기 액션
- */
-export const createProjectWithStructure = createAsyncThunk(
-  'project/createProjectWithStructure',
-  async ({ projectData, buckets }, { dispatch, rejectWithValue }) => {
-    try {
-      // 1. 프로젝트 생성
-      const projectResponse = await dispatch(createProject(projectData));
-
-      if (!createProject.fulfilled.match(projectResponse)) {
-        return rejectWithValue('프로젝트 생성 실패');
-      }
-
-      const createdProject = projectResponse.payload;
-      const projectId = createdProject.id;
-
-      // 버킷이 없는 경우 여기서 종료
-      if (!buckets || buckets.length === 0) {
-        return createdProject;
-      }
-
-      // 2. 각 버킷별 생성
-      const bucketPromises = buckets.map(async (bucket) => {
-        const bucketPayload = {
-          project_id: projectId,
-          name: bucket.bucket,
-          position: bucket.position,
-        };
-
-        const bucketResponse = await dispatch(createBucket(bucketPayload));
-
-        if (!createBucket.fulfilled.match(bucketResponse)) {
-          return { error: true, message: '버킷 생성 실패' };
-        }
-
-        const createdBucket = bucketResponse.payload;
-        const bucketId = createdBucket.id;
-
-        // 태스크가 있는 경우 처리
-        if (bucket.tasks && bucket.tasks.length > 0) {
-          const taskPromises = bucket.tasks.map(async (task) => {
-            const taskPayload = {
-              project_id: projectId,
-              bucket_id: bucketId,
-              name: task.name,
-              position: task.position,
-              priority_level: task.priority_level,
-              task_progress: task.task_progress,
-              task_schedule_type: task.task_schedule_type,
-              // 일정 타입이 true인 경우 계획 시간 데이터 포함
-              ...(task.task_schedule_type &&
-                task.planning_time_data && {
-                  planning_time_data: task.planning_time_data,
-                }),
-              // 날짜 정보가 있는 경우 포함
-              ...(task.plan_start_date && {
-                plan_start_date: task.plan_start_date,
-              }),
-              ...(task.plan_end_date && { plan_end_date: task.plan_end_date }),
-              ...(task.due_date && { due_date: task.due_date }),
-            };
-
-            const taskResponse = await dispatch(createTask(taskPayload));
-
-            if (!createTask.fulfilled.match(taskResponse)) {
-              return { error: true, message: '태스크 생성 실패' };
-            }
-
-            return taskResponse.payload;
-          });
-
-          const taskResults = await Promise.all(taskPromises);
-          const failedTasks = taskResults.filter((result) => result.error);
-
-          if (failedTasks.length > 0) {
-            return { error: true, message: failedTasks[0].message };
-          }
-        }
-
-        return createdBucket;
-      });
-
-      const bucketResults = await Promise.all(bucketPromises);
-      const failedBuckets = bucketResults.filter((result) => result.error);
-
-      if (failedBuckets.length > 0) {
-        return rejectWithValue(failedBuckets[0].message);
-      }
-
-      // 3. 최종 프로젝트 조회
-      const finalProject = await projectApiService.getProjectDetail(projectId);
-
-      return finalProject.data;
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.error?.message ||
-          '프로젝트 및 구조 생성 중 오류가 발생했습니다.',
-      );
-    }
-  },
-);
-
 const projectSlice = createSlice({
   name: 'project',
   initialState: projectReduxInitialState,
@@ -351,11 +212,20 @@ const projectSlice = createSlice({
     },
 
     // 폼 완전 초기화
-    resetForm: (state, action) => {
+    resetForm: (state) => {
       state.form = {
-        data: action.payload || {},
+        data: {},
         errors: {},
         isSubmitting: false,
+      };
+    },
+
+    // 버킷 상태 초기화
+    resetBuckets: (state) => {
+      state.buckets = {
+        items: [],
+        loading: false,
+        error: null,
       };
     },
 
@@ -488,11 +358,14 @@ const projectSlice = createSlice({
       })
       .addCase(createProject.fulfilled, (state, action) => {
         state.form.isSubmitting = false;
-        state.form.data = {}; // 폼 초기화
-        state.form.errors = {};
+        // state.form.data = {}; // 폼 초기화 - useProjectSubmit에서 처리
+        // state.form.errors = {}; // 에러 초기화 - useProjectSubmit에서 처리
       })
       .addCase(createProject.rejected, (state, action) => {
         state.form.isSubmitting = false;
+        state.form.errors = {
+          global: action.payload || '프로젝트 생성 실패',
+        };
       })
 
       // 프로젝트 수정
@@ -501,59 +374,35 @@ const projectSlice = createSlice({
       })
       .addCase(updateProject.fulfilled, (state, action) => {
         state.form.isSubmitting = false;
-        state.form.data = {}; // 폼 초기화
-        state.form.errors = {};
+        // state.form.data = {}; // 폼 초기화 - useProjectSubmit에서 처리
+        // state.form.errors = {}; // 에러 초기화 - useProjectSubmit에서 처리
       })
       .addCase(updateProject.rejected, (state, action) => {
         state.form.isSubmitting = false;
+        state.form.errors = {
+          global: action.payload || '프로젝트 수정 실패',
+        };
       })
 
       // 프로젝트 삭제
       .addCase(deleteProject.pending, (state) => {
         // 삭제 중 로딩 상태 설정
+        state.deleteStatus = 'loading';
       })
       .addCase(deleteProject.fulfilled, (state, action) => {
         // 삭제 성공 처리
+        state.deleteStatus = 'succeeded';
+        // 목록에서 해당 프로젝트 제거
+        if (state.items && state.items.length > 0) {
+          state.items = state.items.filter(
+            (item) => item.id !== action.meta.arg,
+          );
+        }
       })
       .addCase(deleteProject.rejected, (state, action) => {
         // 삭제 실패 처리
-      })
-
-      // 버킷 생성
-      .addCase(createBucket.pending, (state) => {
-        // 버킷 생성 중 상태 설정
-      })
-      .addCase(createBucket.fulfilled, (state, action) => {
-        // 버킷 생성 성공 처리
-      })
-      .addCase(createBucket.rejected, (state, action) => {
-        // 버킷 생성 실패 처리
-      })
-
-      // 태스크 생성
-      .addCase(createTask.pending, (state) => {
-        // 태스크 생성 중 상태 설정
-      })
-      .addCase(createTask.fulfilled, (state, action) => {
-        // 태스크 생성 성공 처리
-      })
-      .addCase(createTask.rejected, (state, action) => {
-        // 태스크 생성 실패 처리
-      })
-
-      // 프로젝트 및 구조 통합 생성
-      .addCase(createProjectWithStructure.pending, (state) => {
-        state.form.isSubmitting = true;
-      })
-      .addCase(createProjectWithStructure.fulfilled, (state, action) => {
-        state.form.isSubmitting = false;
-        state.form.data = {}; // 폼 초기화
-        state.form.errors = {};
-        state.selectedProject = action.payload;
-      })
-      .addCase(createProjectWithStructure.rejected, (state, action) => {
-        state.form.isSubmitting = false;
-        state.form.errors = { global: action.payload || '프로젝트 생성 실패' };
+        state.deleteStatus = 'failed';
+        state.error = action.payload;
       });
   },
 });
@@ -561,6 +410,7 @@ const projectSlice = createSlice({
 export const {
   initForm,
   resetForm,
+  resetBuckets,
   setSubmitting,
   setPage,
   setPageSize,
