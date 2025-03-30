@@ -19,6 +19,8 @@ import {
   Button,
   Checkbox,
   TextArea,
+  Row,
+  Col,
 } from '../../../../shared/components/ui';
 
 // 프로젝트 정보 입력 폼 컴포넌트
@@ -105,215 +107,219 @@ const ProjectAddBaseForm = ({
   ];
 
   return (
-    <div>
-      {/* 고객사 입력 필드 */}
-      <Group direction="horizontal" className="gap-6">
-        <FormItem className="flex-1">
-          <Label required className="text-left">
-            고객사
-          </Label>
-          <CustomerSearchInput
-            // value={selectedCustomerId}
-            onSelect={(e) => setSelectedCustomerId(e.id)}
-            size="small"
-          />
-        </FormItem>
+    <Row gutter={16} className="w-full">
+      <Col span={22} className="space-y-4">
+        {/* 고객사 입력 필드 */}
+        <Group direction="horizontal" className="gap-6">
+          <FormItem className="flex-1">
+            <Label required className="text-left">
+              고객사
+            </Label>
+            <CustomerSearchInput
+              // value={selectedCustomerId}
+              onSelect={(e) => setSelectedCustomerId(e.id)}
+              size="small"
+            />
+          </FormItem>
 
-        {/* SFA 선택 필드 */}
-        <FormItem className="flex-1">
-          <Label required className="text-left">
-            SFA
-          </Label>
-          <Select
-            name="sfa"
-            value={formData.sfa || ''}
-            onChange={updateField}
-            // disabled={isSfaLoading || !selectedCustomerId}
-          >
-            {sfaOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {isSfaLoading && option.value === ''
-                  ? '로딩 중...'
-                  : option.label}
-              </option>
-            ))}
-          </Select>
-        </FormItem>
+          {/* SFA 선택 필드 */}
+          <FormItem className="flex-1">
+            <Label required className="text-left">
+              SFA
+            </Label>
+            <Select
+              name="sfa"
+              value={formData.sfa || ''}
+              onChange={updateField}
+              // disabled={isSfaLoading || !selectedCustomerId}
+            >
+              {sfaOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {isSfaLoading && option.value === ''
+                    ? '로딩 중...'
+                    : option.label}
+                </option>
+              ))}
+            </Select>
+          </FormItem>
 
-        {/* 프로젝트명 입력 필드 */}
-        <FormItem className="flex-1">
-          <Label required className="text-left">
-            프로젝트명
-          </Label>
-          <Input
-            name="name"
-            value={formData.name || ''}
-            onChange={updateField}
-            // disabled={isSubmitting}
-          />
-        </FormItem>
-        <FormItem className="flex-1">
-          <Label required className="text-left">
-            사업년도
-          </Label>
-          <Select
-            name="fy"
-            value={formData.fy}
-            onChange={updateField}
-            // disabled={isSubmitting}
-          >
-            <option value="">선택하세요</option>
-            {codebooks?.fy?.data?.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </Select>
-        </FormItem>
-      </Group>
+          {/* 프로젝트명 입력 필드 */}
+          <FormItem className="flex-1">
+            <Label required className="text-left">
+              프로젝트명
+            </Label>
+            <Input
+              name="name"
+              value={formData.name || ''}
+              onChange={updateField}
+              // disabled={isSubmitting}
+            />
+          </FormItem>
+          <FormItem className="flex-1">
+            <Label required className="text-left">
+              사업년도
+            </Label>
+            <Select
+              name="fy"
+              value={formData.fy}
+              onChange={updateField}
+              // disabled={isSubmitting}
+            >
+              <option value="">선택하세요</option>
+              {codebooks?.fy?.data?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </FormItem>
+        </Group>
 
-      <Group direction="horizontal" className="gap-6">
-        {/* 중요도, 프로젝트 상태 */}
-        <FormItem className="flex-1">
-          <Label className="text-left">상태</Label>
-          <Select
-            name="pjtStatus"
-            value={formData.pjtStatus}
-            onChange={updateField}
-            // disabled={isSubmitting}
-          >
-            {codebooks?.pjt_status?.data?.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </Select>
-        </FormItem>
-        <FormItem className="flex-1">
-          <Label className="text-left">중요도</Label>
-          <Select
-            name="importanceLevel"
-            value={formData.importanceLevel}
-            onChange={updateField}
-            // disabled={isSubmitting}
-          >
-            {codebooks?.importance_level?.data?.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </Select>
-        </FormItem>
+        <Group direction="horizontal" className="gap-6">
+          {/* 중요도, 프로젝트 상태 */}
+          <FormItem className="flex-1">
+            <Label className="text-left">상태</Label>
+            <Select
+              name="pjtStatus"
+              value={formData.pjtStatus}
+              onChange={updateField}
+              // disabled={isSubmitting}
+            >
+              {codebooks?.pjt_status?.data?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </FormItem>
+          <FormItem className="flex-1">
+            <Label className="text-left">중요도</Label>
+            <Select
+              name="importanceLevel"
+              value={formData.importanceLevel}
+              onChange={updateField}
+              // disabled={isSubmitting}
+            >
+              {codebooks?.importance_level?.data?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </FormItem>
 
-        {/* 서비스 선택 필드 */}
-        <FormItem className="flex-1">
-          <Label required className="text-left">
-            서비스
-          </Label>
-          <Select
-            name="service"
-            value={formData.service || ''}
-            onChange={updateField}
-          >
-            {serviceOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </Select>
-        </FormItem>
+          {/* 서비스 선택 필드 */}
+          <FormItem className="flex-1">
+            <Label required className="text-left">
+              서비스
+            </Label>
+            <Select
+              name="service"
+              value={formData.service || ''}
+              onChange={updateField}
+            >
+              {serviceOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+          </FormItem>
 
-        {/* 사업부 선택 필드 */}
-        <FormItem className="flex-1">
-          <Label required className="text-left">
-            사업부
-          </Label>
-          <Select
-            name="team"
-            value={formData.team || ''}
-            onChange={updateField}
-          >
-            {teamOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </Select>
-        </FormItem>
-      </Group>
-      {/* 계획 시작일 / 계획 종료일 */}
-      <Group direction="horizontal" className="gap-6">
-        <FormItem className="flex-1">
-          <Label required className="text-left">
-            계획 시작일
-          </Label>
-          <Input
-            type="date"
-            name="planStartDate"
-            value={formData?.planStartDate}
-            onChange={updateField}
-          />
-        </FormItem>
-        <FormItem className="flex-1">
-          <Label required className="text-left">
-            계획 종료일
-          </Label>
-          <Input
-            type="date"
-            name="planEndDate"
-            value={formData?.planEndDate || ''}
-            onChange={updateField}
-          />
-        </FormItem>
-        <FormItem className="flex-1">
-          <Label className="text-left">비고</Label>
-          <Input
-            name="remark"
-            value={formData.remark || ''}
-            onChange={updateField}
-            // disabled={isSubmitting}
-          />
-        </FormItem>
+          {/* 사업부 선택 필드 */}
+          <FormItem className="flex-1">
+            <Label required className="text-left">
+              사업부
+            </Label>
+            <Select
+              name="team"
+              value={formData.team || ''}
+              onChange={updateField}
+            >
+              {teamOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+          </FormItem>
+        </Group>
+        {/* 계획 시작일 / 계획 종료일 */}
+        <Group direction="horizontal" className="gap-6">
+          <FormItem className="flex-1">
+            <Label required className="text-left">
+              계획 시작일
+            </Label>
+            <Input
+              type="date"
+              name="planStartDate"
+              value={formData?.planStartDate}
+              onChange={updateField}
+            />
+          </FormItem>
+          <FormItem className="flex-1">
+            <Label required className="text-left">
+              계획 종료일
+            </Label>
+            <Input
+              type="date"
+              name="planEndDate"
+              value={formData?.planEndDate || ''}
+              onChange={updateField}
+            />
+          </FormItem>
+          <FormItem className="flex-1">
+            <Label className="text-left">비고</Label>
+            <Input
+              name="remark"
+              value={formData.remark || ''}
+              onChange={updateField}
+              // disabled={isSubmitting}
+            />
+          </FormItem>
 
-        {/* 템플릿 선택 필드 */}
-        <FormItem className="flex-1">
-          <Label className="text-left">템플릿</Label>
-          <Select onChange={(e) => handleTemplateSelect(e.target.value)}>
-            {templeteOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {isTaskTempleteLoading && option.value === ''
-                  ? '로딩 중...'
-                  : option.label}
-              </option>
-            ))}
-          </Select>
-          {/* {isTemplateDetailLoading && selectedTemplateId && (
+          {/* 템플릿 선택 필드 */}
+          <FormItem className="flex-1">
+            <Label className="text-left">템플릿</Label>
+            <Select onChange={(e) => handleTemplateSelect(e.target.value)}>
+              {templeteOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {isTaskTempleteLoading && option.value === ''
+                    ? '로딩 중...'
+                    : option.label}
+                </option>
+              ))}
+            </Select>
+            {/* {isTemplateDetailLoading && selectedTemplateId && (
                     <p className="text-xs text-indigo-600 mt-1">
                     템플릿 작업 로딩 중...
                     </p>
                     )} */}
-        </FormItem>
-      </Group>
-      {/* Submit Button */}
-      <Group direction="horizontal" className="gap-6">
-        <Button type="submit" disabled={isSubmitting} className="w-full">
-          취소
-        </Button>
-        <Button
-          type="submit"
-          variant="primary"
-          disabled={isSubmitting}
-          className="w-full"
-          onClick={(e) => {
-            // 버튼 클릭 시에도 이벤트 전파 방지
-            e.preventDefault();
-            handleFormSubmit(e);
-          }}
-        >
-          {isSubmitting ? '처리중...' : '저장'}
-        </Button>
-      </Group>
-    </div>
+          </FormItem>
+        </Group>
+      </Col>
+      <Col span={2}>
+        {/* Submit Button */}
+        <Group direction="vertical" className="gap-6">
+          <Button type="submit" disabled={isSubmitting} className="w-full">
+            취소
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={isSubmitting}
+            className="w-full"
+            onClick={(e) => {
+              // 버튼 클릭 시에도 이벤트 전파 방지
+              e.preventDefault();
+              handleFormSubmit(e);
+            }}
+          >
+            {isSubmitting ? '처리중...' : '저장'}
+          </Button>
+        </Group>
+      </Col>
+    </Row>
   );
 };
 

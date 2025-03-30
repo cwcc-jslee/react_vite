@@ -195,32 +195,7 @@ const ProjectAddContainer = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col">
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-          @media (max-width: 768px) {
-            .kanban-container {
-              overflow-x: auto !important;
-            }
-          }
-          
-          /* 개별 칸반 컬럼의 스크롤 설정 */
-          .kanban-column {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            overflow: hidden;
-          }
-          
-          .kanban-column-content {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
-          }
-        `,
-        }}
-      />
+    <div>
       <ProjectAddBaseForm
         formData={formData}
         codebooks={codebooks}
