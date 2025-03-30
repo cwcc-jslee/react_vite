@@ -1,4 +1,9 @@
 // src/features/project/store/projectSlice.js
+/**
+ * 프로젝트 상태 관리를 위한 Redux 슬라이스
+ * 프로젝트, 버킷, 태스크 데이터의 CRUD 작업과 상태 관리를 담당합니다.
+ */
+
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { projectApiService } from '../services/projectApiService';
 import { projectReduxInitialState } from '../constants/initialState';
@@ -92,34 +97,19 @@ export const fetchProjectDetail = createAsyncThunk(
 
 /**
  * 프로젝트 생성 비동기 액션
- * 개선: 유효성 검사 및 알림 추가
  */
 export const createProject = createAsyncThunk(
   'project/createProject',
-  async (projectData, { rejectWithValue, dispatch, getState }) => {
+  async (projectData, { rejectWithValue, dispatch }) => {
     try {
       // API 호출
       const response = await projectApiService.createProject(projectData);
 
-      // 성공 알림 --> useProjectSubmit 에서 알림.
-      // notification.success({
-      //   message: '프로젝트 등록 성공',
-      //   description: '프로젝트가 성공적으로 등록되었습니다.',
-      // });
-
       // 성공 시 프로젝트 목록 다시 로드
-      dispatch(fetchProjects());
+      // dispatch(fetchProjects());
 
       return response.data;
     } catch (error) {
-      // 에러 메시지 표시 -> hooks 에서 처리리
-      // notification.error({
-      //   message: '프로젝트 등록 실패',
-      //   description:
-      //     error.response?.data?.error?.message ||
-      //     '프로젝트 생성 중 오류가 발생했습니다.',
-      // });
-
       return rejectWithValue(
         error.response?.data?.error?.message ||
           '프로젝트 생성 중 오류가 발생했습니다.',
@@ -130,7 +120,6 @@ export const createProject = createAsyncThunk(
 
 /**
  * 프로젝트 수정 비동기 액션
- * 개선: 유효성 검사 및 알림 추가
  */
 export const updateProject = createAsyncThunk(
   'project/updateProject',
@@ -173,7 +162,7 @@ export const updateProject = createAsyncThunk(
 );
 
 /**
- * 프로젝트 삭제 비동기 액션 추가
+ * 프로젝트 삭제 비동기 액션
  */
 export const deleteProject = createAsyncThunk(
   'project/deleteProject',
@@ -204,6 +193,145 @@ export const deleteProject = createAsyncThunk(
       return rejectWithValue(
         error.response?.data?.error?.message ||
           '프로젝트 삭제 중 오류가 발생했습니다.',
+      );
+    }
+  },
+);
+
+/**
+ * 버킷 생성 비동기 액션
+ */
+export const createBucket = createAsyncThunk(
+  'project/createBucket',
+  async (bucketData, { rejectWithValue }) => {
+    try {
+      const response = await projectApiService.createBucket(bucketData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error?.message ||
+          '버킷 생성 중 오류가 발생했습니다.',
+      );
+    }
+  },
+);
+
+/**
+ * 태스크 생성 비동기 액션
+ */
+export const createTask = createAsyncThunk(
+  'project/createTask',
+  async (taskData, { rejectWithValue }) => {
+    try {
+      const response = await projectApiService.createTask(taskData);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error?.message ||
+          '태스크 생성 중 오류가 발생했습니다.',
+      );
+    }
+  },
+);
+
+/**
+ * 프로젝트와 버킷/태스크 구조를 한 번에 생성하는 비동기 액션
+ */
+export const createProjectWithStructure = createAsyncThunk(
+  'project/createProjectWithStructure',
+  async ({ projectData, buckets }, { dispatch, rejectWithValue }) => {
+    try {
+      // 1. 프로젝트 생성
+      const projectResponse = await dispatch(createProject(projectData));
+
+      if (!createProject.fulfilled.match(projectResponse)) {
+        return rejectWithValue('프로젝트 생성 실패');
+      }
+
+      const createdProject = projectResponse.payload;
+      const projectId = createdProject.id;
+
+      // 버킷이 없는 경우 여기서 종료
+      if (!buckets || buckets.length === 0) {
+        return createdProject;
+      }
+
+      // 2. 각 버킷별 생성
+      const bucketPromises = buckets.map(async (bucket) => {
+        const bucketPayload = {
+          project_id: projectId,
+          name: bucket.bucket,
+          position: bucket.position,
+        };
+
+        const bucketResponse = await dispatch(createBucket(bucketPayload));
+
+        if (!createBucket.fulfilled.match(bucketResponse)) {
+          return { error: true, message: '버킷 생성 실패' };
+        }
+
+        const createdBucket = bucketResponse.payload;
+        const bucketId = createdBucket.id;
+
+        // 태스크가 있는 경우 처리
+        if (bucket.tasks && bucket.tasks.length > 0) {
+          const taskPromises = bucket.tasks.map(async (task) => {
+            const taskPayload = {
+              project_id: projectId,
+              bucket_id: bucketId,
+              name: task.name,
+              position: task.position,
+              priority_level: task.priority_level,
+              task_progress: task.task_progress,
+              task_schedule_type: task.task_schedule_type,
+              // 일정 타입이 true인 경우 계획 시간 데이터 포함
+              ...(task.task_schedule_type &&
+                task.planning_time_data && {
+                  planning_time_data: task.planning_time_data,
+                }),
+              // 날짜 정보가 있는 경우 포함
+              ...(task.plan_start_date && {
+                plan_start_date: task.plan_start_date,
+              }),
+              ...(task.plan_end_date && { plan_end_date: task.plan_end_date }),
+              ...(task.due_date && { due_date: task.due_date }),
+            };
+
+            const taskResponse = await dispatch(createTask(taskPayload));
+
+            if (!createTask.fulfilled.match(taskResponse)) {
+              return { error: true, message: '태스크 생성 실패' };
+            }
+
+            return taskResponse.payload;
+          });
+
+          const taskResults = await Promise.all(taskPromises);
+          const failedTasks = taskResults.filter((result) => result.error);
+
+          if (failedTasks.length > 0) {
+            return { error: true, message: failedTasks[0].message };
+          }
+        }
+
+        return createdBucket;
+      });
+
+      const bucketResults = await Promise.all(bucketPromises);
+      const failedBuckets = bucketResults.filter((result) => result.error);
+
+      if (failedBuckets.length > 0) {
+        return rejectWithValue(failedBuckets[0].message);
+      }
+
+      // 3. 최종 프로젝트 조회
+      const finalProject = await projectApiService.getProjectDetail(projectId);
+
+      return finalProject.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error?.message ||
+          '프로젝트 및 구조 생성 중 오류가 발생했습니다.',
       );
     }
   },
@@ -389,6 +517,43 @@ const projectSlice = createSlice({
       })
       .addCase(deleteProject.rejected, (state, action) => {
         // 삭제 실패 처리
+      })
+
+      // 버킷 생성
+      .addCase(createBucket.pending, (state) => {
+        // 버킷 생성 중 상태 설정
+      })
+      .addCase(createBucket.fulfilled, (state, action) => {
+        // 버킷 생성 성공 처리
+      })
+      .addCase(createBucket.rejected, (state, action) => {
+        // 버킷 생성 실패 처리
+      })
+
+      // 태스크 생성
+      .addCase(createTask.pending, (state) => {
+        // 태스크 생성 중 상태 설정
+      })
+      .addCase(createTask.fulfilled, (state, action) => {
+        // 태스크 생성 성공 처리
+      })
+      .addCase(createTask.rejected, (state, action) => {
+        // 태스크 생성 실패 처리
+      })
+
+      // 프로젝트 및 구조 통합 생성
+      .addCase(createProjectWithStructure.pending, (state) => {
+        state.form.isSubmitting = true;
+      })
+      .addCase(createProjectWithStructure.fulfilled, (state, action) => {
+        state.form.isSubmitting = false;
+        state.form.data = {}; // 폼 초기화
+        state.form.errors = {};
+        state.selectedProject = action.payload;
+      })
+      .addCase(createProjectWithStructure.rejected, (state, action) => {
+        state.form.isSubmitting = false;
+        state.form.errors = { global: action.payload || '프로젝트 생성 실패' };
       });
   },
 });
