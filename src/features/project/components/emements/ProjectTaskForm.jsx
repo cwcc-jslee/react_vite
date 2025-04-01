@@ -16,58 +16,88 @@ import {
   TextArea,
   Switch,
 } from '../../../../shared/components/ui';
-import { FiChevronUp, FiChevronDown, FiPlus } from 'react-icons/fi';
-import useTaskEditor from '../../hooks/useTaskEditor';
+import {
+  FiChevronUp,
+  FiChevronDown,
+  FiPlus,
+  FiEdit,
+  FiTrash2,
+} from 'react-icons/fi';
+import useTaskFormEditor from '../../hooks/useTaskFormEditor';
 import ProjectUserSelector from './ProjectUserSelector';
 import { notification } from '../../../../shared/services/notification';
+
 /**
  * 프로젝트 작업 수정 폼 컴포넌트
  * 리액트 패턴을 활용하여 DOM 조작 최소화 및 상태 관리 개선
  */
 const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
   const {
+    // 작업 데이터 관련
     taskFormData,
-    checklists,
-    assignedUsers,
-    errors,
-    handleSwitchChange,
+    setTaskFormData,
     handleInputChange,
-    getEditedTask,
+    handleSwitchChange,
+
+    // 체크리스트 관련
+    checklists,
+    isChecklistExpanded,
+    isAddingChecklist,
+    editingChecklistId,
+    editingChecklistText,
+    setEditingChecklistText,
+    getChecklistStats,
     addChecklistItem,
     toggleChecklistItem,
     deleteChecklistItem,
+    startChecklistItemEdit,
+    saveChecklistItemEdit,
+    cancelChecklistItemEdit,
+    toggleChecklistExpanded,
+    setChecklistAddingMode,
+
+    // 사용자 할당 관련
+    assignedUsers,
     assignUser,
     removeAssignedUser,
-    setTaskFormData,
-    handleSubmit,
-  } = useTaskEditor(task);
+
+    // 기타
+    errors,
+    getEditedTask,
+  } = useTaskFormEditor(task);
 
   // 새 체크리스트 항목을 위한 상태
   const [newChecklistItem, setNewChecklistItem] = useState('');
-  // 체크리스트 입력 필드 활성화 상태
-  const [isAddingChecklist, setIsAddingChecklist] = useState(false);
-  // 체크리스트 섹션 펼침/접기 상태
-  const [isChecklistExpanded, setIsChecklistExpanded] = useState(true);
 
   const isScheduled = taskFormData.taskScheduleType;
+
+  // 체크리스트 통계
+  const checklistStats = getChecklistStats();
 
   // 체크리스트 입력 핸들러
   const handleNewChecklistItemKeyDown = (e) => {
     if (e.key === 'Enter' && newChecklistItem.trim()) {
       addChecklistItem(newChecklistItem.trim());
       setNewChecklistItem('');
-      setIsAddingChecklist(false);
+      setChecklistAddingMode(false);
+    } else if (e.key === 'Escape') {
+      setNewChecklistItem('');
+      setChecklistAddingMode(false);
     }
   };
 
   // 체크리스트 추가 영역 클릭 핸들러
   const handleAddChecklistClick = () => {
-    setIsAddingChecklist(true);
+    setChecklistAddingMode(true);
   };
 
-  // 체크리스트 아이템 삭제 핸들러
-  const handleDeleteChecklistItem = (id) => {
-    deleteChecklistItem(id);
+  // 체크리스트 수정 키 입력 핸들러
+  const handleEditChecklistKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      saveChecklistItemEdit();
+    } else if (e.key === 'Escape') {
+      cancelChecklistItemEdit();
+    }
   };
 
   // 계획 시간 계산 함수
@@ -349,8 +379,7 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
             <Input
               type="text"
               name="totalPlannedHours"
-              // value={formData.commencementDate}
-              // onChange={updateFormField}
+              value={taskFormData?.planningTimeData?.totalPlannedHours || ''}
               disabled={true}
             />
           </FormItem>
@@ -361,12 +390,20 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
       <Group direction="horizontal" spacing="lg" className="mb-6">
         <FormItem direction="vertical" className="flex-1">
           <div className="flex justify-between items-center">
-            <Label className="text-left">체크리스트</Label>
+            <div className="flex items-center">
+              <Label className="text-left mr-2">체크리스트</Label>
+              {/* 체크리스트 완료 수량 표시 */}
+              {checklists.length > 0 && (
+                <span className="text-sm text-gray-500">
+                  {checklistStats.completed}/{checklistStats.total}
+                </span>
+              )}
+            </div>
             {checklists.length > 0 && (
               <button
                 type="button"
                 className="text-gray-500 hover:text-gray-700 focus:outline-none"
-                onClick={() => setIsChecklistExpanded(!isChecklistExpanded)}
+                onClick={toggleChecklistExpanded}
               >
                 {isChecklistExpanded ? (
                   <FiChevronUp size={18} />
@@ -385,44 +422,69 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
                     key={item.id || item.index}
                     className="flex items-center gap-2 py-1 px-1 rounded-md group hover:bg-gray-100 transition-colors"
                   >
-                    <Checkbox
-                      id={`checklist-item-${item.id || item.index}`}
-                      checked={item.isCompleted}
-                      onChange={(e) =>
-                        toggleChecklistItem(
-                          item.id || item.index,
-                          e.target.checked,
-                        )
-                      }
-                    />
-                    <label
-                      htmlFor={`checklist-item-${item.id || item.index}`}
-                      className="text-sm flex-1"
-                    >
-                      {item.description}
-                    </label>
-                    <button
-                      type="button"
-                      className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() =>
-                        handleDeleteChecklistItem(item.id || item.index)
-                      }
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    {/* 체크리스트 수정 모드 */}
+                    {editingChecklistId === (item.id || item.index) ? (
+                      <div className="flex items-center gap-2 flex-1">
+                        <Checkbox
+                          id={`checklist-item-${item.id || item.index}`}
+                          checked={item.isCompleted}
+                          onChange={(e) =>
+                            toggleChecklistItem(
+                              item.id || item.index,
+                              e.target.checked,
+                            )
+                          }
                         />
-                      </svg>
-                    </button>
+                        <Input
+                          value={editingChecklistText}
+                          onChange={(e) =>
+                            setEditingChecklistText(e.target.value)
+                          }
+                          onKeyDown={handleEditChecklistKeyDown}
+                          onBlur={saveChecklistItemEdit}
+                          autoFocus
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        {/* 체크박스만 클릭 가능하도록 수정 */}
+                        <Checkbox
+                          id={`checklist-item-${item.id || item.index}`}
+                          checked={item.isCompleted}
+                          onChange={(e) =>
+                            toggleChecklistItem(
+                              item.id || item.index,
+                              e.target.checked,
+                            )
+                          }
+                        />
+                        <label
+                          htmlFor={`checklist-item-${item.id || item.index}`}
+                          className="text-sm flex-1 cursor-default"
+                        >
+                          {item.description}
+                        </label>
+                        {/* 수정, 삭제 버튼 - 호버 시에만 표시 */}
+                        <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            className="text-gray-400 hover:text-blue-500 mr-2"
+                            onClick={() => startChecklistItemEdit(item)}
+                          >
+                            <FiEdit size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            className="text-gray-400 hover:text-red-500"
+                            onClick={() =>
+                              deleteChecklistItem(item.id || item.index)
+                            }
+                          >
+                            <FiTrash2 size={16} />
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
@@ -473,8 +535,7 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
         <Button onClick={onCancel} variant="outline">
           취소
         </Button>
-        {/* <Button onClick={() => onSave(getEditedTask())}>저장</Button> */}
-        <Button onClick={handleSave}>저장</Button>
+        <Button onClick={handleSave}>수정</Button>
       </div>
     </>
   );

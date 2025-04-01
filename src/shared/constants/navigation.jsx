@@ -1,15 +1,13 @@
 // src/shared/constants/navigation.js
 
-/**
- * 애플리케이션 네비게이션 관련 상수
- * 사이드바 메뉴 항목 및 페이지별 메뉴 구성
- */
-
 // 사이드바 메뉴 항목
-export const MENU_ITEMS = [
+export const SIDEBAR_ITEMS = [
   {
-    key: '/',
+    id: 'home',
+    path: '/',
     label: 'HOME',
+    permissions: ['user'],
+    // icon: 'home',
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -22,8 +20,10 @@ export const MENU_ITEMS = [
     ),
   },
   {
-    key: '/sfa',
+    id: 'sfa',
+    path: '/sfa',
     label: 'SFA',
+    permissions: ['user'],
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -40,8 +40,10 @@ export const MENU_ITEMS = [
     ),
   },
   {
-    key: '/customer',
+    id: 'customer',
+    path: '/customer',
     label: 'CUSTOMER',
+    permissions: ['user'],
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -54,8 +56,10 @@ export const MENU_ITEMS = [
     ),
   },
   {
-    key: '/contact',
+    id: 'contact',
+    path: '/contact',
     label: 'CONTACT',
+    permissions: ['user'],
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -68,8 +72,10 @@ export const MENU_ITEMS = [
     ),
   },
   {
-    key: '/project',
+    id: 'project',
+    path: '/project',
     label: 'PROJECT',
+    permissions: ['user'],
     icon: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -88,74 +94,196 @@ export const MENU_ITEMS = [
   // 나머지 메뉴 항목들...
 ];
 
-// 페이지별 메뉴 구성 정보
+// 메뉴 리스트
 export const PAGE_MENUS = {
-  // 프로젝트 페이지 메뉴
-  project: {
-    menus: {
-      default: {
+  // 페이지별 상단 메뉴
+  sfa: {
+    defaultMenu: 'list',
+    items: {
+      list: {
         label: '현황',
+        permissions: ['user'],
         config: {
-          // title: '현황',
-          layoutMode: 'default',
           components: {
-            projectTable: true,
-            projectAddSection: false,
+            monthlyStatus: true,
+            sfaTable: true,
+            searchForm: false,
+            forecastTable: false,
           },
-          form: { data: {}, errors: {}, isSubmitting: false },
+          drawer: {
+            visible: false, // 드로어 표시 여부
+          },
         },
       },
-      addProject: {
-        label: '등록',
+      add: {
+        label: '매출등록',
+        permissions: ['user'],
         config: {
-          // title: '등록',
-          layoutMode: 'addProject',
           components: {
-            projectTable: false,
-            projectAddSection: true,
+            monthlyStatus: true,
+            sfaTable: true,
+            searchForm: false,
+            forecastTable: false,
           },
-          form: { data: { sfa: '' }, errors: {}, isSubmitting: false },
+          drawer: {
+            visible: true, // 드로어 표시 여부
+            mode: 'add',
+            data: null,
+          },
+        },
+      },
+      search: {
+        label: '상세조회',
+        permissions: ['user'],
+        config: {
+          components: {
+            monthlyStatus: false,
+            sfaTable: true,
+            searchForm: true,
+            forecastTable: false,
+          },
+          drawer: {
+            visible: false, // 드로어 표시 여부
+          },
+        },
+      },
+      forecast: {
+        label: '매출예측',
+        permissions: ['user'],
+        config: {
+          components: {
+            monthlyStatus: false,
+            sfaTable: true,
+            searchForm: false,
+            forecastTable: true,
+          },
+          drawer: {
+            visible: false, // 드로어 표시 여부
+          },
         },
       },
     },
   },
-  // 다른 페이지 메뉴 구성 정보...
-  sfa: {
-    menus: {
+  //
+  project: {
+    defaultMenu: 'list',
+    items: {
       list: {
-        label: '매출 목록',
+        label: '현황',
+        permissions: ['user'],
         config: {
-          title: '매출 목록',
           components: {
-            sfaList: true,
-            sfaDetail: false,
+            projectTable: true,
+            projectAddSection: false,
+          },
+          drawer: {
+            visible: false, // 드로어 표시 여부
           },
         },
       },
-      create: {
-        label: '매출 등록',
+      add: {
+        label: '등록',
+        permissions: ['user'],
         config: {
-          title: '매출 등록',
           components: {
-            sfaList: false,
-            sfaDetail: true,
+            projectTable: false,
+            projectAddSection: true,
           },
-        },
-      },
-      analysis: {
-        label: '매출 분석',
-        config: {
-          title: '매출 분석',
-          components: {
-            sfaList: false,
-            sfaDetail: false,
-            sfaAnalysis: true,
+          drawer: {
+            visible: false, // 드로어 표시 여부
           },
         },
       },
     },
   },
 };
+
+// 페이지별 메뉴 구성 정보
+// export const PAGE_MENUS = {
+//   //SFA
+//   sfa: {
+//     menus: {
+//       add: {
+//         label: '매출등록',
+//         config: {
+//           title: '매출등록',
+//           components: {
+//             monthlyStatus: true,
+//             sfaTable: true,
+//             searchForm: false,
+//             forecastTable: false,
+//           },
+//         },
+//       },
+//       search: {
+//         label: '상세조회',
+//         config: {
+//           title: '매출 등록',
+//           components: {
+//             monthlyStatus: false,
+//             sfaTable: true,
+//             searchForm: true,
+//             forecastTable: false,
+//           },
+//         },
+//       },
+//       forecast: {
+//         label: '매출예측',
+//         config: {
+//           title: '매출예측',
+//           components: {
+//             monthlyStatus: false,
+//             sfaTable: true,
+//             searchForm: false,
+//             forecastTable: true,
+//           },
+//         },
+//       },
+//       reset: {
+//         label: '초기화',
+//         config: {
+//           title: '초기화',
+//           components: {
+//             monthlyStatus: true,
+//             sfaTable: true,
+//             searchForm: false,
+//             forecastTable: false,
+//           },
+//         },
+//       },
+//     },
+//   },
+//   // 프로젝트 페이지 메뉴
+//   project: {
+//     menus: {
+//       default: {
+//         label: '현황',
+//         config: {
+//           // title: '현황',
+//           layoutMode: 'default',
+//           components: {
+//             projectTable: true,
+//             projectAddSection: false,
+//           },
+//           form: { data: {}, errors: {}, isSubmitting: false },
+//         },
+//       },
+//       addProject: {
+//         label: '등록',
+//         config: {
+//           // title: '등록',
+//           layoutMode: 'addProject',
+//           components: {
+//             projectTable: false,
+//             projectAddSection: true,
+//           },
+//           form: { data: { sfa: '' }, errors: {}, isSubmitting: false },
+//         },
+//       },
+//     },
+//   },
+//   // 다른 페이지 메뉴 구성 정보...
+// };
 
 // 각 페이지의 기본 메뉴 ID 정의
 export const DEFAULT_MENU_IDS = {

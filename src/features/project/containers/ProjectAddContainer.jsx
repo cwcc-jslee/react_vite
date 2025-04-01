@@ -196,6 +196,7 @@ const ProjectAddContainer = () => {
 
   return (
     <div>
+      <span>프로젝트 기본정보</span>
       <ProjectAddBaseForm
         formData={formData}
         codebooks={codebooks}
@@ -205,6 +206,8 @@ const ProjectAddContainer = () => {
         handleReset={handleReset}
         isSubmitting={isSubmitting}
       />
+      <br></br>
+      <span>프로젝트 테스크</span>
 
       {/* 전체 컨테이너를 수평 레이아웃으로 변경 */}
       <div className="flex flex-row h-full flex-grow overflow-hidden">

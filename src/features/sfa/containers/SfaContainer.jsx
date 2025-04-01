@@ -13,7 +13,7 @@ import SfaDrawer from '../components/drawer/SfaDrawer';
 import SfaQuarterlyOverview from '../components/tables/SfaQuarterlyOverview';
 import SfaAnnualOverview from '../components/tables/SfaAnnualOverview';
 import SfaTable from '../components/tables/SfaTable';
-import SfaSubMenu from '../components/SfaSubMenu';
+// import SfaSubMenu from '../components/SfaSubMenu';
 import SfaSearchForm from '../components/forms/SfaSearchForm';
 
 /**
@@ -23,18 +23,21 @@ import SfaSearchForm from '../components/forms/SfaSearchForm';
 const SfaContainer = () => {
   // 레이아웃 관련 상태 가져오기
   const { pageLayout, drawerState } = useSfa();
-  const { components } = pageLayout;
+  // const { components } = pageLayout;
+  // 레이아웃 관련 상태 가져오기
+  const components = useSelector((state) => state.ui.pageLayout.components);
+  const drawer = useSelector((state) => state.ui.drawer);
 
   return (
     <>
       <Section>
-        <SfaSubMenu />
+        {/* <SfaSubMenu /> */}
         {components.searchForm && <SfaSearchForm />}
         {components.forecastTable && <SfaAnnualOverview />}
         {components.monthlyStatus && <SfaQuarterlyOverview />}
         {components.sfaTable && <SfaTable />}
       </Section>
-      {drawerState.visible && <SfaDrawer />}
+      {drawer.visible && <SfaDrawer drawer={drawer} />}
     </>
   );
 };

@@ -92,9 +92,10 @@ export const Sider = ({
     >
       {/* 사이드바 토글 버튼 */}
       {onToggle && (
+        // 수정된 코드
         <button
           onClick={onToggle}
-          className="absolute -right-3 top-6 bg-blue-700 rounded-full p-1 text-white shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="absolute -right-0 top-6 bg-blue-700 rounded-full p-1 text-white shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           <svg

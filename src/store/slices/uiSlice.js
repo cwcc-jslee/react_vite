@@ -8,48 +8,19 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
   // 레이아웃 상태
   pageLayout: {
-    mode: 'default',
-    components: {
-      // 페이지별 컴포넌트 - project
-      projectTable: true,
-      projectAddSection: false,
-    },
+    page: null, // 현재 페이지 (ex: 'project', 'sfa')
+    menu: 'default',
+    components: {},
   },
 
   // 드로어 상태
   drawer: {
-    visible: false,
-    baseMode: null,
-    subMode: null,
-    data: null,
-  },
-
-  // 각 페이지별 활성 메뉴
-  activeMenu: {
-    project: 'default',
-    sfa: 'default',
-    work: 'default',
-    customer: 'default',
-  },
-
-  // 페이지별 메뉴 상태 저장 (각 메뉴가 가진 상태값)
-  menuState: {
-    project: {
-      default: null,
-      addProject: {
-        customer: null,
-        sfa: null,
-        template: null,
-      },
-    },
-    sfa: {
-      default: null,
-      addSfa: {
-        customer: null,
-        // sfa 관련 상태들...
-      },
-    },
-    // 다른 페이지들...
+    visible: false, // 드로어 표시 여부
+    type: null, // 드로어 유형 (예: 'filter', 'detail', 'form')
+    mode: null, // 드로어 모드 (예: 'create', 'edit', 'view')
+    data: null, // 필요한 데이터
+    options: {}, // 추가 옵션 subMode 설정
+    width: 'md', // 드로어 너비 (xs, sm, md, lg, xl)
   },
 };
 
@@ -58,11 +29,31 @@ const uiSlice = createSlice({
   initialState,
   reducers: {
     /**
+     * 페이지 변경 시 호출
+     * 페이지 정보와 해당 페이지의 기본 컴포넌트 설정
+     */
+    changePage: (state, action) => {
+      const {
+        page,
+        defaultComponents = {},
+        defaultMenu = 'default',
+      } = action.payload;
+      console.log(`>> changePage click : `, action);
+
+      state.pageLayout.page = page;
+      state.pageLayout.components = defaultComponents;
+      state.pageLayout.menu = defaultMenu;
+    },
+
+    /**
      * 레이아웃 모드 변경
      */
     setPageLayout: (state, action) => {
       const { mode, components } = action.payload;
-      state.pageLayout.mode = mode;
+
+      if (mode) {
+        state.pageLayout.mode = mode;
+      }
 
       if (components) {
         state.pageLayout.components = {
@@ -87,37 +78,20 @@ const uiSlice = createSlice({
      */
     closeDrawer: (state) => {
       state.drawer = {
-        visible: false,
-        baseMode: null,
-        subMode: null,
-        data: null,
+        visible: false, // 드로어 표시 여부
+        type: null, // 드로어 유형 (예: 'filter', 'detail', 'form')
+        mode: null, // 드로어 모드 (예: 'create', 'edit', 'view')
+        data: null, // 필요한 데이터
+        options: {}, // 추가 옵션 subMode 설정
+        width: 'md', // 드로어 너비 (xs, sm, md, lg, xl)
       };
     },
 
     /**
-     * 활성 메뉴 변경
+     * 현재 페이지의 활성 메뉴 변경
      */
     setActiveMenu: (state, action) => {
-      const { page, menuId } = action.payload;
-      state.activeMenu[page] = menuId;
-    },
-
-    /**
-     * 메뉴 상태 업데이트
-     */
-    updateMenuState: (state, action) => {
-      const { page, menuId, updates } = action.payload;
-
-      // 해당 페이지와 메뉴의 상태가 없으면 초기화
-      if (!state.menuState[page][menuId]) {
-        state.menuState[page][menuId] = {};
-      }
-
-      // 상태 업데이트
-      state.menuState[page][menuId] = {
-        ...state.menuState[page][menuId],
-        ...updates,
-      };
+      state.pageLayout.menu = action.payload;
     },
 
     /**
@@ -125,14 +99,14 @@ const uiSlice = createSlice({
      * (메뉴에 따른 레이아웃, 드로어 등 변경)
      */
     changePageMenu: (state, action) => {
-      const { page, menuId, config } = action.payload;
+      const { menuId, config } = action.payload;
 
       // 활성 메뉴 업데이트
-      state.activeMenu[page] = menuId;
+      state.pageLayout.menu = menuId;
 
       // 레이아웃 업데이트
       if (config.components) {
-        state.pageLayout.mode = config.layoutMode || 'default';
+        // state.pageLayout.mode = config.layoutMode || 'default';
         state.pageLayout.components = {
           ...state.pageLayout.components,
           ...config.components,
@@ -146,23 +120,16 @@ const uiSlice = createSlice({
           ...config.drawer,
         };
       }
-
-      // 메뉴 상태 초기화 (필요한 경우)
-      if (config.hasState && config.initialState) {
-        state.menuState[page][menuId] = {
-          ...config.initialState,
-        };
-      }
     },
   },
 });
 
 export const {
+  changePage,
   setPageLayout,
   setDrawer,
   closeDrawer,
   setActiveMenu,
-  updateMenuState,
   changePageMenu,
 } = uiSlice.actions;
 

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 
 /**
  * 작업 편집을 위한 커스텀 훅
+ * 작업 정보 관리 및 체크리스트 기능을 포함
  *
  * @param {Object} initialTask - 초기 작업 데이터
  * @param {Function} onSave - 저장 시 호출할 콜백 함수 (columnIndex, taskIndex, updatedTask)
@@ -20,6 +21,15 @@ const useTaskEditor = (
   const [checklists, setChecklists] = useState([]);
   // 할당된 사용자 상태
   const [assignedUsers, setAssignedUsers] = useState([]);
+
+  // 체크리스트 확장/축소 상태
+  const [isChecklistExpanded, setIsChecklistExpanded] = useState(true);
+  // 체크리스트 항목 추가 모드 상태
+  const [isAddingChecklist, setIsAddingChecklist] = useState(false);
+  // 체크리스트 수정 상태
+  const [editingChecklistId, setEditingChecklistId] = useState(null);
+  // 체크리스트 수정 텍스트
+  const [editingChecklistText, setEditingChecklistText] = useState('');
 
   // 제출 및 오류 상태 (향후 개별 task 제출 시 사용)
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,10 +63,37 @@ const useTaskEditor = (
         // 기타 필요한 필드 추가
       });
 
-      setChecklists(initialTask?.projectTaskChecklists || []);
+      // 체크리스트 초기화 시 index 재설정
+      if (
+        initialTask?.projectTaskChecklists &&
+        initialTask.projectTaskChecklists.length > 0
+      ) {
+        const checklistsWithIndexes = initialTask.projectTaskChecklists.map(
+          (item, idx) => ({
+            ...item,
+            index: idx,
+          }),
+        );
+        setChecklists(checklistsWithIndexes);
+      } else {
+        setChecklists([]);
+      }
+
       setAssignedUsers(initialTask?.users || []);
     }
   }, [initialTask]);
+
+  /**
+   * 체크리스트 항목의 index를 순차적으로 재설정
+   * @param {Array} items - 체크리스트 항목 배열
+   * @returns {Array} - index가 재설정된 체크리스트 항목 배열
+   */
+  const reorderChecklistIndexes = (items) => {
+    return items.map((item, idx) => ({
+      ...item,
+      index: idx,
+    }));
+  };
 
   // 필드 변경 핸들러
   const handleChange = (name, value) => {
@@ -135,32 +172,123 @@ const useTaskEditor = (
   };
 
   // 체크리스트 관련 함수들
+  /**
+   * 체크리스트 항목 추가
+   * @param {string} description - 체크리스트 항목 내용
+   */
   const addChecklistItem = (description) => {
     if (!description.trim()) return;
 
-    const newItem = {
-      index: checklists.length, // 배열의 현재 길이를 id로 사용
-      description: description.trim(),
-      isCompleted: false,
-    };
+    setChecklists((prev) => {
+      // 새 항목 생성 (임시 인덱스 사용)
+      const newItem = {
+        description: description.trim(),
+        isCompleted: false,
+      };
 
-    setChecklists((prev) => [...prev, newItem]);
+      // 기존 항목에 새 항목 추가 후 인덱스 재정렬
+      const updatedItems = [...prev, newItem];
+      return reorderChecklistIndexes(updatedItems);
+    });
+
+    setIsAddingChecklist(false); // 추가 후 입력 모드 종료
   };
 
-  const toggleChecklistItem = (id) => {
+  /**
+   * 체크리스트 항목 토글
+   * @param {string|number} id - 체크리스트 항목 ID 또는 인덱스
+   * @param {boolean} isCompleted - 완료 상태
+   */
+  const toggleChecklistItem = (id, isCompleted) => {
     setChecklists((prev) =>
       prev.map((item) =>
         item.id === id || item.index === id
-          ? { ...item, isCompleted: !item.isCompleted }
+          ? {
+              ...item,
+              isCompleted:
+                isCompleted !== undefined ? isCompleted : !item.isCompleted,
+            }
           : item,
       ),
     );
   };
 
+  /**
+   * 체크리스트 항목 삭제
+   * @param {string|number} id - 체크리스트 항목 ID 또는 인덱스
+   */
   const deleteChecklistItem = (id) => {
-    setChecklists((prev) =>
-      prev.filter((item) => !(item.id === id || item.index === id)),
-    );
+    setChecklists((prev) => {
+      // 항목 삭제
+      const filteredItems = prev.filter(
+        (item) => !(item.id === id || item.index === id),
+      );
+      // 인덱스 재정렬
+      return reorderChecklistIndexes(filteredItems);
+    });
+  };
+
+  /**
+   * 체크리스트 항목 수정 시작
+   * @param {Object} item - 수정할 체크리스트 항목
+   */
+  const startChecklistItemEdit = (item) => {
+    setEditingChecklistId(item.id || item.index);
+    setEditingChecklistText(item.description);
+  };
+
+  /**
+   * 체크리스트 항목 수정 저장
+   */
+  const saveChecklistItemEdit = () => {
+    if (editingChecklistText.trim()) {
+      setChecklists((prev) =>
+        prev.map((item) => {
+          if ((item.id || item.index) === editingChecklistId) {
+            return { ...item, description: editingChecklistText.trim() };
+          }
+          return item;
+        }),
+      );
+    }
+
+    // 수정 모드 종료
+    setEditingChecklistId(null);
+    setEditingChecklistText('');
+  };
+
+  /**
+   * 체크리스트 항목 수정 취소
+   */
+  const cancelChecklistItemEdit = () => {
+    setEditingChecklistId(null);
+    setEditingChecklistText('');
+  };
+
+  /**
+   * 체크리스트 통계 계산
+   * @returns {Object} 체크리스트 통계 (총 항목 수, 완료된 항목 수)
+   */
+  const getChecklistStats = () => {
+    return {
+      total: checklists.length,
+      completed: checklists.filter((item) => item.isCompleted).length,
+    };
+  };
+
+  /**
+   * 체크리스트 섹션 토글 (펼침/접기)
+   */
+  const toggleChecklistExpanded = () => {
+    setIsChecklistExpanded(!isChecklistExpanded);
+  };
+
+  /**
+   * 체크리스트 추가 모드 설정
+   * @param {boolean} isAdding - 추가 모드 활성화 여부
+   */
+  const setChecklistAddingMode = (isAdding) => {
+    setIsAddingChecklist(isAdding);
   };
 
   // 사용자 할당 관련 함수들
@@ -266,20 +394,38 @@ const useTaskEditor = (
   };
 
   return {
+    // 작업 데이터 관련
     taskFormData,
-    checklists,
-    assignedUsers,
-    errors,
-    isSubmitting,
     setTaskFormData,
-    handleSwitchChange,
     handleChange,
     handleInputChange,
+    handleSwitchChange,
+
+    // 체크리스트 관련
+    checklists,
+    isChecklistExpanded,
+    isAddingChecklist,
+    editingChecklistId,
+    editingChecklistText,
+    setEditingChecklistText,
+    getChecklistStats,
     addChecklistItem,
     toggleChecklistItem,
     deleteChecklistItem,
+    startChecklistItemEdit,
+    saveChecklistItemEdit,
+    cancelChecklistItemEdit,
+    toggleChecklistExpanded,
+    setChecklistAddingMode,
+
+    // 사용자 할당 관련
+    assignedUsers,
     assignUser,
     removeAssignedUser,
+
+    // 기타 상태 및 기능
+    errors,
+    isSubmitting,
     getEditedTask,
     saveTask,
     validateTask,

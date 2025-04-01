@@ -4,11 +4,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../../../features/auth/store/authSlice';
 import { fetchFrequentCodebooks } from '../../../../features/codebook/store/codebookSlice';
-import {
-  MENU_ITEMS,
-  PAGE_MENUS,
-  DEFAULT_MENU_IDS,
-} from '../../../constants/navigation';
+import { changePage } from '../../../../store/slices/uiSlice';
+import { SIDEBAR_ITEMS, PAGE_MENUS } from '../../../constants/navigation';
 import { Button } from '../index.jsx';
 import {
   Layout,
@@ -50,12 +47,33 @@ const getCurrentPageFromPath = (path) => {
   return segments.length > 0 ? segments[0] : '';
 };
 
+// 페이지 기본 컴포넌트 상태 가져오기
+// const getDefaultPageComponents = (page) => {
+//   if (!page || !PAGE_MENUS[page]) return {};
+
+//   const defaultMenuId = PAGE_MENUS[page]?.defaultMenu || 'default';
+//   const menuConfig = PAGE_MENUS[page]?.items?.id[defaultMenuId]?.config || {};
+
+//   return menuConfig.components || {};
+// };
+
+// PAGE_MENUS Config(components, drawer) 상태 가져오기
+const getPageMenuConfig = (page) => {
+  if (!page || !PAGE_MENUS[page]) return {};
+
+  const defaultMenuId = PAGE_MENUS[page]?.defaultMenu || 'default';
+  const menuConfig = PAGE_MENUS[page]?.items?.[defaultMenuId]?.config || {};
+
+  return menuConfig || {};
+};
+
 const DefaultLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { status, error } = useSelector((state) => state.codebook);
+  const { pageLayout } = useSelector((state) => state.ui);
 
   // 현재 페이지 식별자 추출
   const currentPage = getCurrentPageFromPath(location.pathname);
@@ -65,6 +83,23 @@ const DefaultLayout = ({ children }) => {
 
   // 브레드크럼 아이템
   const breadcrumbItems = getBreadcrumbItems(location.pathname);
+
+  // 페이지 메뉴 관리
+  useEffect(() => {
+    // 이전에 저장된 페이지와 현재 페이지가 다르면 초기화
+    if (currentPage && pageLayout.page !== currentPage) {
+      const defaultComponents = getPageMenuConfig(currentPage)?.components;
+      const defaultMenu = PAGE_MENUS[currentPage]?.defaultMenu || 'default';
+
+      dispatch(
+        changePage({
+          page: currentPage,
+          defaultComponents,
+          defaultMenu,
+        }),
+      );
+    }
+  }, [currentPage, pageLayout.page, dispatch]);
 
   useEffect(() => {
     if (status === 'idle') {
@@ -107,6 +142,14 @@ const DefaultLayout = ({ children }) => {
     );
   }
 
+  // 현재 활성 메뉴 결정
+  // let currentActiveMenu = 'default';
+  // if (pageLayout && typeof pageLayout.menu === 'string') {
+  //   currentActiveMenu = pageLayout.menu;
+  // } else if (DEFAULT_MENU_IDS[currentPage]) {
+  //   currentActiveMenu = DEFAULT_MENU_IDS[currentPage];
+  // }
+
   const handleLogout = () => {
     dispatch(logout());
     navigate('/login');
@@ -139,14 +182,14 @@ const DefaultLayout = ({ children }) => {
         <Sider collapsed={sidebarCollapsed} onToggle={toggleSidebar}>
           <Navigation>
             <NavList>
-              {MENU_ITEMS.map((item) => (
+              {SIDEBAR_ITEMS.map((item) => (
                 <NavItem
-                  key={item.key}
+                  key={item.id}
                   active={
-                    location.pathname === item.key ||
-                    location.pathname.startsWith(item.key + '/')
+                    location.pathname === item.id ||
+                    location.pathname.startsWith(item.path)
                   }
-                  onClick={() => navigate(item.key)}
+                  onClick={() => navigate(item.id)}
                   collapsed={sidebarCollapsed}
                   icon={item.icon}
                 >
@@ -167,6 +210,7 @@ const DefaultLayout = ({ children }) => {
               breadcrumbItems={breadcrumbItems}
               currentPage={currentPage}
               pageMenus={PAGE_MENUS}
+              activeMenu={pageLayout.menu}
             />
           </div>
 

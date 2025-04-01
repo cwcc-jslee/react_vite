@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useSelector } from 'react-redux';
 import { selectCodebookByType } from '../../../codebook/store/codebookSlice.js';
+import { useSfaDrawer } from '../../hooks/useSfaDrawer.js';
 import { useSfa } from '../../context/SfaProvider.jsx';
 import { useSfaForm } from '../../hooks/useSfaForm.js';
 import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer.jsx';
@@ -19,7 +20,7 @@ import EditableSfaDetail from '../tables/EditableSfaDetail.jsx';
 import SfaAddPaymentForm from '../forms/SfaAddPaymentForm.jsx';
 import SfaPaymentSection from '../compose/SfaPaymentSection.jsx';
 
-const SfaDrawer = () => {
+const SfaDrawer = ({ drawer }) => {
   // Codebook 데이터 조회
   const sfaSalesTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
   const sfaClassificationData = useSelector(
@@ -27,8 +28,9 @@ const SfaDrawer = () => {
   );
   const { togglePaymentSelection, resetPaymentForm } = useSfaForm(); // Custom hook을 통한 form 관련 로직 분리
 
-  const { drawerState, setDrawer, setDrawerClose } = useSfa();
-  const { visible, controlMode, featureMode, data } = drawerState;
+  const { drawerState, setDrawer } = useSfa();
+  const { visible, mode, controlMode, featureMode, data } = drawer;
+  const { setDrawerClose } = useSfaDrawer();
 
   const controlMenus = [
     {
@@ -132,7 +134,7 @@ const SfaDrawer = () => {
         // onUpdate={handleFieldUpdate}
       />
 
-      {featureMode === 'addPayment' && (
+      {mode === 'edit' && (
         <SfaAddPaymentForm
           data={data}
           controlMode={controlMode}
@@ -172,7 +174,7 @@ const SfaDrawer = () => {
       controlMode={controlMode}
     >
       {/* {renderDrawerContent()} */}
-      {controlMode === 'add' && <AddContent />}
+      {mode === 'add' && <AddContent />}
       {controlMode === 'view' && <ViewContent data={data} />}
       {controlMode === 'edit' && <EditContent data={data} />}
     </BaseDrawer>
