@@ -1,26 +1,27 @@
 // src/features/project/components/table/ProjectTable.jsx
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React from 'react';
+import { useDispatch } from 'react-redux';
 import { Button } from '../../../../shared/components/ui';
 import { Card } from '../../../../shared/components/ui/card/Card';
 import { Pagination } from '../../../../shared/components/ui/pagination/Pagination';
-import {
-  fetchProjects,
-  setPage,
-  setPageSize,
-  fetchProjectDetail,
-} from '../../store/projectSlice';
+
+// 커스텀 훅 & Redux
+import useProjectPage from '../../hooks/useProjectPage';
+
+// 컴포넌트
 
 const COLUMNS = [
   { key: 'id', title: 'ID', align: 'left' },
   { key: 'customer', title: '고객사', align: 'left' },
   { key: 'name', title: '프로젝트명', align: 'left' },
-  { key: 'risk', title: '위험도', align: 'left' },
+  // { key: 'risk', title: '위험도', align: 'left' },
   { key: 'service', title: '서비스', align: 'center' },
+  { key: 'pjtStatus', title: '상태', align: 'center' },
   { key: 'progress', title: '진행률', align: 'center' },
-  { key: 'tag', title: '시작일', align: 'center' },
-  { key: 'last_date', title: '최근작업일', align: 'center' },
-  { key: 'work_count', title: '작업시간', align: 'center' },
+  // { key: 'tag', title: '시작일', align: 'center' },
+  { key: 'planEndDate', title: '완료(예정)일', align: 'center' },
+  { key: 'lastDate', title: '최근작업일', align: 'center' },
+  { key: 'workCount', title: '작업시간', align: 'center' },
   { key: 'action', title: 'Action', align: 'center' },
 ];
 
@@ -75,7 +76,7 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
 
   // 프로젝트 상세정보 조회 핸들러
   const handleViewDetail = () => {
-    dispatch(fetchProjectDetail(item.id));
+    // dispatch(fetchProjectDetail(item.id));
   };
 
   // business_type 표시를 위한 헬퍼 함수
@@ -117,10 +118,10 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
       <td className="px-3 py-2 text-center text-sm">
         {item.plan_start_date || '-'}
       </td>
+      <td className="px-3 py-2 text-center text-sm">{'-'}</td>
       <td className="px-3 py-2 text-center text-sm">
         {item.last_workupdate_date || '-'}
       </td>
-      <td className="px-3 py-2 text-center text-sm">{'-'}</td>
       <td className="px-3 py-2 text-center">
         <Button variant="outline" size="sm" onClick={handleViewDetail}>
           View
@@ -131,32 +132,16 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
 };
 
 const ProjectTable = () => {
-  const dispatch = useDispatch();
-
-  // Redux 상태에서 필요한 데이터 추출
-  const items = useSelector((state) => state.project.items);
-  const status = useSelector((state) => state.project.status);
-  const error = useSelector((state) => state.project.error);
-  const pagination = useSelector((state) => state.project.pagination);
-
-  // 컴포넌트 마운트 시 데이터 로드
-  useEffect(() => {
-    dispatch(fetchProjects());
-  }, [dispatch, pagination.current, pagination.pageSize]);
-
-  // 페이지 변경 핸들러
-  const handlePageChange = (page) => {
-    dispatch(setPage(page));
-  };
-
-  // 페이지 크기 변경 핸들러
-  const handlePageSizeChange = (pageSize) => {
-    dispatch(setPageSize(pageSize));
-  };
-
-  const loading = status === 'loading';
-
-  console.log(`ProjectTable's items : `, items);
+  // 프로젝트 페이지 상태 및 액션 훅
+  const {
+    items,
+    pagination,
+    filters,
+    loading,
+    error,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useProjectPage();
 
   return (
     <Card>
