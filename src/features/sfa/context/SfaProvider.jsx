@@ -8,6 +8,8 @@
  * @filename src/features/sfa/contexts/SfaProvider.jsx
  */
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { setDrawer } from '../../../store/slices/uiSlice';
 import dayjs from 'dayjs';
 import { sfaService } from '../services/sfaService';
 // import { useSfaSearchFilter } from '../hooks/useSfaSearchFilter';
@@ -29,6 +31,7 @@ export const useSfa = () => {
  * SFA Provider 컴포넌트
  */
 export const SfaProvider = ({ children }) => {
+  const dispatch = useDispatch();
   // 데이터 상태
   const [sfaData, setSfaData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -164,12 +167,12 @@ export const SfaProvider = ({ children }) => {
   /**
    * 드로어 관련 함수들
    */
-  const setDrawer = (update) => {
-    setDrawerState((prev) => ({
-      ...prev,
-      ...update,
-    }));
-  };
+  // const setDrawer = (update) => {
+  //   setDrawerState((prev) => ({
+  //     ...prev,
+  //     ...update,
+  //   }));
+  // };
 
   const setDrawerClose = () => {
     setDrawerState({
@@ -251,12 +254,13 @@ export const SfaProvider = ({ children }) => {
     // setLoading(true);
     try {
       const response = await sfaService.getSfaDetail(id);
-      setDrawerState({
-        visible: true,
-        controlMode: 'view',
-        featureMode: null,
-        data: response,
-      });
+      dispatch(setDrawer({ visible: true, mode: 'view', data: response }));
+      // setDrawerState({
+      //   visible: true,
+      //   controlMode: 'view',
+      //   featureMode: null,
+      //   data: response,
+      // });
       // return response.data[0];
     } catch (err) {
       setError(err.message);
@@ -304,7 +308,7 @@ export const SfaProvider = ({ children }) => {
 
     // 드로어 관련
     drawerState,
-    setDrawer,
+    // setDrawer,
     setDrawerClose,
 
     //

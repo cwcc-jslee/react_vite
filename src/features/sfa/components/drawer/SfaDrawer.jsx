@@ -5,6 +5,8 @@
 
 // src/features/sfa/components/drawer/SfaDrawer.jsx
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { setDrawer } from '../../../../store/slices/uiSlice.js';
 import PropTypes from 'prop-types';
 import { useSelector } from 'react-redux';
 import { selectCodebookByType } from '../../../codebook/store/codebookSlice.js';
@@ -21,6 +23,7 @@ import SfaAddPaymentForm from '../forms/SfaAddPaymentForm.jsx';
 import SfaPaymentSection from '../compose/SfaPaymentSection.jsx';
 
 const SfaDrawer = ({ drawer }) => {
+  const dispatch = useDispatch();
   // Codebook 데이터 조회
   const sfaSalesTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
   const sfaClassificationData = useSelector(
@@ -28,40 +31,42 @@ const SfaDrawer = ({ drawer }) => {
   );
   const { togglePaymentSelection, resetPaymentForm } = useSfaForm(); // Custom hook을 통한 form 관련 로직 분리
 
-  const { drawerState, setDrawer } = useSfa();
-  const { visible, mode, controlMode, featureMode, data } = drawer;
-  const { setDrawerClose } = useSfaDrawer();
+  // const { drawerState, setDrawer } = useSfa();
+  const { visible, mode, featureMode, data } = drawer;
+  const { setDrawerClose, handleSetDrawer } = useSfaDrawer();
+  console.log(`>>Sfa Drawer : `, drawer);
 
   const controlMenus = [
     {
       key: 'view',
       label: 'View',
-      active: controlMode === 'view',
+      active: mode === 'view',
       onClick: () => {
         // setActiveControl('view');
-        setDrawer({ controlMode: 'view' });
+        handleSetDrawer({ mode: 'view', featureMode: null });
+        // dispatch(setDrawer({ mode: 'view' }));
       },
     },
     {
       key: 'edit',
       label: 'Edit',
-      active: controlMode === 'edit',
+      active: mode === 'edit',
       onClick: () => {
         // setActiveControl('edit');
-        setDrawer({ controlMode: 'edit' });
+        dispatch(setDrawer({ mode: 'edit', featureMode: 'editBase' }));
       },
     },
   ];
 
   const functionMenus =
-    controlMode === 'edit'
+    mode === 'edit'
       ? [
           {
             key: 'editBase',
             label: '기본정보수정',
             active: featureMode === 'editBase',
             onClick: () => {
-              setDrawer({ featureMode: 'editBase' });
+              dispatch(setDrawer({ featureMode: 'editBase' }));
               resetPaymentForm();
             },
           },
@@ -70,7 +75,7 @@ const SfaDrawer = ({ drawer }) => {
             label: '결제매출등록',
             active: featureMode === 'addPayment',
             onClick: () => {
-              setDrawer({ featureMode: 'addPayment' });
+              dispatch(setDrawer({ featureMode: 'addPayment' }));
               resetPaymentForm();
             },
           },
@@ -79,7 +84,7 @@ const SfaDrawer = ({ drawer }) => {
             label: '결제매출수정',
             active: featureMode === 'editPayment',
             onClick: () => {
-              setDrawer({ featureMode: 'editPayment' });
+              dispatch(setDrawer({ featureMode: 'editPayment' }));
               resetPaymentForm();
             },
           },
@@ -88,13 +93,13 @@ const SfaDrawer = ({ drawer }) => {
 
   // Drawer 헤더 타이틀 설정
   const getHeaderTitle = () => {
-    if (controlMode) {
+    if (mode) {
       const titles = {
         add: '매출등록',
         view: 'SFA 상세정보',
         edit: 'SFA 수정',
       };
-      return titles[controlMode] || '';
+      return titles[mode] || '';
     }
     return '';
   };
@@ -115,7 +120,7 @@ const SfaDrawer = ({ drawer }) => {
       /> */}
       <SfaPaymentSection
         data={data}
-        controlMode={controlMode}
+        controlMode={mode}
         featureMode={featureMode}
         togglePaymentSelection={togglePaymentSelection}
       />
@@ -137,13 +142,13 @@ const SfaDrawer = ({ drawer }) => {
       {mode === 'edit' && (
         <SfaAddPaymentForm
           data={data}
-          controlMode={controlMode}
+          controlMode={mode}
           featureMode={featureMode}
         />
       )}
       <SfaPaymentSection
         data={data}
-        controlMode={controlMode}
+        controlMode={mode}
         featureMode={featureMode}
         togglePaymentSelection={togglePaymentSelection}
       />
@@ -171,12 +176,12 @@ const SfaDrawer = ({ drawer }) => {
       }
       width="900px"
       enableOverlayClick={false}
-      controlMode={controlMode}
+      controlMode={mode}
     >
       {/* {renderDrawerContent()} */}
       {mode === 'add' && <AddContent />}
-      {controlMode === 'view' && <ViewContent data={data} />}
-      {controlMode === 'edit' && <EditContent data={data} />}
+      {mode === 'view' && <ViewContent data={data} />}
+      {mode === 'edit' && <EditContent data={data} />}
     </BaseDrawer>
   );
 };

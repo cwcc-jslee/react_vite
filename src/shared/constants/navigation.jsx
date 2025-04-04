@@ -196,6 +196,101 @@ export const PAGE_MENUS = {
       },
     },
   },
+  // CUSTOMER
+  customer: {
+    defaultMenu: 'list',
+    items: {
+      list: {
+        label: '현황',
+        permissions: ['user'],
+        config: {
+          components: {
+            customerTable: true,
+            //   searchForm: false,
+          },
+          drawer: {
+            visible: false, // 드로어 표시 여부
+          },
+        },
+      },
+      add: {
+        label: '고객등록',
+        permissions: ['user'],
+        config: {
+          components: {
+            customerTable: true,
+            //   searchForm: false,
+          },
+          drawer: {
+            visible: true, // 드로어 표시 여부
+            mode: 'add',
+          },
+        },
+      },
+      search: {
+        label: '상세조회',
+        permissions: ['user'],
+        config: {
+          components: {
+            customerTable: true,
+            //   searchForm: false,
+          },
+          drawer: {
+            visible: false, // 드로어 표시 여부
+          },
+        },
+      },
+    },
+  },
+  // CONTACT
+  contact: {
+    defaultMenu: 'list',
+    items: {
+      list: {
+        label: '현황',
+        permissions: ['user'],
+        config: {
+          components: {
+            contactSearchForm: true,
+            contactTable: true,
+            contactExcelUpload: false,
+          },
+          drawer: {
+            visible: false, // 드로어 표시 여부
+          },
+        },
+      },
+      add: {
+        label: '담당자등록',
+        permissions: ['user'],
+        config: {
+          components: {
+            contactSearchForm: true,
+            contactTable: true,
+            contactExcelUpload: false,
+          },
+          drawer: {
+            visible: true, // 드로어 표시 여부
+            mode: 'addSingle',
+          },
+        },
+      },
+      search: {
+        label: '상세조회',
+        permissions: ['user'],
+        config: {
+          components: {
+            contactSearchForm: true,
+            contactTable: true,
+            contactExcelUpload: false,
+          },
+          drawer: {
+            visible: false, // 드로어 표시 여부
+          },
+        },
+      },
+    },
+  },
 };
 
 // 페이지별 메뉴 구성 정보

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { closeDrawer } from '../../../store/slices/uiSlice';
+import { closeDrawer, setDrawer } from '../../../store/slices/uiSlice';
 // import { transformSearchParams } from '../utils/transformSearchParams';
 import dayjs from 'dayjs';
 
@@ -14,7 +14,12 @@ export const useSfaDrawer = () => {
     dispatch(closeDrawer());
   };
 
+  const handleSetDrawer = (payload) => {
+    dispatch(setDrawer(payload));
+  };
+
   return {
     setDrawerClose,
+    handleSetDrawer,
   };
 };

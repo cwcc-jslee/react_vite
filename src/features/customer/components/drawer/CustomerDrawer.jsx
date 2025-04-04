@@ -4,7 +4,8 @@
 
 // src/features/customer/components/drawer/CustomerDrawer.jsx
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { closeDrawer, setDrawer } from '../../../../store/slices/uiSlice.js';
 import { selectCodebookByType } from '../../../codebook/store/codebookSlice.js';
 // import { useSfa } from '../../context/SfaProvider.jsx';
 import { useCustomer } from '../../context/CustomerProvider.jsx';
@@ -15,7 +16,8 @@ import CustomerAddForm from '../forms/CusotmerAddForm';
 import CustomerDetailTable from '../tables/CustomerDetailTable.jsx';
 import EditableCustomerDetailTable from '../tables/EditableCustomerDetailTable.jsx';
 
-const CustomerDrawer = () => {
+const CustomerDrawer = ({ drawer }) => {
+  const dispatch = useDispatch();
   // Codebook 데이터 조회
   const sfaSalesTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
   const sfaClassificationData = useSelector(
@@ -23,26 +25,34 @@ const CustomerDrawer = () => {
   );
   //   const { togglePaymentSelection, resetPaymentForm } = useSfaForm(); // Custom hook을 통한 form 관련 로직 분리
 
-  const { drawerState, setDrawer, setDrawerClose } = useCustomer();
-  const { visible, controlMode, featureMode, data } = drawerState;
+  // const { drawerState, setDrawer, setDrawerClose } = useCustomer();
+  const { visible, mode, data } = drawer;
+
+  const setDrawerClose = () => {
+    dispatch(closeDrawer());
+  };
+
+  const handleSetDrawer = (payload) => {
+    dispatch(setDrawer(payload));
+  };
 
   const controlMenus = [
     {
       key: 'view',
       label: 'View',
-      active: controlMode === 'view',
+      active: mode === 'view',
       onClick: () => {
         // setActiveControl('view');
-        setDrawer({ controlMode: 'view' });
+        handleSetDrawer({ mode: 'view' });
       },
     },
     {
       key: 'edit',
       label: 'Edit',
-      active: controlMode === 'edit',
+      active: mode === 'edit',
       onClick: () => {
         // setActiveControl('edit');
-        setDrawer({ controlMode: 'edit' });
+        handleSetDrawer({ mode: 'edit' });
       },
     },
   ];
@@ -51,13 +61,13 @@ const CustomerDrawer = () => {
 
   // Drawer 헤더 타이틀 설정
   const getHeaderTitle = () => {
-    if (controlMode) {
+    if (mode) {
       const titles = {
         add: '고객등록',
         view: '고객 상세정보',
         edit: '고객 수정',
       };
-      return titles[controlMode] || '';
+      return titles[mode] || '';
     }
     return '';
   };
@@ -96,12 +106,12 @@ const CustomerDrawer = () => {
       }
       width="900px"
       enableOverlayClick={false}
-      controlMode={controlMode}
+      controlMode={mode}
     >
       {/* {renderDrawerContent()} */}
-      {controlMode === 'add' && <AddContent />}
-      {controlMode === 'view' && <ViewContent data={data?.data[0]} />}
-      {controlMode === 'edit' && <EditContent data={data?.data[0]} />}
+      {mode === 'add' && <AddContent />}
+      {mode === 'view' && <ViewContent data={data?.data[0]} />}
+      {mode === 'edit' && <EditContent data={data?.data[0]} />}
     </BaseDrawer>
   );
 };

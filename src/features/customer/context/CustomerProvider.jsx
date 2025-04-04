@@ -8,6 +8,8 @@
  * @filename src/features/customer/contexts/CustomerProvider.jsx
  */
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { setDrawer } from '../../../store/slices/uiSlice';
 import dayjs from 'dayjs';
 import { customerService } from '../services/customerService';
 
@@ -28,6 +30,7 @@ export const useCustomer = () => {
  * CUSTOMER Provider 컴포넌트
  */
 export const CustomerProvider = ({ children }) => {
+  const dispatch = useDispatch();
   // 데이터 상태
   const [fetchData, setFetchData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -147,21 +150,21 @@ export const CustomerProvider = ({ children }) => {
   /**
    * 드로어 관련 함수들
    */
-  const setDrawer = (update) => {
-    setDrawerState((prev) => ({
-      ...prev,
-      ...update,
-    }));
-  };
+  // const setDrawer = (update) => {
+  //   setDrawerState((prev) => ({
+  //     ...prev,
+  //     ...update,
+  //   }));
+  // };
 
-  const setDrawerClose = () => {
-    setDrawerState({
-      visible: false,
-      controlMode: null,
-      featureMode: null,
-      data: null,
-    });
-  };
+  // const setDrawerClose = () => {
+  //   setDrawerState({
+  //     visible: false,
+  //     controlMode: null,
+  //     featureMode: null,
+  //     data: null,
+  //   });
+  // };
 
   /**
    * CUSTOMER 목록 조회
@@ -224,12 +227,13 @@ export const CustomerProvider = ({ children }) => {
     try {
       const response = await customerService.getCustomerDetail(id);
       console.log(`fetchCustomer : `, response);
-      setDrawerState({
-        visible: true,
-        controlMode: 'view',
-        featureMode: null,
-        data: response,
-      });
+      dispatch(setDrawer({ visible: true, mode: 'view', data: response }));
+      // setDrawerState({
+      //   visible: true,
+      //   controlMode: 'view',
+      //   featureMode: null,
+      //   data: response,
+      // });
     } catch (err) {
       // setError(err.message);
       return null;
@@ -258,8 +262,8 @@ export const CustomerProvider = ({ children }) => {
 
     // 드로어 관련
     drawerState,
-    setDrawer,
-    setDrawerClose,
+    // setDrawer,
+    // setDrawerClose,
 
     //
     setLoading,

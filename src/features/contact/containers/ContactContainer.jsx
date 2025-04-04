@@ -1,6 +1,7 @@
 // src/features/contact/containers/ContactContainer.jsx
 
 import React, { useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { useContact } from '../context/ContactProvider';
 import { Section } from '../../../shared/components/ui/layout/components';
 
@@ -16,21 +17,25 @@ import ContactDrawer from '../components/drawer/ContactDrawer';
  */
 const ContactContainer = () => {
   // 레이아웃 관련 상태 가져오기
-  const { pageLayout, drawerState } = useContact();
-  const { components } = pageLayout;
+  // const { pageLayout, drawerState } = useContact();
+  // const { components } = pageLayout;
 
-  console.log(`DrawerState : `, drawerState);
+  // 레이아웃 관련 상태 가져오기
+  const components = useSelector((state) => state.ui.pageLayout.components);
+  const drawer = useSelector((state) => state.ui.drawer);
+
+  // console.log(`DrawerState : `, drawerState);
 
   return (
     <>
       <Section>
-        <ContactSubMenu />
-        <br></br>
+        {/* <ContactSubMenu /> */}
+        {/* <br></br> */}
         {components.contactTable && <ContactSearchForm />}
         {components.contactTable && <ContactTable />}
         {/* {components.contactExcelUpload && <ContactExcelUpload />} */}
       </Section>
-      {drawerState.visible && <ContactDrawer />}
+      {drawer.visible && <ContactDrawer drawer={drawer} />}
     </>
   );
 };

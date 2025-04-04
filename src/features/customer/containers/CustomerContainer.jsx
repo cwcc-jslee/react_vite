@@ -1,6 +1,7 @@
 // src/features/customer/containers/CustomerContainer.jsx
 
 import React, { useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { useCustomer } from '../context/CustomerProvider';
 import { Section } from '../../../shared/components/ui/layout/components';
 
@@ -17,17 +18,21 @@ import CustomerDrawer from '../components/drawer/CustomerDrawer';
 const CustomerContainer = () => {
   // 레이아웃 관련 상태 가져오기
   const { pageLayout, drawerState } = useCustomer();
-  const { components } = pageLayout;
+  // const { components } = pageLayout;
+
+  // 레이아웃, 드로우어 관련 상태 가져오기
+  const components = useSelector((state) => state.ui.pageLayout.components);
+  const drawer = useSelector((state) => state.ui.drawer);
 
   return (
     <>
       <Section>
-        <CustomerSubMenu />
+        {/* <CustomerSubMenu /> */}
         <CustomerStatisticsOverview />
         <br></br>
         {components.customerTable && <CustomerTable />}
       </Section>
-      {drawerState.visible && <CustomerDrawer />}
+      {drawer.visible && <CustomerDrawer drawer={drawer} />}
     </>
   );
 };

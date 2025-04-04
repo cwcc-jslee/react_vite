@@ -57,35 +57,37 @@ const BreadcrumbWithMenu = ({
   console.log(`메뉴 항목 존재 여부: ${hasMenuItems}`);
 
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-2 px-4 bg-white">
-      {/* 브레드크럼 */}
-      <div className="mb-2 sm:mb-0">
-        <Breadcrumb items={breadcrumbItems} />
-      </div>
+    <div className="flex flex-col sm:flex-row items-start sm:items-center py-2 px-4 bg-white">
+      {/* 브레드크럼과 페이지별 메뉴를 같은 줄에 배치 */}
+      <div className="flex flex-col sm:flex-row sm:items-center mb-2 sm:mb-0">
+        <div className="mr-4 w-[150px]">
+          <Breadcrumb items={breadcrumbItems} />
+        </div>
 
-      {/* 페이지별 메뉴 */}
-      <div className="flex space-x-2">
-        {hasMenuItems ? (
-          Object.entries(currentPageMenus).map(([index, menuInfo]) => (
-            <button
-              key={menuInfo.key}
-              onClick={() => handleMenuClick(menuInfo.key)}
-              className={`px-3 py-1 rounded-md text-sm font-medium 
-                ${
-                  activeMenu === menuInfo.key
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }
-              `}
-            >
-              {menuInfo.label}
-            </button>
-          ))
-        ) : (
-          <div className="text-sm text-gray-400">
-            사용 가능한 메뉴가 없습니다
-          </div>
-        )}
+        {/* 페이지별 메뉴 */}
+        <div className="flex space-x-2 mt-2 sm:mt-0">
+          {hasMenuItems ? (
+            Object.entries(currentPageMenus).map(([index, menuInfo]) => (
+              <button
+                key={menuInfo.key}
+                onClick={() => handleMenuClick(menuInfo.key)}
+                className={`px-3 py-1 rounded-md text-sm font-medium 
+                  ${
+                    activeMenu === menuInfo.key
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }
+                `}
+              >
+                {menuInfo.label}
+              </button>
+            ))
+          ) : (
+            <div className="text-sm text-gray-400">
+              사용 가능한 메뉴가 없습니다
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
