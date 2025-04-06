@@ -7,6 +7,7 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { notification } from '../../shared/services/notification';
+import { snakeToCamelCase } from '../../shared/utils/transformUtils';
 
 // 초기 상태 정의
 const initialState = {
@@ -61,6 +62,8 @@ export const createFetchItems = (pageType, apiFunction) =>
             pageSize: params.pagination?.pageSize || pagination.pageSize,
           },
           filters: params.filters || state.pageState.filters,
+          // 추가적인 파라미터가 있으면 여기서 병합
+          // ...params.additionalParams,
         };
 
         const response = await apiFunction(queryParams);
@@ -306,36 +309,10 @@ const pageStateSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // 여기서는 createAsyncThunk 액션에 대한 핸들러를 정의하지 않습니다.
+    // extraReducers : 스토어에 데이터를 저장하는 작업
+    // 비동기 액션의 다양한 상태에 대응하는 리듀서를 정의
     // 각 페이지별 비동기 액션은 해당 페이지에서 생성하고, 이 슬라이스의 리듀서에서 처리합니다.
     // 각 페이지에서 비동기 액션을 생성할 때 extraReducers를 등록해야 합니다.
-    // 아래는 비동기 액션에 대한 표준 패턴입니다:
-
-    /*
-    // 데이터 목록 조회
-    .addMatcher(
-      (action) => action.type.endsWith('/fetchItems/pending'),
-      (state) => {
-        state.status = 'loading';
-      }
-    )
-    .addMatcher(
-      (action) => action.type.endsWith('/fetchItems/fulfilled'),
-      (state, action) => {
-        state.status = 'succeeded';
-        state.items = action.payload.data;
-        state.pagination.total = action.payload.meta.pagination.total;
-        state.error = null;
-      }
-    )
-    .addMatcher(
-      (action) => action.type.endsWith('/fetchItems/rejected'),
-      (state, action) => {
-        state.status = 'failed';
-        state.error = action.payload;
-      }
-    )
-    */
 
     // 표준 패턴 구현: 데이터 목록 조회
     builder
@@ -349,7 +326,7 @@ const pageStateSlice = createSlice({
         (action) => action.type.endsWith('/fetchItems/fulfilled'),
         (state, action) => {
           state.status = 'succeeded';
-          state.items = action.payload.data;
+          state.items = snakeToCamelCase(action.payload.data);
           state.pagination.total = action.payload.meta.pagination.total;
           state.error = null;
         },

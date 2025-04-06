@@ -18,7 +18,10 @@ import useProjectSubmit from '../hooks/useProjectSubmit';
 import useProjectTask from '../hooks/useProjectTask';
 
 // Redux 액션
-import { updateFormField, resetForm } from '../store/projectSlice';
+import {
+  updateFormField,
+  resetForm,
+} from '../../../store/slices/pageFormSlice';
 // import { selectBuckets, loadTaskTemplate } from '../store/kanbanSlice';
 
 // 컴포넌트
@@ -42,7 +45,7 @@ const ProjectAddContainer = () => {
   const dispatch = useDispatch();
 
   // Redux 상태 가져오기
-  const { data: formData = {} } = useSelector((state) => state.project.form);
+  // const { data: formData = {} } = useSelector((state) => state.pageForm);
   // const buckets = useSelector((state) => state.tasks.buckets); // 칸반 데이터를 Redux에서 직접 가져옴
 
   // 커스텀 훅 사용
@@ -198,7 +201,7 @@ const ProjectAddContainer = () => {
     <div>
       <span>프로젝트 기본정보</span>
       <ProjectAddBaseForm
-        formData={formData}
+        // formData={formData}
         codebooks={codebooks}
         handleTemplateSelect={handleTemplateSelect}
         updateField={updateField}

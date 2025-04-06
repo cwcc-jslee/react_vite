@@ -5,9 +5,6 @@ import { Button } from '../../../../shared/components/ui';
 import { Card } from '../../../../shared/components/ui/card/Card';
 import { Pagination } from '../../../../shared/components/ui/pagination/Pagination';
 
-// 커스텀 훅 & Redux
-import useProjectPage from '../../hooks/useProjectPage';
-
 // 컴포넌트
 
 const COLUMNS = [
@@ -15,6 +12,7 @@ const COLUMNS = [
   { key: 'customer', title: '고객사', align: 'left' },
   { key: 'name', title: '프로젝트명', align: 'left' },
   // { key: 'risk', title: '위험도', align: 'left' },
+  { key: 'importanceLevel', title: '중요도', align: 'center' },
   { key: 'service', title: '서비스', align: 'center' },
   { key: 'pjtStatus', title: '상태', align: 'center' },
   { key: 'progress', title: '진행률', align: 'center' },
@@ -71,7 +69,6 @@ const TableErrorState = ({ columnsCount, message }) => {
 
 // 테이블 행 컴포넌트
 const TableRow = ({ item, index, pageSize, currentPage }) => {
-  const dispatch = useDispatch();
   const actualIndex = (currentPage - 1) * pageSize + index + 1;
 
   // 프로젝트 상세정보 조회 핸들러
@@ -109,19 +106,22 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
     <tr className="hover:bg-gray-50">
       <td className="px-3 py-2 text-center text-sm">{item.id}</td>
       <td className="px-3 py-2 text-center text-sm">
-        {item?.customer?.name || '-'}
+        {item?.sfa?.customer?.name || item?.customer?.name || '-'}
       </td>
       <td className="px-3 py-2 text-sm">{item.name || '-'}</td>
-      <td className="px-3 py-2 text-center text-sm">{'-'}</td>
-      <td className="px-3 py-2 text-center text-sm">{'-'}</td>
-      <td className="px-3 py-2 text-center text-sm">{'-'}</td>
       <td className="px-3 py-2 text-center text-sm">
-        {item.plan_start_date || '-'}
+        {item?.importanceLevel?.name}
       </td>
-      <td className="px-3 py-2 text-center text-sm">{'-'}</td>
+      <td className="px-3 py-2 text-center text-sm">{item?.service?.name}</td>
+      <td className="px-3 py-2 text-center text-sm">{item?.pjtStatus?.name}</td>
+      <td className="px-3 py-2 text-center text-sm">{'계산'}</td>
       <td className="px-3 py-2 text-center text-sm">
-        {item.last_workupdate_date || '-'}
+        {item?.planEndDate || '-'}
       </td>
+      <td className="px-3 py-2 text-center text-sm">
+        {item?.lastWorkupdateDate}
+      </td>
+      <td className="px-3 py-2 text-center text-sm">{'계산'}</td>
       <td className="px-3 py-2 text-center">
         <Button variant="outline" size="sm" onClick={handleViewDetail}>
           View
@@ -131,17 +131,25 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
   );
 };
 
-const ProjectTable = () => {
+const ProjectTable = ({
+  items,
+  pagination,
+  filters,
+  loading,
+  error,
+  handlePageChange,
+  handlePageSizeChange,
+}) => {
   // 프로젝트 페이지 상태 및 액션 훅
-  const {
-    items,
-    pagination,
-    filters,
-    loading,
-    error,
-    handlePageChange,
-    handlePageSizeChange,
-  } = useProjectPage();
+  // const {
+  //   items,
+  //   pagination,
+  //   filters,
+  //   loading,
+  //   error,
+  //   handlePageChange,
+  //   handlePageSizeChange,
+  // } = useProjectPage();
 
   return (
     <Card>

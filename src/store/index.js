@@ -15,7 +15,7 @@ import pageStateReducer from './slices/pageStateSlice';
 import pageFormReducer from './slices/pageFormSlice';
 
 // 변경 삭제 예정
-import projectReducer from '../features/project/store/projectSlice';
+// import projectReducer from '../features/project/store/projectSlice';
 import kanbanReducer from '../features/project/store/kanbanSlice';
 // import sfaReducer from './slices/sfaSlice';
 // import customerReducer from './slices/customerSlice';
@@ -38,7 +38,7 @@ export const store = configureStore({
     pageForm: pageFormReducer,
 
     // 삭제, 이동 예정
-    project: projectReducer, // 삭제 예정..
+    // project: projectReducer, // 삭제 예정..
     projectTask: kanbanReducer,
     // sfa: sfaReducer, // 아직 구현되지 않은 경우 주석 처리
     // customer: customerReducer, // 아직 구현되지 않은 경우 주석 처리

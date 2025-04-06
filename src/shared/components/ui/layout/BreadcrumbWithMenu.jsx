@@ -2,6 +2,8 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
 import { changePageMenu } from '../../../../store/slices/uiSlice';
+import { setCurrentPath } from '../../../../store/slices/pageStateSlice';
+import { resetForm } from '../../../../store/slices/pageFormSlice';
 import { Breadcrumb } from './components';
 
 /**
@@ -44,6 +46,11 @@ const BreadcrumbWithMenu = ({
     console.log(`메뉴 클릭: ${menuId}`, currentMenu);
     console.log('현재 페이지 메뉴 항목:', currentPageMenus);
 
+    // 페이지 메뉴 변경 시 상태 초기화
+    dispatch(setCurrentPath(currentPage));
+    dispatch(resetForm());
+
+    // UI 메뉴 변경
     dispatch(
       changePageMenu({
         menuId,

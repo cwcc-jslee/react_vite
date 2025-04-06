@@ -122,6 +122,19 @@ const uiSlice = createSlice({
       }
     },
   },
+  extraReducers: (builder) => {
+    // pageState와 pageForm 슬라이스와 연동
+    builder
+      // 메뉴가 변경될 때마다 pageState와 pageForm 초기화
+      .addCase('pageState/setCurrentPath', (state, action) => {
+        // 페이지 상태 리셋 처리
+        console.log('페이지 상태 초기화: ', action.payload);
+      })
+      .addCase('pageForm/resetForm', (state, action) => {
+        // 폼 상태 리셋 처리
+        console.log('폼 상태 초기화 완료');
+      });
+  },
 });
 
 export const {

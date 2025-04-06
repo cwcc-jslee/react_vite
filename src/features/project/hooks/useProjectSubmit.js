@@ -31,7 +31,7 @@ import { projectTaskService } from '../services/projectTaskService';
 export const useProjectSubmit = () => {
   const dispatch = useDispatch();
   const { data: formData, isSubmitting } = useSelector(
-    (state) => state.project.form,
+    (state) => state.pageForm,
   );
   const [progress, setProgress] = useState(0);
   const [currentBucketIndex, setCurrentBucketIndex] = useState(0);

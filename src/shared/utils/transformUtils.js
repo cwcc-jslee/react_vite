@@ -143,34 +143,55 @@ export const convertKeysToSnakeCase = (data) => {
 };
 
 /**
- * snake_case 키를 camelCase로 변환
+ * snake_case 키를 camelCase로 변환 (개선된 버전)
  * @param {Object} obj - snake_case 키를 가진 객체
  * @returns {Object} camelCase 키를 가진 객체
  */
 export const snakeToCamelCase = (obj) => {
+  // 기본 타입 또는 null/undefined 처리
   if (obj === null || obj === undefined || typeof obj !== 'object') {
     return obj;
   }
 
+  // 배열 처리
   if (Array.isArray(obj)) {
     return obj.map((item) => snakeToCamelCase(item));
   }
 
+  // 특수 객체 타입 처리 (Map, Set 등)
+  if (
+    obj instanceof Map ||
+    obj instanceof Set ||
+    obj instanceof Date ||
+    obj instanceof RegExp
+  ) {
+    return obj;
+  }
+
   const result = {};
 
+  // 객체의 각 키-값 쌍 처리
   for (const key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
-      // snake_case를 camelCase로 변환
-      const camelKey = key.replace(/_([a-z])/g, (_, letter) =>
-        letter.toUpperCase(),
-      );
+      // 첫 글자의 _ 처리를 포함한 snake_case -> camelCase 변환
+      let camelKey = key;
+
+      // 첫 글자가 _ 인 경우 특별 처리 (예: _private_field -> _privateField)
+      if (key.startsWith('_')) {
+        camelKey =
+          '_' +
+          key
+            .substring(1)
+            .replace(/_([a-z])/gi, (_, letter) => letter.toUpperCase());
+      } else {
+        camelKey = key.replace(/_([a-z])/gi, (_, letter) =>
+          letter.toUpperCase(),
+        );
+      }
 
       // 값이 객체인 경우 재귀적으로 처리
       const value = obj[key];
-      result[camelKey] =
-        typeof value === 'object' && value !== null
-          ? snakeToCamelCase(value)
-          : value;
+      result[camelKey] = snakeToCamelCase(value);
     }
   }
 

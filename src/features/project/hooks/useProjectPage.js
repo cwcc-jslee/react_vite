@@ -44,8 +44,14 @@ export const useProjectPage = () => {
 
   // 페이지 초기화 (컴포넌트 마운트 시 호출)
   useEffect(() => {
+    // 1. 페이지 경로 설정
     dispatch(setCurrentPath(PROJECT_PAGE_TYPE));
-    // 초기 프로젝트 목록 로드
+    // 2. 필터 설정
+    const defaultFilters = {
+      pjt_status: { $in: [88, 89] }, // 진행중(88), 검수중(89)
+    };
+    // 3. 필터 적용 및 초기 프로젝트 목록 로드
+    dispatch(setFilters(defaultFilters));
     dispatch(fetchProjects());
 
     // 컴포넌트 언마운트 시 정리
@@ -73,7 +79,7 @@ export const useProjectPage = () => {
 
   // 페이지 크기 변경 핸들러
   const handlePageSizeChange = useCallback(
-    (current, size) => {
+    (size) => {
       dispatch(setPageSize(size));
       dispatch(fetchProjects({ pagination: { current: 1, pageSize: size } }));
     },

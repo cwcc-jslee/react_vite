@@ -15,30 +15,32 @@ import ProjectAddContainer from './ProjectAddContainer';
  */
 const ProjectContainer = () => {
   // 프로젝트 페이지 상태 및 액션 훅
-  // const {
-  //   projects,
-  //   pagination,
-  //   filters,
-  //   loading,
-  //   handlePageChange,
-  //   handlePageSizeChange,
-  //   handleFilterChange,
-  //   handleResetFilters,
-  //   refreshProjects,
-  //   loadProjectDetail,
-  //   handleDeleteProject,
-  //   initProjectForm,
-  // } = useProjectPage();
+  const {
+    items,
+    pagination,
+    filters,
+    loading,
+    error,
+    handlePageChange,
+    handlePageSizeChange,
+  } = useProjectPage();
 
   // 레이아웃 관련 상태 가져오기
   const components = useSelector((state) => state.ui.pageLayout.components);
 
-  console.log(`DrawerState : `, components);
-
   return (
     <>
       <Section>
-        {components.projectTable && <ProjectTable />}
+        {components.projectTable && (
+          <ProjectTable
+            items={items}
+            pagination={pagination}
+            loading={loading}
+            error={error}
+            handlePageChange={handlePageChange}
+            handlePageSizeChange={handlePageSizeChange}
+          />
+        )}
         {components.projectAddSection && <ProjectAddContainer />}
       </Section>
       {/* {drawerState.visible && <ProjectDrawer />} */}

@@ -39,7 +39,7 @@ const ProjectAddBaseForm = ({
     data: formData = {},
     errors = {},
     isSubmitting = false,
-  } = useSelector((state) => state.project.form);
+  } = useSelector((state) => state.pageForm);
 
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   // const [selectedTemplateId, setSelectedTemplateId] = useState(null);
