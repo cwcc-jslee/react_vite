@@ -63,5 +63,8 @@ export default defineConfig(({ mode }) => {
       // 빌드 시 환경변수 주입
       'process.env.VITE_API_URL': JSON.stringify(env.VITE_API_URL),
     },
+    optimizeDeps: {
+      include: ['recharts'],
+    },
   };
 });

@@ -173,6 +173,7 @@ export const PAGE_MENUS = {
         permissions: ['user'],
         config: {
           components: {
+            projectChart: true,
             projectTable: true,
             projectAddSection: false,
           },
@@ -186,6 +187,7 @@ export const PAGE_MENUS = {
         permissions: ['user'],
         config: {
           components: {
+            projectChart: false,
             projectTable: false,
             projectAddSection: true,
           },

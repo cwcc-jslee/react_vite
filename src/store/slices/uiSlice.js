@@ -38,7 +38,6 @@ const uiSlice = createSlice({
         defaultComponents = {},
         defaultMenu = 'default',
       } = action.payload;
-      console.log(`>> changePage click : `, action);
 
       state.pageLayout.page = page;
       state.pageLayout.components = defaultComponents;
