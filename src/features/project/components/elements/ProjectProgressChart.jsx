@@ -17,7 +17,7 @@ import ChartContainer from '../../../../shared/components/charts/ChartContainer'
  * 프로젝트 진행 단계별 수량을 세로 막대 차트로 표시하는 컴포넌트 (리팩토링 버전)
  * @returns {JSX.Element} 프로젝트 진행 상태 차트 컴포넌트
  */
-const ProjectProgressChart = () => {
+const ProjectProgressChart = ({ projectProgress }) => {
   const renderBarLabel = (props) => {
     const { x, y, width, value } = props;
     return (
@@ -50,12 +50,48 @@ const ProjectProgressChart = () => {
 
   // 각 단계별 프로젝트 수 (실제 구현 시 props 또는 API에서 가져올 수 있음)
   const progressData = [
-    { name: '0%', value: 5, color: '#D13438', isProgress: true },
-    { name: '25%', value: 12, color: '#FF8C00', isProgress: true },
-    { name: '50%', value: 15, color: '#FFB900', isProgress: true },
-    { name: '75%', value: 10, color: '#107C10', isProgress: true },
-    { name: '100%', value: 6, color: '#0078D4', isProgress: true },
-    { name: '검수', value: 4, color: '#5C2D91', isProgress: false },
+    {
+      name: '0%',
+      value: projectProgress['0%'],
+      color: '#D13438',
+      isProgress: true,
+    },
+    {
+      name: '10%',
+      value: projectProgress['10%'],
+      color: '#FF8C00',
+      isProgress: true,
+    },
+    {
+      name: '25%',
+      value: projectProgress['25%'],
+      color: '#FF8C00',
+      isProgress: true,
+    },
+    {
+      name: '50%',
+      value: projectProgress['50%'],
+      color: '#FFB900',
+      isProgress: true,
+    },
+    {
+      name: '75%',
+      value: projectProgress['75%'],
+      color: '#107C10',
+      isProgress: true,
+    },
+    {
+      name: '100%',
+      value: projectProgress['100%'],
+      color: '#0078D4',
+      isProgress: true,
+    },
+    // {
+    //   name: '검수',
+    //   value: projectProgress['25%'],
+    //   color: '#5C2D91',
+    //   isProgress: false,
+    // },
   ];
 
   // 진행 단계 인덱스 찾기

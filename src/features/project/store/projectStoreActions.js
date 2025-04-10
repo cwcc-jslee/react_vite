@@ -1,4 +1,4 @@
-// src/features/project/store/projectPageActions.js
+// src/features/project/store/projectStoreActions.js
 /**
  * 프로젝트 페이지 상태 관리를 위한 액션 생성자
  * pageState 슬라이스를 활용하여 프로젝트 관련 액션을 정의합니다.

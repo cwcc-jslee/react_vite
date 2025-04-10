@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useProject } from '../context/ProjectProvider';
-import useProjectPage from '../hooks/useProjectPage';
+import useProjectStore from '../hooks/useProjectStore';
 import { Section } from '../../../shared/components/ui/layout/components';
 import { Row, Col } from '../../../shared/components/ui';
 
@@ -30,19 +30,22 @@ const ProjectContainer = () => {
     error,
     handlePageChange,
     handlePageSizeChange,
-  } = useProjectPage();
+  } = useProjectStore();
 
   // 레이아웃 관련 상태 가져오기
   const components = useSelector((state) => state.ui.pageLayout.components);
   const drawer = useSelector((state) => state.ui.drawer);
   // status 상태 가져오기
-  const { state, fetchDashboardData } = useProject();
+  const { state } = useProject();
   const {
     projectStatus,
+    projectProgress,
     monthlyStats,
     loading: stateLoading,
     error: stateError,
   } = state;
+
+  console.log(`>>> progress : `, projectProgress);
 
   return (
     <>
@@ -59,7 +62,7 @@ const ProjectContainer = () => {
             {/* 가운데: 프로젝트 진행 단계별 막대 차트 */}
             <Col span={8}>
               <div className="h-[420px]">
-                <ProjectProgressChart />
+                <ProjectProgressChart projectProgress={projectProgress} />
               </div>
             </Col>
 

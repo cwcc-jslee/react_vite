@@ -31,7 +31,7 @@ import {
   createProject,
   updateProject,
   PROJECT_PAGE_TYPE,
-} from '../store/projectPageActions';
+} from '../store/projectStoreActions';
 
 /**
  * 프로젝트 폼 관리를 위한 커스텀 훅

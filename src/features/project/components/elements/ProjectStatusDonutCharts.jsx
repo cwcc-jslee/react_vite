@@ -70,15 +70,38 @@ const ProjectStatusDonutCharts = ({ projectStatus }) => {
     setActiveIndex(activeIndex === index ? null : index);
   };
 
-  // 마우스 떠남 핸들러
-  const onMouseLeave = () => {
-    setActiveIndex(null);
+  // 가운데 표시할 텍스트 계산
+  const getCenterText = () => {
+    if (activeIndex !== null && chartData[activeIndex]) {
+      const data = chartData[activeIndex];
+      return {
+        status: data.name,
+        count: data.value,
+      };
+    }
+    // 초기 상태는 '진행중' 데이터 표시
+    const inProgressData = chartData.find(
+      (item) => item.status === 'inProgress',
+    );
+    if (inProgressData) {
+      return {
+        status: inProgressData.name,
+        count: inProgressData.value,
+      };
+    }
+
+    // 진행중 데이터가 없는 경우 첫 번째 데이터 표시
+    return chartData.length > 0
+      ? { status: chartData[0].name, count: chartData[0].value }
+      : { status: '데이터 없음', count: 0 };
   };
+
+  const centerText = getCenterText();
 
   return (
     <ChartContainer title="프로젝트 상태" legends={legendItems}>
       <ResponsiveContainer width="100%" height="100%">
-        <PieChart onMouseLeave={onMouseLeave}>
+        <PieChart>
           <Pie
             data={chartData}
             cx="50%"
@@ -90,24 +113,19 @@ const ProjectStatusDonutCharts = ({ projectStatus }) => {
             labelLine={false}
             onClick={onPieClick}
             activeIndex={activeIndex}
+            // 클릭시 사각형 테두리 제거를 위한 스타일 조정
+            style={{ outline: 'none' }}
             activeShape={(props) => {
-              const RADIAN = Math.PI / 180;
               const {
                 cx,
                 cy,
-                midAngle,
                 innerRadius,
                 outerRadius,
                 startAngle,
                 endAngle,
                 fill,
-                value,
-                name,
               } = props;
-              const sin = Math.sin(-RADIAN * midAngle);
-              const cos = Math.cos(-RADIAN * midAngle);
-              const mx = cx + (outerRadius + 15) * cos;
-              const my = cy + (outerRadius + 15) * sin;
+              const RADIAN = Math.PI / 180;
 
               return (
                 <g>
@@ -115,39 +133,21 @@ const ProjectStatusDonutCharts = ({ projectStatus }) => {
                   <path
                     d={`M ${cx},${cy} L ${
                       cx + outerRadius * Math.cos(-startAngle * RADIAN)
-                    },${
-                      cy + outerRadius * Math.sin(-startAngle * RADIAN)
-                    } A ${outerRadius},${outerRadius} 0 ${
+                    },${cy + outerRadius * Math.sin(-startAngle * RADIAN)} A ${
+                      outerRadius + 5
+                    },${outerRadius + 5} 0 ${
                       endAngle - startAngle > 180 ? 1 : 0
-                    },0 ${cx + outerRadius * Math.cos(-endAngle * RADIAN)},${
-                      cy + outerRadius * Math.sin(-endAngle * RADIAN)
+                    },0 ${
+                      cx + (outerRadius + 5) * Math.cos(-endAngle * RADIAN)
+                    },${
+                      cy + (outerRadius + 5) * Math.sin(-endAngle * RADIAN)
                     } Z`}
                     fill={fill}
                     stroke={fill}
-                    strokeWidth={2}
-                    opacity={0.9}
+                    strokeWidth={1}
                   />
                   {/* 내부 원 */}
                   <circle cx={cx} cy={cy} r={innerRadius} fill="#fff" />
-
-                  {/* 라벨 선 */}
-                  <path
-                    d={`M${cx + (outerRadius + 5) * cos},${
-                      cy + (outerRadius + 5) * sin
-                    }L${mx},${my}`}
-                    stroke={fill}
-                    fill="none"
-                  />
-
-                  {/* 라벨 텍스트 */}
-                  <text
-                    x={mx + (cos >= 0 ? 10 : -10)}
-                    y={my}
-                    textAnchor={cos >= 0 ? 'start' : 'end'}
-                    fill="#333"
-                    fontSize={12}
-                    fontWeight="bold"
-                  >{`${name}: ${value}건`}</text>
                 </g>
               );
             }}
@@ -161,10 +161,36 @@ const ProjectStatusDonutCharts = ({ projectStatus }) => {
                 opacity={
                   activeIndex === null || activeIndex === index ? 1 : 0.3
                 }
+                // 클릭 영역에 포커스 스타일 제거
+                style={{ outline: 'none' }}
+                className="focus:outline-none"
               />
             ))}
           </Pie>
           <Tooltip content={<CustomTooltip />} />
+
+          {/* 중앙 텍스트 */}
+          <text
+            x="50%"
+            y="50%"
+            textAnchor="middle"
+            dominantBaseline="middle"
+            className="font-medium"
+            fill="#333"
+          >
+            {centerText.status}
+          </text>
+          <text
+            x="50%"
+            y="50%"
+            dy="1.2em"
+            textAnchor="middle"
+            dominantBaseline="middle"
+            className="font-bold"
+            fill="#333"
+          >
+            {centerText.count}건
+          </text>
         </PieChart>
       </ResponsiveContainer>
     </ChartContainer>

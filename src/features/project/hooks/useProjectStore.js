@@ -1,4 +1,4 @@
-// src/features/project/hooks/useProjectPage.js
+// src/features/project/hooks/useProjectStore.js
 /**
  * 프로젝트 페이지 상태 관리를 위한 커스텀 훅
  * pageState 슬라이스를 사용하여 프로젝트 페이지 상태를 관리합니다.
@@ -21,13 +21,13 @@ import {
   updateProject,
   deleteProject,
   PROJECT_PAGE_TYPE,
-} from '../store/projectPageActions';
+} from '../store/projectStoreActions';
 
 /**
  * 프로젝트 페이지 상태 관리 훅
  * 페이지 초기화, 목록 조회, 페이지네이션, 필터링 등의 기능 제공
  */
-export const useProjectPage = () => {
+export const useProjectStore = () => {
   const dispatch = useDispatch();
   const pageState = useSelector((state) => state.pageState);
   const {
@@ -169,4 +169,4 @@ export const useProjectPage = () => {
   };
 };
 
-export default useProjectPage;
+export default useProjectStore;

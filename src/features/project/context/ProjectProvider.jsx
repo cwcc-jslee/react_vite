@@ -18,9 +18,16 @@ const initialState = {
     recentlyCompleted: 0,
     total: 0,
   },
+  projectProgress: {
+    distribution: {},
+    total: 0,
+    ranges: {},
+  },
   monthlyStats: [],
   loading: false,
   error: null,
+  loadingProgress: false,
+  errorProgress: null,
 };
 
 const ProjectContext = createContext(null);
@@ -37,6 +44,24 @@ const projectReducer = (state, action) => {
       };
     case 'FETCH_ERROR':
       return { ...state, loading: false, error: action.payload };
+    case 'FETCH_PROGRESS_START':
+      return {
+        ...state,
+        loadingProgress: true,
+        errorProgress: null,
+      };
+    case 'FETCH_PROGRESS_SUCCESS':
+      return {
+        ...state,
+        projectProgress: action.payload,
+        loadingProgress: false,
+      };
+    case 'FETCH_PROGRESS_ERROR':
+      return {
+        ...state,
+        errorProgress: action.payload,
+        loadingProgress: false,
+      };
     default:
       return state;
   }
@@ -60,7 +85,7 @@ export const ProjectProvider = ({ children }) => {
   // 데이터 상태
   const [state, dispatch] = useReducer(projectReducer, initialState);
 
-  const fetchDashboardData = async () => {
+  const fetchStatusData = async () => {
     try {
       dispatch({ type: 'FETCH_START' });
       // API 호출 로직
@@ -93,15 +118,50 @@ export const ProjectProvider = ({ children }) => {
     }
   };
 
+  // 진행률 데이터 가져오는 함수
+  const fetchProgressData = async () => {
+    try {
+      dispatch({ type: 'FETCH_PROGRESS_START' });
+      // progress API 호출
+      const response = await apiService.get('/project-api/progress');
+      const responseData = response.data.data;
+
+      console.log(`>>> fetchProgressData : `, responseData);
+      // 진행률 데이터 형식화
+      const formattedProgressData = {
+        distribution: responseData.progressDistribution || {},
+        // total: responseData.total || 0,
+        // ranges: responseData.ranges || {},
+      };
+
+      dispatch({
+        type: 'FETCH_PROGRESS_SUCCESS',
+        payload: formattedProgressData.distribution,
+      });
+    } catch (error) {
+      dispatch({
+        type: 'FETCH_PROGRESS_ERROR',
+        payload: error.message,
+      });
+    }
+  };
+
+  // 진행률 데이터만 별도로 새로고침하는 함수
+  const refreshProgressData = async () => {
+    await fetchProgressData();
+  };
+
   // Provider 마운트시 자동으로 데이터 로드
   useEffect(() => {
-    fetchDashboardData();
+    fetchStatusData();
+    fetchProgressData();
   }, []);
 
   // 컨텍스트 값 정의
   const value = {
     state,
-    fetchDashboardData,
+    fetchStatusData,
+    fetchProgressData,
   };
 
   return (
