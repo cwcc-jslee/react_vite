@@ -4,6 +4,8 @@ import { useDispatch } from 'react-redux';
 import { Button } from '../../../../shared/components/ui';
 import { Card } from '../../../../shared/components/ui/card/Card';
 import { Pagination } from '../../../../shared/components/ui/pagination/Pagination';
+import { fetchProjectDetail } from '../../store/projectStoreActions';
+// import useProjectStore from '../../hooks/useProjectStore';
 
 // 컴포넌트
 
@@ -68,12 +70,19 @@ const TableErrorState = ({ columnsCount, message }) => {
 };
 
 // 테이블 행 컴포넌트
-const TableRow = ({ item, index, pageSize, currentPage }) => {
+const TableRow = ({
+  item,
+  index,
+  pageSize,
+  currentPage,
+  loadProjectDetail,
+}) => {
+  const dispatch = useDispatch();
   const actualIndex = (currentPage - 1) * pageSize + index + 1;
 
   // 프로젝트 상세정보 조회 핸들러
   const handleViewDetail = () => {
-    // dispatch(fetchProjectDetail(item.id));
+    loadProjectDetail(item.id);
   };
 
   // business_type 표시를 위한 헬퍼 함수
@@ -139,18 +148,8 @@ const ProjectTable = ({
   error,
   handlePageChange,
   handlePageSizeChange,
+  loadProjectDetail,
 }) => {
-  // 프로젝트 페이지 상태 및 액션 훅
-  // const {
-  //   items,
-  //   pagination,
-  //   filters,
-  //   loading,
-  //   error,
-  //   handlePageChange,
-  //   handlePageSizeChange,
-  // } = useProjectPage();
-
   return (
     <Card>
       <div className="overflow-x-auto">
@@ -185,6 +184,7 @@ const ProjectTable = ({
                   index={index}
                   pageSize={pagination.pageSize}
                   currentPage={pagination.current}
+                  loadProjectDetail={loadProjectDetail}
                 />
               ))
             )}

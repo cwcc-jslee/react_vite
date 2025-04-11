@@ -196,6 +196,21 @@ export const PAGE_MENUS = {
           },
         },
       },
+      detail: {
+        label: '상세정보',
+        permissions: ['user'],
+        config: {
+          components: {
+            projectChart: false,
+            projectTable: false,
+            projectAddSection: false,
+            projectDetailContainer: true,
+          },
+          drawer: {
+            visible: false, // 드로어 표시 여부
+          },
+        },
+      },
     },
   },
   // CUSTOMER

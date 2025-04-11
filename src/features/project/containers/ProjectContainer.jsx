@@ -30,6 +30,7 @@ const ProjectContainer = () => {
     error,
     handlePageChange,
     handlePageSizeChange,
+    loadProjectDetail,
   } = useProjectStore();
 
   // 레이아웃 관련 상태 가져오기
@@ -83,6 +84,7 @@ const ProjectContainer = () => {
             error={error}
             handlePageChange={handlePageChange}
             handlePageSizeChange={handlePageSizeChange}
+            loadProjectDetail={loadProjectDetail}
           />
         )}
         {components.projectAddSection && <ProjectAddContainer />}

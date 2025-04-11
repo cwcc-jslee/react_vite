@@ -18,6 +18,12 @@ const initialState = {
 
   // 공통 데이터 목록 상태
   items: [],
+  // 선택된 항목(상세 조회용)
+  selectedItem: {
+    data: null,
+    status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+    error: null,
+  },
 
   // 페이지네이션 상태
   pagination: {
@@ -29,13 +35,8 @@ const initialState = {
   // 필터 상태
   filters: {},
 
-  // 선택된 항목(상세 조회용)
-  selectedItem: null,
-
   // 로딩 상태
   status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
-  detailStatus: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
-  deleteStatus: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
 
   // 오류 메시지
   error: null,
@@ -85,23 +86,52 @@ export const createFetchItems = (pageType, apiFunction) =>
  * 상세 조회 비동기 액션 생성 함수
  * @param {string} pageType - 페이지 타입 ('project', 'customer', 등)
  * @param {Function} apiFunction - API 호출 함수 (id를 받아 Promise 반환)
+ * @param {Object} options - 추가 옵션
+ * @param {boolean} options.useDrawer - 드로어를 사용할지 여부 (기본값: false)
+ * @param {string} options.componentName - useDrawer가 false일 때 활성화할 컴포넌트 이름 (기본값: `${pageType}DetailSection`)
+ * @param {Function} options.onSuccess - 성공 시 추가 처리 콜백 함수 (선택사항)
  */
-export const createFetchDetail = (pageType, apiFunction) =>
+export const createFetchDetail = (pageType, apiFunction, options = {}) =>
   createAsyncThunk(
     `pageState/${pageType}/fetchDetail`,
     async (itemId, { rejectWithValue, dispatch }) => {
       try {
         const response = await apiFunction(itemId);
 
-        // 드로어 열기 액션 디스패치 (UI 슬라이스 액션)
-        dispatch({
-          type: 'ui/setDrawer',
-          payload: {
-            visible: true,
-            baseMode: `${pageType}Detail`,
-            data: response.data,
-          },
-        });
+        // 옵션 설정 (기본값 지정)
+        const {
+          useDrawer = false,
+          componentName = `${pageType}DetailSection`,
+          onSuccess = null,
+        } = options;
+
+        // UI 상태 업데이트 (드로어 또는 컴포넌트)
+        if (useDrawer) {
+          // 드로어 사용 시 드로어 상태 업데이트
+          dispatch({
+            type: 'ui/setDrawer',
+            payload: {
+              visible: true,
+              baseMode: `${pageType}Detail`,
+              data: response.data,
+            },
+          });
+        } else {
+          // 드로어 미사용 시 해당 컴포넌트 활성화
+          dispatch({
+            type: 'ui/setPageLayout',
+            payload: {
+              components: {
+                [componentName]: true,
+              },
+            },
+          });
+        }
+
+        // 성공 시 추가 콜백 실행 (있는 경우)
+        if (onSuccess && typeof onSuccess === 'function') {
+          onSuccess(response.data, dispatch);
+        }
 
         return response.data;
       } catch (error) {
@@ -263,11 +293,13 @@ const pageStateSlice = createSlice({
           total: 0,
         };
         state.filters = {};
-        state.selectedItem = null;
+        // items 상태 & error
         state.status = 'idle';
-        state.detailStatus = 'idle';
-        state.deleteStatus = 'idle';
         state.error = null;
+        // item detail
+        state.selectedItem.data = null;
+        state.selectedItem.status = 'idle';
+        state.selectedItem.error = null;
       }
     },
 
@@ -343,21 +375,21 @@ const pageStateSlice = createSlice({
       .addMatcher(
         (action) => action.type.endsWith('/fetchDetail/pending'),
         (state) => {
-          state.detailStatus = 'loading';
+          state.selectedItem.status = 'loading';
         },
       )
       .addMatcher(
         (action) => action.type.endsWith('/fetchDetail/fulfilled'),
         (state, action) => {
-          state.detailStatus = 'succeeded';
-          state.selectedItem = action.payload;
+          state.selectedItem.status = 'succeeded';
+          state.selectedItem.data = action.payload;
         },
       )
       .addMatcher(
         (action) => action.type.endsWith('/fetchDetail/rejected'),
         (state, action) => {
-          state.detailStatus = 'failed';
-          state.error = action.payload;
+          state.selectedItem.status = 'failed';
+          state.selectedItem.error = action.payload;
         },
       );
   },

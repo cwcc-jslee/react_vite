@@ -1,7 +1,7 @@
 // src/features/project/hooks/useProjectStore.js
 /**
  * 프로젝트 페이지 상태 관리를 위한 커스텀 훅
- * pageState 슬라이스를 사용하여 프로젝트 페이지 상태를 관리합니다.
+ * pageState 슬라이스를 사용하여 프로젝트 관련 상태와 액션을 제공합니다.
  */
 
 import { useEffect, useCallback } from 'react';
@@ -22,14 +22,16 @@ import {
   deleteProject,
   PROJECT_PAGE_TYPE,
 } from '../store/projectStoreActions';
+import { PAGE_MENUS } from '../../../shared/constants/navigation';
 
 /**
  * 프로젝트 페이지 상태 관리 훅
- * 페이지 초기화, 목록 조회, 페이지네이션, 필터링 등의 기능 제공
+ * 페이지 초기화, 목록 조회, 페이지네이션, 필터링, 상세 조회 등의 기능 제공
  */
 export const useProjectStore = () => {
   const dispatch = useDispatch();
   const pageState = useSelector((state) => state.pageState);
+  const uiState = useSelector((state) => state.ui);
   const {
     items,
     pagination,
@@ -39,24 +41,42 @@ export const useProjectStore = () => {
     detailStatus,
     deleteStatus,
     error,
-    // form,
   } = pageState;
+
+  // 현재 선택된 메뉴 ID
+  const activeMenuId = uiState.pageLayout.menu;
 
   // 페이지 초기화 (컴포넌트 마운트 시 호출)
   useEffect(() => {
     // 1. 페이지 경로 설정
     dispatch(setCurrentPath(PROJECT_PAGE_TYPE));
-    // 2. 필터 설정
+
+    // 2. 페이지 레이아웃 및 메뉴 초기화
+    const defaultMenuId = PAGE_MENUS.project.defaultMenu;
+    const defaultMenuConfig = PAGE_MENUS.project.items[defaultMenuId].config;
+
+    dispatch({
+      type: 'ui/changePage',
+      payload: {
+        page: PROJECT_PAGE_TYPE,
+        defaultMenu: defaultMenuId,
+        defaultComponents: defaultMenuConfig.components,
+      },
+    });
+
+    // 3. 필터 설정
     const defaultFilters = {
       pjt_status: { $in: [88, 89] }, // 진행중(88), 검수중(89)
     };
-    // 3. 필터 적용 및 초기 프로젝트 목록 로드
+
+    // 4. 필터 적용 및 초기 프로젝트 목록 로드
     dispatch(setFilters(defaultFilters));
     dispatch(fetchProjects());
 
     // 컴포넌트 언마운트 시 정리
     return () => {
       // 필요한 정리 작업 수행
+      dispatch(clearSelectedItem());
     };
   }, [dispatch]);
 
@@ -104,18 +124,73 @@ export const useProjectStore = () => {
   // 프로젝트 상세 조회
   const loadProjectDetail = useCallback(
     (projectId) => {
-      dispatch(fetchProjectDetail(projectId));
+      dispatch(fetchProjectDetail(projectId)).then(() => {
+        // 상세 조회 성공 후 메뉴 변경
+        const detailMenuConfig = PAGE_MENUS.project.items.detail.config;
+
+        dispatch({
+          type: 'ui/changePageMenu',
+          payload: {
+            menuId: 'detail',
+            config: detailMenuConfig,
+          },
+        });
+      });
     },
     [dispatch],
   );
+
+  // 메뉴 변경 핸들러
+  const changeMenu = useCallback(
+    (menuId) => {
+      if (!PAGE_MENUS.project.items[menuId]) {
+        console.error(`Menu not found: ${menuId}`);
+        return;
+      }
+
+      const menuConfig = PAGE_MENUS.project.items[menuId].config;
+
+      dispatch({
+        type: 'ui/changePageMenu',
+        payload: {
+          menuId,
+          config: menuConfig,
+        },
+      });
+
+      // 목록 메뉴로 돌아갈 때 목록 새로고침
+      if (menuId === 'list') {
+        refreshProjects();
+      }
+    },
+    [dispatch, refreshProjects],
+  );
+
+  // 목록 화면으로 돌아가기
+  const backToList = useCallback(() => {
+    // 선택된 항목 초기화
+    dispatch(clearSelectedItem());
+
+    // 목록 메뉴로 변경
+    changeMenu('list');
+  }, [dispatch, changeMenu]);
+
+  // 프로젝트 생성 화면으로 이동
+  const goToAddProject = useCallback(() => {
+    changeMenu('add');
+  }, [changeMenu]);
 
   // 프로젝트 생성
   const handleCreateProject = useCallback(
     async (projectData) => {
       const resultAction = await dispatch(createProject(projectData));
+      if (!resultAction.error) {
+        // 생성 성공 시 목록 화면으로 이동
+        backToList();
+      }
       return !resultAction.error;
     },
-    [dispatch],
+    [dispatch, backToList],
   );
 
   // 프로젝트 수정
@@ -124,28 +199,33 @@ export const useProjectStore = () => {
       const resultAction = await dispatch(
         updateProject({ itemId: projectId, data }),
       );
+      if (!resultAction.error) {
+        // 수정 성공 시 목록 화면으로 이동
+        backToList();
+      }
       return !resultAction.error;
     },
-    [dispatch],
+    [dispatch, backToList],
   );
 
   // 프로젝트 삭제
   const handleDeleteProject = useCallback(
     async (projectId) => {
       const resultAction = await dispatch(deleteProject(projectId));
+      if (!resultAction.error) {
+        // 삭제 성공 시 목록 화면으로 이동
+        backToList();
+      }
       return !resultAction.error;
     },
-    [dispatch],
+    [dispatch, backToList],
   );
 
-  // 선택된 프로젝트 초기화
-  const clearSelectedProject = useCallback(() => {
-    dispatch(clearSelectedItem());
-  }, [dispatch]);
+  // 현재 보여질 컴포넌트 상태
+  const components = uiState.pageLayout.components || {};
 
   return {
     // 상태
-    // projects: items,
     items,
     pagination,
     filters,
@@ -154,8 +234,15 @@ export const useProjectStore = () => {
     detailLoading: detailStatus === 'loading',
     deleteLoading: deleteStatus === 'loading',
     error,
+    activeMenuId,
+    components,
 
-    // 액션 메서드
+    // 메뉴 관련 액션
+    changeMenu,
+    backToList,
+    goToAddProject,
+
+    // 데이터 관련 액션 메서드
     refreshProjects,
     handlePageChange,
     handlePageSizeChange,
@@ -165,7 +252,6 @@ export const useProjectStore = () => {
     handleCreateProject,
     handleUpdateProject,
     handleDeleteProject,
-    clearSelectedProject,
   };
 };
 
