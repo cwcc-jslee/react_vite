@@ -26,9 +26,6 @@ export const fetchProjects = createFetchItems(
 export const fetchProjectDetail = createFetchDetail(
   PROJECT_PAGE_TYPE,
   projectApiService.getProjectDetail,
-  // {
-  //   useDrawer: true // 드로어 사용
-  // }
 );
 
 // 프로젝트 생성 액션 생성

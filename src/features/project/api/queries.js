@@ -79,3 +79,80 @@ export const buildProjectListQuery = (params) => {
 
   return qs.stringify(query, { encodeValuesOnly: true });
 };
+
+export const buildProjectDetailQuery = (id) => {
+  return qs.stringify(
+    {
+      filters: {
+        id: { $eq: id },
+      },
+      fields: [],
+      populate: {
+        sfa: {
+          fields: ['name'],
+          populate: {
+            customer: {
+              fields: ['name'],
+            },
+          },
+        },
+        pjt_status: {
+          fields: ['name'],
+        },
+        team: {
+          fields: ['name'],
+        },
+        service: {
+          fields: ['name'],
+        },
+        fy: {
+          fields: ['name'],
+        },
+        importance_level: {
+          fields: ['name'],
+        },
+        project_completion: {
+          fields: [],
+        },
+        customer: {
+          fields: ['name'],
+        },
+        project_tasks: {
+          filters: {
+            is_deleted: {
+              $eq: false,
+            },
+          },
+          sort: ['id:asc'],
+          fields: ['*'],
+          populate: {
+            project_task_bucket: {
+              fields: ['name', 'position', 'remarks'],
+            },
+            task_progress: {
+              fields: ['name'],
+            },
+            priority_level: {
+              fields: ['name'],
+            },
+            project_task_checklists: {
+              fields: ['*'],
+              sort: ['id:asc'],
+            },
+          },
+        },
+        users: {
+          fields: [],
+          populate: {
+            role: {
+              fields: [],
+            },
+          },
+        },
+      },
+    },
+    {
+      encodeValuesOnly: true,
+    },
+  );
+};

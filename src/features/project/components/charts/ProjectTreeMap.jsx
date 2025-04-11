@@ -1,4 +1,4 @@
-// src/features/project/components/elements/ProjectTreeMap.jsx
+// src/features/project/components/charts/ProjectTreeMap.jsx
 import React from 'react';
 import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
 import ChartContainer from '../../../../shared/components/charts/ChartContainer';

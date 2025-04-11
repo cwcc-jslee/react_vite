@@ -5,8 +5,10 @@
  */
 
 import React from 'react';
-import { Card } from '../../../../shared/components/ui/card/Card';
-import { Button } from '../../../../shared/components/ui';
+// import { Card } from '../../../../shared/components/ui/card/Card';
+import { Card } from '../../../shared/components/ui';
+import { Button } from '../../../shared/components/ui';
+// import { Button } from '../../../../shared/components/ui';
 
 // 로딩 상태 컴포넌트
 const DetailLoadingIndicator = () => {

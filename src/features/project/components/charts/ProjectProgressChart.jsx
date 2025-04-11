@@ -1,4 +1,4 @@
-// src/features/project/components/elements/ProjectProgressChart.jsx
+// src/features/project/components/charts/ProjectProgressChart.jsx
 import React from 'react';
 import {
   BarChart,

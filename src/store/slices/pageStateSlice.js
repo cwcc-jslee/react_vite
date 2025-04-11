@@ -331,7 +331,11 @@ const pageStateSlice = createSlice({
 
     // 선택된 항목 초기화
     clearSelectedItem: (state) => {
-      state.selectedItem = null;
+      state.selectedItem = {
+        data: null,
+        status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+        error: null,
+      };
     },
 
     // 상태 직접 설정 (고급 사용 사례용)
@@ -382,7 +386,7 @@ const pageStateSlice = createSlice({
         (action) => action.type.endsWith('/fetchDetail/fulfilled'),
         (state, action) => {
           state.selectedItem.status = 'succeeded';
-          state.selectedItem.data = action.payload;
+          state.selectedItem.data = action.payload[0];
         },
       )
       .addMatcher(

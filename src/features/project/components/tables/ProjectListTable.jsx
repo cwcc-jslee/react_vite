@@ -140,7 +140,7 @@ const TableRow = ({
   );
 };
 
-const ProjectTable = ({
+const ProjectListTable = ({
   items,
   pagination,
   filters,
@@ -205,4 +205,4 @@ const ProjectTable = ({
   );
 };
 
-export default ProjectTable;
+export default ProjectListTable;

@@ -124,6 +124,7 @@ export const useProjectStore = () => {
   // 프로젝트 상세 조회
   const loadProjectDetail = useCallback(
     (projectId) => {
+      console.log(`>>>> loadProjectdDetail : `, projectId);
       dispatch(fetchProjectDetail(projectId)).then(() => {
         // 상세 조회 성공 후 메뉴 변경
         const detailMenuConfig = PAGE_MENUS.project.items.detail.config;

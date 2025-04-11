@@ -24,7 +24,8 @@ import {
   FiTrash2,
 } from 'react-icons/fi';
 import useTaskFormEditor from '../../hooks/useTaskFormEditor';
-import ProjectUserSelector from './ProjectUserSelector';
+// import ProjectUserSelector from './ProjectUserSelector';
+import UserSelectorForm from './UserSelectorForm';
 import { notification } from '../../../../shared/services/notification';
 
 /**
@@ -252,7 +253,7 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
       {/* 작업할당 - 개선된 컴포넌트 사용 */}
       <Group direction="horizontal" spacing="lg" className="mb-3">
         <FormItem direction="vertical" className="flex-1">
-          <ProjectUserSelector
+          <UserSelectorForm
             usersData={usersData}
             assignedUsers={assignedUsers}
             onAssignUser={assignUser}

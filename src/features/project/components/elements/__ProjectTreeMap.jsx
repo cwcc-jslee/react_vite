@@ -1,12 +1,32 @@
 // src/features/project/components/elements/ProjectTreeMap.jsx
 import React from 'react';
 import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
+import ChartContainer from '../../../../shared/components/charts/ChartContainer';
 
 /**
- * 진행 중인 프로젝트를 작업 시간에 따라 크기가 다르게 표시하는 TreeMap 차트
+ * 진행 중인 프로젝트를 작업 시간에 따라 크기가 다르게 표시하는 TreeMap 차트 (리팩토링 버전)
  * @returns {JSX.Element} 프로젝트 TreeMap 차트 컴포넌트
  */
 const ProjectTreeMap = () => {
+  const getProgressColor = (progress) => {
+    if (progress < 30) return '#FF8C00';
+    if (progress < 50) return '#FFB900';
+    if (progress < 75) return '#107C10';
+    return '#0078D4';
+  };
+
+  const createCustomTooltip = (renderFn) => {
+    return ({ active, payload }) => {
+      if (active && payload && payload.length) {
+        return (
+          <div className="bg-white p-2 shadow rounded border border-gray-200">
+            {renderFn(payload[0].payload)}
+          </div>
+        );
+      }
+      return null;
+    };
+  };
   // 샘플 프로젝트 데이터 - 실제 구현 시 props 또는 API에서 가져올 수 있음
   const projectData = [
     {
@@ -14,7 +34,6 @@ const ProjectTreeMap = () => {
       hours: 180,
       progress: 75,
       status: '진행중',
-      color: '#0078D4',
       members: 4,
     },
     {
@@ -22,7 +41,6 @@ const ProjectTreeMap = () => {
       hours: 320,
       progress: 50,
       status: '진행중',
-      color: '#FFB900',
       members: 6,
     },
     {
@@ -30,7 +48,6 @@ const ProjectTreeMap = () => {
       hours: 120,
       progress: 25,
       status: '진행중',
-      color: '#FF8C00',
       members: 3,
     },
     {
@@ -38,7 +55,6 @@ const ProjectTreeMap = () => {
       hours: 450,
       progress: 35,
       status: '진행중',
-      color: '#107C10',
       members: 8,
     },
     {
@@ -46,7 +62,6 @@ const ProjectTreeMap = () => {
       hours: 85,
       progress: 90,
       status: '진행중',
-      color: '#0078D4',
       members: 2,
     },
     {
@@ -54,7 +69,6 @@ const ProjectTreeMap = () => {
       hours: 160,
       progress: 45,
       status: '진행중',
-      color: '#FFB900',
       members: 3,
     },
     {
@@ -62,7 +76,6 @@ const ProjectTreeMap = () => {
       hours: 110,
       progress: 65,
       status: '진행중',
-      color: '#107C10',
       members: 2,
     },
     {
@@ -70,18 +83,9 @@ const ProjectTreeMap = () => {
       hours: 200,
       progress: 30,
       status: '진행중',
-      color: '#FF8C00',
       members: 4,
     },
   ];
-
-  // 프로젝트 상태에 따른 색상 지정 함수
-  const getColorByProgress = (progress) => {
-    if (progress < 30) return '#FF8C00';
-    if (progress < 50) return '#FFB900';
-    if (progress < 75) return '#107C10';
-    return '#0078D4';
-  };
 
   // TreeMap 데이터 형식으로 변환
   const treeMapData = [
@@ -93,34 +97,28 @@ const ProjectTreeMap = () => {
         progress: project.progress,
         hours: project.hours,
         members: project.members,
-        color: getColorByProgress(project.progress),
+        color: getProgressColor(project.progress),
       })),
     },
   ];
 
   // 커스텀 툴팁 컴포넌트
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-white p-3 shadow-md rounded border border-gray-200">
-          <p className="text-base font-semibold mb-1">{data.name}</p>
-          <div className="space-y-1 text-sm">
-            <p>
-              작업 시간: <span className="font-medium">{data.hours}시간</span>
-            </p>
-            <p>
-              진행률: <span className="font-medium">{data.progress}%</span>
-            </p>
-            <p>
-              참여 인원: <span className="font-medium">{data.members}명</span>
-            </p>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
+  const CustomTooltip = createCustomTooltip((data) => (
+    <>
+      <p className="text-base font-semibold mb-1">{data.name}</p>
+      <div className="space-y-1 text-sm">
+        <p>
+          작업 시간: <span className="font-medium">{data.hours}시간</span>
+        </p>
+        <p>
+          진행률: <span className="font-medium">{data.progress}%</span>
+        </p>
+        <p>
+          참여 인원: <span className="font-medium">{data.members}명</span>
+        </p>
+      </div>
+    </>
+  ));
 
   // TreeMap 내부 콘텐츠 렌더링 함수
   const CustomizedContent = (props) => {
@@ -179,53 +177,31 @@ const ProjectTreeMap = () => {
     );
   };
 
+  // 범례 아이템 생성
+  const legendItems = [
+    { name: '30% 미만', value: '', color: '#FF8C00' },
+    { name: '30-50%', value: '', color: '#FFB900' },
+    { name: '50-75%', value: '', color: '#107C10' },
+    { name: '75% 이상', value: '', color: '#0078D4' },
+  ];
+
   return (
-    <div className="w-full border border-gray-200 rounded shadow-sm">
-      <h2 className="text-lg font-semibold p-3 bg-zinc-100 border-b">
-        진행중 프로젝트 작업 시간
-      </h2>
-
-      <div className="p-4 bg-white">
-        <div style={{ width: '100%', height: '450px' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <Treemap
-              data={treeMapData}
-              dataKey="size"
-              aspectRatio={4 / 3}
-              stroke="#fff"
-              fill="#8884d8"
-              content={<CustomizedContent />}
-            >
-              <Tooltip content={<CustomTooltip />} />
-            </Treemap>
-          </ResponsiveContainer>
-        </div>
+    <ChartContainer title="진행중 프로젝트 작업 시간" legends={legendItems}>
+      <div className="w-full h-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <Treemap
+            data={treeMapData}
+            dataKey="size"
+            aspectRatio={4 / 3}
+            stroke="#fff"
+            fill="#8884d8"
+            content={<CustomizedContent />}
+          >
+            <Tooltip content={<CustomTooltip />} />
+          </Treemap>
+        </ResponsiveContainer>
       </div>
-
-      {/* 범례 */}
-      <div className="flex flex-wrap p-3 border-t bg-gray-50">
-        <div className="mr-6 font-medium text-sm">진행률에 따른 색상:</div>
-        <div className="flex items-center mr-4">
-          <div className="w-3 h-3 mr-1 bg-orange-500"></div>
-          <span className="text-xs">30% 미만</span>
-        </div>
-        <div className="flex items-center mr-4">
-          <div className="w-3 h-3 mr-1 bg-yellow-500"></div>
-          <span className="text-xs">30-50%</span>
-        </div>
-        <div className="flex items-center mr-4">
-          <div className="w-3 h-3 mr-1 bg-green-700"></div>
-          <span className="text-xs">50-75%</span>
-        </div>
-        <div className="flex items-center mr-4">
-          <div className="w-3 h-3 mr-1 bg-blue-600"></div>
-          <span className="text-xs">75% 이상</span>
-        </div>
-        <div className="flex-1 text-right text-xs text-gray-500">
-          *박스 크기는 총 작업 시간에 비례합니다
-        </div>
-      </div>
-    </div>
+    </ChartContainer>
   );
 };
 

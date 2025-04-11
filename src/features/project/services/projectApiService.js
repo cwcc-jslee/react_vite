@@ -9,7 +9,7 @@
 import { apiService } from '../../../shared/api/apiService';
 import { apiClient } from '../../../shared/api/apiClient';
 import { handleApiError } from '../../../shared/api/errorHandlers';
-import { buildProjectListQuery } from '../api/queries';
+import { buildProjectListQuery, buildProjectDetailQuery } from '../api/queries';
 import { normalizeResponse } from '../../../shared/api/normalize';
 import qs from 'qs';
 
@@ -26,6 +26,25 @@ export const projectApiService = {
 
       return normalizeResponse(response);
     } catch (error) {
+      handleApiError(error, '프로젝트 목록을 불러오는 중 오류가 발생했습니다.');
+    }
+  },
+
+  /**
+   * 프로젝트 상세세 조회
+   * @param {Object} id - 검색 파라미터
+   */
+  getProjectDetail: async (projectId) => {
+    console.log(`>>>> getProjectDetail : `, projectId);
+    try {
+      // 쿼리 생성 및 API 호출
+      const query = buildProjectDetailQuery(projectId);
+      console.log(`>>>> buildProjectDetailQuery : `, query);
+      const response = await apiService.get(`/projects?${query}`);
+
+      return normalizeResponse(response);
+    } catch (error) {
+      console.error(error);
       handleApiError(error, '프로젝트 목록을 불러오는 중 오류가 발생했습니다.');
     }
   },

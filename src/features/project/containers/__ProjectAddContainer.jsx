@@ -27,7 +27,7 @@ import {
 // 컴포넌트
 import KanbanColumn from '../components/ui/KanbanColumn';
 import ProjectAddBaseForm from '../components/forms/ProjectAddBaseForm';
-import ProjectTaskForm from '../components/emements/ProjectTaskForm';
+import ProjectTaskForm from '../components/forms/ProjectTaskForm';
 import ModalRenderer from '../../../shared/components/ui/modal/ModalRenderer';
 
 // 알림 서비스 추가
