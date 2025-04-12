@@ -117,6 +117,9 @@ export const buildProjectDetailQuery = (id) => {
         customer: {
           fields: ['name'],
         },
+        project_task_buckets: {
+          fields: ['name', 'position'],
+        },
         project_tasks: {
           filters: {
             is_deleted: {
@@ -141,14 +144,14 @@ export const buildProjectDetailQuery = (id) => {
             },
           },
         },
-        users: {
-          fields: [],
-          populate: {
-            role: {
-              fields: [],
-            },
-          },
-        },
+        // users: {
+        //   fields: ['*'],
+        //   populate: {
+        //     role: {
+        //       fields: [],
+        //     },
+        //   },
+        // },
       },
     },
     {

@@ -2,6 +2,8 @@
 import React from 'react';
 import Modal from './modal/Modal';
 import { Row, Col } from './grid/Grid';
+export { default as Tooltip } from './tooltip/Tooltip';
+export { default as Progress } from './progress/Progress';
 
 export { Modal, Row, Col };
 /**

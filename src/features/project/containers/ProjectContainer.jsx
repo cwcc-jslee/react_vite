@@ -21,6 +21,7 @@ import {
 // Layout
 import ProjectListLayout from '../layouts/ProjectListLayout';
 import ProjectAddLayout from '../layouts/ProjectAddLayout';
+import ProjectDetailLayout from '../layouts/ProjectDetailLayout';
 
 // Components
 import ProjectDetailContainer from './ProjectDetailContainer';
@@ -176,11 +177,11 @@ const ProjectContainer = () => {
         )}
 
         {/* 프로젝트 상세 섹션 */}
-        {components.projectDetailSection && <ProjectDetailContainer />}
+        {components.projectDetailSection && <ProjectDetailLayout />}
       </Section>
 
       {/* 프로젝트 드로어 */}
-      {drawer.visible && <ProjectDrawer drawer={drawer} />}
+      {/* {drawer.visible && <ProjectDrawer drawer={drawer} />} */}
     </>
   );
 };
