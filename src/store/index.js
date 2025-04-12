@@ -5,7 +5,8 @@ import { enableMapSet } from 'immer';
 
 // 기존 리듀서
 import authReducer from '../features/auth/store/authSlice';
-import codebookReducer from '../features/codebook/store/codebookSlice';
+import codebookReducer from './slices/codebookSlice';
+// import codebookReducer from '../features/codebook/store/codebookSlice';
 
 // 새로 추가된 리듀서
 import uiReducer from './slices/uiSlice';

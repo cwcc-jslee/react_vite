@@ -1,7 +1,7 @@
 // src/features/sfa/hooks/useSfaForm.js
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { selectCodebookByType } from '../../codebook/store/codebookSlice';
+// import { selectCodebookByType } from '../../codebook/store/codebookSlice';
 // import { useDrawerFormData } from './useDrawerFormData';
 import { useFormData } from './useFormData';
 import { useFormValidation } from './useFormValidation';

@@ -6,7 +6,8 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { closeDrawer, setDrawer } from '../../../../store/slices/uiSlice.js';
-import { selectCodebookByType } from '../../../codebook/store/codebookSlice.js';
+import { selectCodebookByType } from '../../../../store/slices/codebookSlice.js';
+import { useCodebook } from '../../../../shared/hooks/useCodebook';
 // import { useSfa } from '../../context/SfaProvider.jsx';
 import { useCustomer } from '../../context/CustomerProvider.jsx';
 // import { useSfaForm } from '../../hooks/useSfaForm.js';
@@ -19,6 +20,18 @@ import EditableCustomerDetailTable from '../tables/EditableCustomerDetailTable.j
 const CustomerDrawer = ({ drawer }) => {
   const dispatch = useDispatch();
   // Codebook 데이터 조회
+  const {
+    data: codebooks,
+    isLoading: isLoadingCodebook,
+    error,
+  } = useCodebook([
+    'co_classification',
+    'business_scale',
+    'co_funnel',
+    'employee',
+    'business_type',
+    'region',
+  ]);
   const sfaSalesTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
   const sfaClassificationData = useSelector(
     selectCodebookByType('sfa_classification'),
@@ -75,8 +88,8 @@ const CustomerDrawer = ({ drawer }) => {
   // ViewContent 컴포넌트 - 조회 모드 UI
   const AddContent = () => (
     <CustomerAddForm
-    //   sfaSalesTypeData={sfaSalesTypeData}
-    //   sfaClassificationData={sfaClassificationData}
+      codebooks={codebooks}
+      isLoadingCodebook={isLoadingCodebook}
     />
   );
   const ViewContent = ({ data }) => (
@@ -87,6 +100,8 @@ const CustomerDrawer = ({ drawer }) => {
   const EditContent = ({ data }) => (
     <>
       <EditableCustomerDetailTable
+        codebooks={codebooks}
+        isLoadingCodebook={isLoadingCodebook}
         data={data}
         editable={true} // 편집 가능 여부 설정
       />

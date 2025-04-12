@@ -174,7 +174,7 @@ const SalesByPayment = ({
               required
             >
               <option value="">결제구분 선택</option>
-              {codebooks?.re_payment_method?.data?.map((method) => (
+              {codebooks?.re_payment_method?.map((method) => (
                 <option key={method.id} value={method.code}>
                   {method.name}
                 </option>
@@ -199,7 +199,7 @@ const SalesByPayment = ({
               }
             >
               <option value="">매출확률 선택</option>
-              {codebooks?.sfa_percentage?.data?.map((percent) => (
+              {codebooks?.sfa_percentage?.map((percent) => (
                 <option key={percent.id} value={percent.code}>
                   {percent.name}
                 </option>

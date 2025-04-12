@@ -32,6 +32,7 @@ const SfaSearchForm = () => {
     'sfa_sales_type',
     'sfa_classification',
   ]);
+  console.log(`>> SFA useCodebook : `, codebook);
 
   const INITFORMDATA = {
     name: '',
@@ -147,7 +148,7 @@ const SfaSearchForm = () => {
               onChange={handleInputChange}
             >
               <option value="">선택하세요</option>
-              {codebook?.sfa_classification?.data?.map((item) => (
+              {codebook?.sfa_classification?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
@@ -163,7 +164,7 @@ const SfaSearchForm = () => {
               onChange={handleInputChange}
             >
               <option value="">선택하세요</option>
-              {codebook?.sfa_sales_type?.data?.map((item) => (
+              {codebook?.sfa_sales_type?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
@@ -210,7 +211,7 @@ const SfaSearchForm = () => {
             >
               <option value="">선택하세요</option>
               <option value="confirmed">확정</option>
-              {codebook.sfa_percentage?.data?.map((item) => (
+              {codebook.sfa_percentage?.map((item) => (
                 <option key={item.id} value={item.name}>
                   {item.name}
                 </option>
@@ -256,7 +257,7 @@ const SfaSearchForm = () => {
               onChange={handleInputChange}
             >
               <option value="">선택하세요</option>
-              {codebook.re_payment_method?.data?.map((item) => (
+              {codebook.re_payment_method?.map((item) => (
                 <option key={item.id} value={item.name}>
                   {item.name}
                 </option>

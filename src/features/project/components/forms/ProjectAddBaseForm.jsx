@@ -166,7 +166,7 @@ const ProjectAddBaseForm = ({
               // disabled={isSubmitting}
             >
               <option value="">선택하세요</option>
-              {codebooks?.fy?.data?.map((item) => (
+              {codebooks?.fy?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
@@ -185,7 +185,7 @@ const ProjectAddBaseForm = ({
               onChange={updateField}
               // disabled={isSubmitting}
             >
-              {codebooks?.pjt_status?.data?.map((item) => (
+              {codebooks?.pjt_status?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
@@ -200,7 +200,7 @@ const ProjectAddBaseForm = ({
               onChange={updateField}
               // disabled={isSubmitting}
             >
-              {codebooks?.importance_level?.data?.map((item) => (
+              {codebooks?.importance_level?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>

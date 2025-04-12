@@ -140,7 +140,7 @@ const ProjectContainer = () => {
 
   // 폼 섹션에 전달할 속성
   const formProps = {
-    codebooks,
+    // codebooks,
     handleTemplateSelect,
     updateField,
     handleFormSubmit: onFormSubmit,
@@ -149,9 +149,9 @@ const ProjectContainer = () => {
   };
 
   // 칸반보드 섹션에 전달할 속성
-  const kanbanProps = {
-    codebooks,
-  };
+  // const kanbanProps = {
+  //   codebooks,
+  // };
 
   return (
     <>
@@ -173,7 +173,7 @@ const ProjectContainer = () => {
 
         {/* 프로젝트 추가 레이아웃 */}
         {components.projectAddSection && (
-          <ProjectAddLayout formProps={formProps} kanbanProps={kanbanProps} />
+          <ProjectAddLayout formProps={formProps} codebooks={codebooks} />
         )}
 
         {/* 프로젝트 상세 섹션 */}

@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../../../features/auth/store/authSlice';
-import { fetchFrequentCodebooks } from '../../../../features/codebook/store/codebookSlice';
+// import { fetchFrequentCodebooks } from '../../../../features/codebook/store/codebookSlice';
 import { Button } from '../index';
 import {
   Layout,
@@ -34,7 +34,7 @@ const DefaultLayout = ({ children }) => {
 
   useEffect(() => {
     if (status === 'idle') {
-      dispatch(fetchFrequentCodebooks());
+      // dispatch(fetchFrequentCodebooks());
     }
 
     if (status === 'failed' && error) {

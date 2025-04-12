@@ -13,14 +13,14 @@ import ProjectTaskBoardSection from '../sections/ProjectTaskBoardSection';
  * @param {Object} props.kanbanProps - 칸반보드 관련 속성
  * @returns {JSX.Element} 프로젝트 추가 레이아웃
  */
-const ProjectAddLayout = ({ formProps, kanbanProps }) => {
+const ProjectAddLayout = ({ formProps, codebooks }) => {
   return (
     <div className="flex flex-col space-y-6">
       {/* 프로젝트 기본정보 입력 폼 섹션 */}
-      <ProjectAddFormSection {...formProps} />
+      <ProjectAddFormSection {...formProps} codebooks={codebooks} />
 
       {/* 프로젝트 작업 칸반보드 섹션 */}
-      <ProjectTaskBoardSection {...kanbanProps} />
+      <ProjectTaskBoardSection codebooks={codebooks} />
     </div>
   );
 };

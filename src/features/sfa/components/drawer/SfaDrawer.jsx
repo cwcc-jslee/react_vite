@@ -7,9 +7,10 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setDrawer } from '../../../../store/slices/uiSlice.js';
-import PropTypes from 'prop-types';
 import { useSelector } from 'react-redux';
-import { selectCodebookByType } from '../../../codebook/store/codebookSlice.js';
+import { useCodebook } from '../../../../shared/hooks/useCodebook.js';
+// import { selectCodebookByType } from '../../../codebook/store/codebookSlice.js';
+import { selectCodebookByType } from '../../../../store/slices/codebookSlice.js';
 import { useSfaDrawer } from '../../hooks/useSfaDrawer.js';
 import { useSfa } from '../../context/SfaProvider.jsx';
 import { useSfaForm } from '../../hooks/useSfaForm.js';
@@ -25,6 +26,11 @@ import SfaPaymentSection from '../compose/SfaPaymentSection.jsx';
 const SfaDrawer = ({ drawer }) => {
   const dispatch = useDispatch();
   // Codebook 데이터 조회
+  const {
+    data: codebook,
+    isLoading,
+    error,
+  } = useCodebook(['sfa_sales_type', 'sfa_classification']);
   const sfaSalesTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
   const sfaClassificationData = useSelector(
     selectCodebookByType('sfa_classification'),
@@ -107,8 +113,9 @@ const SfaDrawer = ({ drawer }) => {
   // ViewContent 컴포넌트 - 조회 모드 UI
   const AddContent = () => (
     <SfaAddForm
-      sfaSalesTypeData={sfaSalesTypeData}
-      sfaClassificationData={sfaClassificationData}
+      codebook={codebook}
+      // sfaSalesTypeData={sfaSalesTypeData}
+      // sfaClassificationData={sfaClassificationData}
     />
   );
   const ViewContent = ({ data }) => (

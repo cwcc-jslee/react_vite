@@ -6,7 +6,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../../../features/auth/store/authSlice';
-import { fetchFrequentCodebooks } from '../../../../features/codebook/store/codebookSlice';
+// import { fetchFrequentCodebooks } from '../../../../features/codebook/store/codebookSlice';
+import { useCodebook } from '../../../hooks/useCodebook.js';
 import { changePage } from '../../../../store/slices/uiSlice';
 import { SIDEBAR_ITEMS, PAGE_MENUS } from '../../../constants/navigation';
 import { Button } from '../index.jsx';
@@ -66,7 +67,7 @@ const DefaultLayout = ({ children }) => {
   const location = useLocation();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const { status, error } = useSelector((state) => state.codebook);
+  // const { status, error } = useSelector((state) => state.codebook);
   const { pageLayout } = useSelector((state) => state.ui);
 
   // 현재 페이지 식별자 추출
@@ -96,15 +97,15 @@ const DefaultLayout = ({ children }) => {
   }, [currentPage, pageLayout.page, dispatch]);
 
   useEffect(() => {
-    if (status === 'idle') {
-      dispatch(fetchFrequentCodebooks());
-    }
+    // if (status === 'idle') {
+    //   dispatch(fetchFrequentCodebooks());
+    // }
 
-    if (status === 'failed' && error) {
-      window.alert(
-        `Codebook 정보를 가져오지 못했습니다.\n오류: ${error}\n페이지를 계속 이용할 수 있으나 일부 기능이 제한될 수 있습니다.`,
-      );
-    }
+    // if (status === 'failed' && error) {
+    //   window.alert(
+    //     `Codebook 정보를 가져오지 못했습니다.\n오류: ${error}\n페이지를 계속 이용할 수 있으나 일부 기능이 제한될 수 있습니다.`,
+    //   );
+    // }
 
     // 화면 크기에 따라 사이드바 상태 초기화
     const handleResize = () => {
@@ -123,18 +124,18 @@ const DefaultLayout = ({ children }) => {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [dispatch, status, error]);
+  }, [dispatch]);
 
-  if (status === 'loading') {
-    return (
-      <div className="flex items-center justify-center h-screen bg-slate-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto"></div>
-          <p className="mt-3 text-slate-600">Codebook 로딩중...</p>
-        </div>
-      </div>
-    );
-  }
+  // if (status === 'loading') {
+  //   return (
+  //     <div className="flex items-center justify-center h-screen bg-slate-50">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto"></div>
+  //         <p className="mt-3 text-slate-600">Codebook 로딩중...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   const handleLogout = () => {
     dispatch(logout());

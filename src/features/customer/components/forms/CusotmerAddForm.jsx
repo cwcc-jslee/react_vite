@@ -30,23 +30,23 @@ import {
 import { notification } from '../../../../shared/services/notification';
 import CoFunnelInput from '../elements/CoFunnelInput';
 
-const CustomerAddForm = () => {
+const CustomerAddForm = ({ codebooks, isLoadingCodebook }) => {
   const { resetFilters } = useCustomer();
   const { formData, errors, isSubmitting, updateFormField, processSubmit } =
     useCustomerForm();
   const { validationErrors, validateForm, clearErrors } = useFormValidation();
-  const {
-    data: codebooks,
-    isLoading: isLoadingCodebook,
-    error,
-  } = useCodebook([
-    'co_classification',
-    'business_scale',
-    'co_funnel',
-    'employee',
-    'business_type',
-    'region',
-  ]);
+  // const {
+  //   data: codebooks,
+  //   isLoading: isLoadingCodebook,
+  //   error,
+  // } = useCodebook([
+  //   'co_classification',
+  //   'business_scale',
+  //   'co_funnel',
+  //   'employee',
+  //   'business_type',
+  //   'region',
+  // ]);
 
   const showErrorNotification = (errors) => {
     const firstError = Object.values(errors)[0];
@@ -180,7 +180,7 @@ const CustomerAddForm = () => {
               disabled={isSubmitting}
             >
               <option value="">선택하세요</option>
-              {codebooks?.co_classification?.data?.map((item) => (
+              {codebooks?.co_classification?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
@@ -198,7 +198,7 @@ const CustomerAddForm = () => {
               disabled={isSubmitting}
             >
               <option value="">선택하세요</option>
-              {codebooks?.business_scale?.data?.map((item) => (
+              {codebooks?.business_scale?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
@@ -253,7 +253,7 @@ const CustomerAddForm = () => {
           <FormItem direction="vertical" className="flex-1">
             <Label className="text-left">업태 (다중선택)</Label>
             <div className="flex flex-wrap items-center gap-4">
-              {codebooks?.business_type?.data?.map((type) => (
+              {codebooks?.business_type?.map((type) => (
                 <div key={type.id} className="flex items-center space-x-2">
                   <Checkbox
                     name={`businessType_${type.id}`}
@@ -284,7 +284,7 @@ const CustomerAddForm = () => {
               disabled={isSubmitting}
             >
               <option value="">선택하세요</option>
-              {codebooks?.employee?.data?.map((item) => (
+              {codebooks?.employee?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>

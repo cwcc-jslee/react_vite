@@ -2,7 +2,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { enableMapSet } from 'immer';
 import authReducer from '../features/auth/store/authSlice';
-import codebookReducer from '../features/codebook/store/codebookSlice';
+// import codebookReducer from '../features/codebook/store/codebookSlice';
 
 // Immer MapSet 플러그인 활성화
 enableMapSet();
@@ -11,7 +11,7 @@ enableMapSet();
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    codebook: codebookReducer,
+    // codebook: codebookReducer,
     // 다른 리듀서들도 여기에 추가...
   },
   middleware: (getDefaultMiddleware) =>

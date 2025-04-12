@@ -5,17 +5,23 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { closeDrawer, setDrawer } from '../../../../store/slices/uiSlice.js';
-import { selectCodebookByType } from '../../../codebook/store/codebookSlice.js';
+import { selectCodebookByType } from '../../../../store/slices/codebookSlice.js';
 import { useContact } from '../../context/ContactProvider.jsx';
 import Drawer from '../../../../shared/components/ui/drawer/Drawer.jsx';
 import DrawerActionMenu from '../../../../shared/components/ui/button/DrawerActionMenu.jsx';
 import ContactAddForm from '../forms/ContactAddForm';
 import ContactExcelUpload from '../upload/ContactExcelUpload.jsx';
+import { useCodebook } from '../../../../shared/hooks/useCodebook.js';
 
 const ContactDrawer = ({ drawer }) => {
   const dispatch = useDispatch();
 
   // Codebook 데이터 조회
+  const {
+    data: codebooks,
+    isLoading,
+    error,
+  } = useCodebook(['sfa_sales_type', 'sfa_classification']);
   const sfaSalesTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
   const sfaClassificationData = useSelector(
     selectCodebookByType('sfa_classification'),

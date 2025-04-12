@@ -22,19 +22,24 @@ import useModal from '../../../../shared/hooks/useModal';
 /**
  * 섹션별 인라인 편집이 가능한 고객사 상세 정보 컴포넌트
  */
-const EditableCustomerDetailTable = ({ data, editable = true }) => {
-  const {
-    data: codebooks,
-    isLoading: isLoadingCodebook,
-    error,
-  } = useCodebook([
-    'co_classification',
-    'business_scale',
-    'co_funnel',
-    'employee',
-    'business_type',
-    'region',
-  ]);
+const EditableCustomerDetailTable = ({
+  codebooks,
+  isLoadingCodebook,
+  data,
+  editable = true,
+}) => {
+  // const {
+  //   data: codebooks,
+  //   isLoading: isLoadingCodebook,
+  //   error,
+  // } = useCodebook([
+  //   'co_classification',
+  //   'business_scale',
+  //   'co_funnel',
+  //   'employee',
+  //   'business_type',
+  //   'region',
+  // ]);
 
   const {
     editingSection,
@@ -95,7 +100,7 @@ const EditableCustomerDetailTable = ({ data, editable = true }) => {
   const renderSelectField = (name, codebookKey) => (
     <Select name={name} value={editedData[name] || ''} onChange={handleChange}>
       <option value="">선택하세요</option>
-      {codebooks?.[codebookKey]?.data?.map((item) => (
+      {codebooks?.[codebookKey]?.map((item) => (
         <option key={item.id} value={item.id}>
           {item.name}
         </option>
@@ -152,7 +157,7 @@ const EditableCustomerDetailTable = ({ data, editable = true }) => {
             onChange={(e) => setSelectedFunnel(e.target.value)}
           >
             <option value="">유입경로 선택</option>
-            {codebooks?.co_funnel?.data?.map((item) => (
+            {codebooks?.co_funnel?.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
               </option>
@@ -348,7 +353,7 @@ const EditableCustomerDetailTable = ({ data, editable = true }) => {
             <DescriptionItem>
               {editingSection === 'company' ? (
                 <div className="flex flex-wrap items-center gap-4">
-                  {codebooks?.business_type?.data?.map((type) => (
+                  {codebooks?.business_type?.map((type) => (
                     <div key={type.id} className="flex items-center space-x-2">
                       <Checkbox
                         name={`businessType_${type.id}`}
@@ -522,7 +527,7 @@ const EditableCustomerDetailTable = ({ data, editable = true }) => {
               {editingSection === 'support' ? (
                 <div className="flex flex-wrap items-center gap-4">
                   {/* 지원사업 옵션 */}
-                  {codebooks?.support_program?.data?.map((program) => (
+                  {codebooks?.support_program?.map((program) => (
                     <div
                       key={program.id}
                       className="flex items-center space-x-2"

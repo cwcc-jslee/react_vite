@@ -3,9 +3,9 @@
 // SfaPage 컴포넌트가 useSfa hook을 사용하기 전에 SfaProvider로 감싸져 있지 않아서 발생하는 문제해결
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { selectCodebookByType } from '../../codebook/store/codebookSlice';
-import { useSfa } from '../context/SfaProvider';
-import { useSfaSearchFilter } from '../hooks/useSfaSearchFilter';
+// import { selectCodebookByType } from '../../codebook/store/codebookSlice';
+// import { useSfa } from '../context/SfaProvider';
+// import { useSfaSearchFilter } from '../hooks/useSfaSearchFilter';
 import { Section } from '../../../shared/components/ui/layout/components';
 import SfaDrawer from '../components/drawer/SfaDrawer';
 
@@ -22,7 +22,7 @@ import SfaSearchForm from '../components/forms/SfaSearchForm';
  */
 const SfaContainer = () => {
   // 레이아웃 관련 상태 가져오기
-  const { pageLayout, drawerState } = useSfa();
+  // const { pageLayout, drawerState } = useSfa();
   // const { components } = pageLayout;
   // 레이아웃 관련 상태 가져오기
   const components = useSelector((state) => state.ui.pageLayout.components);
