@@ -1,4 +1,7 @@
 // src/shared/components/ui/layout/components.jsx
+// 레이아웃 컴포넌트들을 정의하여 일관된 UI 구조를 제공합니다.
+// 반응형 사이드바, 헤더, 콘텐츠 영역 및 네비게이션 요소들을 포함합니다.
+
 import React, { useState } from 'react';
 
 // 사이드바 너비 상수화 (확장성을 위해)
@@ -86,16 +89,28 @@ export const Sider = ({
   // 사이드바 너비 설정
   const width = collapsed ? SIDEBAR_WIDTH.collapsed : SIDEBAR_WIDTH.expanded;
 
+  // 자식 요소 분리 (네비게이션과 액션 버튼을 구분하기 위해)
+  let mainNavigation = null;
+  let actionButtons = null;
+
+  // children이 배열인 경우 (복수의 자식 요소)
+  if (Array.isArray(children)) {
+    mainNavigation = children[0];
+    actionButtons = children[1];
+  } else {
+    // 단일 자식인 경우 (네비게이션만 있는 경우)
+    mainNavigation = children;
+  }
+
   return (
     <aside
-      className={`fixed top-16 left-0 ${width} h-[calc(100vh-64px)] bg-slate-800 overflow-y-auto transition-all duration-200 ${className}`}
+      className={`fixed top-16 left-0 ${width} h-[calc(100vh-64px)] bg-slate-800 flex flex-col transition-all duration-200 ${className}`}
     >
       {/* 사이드바 토글 버튼 */}
       {onToggle && (
-        // 수정된 코드
         <button
           onClick={onToggle}
-          className="absolute -right-0 top-6 bg-blue-700 rounded-full p-1 text-white shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="absolute -right-0 top-6 bg-blue-700 rounded-full p-1 text-white shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 z-10"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           <svg
@@ -121,7 +136,13 @@ export const Sider = ({
         </button>
       )}
 
-      {children}
+      {/* 메인 네비게이션 영역 */}
+      <div className="overflow-y-auto">{mainNavigation}</div>
+
+      {/* 하단 액션 버튼 영역 */}
+      {actionButtons && (
+        <div className="border-t border-slate-700 mt-auto">{actionButtons}</div>
+      )}
     </aside>
   );
 };
@@ -178,6 +199,38 @@ export const NavItem = ({
       </span>
     )}
   </li>
+);
+
+// 새로 추가된 사이드바 하단 액션 버튼 컴포넌트
+export const ActionButton = ({
+  children,
+  onClick,
+  collapsed = false,
+  icon,
+  className = '',
+}) => (
+  <button
+    onClick={onClick}
+    className={`
+      w-full text-left px-6 py-3 cursor-pointer transition-colors flex items-center
+      text-white bg-blue-600 hover:bg-blue-700
+      ${collapsed ? 'justify-center px-2' : ''}
+      ${className}
+    `}
+  >
+    {/* 아이콘이 있는 경우 표시 */}
+    {icon && <span className={collapsed ? 'mx-auto' : 'mr-3'}>{icon}</span>}
+
+    {/* 사이드바가 접힌 상태가 아닐 때만 텍스트 표시 */}
+    {!collapsed && <span>{children}</span>}
+
+    {/* 접힌 상태에서 아이콘이 없는 경우, 텍스트의 첫 글자만 표시 */}
+    {collapsed && !icon && (
+      <span className="mx-auto font-medium">
+        {children.toString().charAt(0)}
+      </span>
+    )}
+  </button>
 );
 
 export const Section = ({ title, children, className = '' }) => (

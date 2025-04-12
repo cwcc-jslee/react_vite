@@ -115,23 +115,23 @@ export const PAGE_MENUS = {
           },
         },
       },
-      add: {
-        label: '매출등록',
-        permissions: ['user'],
-        config: {
-          components: {
-            monthlyStatus: true,
-            sfaTable: true,
-            searchForm: false,
-            forecastTable: false,
-          },
-          drawer: {
-            visible: true, // 드로어 표시 여부
-            mode: 'add',
-            data: null,
-          },
-        },
-      },
+      // add: {
+      //   label: '매출등록',
+      //   permissions: ['user'],
+      //   config: {
+      //     components: {
+      //       monthlyStatus: true,
+      //       sfaTable: true,
+      //       searchForm: false,
+      //       forecastTable: false,
+      //     },
+      //     drawer: {
+      //       visible: true, // 드로어 표시 여부
+      //       mode: 'add',
+      //       data: null,
+      //     },
+      //   },
+      // },
       search: {
         label: '상세조회',
         permissions: ['user'],
@@ -182,20 +182,20 @@ export const PAGE_MENUS = {
           },
         },
       },
-      add: {
-        label: '등록',
-        permissions: ['user'],
-        config: {
-          components: {
-            projectChart: false,
-            projectTable: false,
-            projectAddSection: true,
-          },
-          drawer: {
-            visible: false, // 드로어 표시 여부
-          },
-        },
-      },
+      // add: {
+      //   label: '등록',
+      //   permissions: ['user'],
+      //   config: {
+      //     components: {
+      //       projectChart: false,
+      //       projectTable: false,
+      //       projectAddSection: true,
+      //     },
+      //     drawer: {
+      //       visible: false, // 드로어 표시 여부
+      //     },
+      //   },
+      // },
       detail: {
         label: '상세정보',
         permissions: ['user'],
@@ -230,20 +230,20 @@ export const PAGE_MENUS = {
           },
         },
       },
-      add: {
-        label: '고객등록',
-        permissions: ['user'],
-        config: {
-          components: {
-            customerTable: true,
-            //   searchForm: false,
-          },
-          drawer: {
-            visible: true, // 드로어 표시 여부
-            mode: 'add',
-          },
-        },
-      },
+      // add: {
+      //   label: '고객등록',
+      //   permissions: ['user'],
+      //   config: {
+      //     components: {
+      //       customerTable: true,
+      //       //   searchForm: false,
+      //     },
+      //     drawer: {
+      //       visible: true, // 드로어 표시 여부
+      //       mode: 'add',
+      //     },
+      //   },
+      // },
       search: {
         label: '상세조회',
         permissions: ['user'],
@@ -277,21 +277,21 @@ export const PAGE_MENUS = {
           },
         },
       },
-      add: {
-        label: '담당자등록',
-        permissions: ['user'],
-        config: {
-          components: {
-            contactSearchForm: true,
-            contactTable: true,
-            contactExcelUpload: false,
-          },
-          drawer: {
-            visible: true, // 드로어 표시 여부
-            mode: 'addSingle',
-          },
-        },
-      },
+      // add: {
+      //   label: '담당자등록',
+      //   permissions: ['user'],
+      //   config: {
+      //     components: {
+      //       contactSearchForm: true,
+      //       contactTable: true,
+      //       contactExcelUpload: false,
+      //     },
+      //     drawer: {
+      //       visible: true, // 드로어 표시 여부
+      //       mode: 'addSingle',
+      //     },
+      //   },
+      // },
       search: {
         label: '상세조회',
         permissions: ['user'],
@@ -309,93 +309,6 @@ export const PAGE_MENUS = {
     },
   },
 };
-
-// 페이지별 메뉴 구성 정보
-// export const PAGE_MENUS = {
-//   //SFA
-//   sfa: {
-//     menus: {
-//       add: {
-//         label: '매출등록',
-//         config: {
-//           title: '매출등록',
-//           components: {
-//             monthlyStatus: true,
-//             sfaTable: true,
-//             searchForm: false,
-//             forecastTable: false,
-//           },
-//         },
-//       },
-//       search: {
-//         label: '상세조회',
-//         config: {
-//           title: '매출 등록',
-//           components: {
-//             monthlyStatus: false,
-//             sfaTable: true,
-//             searchForm: true,
-//             forecastTable: false,
-//           },
-//         },
-//       },
-//       forecast: {
-//         label: '매출예측',
-//         config: {
-//           title: '매출예측',
-//           components: {
-//             monthlyStatus: false,
-//             sfaTable: true,
-//             searchForm: false,
-//             forecastTable: true,
-//           },
-//         },
-//       },
-//       reset: {
-//         label: '초기화',
-//         config: {
-//           title: '초기화',
-//           components: {
-//             monthlyStatus: true,
-//             sfaTable: true,
-//             searchForm: false,
-//             forecastTable: false,
-//           },
-//         },
-//       },
-//     },
-//   },
-//   // 프로젝트 페이지 메뉴
-//   project: {
-//     menus: {
-//       default: {
-//         label: '현황',
-//         config: {
-//           // title: '현황',
-//           layoutMode: 'default',
-//           components: {
-//             projectTable: true,
-//             projectAddSection: false,
-//           },
-//           form: { data: {}, errors: {}, isSubmitting: false },
-//         },
-//       },
-//       addProject: {
-//         label: '등록',
-//         config: {
-//           // title: '등록',
-//           layoutMode: 'addProject',
-//           components: {
-//             projectTable: false,
-//             projectAddSection: true,
-//           },
-//           form: { data: { sfa: '' }, errors: {}, isSubmitting: false },
-//         },
-//       },
-//     },
-//   },
-//   // 다른 페이지 메뉴 구성 정보...
-// };
 
 // 각 페이지의 기본 메뉴 ID 정의
 export const DEFAULT_MENU_IDS = {

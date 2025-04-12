@@ -162,7 +162,7 @@ const ProjectTaskBoardSection = ({ codebooks }) => {
       </div>
 
       {/* 칸반 보드 통계 요약 - 새로 추가된 부분 */}
-      {buckets.length > 0 && (
+      {/* {buckets.length > 0 && (
         <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 text-sm text-gray-600">
           <div className="flex justify-between items-center">
             <div>
@@ -188,7 +188,7 @@ const ProjectTaskBoardSection = ({ codebooks }) => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* 모달 렌더러 */}
       <ModalRenderer

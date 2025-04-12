@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import ProjectAddBaseForm from '../components/forms/ProjectAddBaseForm';
-import { Button } from '../../../shared/components/ui';
+import { Button, Row, Col, Group } from '../../../shared/components/ui';
 
 /**
  * 프로젝트 기본정보 입력 폼 섹션 컴포넌트
@@ -94,14 +94,47 @@ const ProjectAddFormSection = ({
   return (
     <div className="bg-white rounded-md shadow-sm">
       <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-medium text-gray-800">프로젝트 기본정보</h2>
-        {/* 진행 상태 표시 바 */}
-        <div className="w-full h-1 bg-gray-200 mt-2 rounded-full overflow-hidden">
-          <div
-            className={`h-full ${progressColor} transition-all duration-300 ease-in-out`}
-            style={{ width: `${formProgress}%` }}
-          ></div>
-        </div>
+        <Row gutter={16}>
+          <Col span={20}>
+            <h2 className="text-lg font-medium text-gray-800">
+              프로젝트 기본정보
+            </h2>
+            {/* 진행 상태 표시 바 */}
+            <div className="w-full h-1 bg-gray-200 mt-2 rounded-full overflow-hidden">
+              <div
+                className={`h-full ${progressColor} transition-all duration-300 ease-in-out`}
+                style={{ width: `${formProgress}%` }}
+              ></div>
+            </div>
+          </Col>
+          <Col span={4}>
+            <Group direction="horizontal" className="gap-6">
+              <Button
+                onClick={handleReset}
+                variant="outline"
+                size="md"
+                disabled={isSubmitting}
+              >
+                초기화
+              </Button>
+              <Button
+                onClick={(e) => {
+                  // 버튼 클릭 시에도 이벤트 전파 방지
+                  e.preventDefault();
+                  handleFormSubmit(e);
+                }}
+                variant="primary"
+                size="md"
+                disabled={isSubmitting || formProgress < 50}
+                className={
+                  formProgress < 50 ? 'opacity-50 cursor-not-allowed' : ''
+                }
+              >
+                {isSubmitting ? '저장 중...' : '저장하기'}
+              </Button>
+            </Group>
+          </Col>
+        </Row>
       </div>
 
       <div className="p-4">
@@ -109,31 +142,8 @@ const ProjectAddFormSection = ({
           codebooks={codebooks}
           handleTemplateSelect={handleTemplateSelectExtended}
           updateField={handleFieldChangeExtended}
-          handleFormSubmit={handleFormSubmit}
-          handleReset={handleReset}
           isSubmitting={isSubmitting}
         />
-      </div>
-
-      <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex justify-between">
-        <Button
-          onClick={handleReset}
-          variant="outline"
-          size="md"
-          disabled={isSubmitting}
-        >
-          모두 지우기
-        </Button>
-
-        <Button
-          onClick={handleFormSubmit}
-          variant="primary"
-          size="md"
-          disabled={isSubmitting || formProgress < 50}
-          className={formProgress < 50 ? 'opacity-50 cursor-not-allowed' : ''}
-        >
-          {isSubmitting ? '저장 중...' : '저장하기'}
-        </Button>
       </div>
     </div>
   );

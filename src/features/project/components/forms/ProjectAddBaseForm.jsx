@@ -29,8 +29,8 @@ const ProjectAddBaseForm = ({
   codebooks,
   updateField,
   handleTemplateSelect,
-  onTemplateSelect,
-  handleFormSubmit,
+  // onTemplateSelect,
+  // handleFormSubmit,
 }) => {
   const dispatch = useDispatch();
 
@@ -108,7 +108,7 @@ const ProjectAddBaseForm = ({
 
   return (
     <Row gutter={16} className="w-full">
-      <Col span={22} className="space-y-4">
+      <Col span={24} className="space-y-4">
         {/* 고객사 입력 필드 */}
         <Group direction="horizontal" className="gap-6">
           <FormItem className="flex-1">
@@ -298,8 +298,7 @@ const ProjectAddBaseForm = ({
           </FormItem>
         </Group>
       </Col>
-      <Col span={2}>
-        {/* Submit Button */}
+      {/* <Col span={2}>
         <Group direction="vertical" className="gap-6">
           <Button type="submit" disabled={isSubmitting} className="w-full">
             취소
@@ -318,7 +317,7 @@ const ProjectAddBaseForm = ({
             {isSubmitting ? '처리중...' : '저장'}
           </Button>
         </Group>
-      </Col>
+      </Col> */}
     </Row>
   );
 };

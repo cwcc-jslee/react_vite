@@ -8,9 +8,7 @@ import { Section } from '../../../shared/components/ui/layout/components';
 import { projectTaskInitialState } from '../../../shared/constants/initialFormState';
 
 // 커스텀 훅 사용
-// import { apiCommon } from '../../../shared/api/apiCommon';
 import { useCodebook } from '../../../shared/hooks/useCodebook';
-// import useSelectData from '../../../shared/hooks/useSelectData';
 import useProjectSubmit from '../hooks/useProjectSubmit';
 import useProjectTask from '../hooks/useProjectTask';
 

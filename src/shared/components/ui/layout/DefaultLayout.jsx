@@ -1,4 +1,7 @@
 // src/shared/components/ui/layout/DefaultLayout.jsx
+// 애플리케이션의 기본 레이아웃 구조를 정의하며 전체 UI 프레임워크를 제공합니다.
+// 헤더, 사이드바, 콘텐츠 영역 및 경로 기반 네비게이션을 통합적으로 관리합니다.
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -18,6 +21,7 @@ import {
   NavItem,
 } from './components.jsx';
 import BreadcrumbWithMenu from './BreadcrumbWithMenu.jsx';
+import SidebarActionButton from './SidebarActionButton.jsx';
 
 // 현재 경로에 기반한 브레드크럼 생성 함수
 const getBreadcrumbItems = (path) => {
@@ -46,16 +50,6 @@ const getCurrentPageFromPath = (path) => {
   const segments = path.split('/').filter(Boolean);
   return segments.length > 0 ? segments[0] : '';
 };
-
-// 페이지 기본 컴포넌트 상태 가져오기
-// const getDefaultPageComponents = (page) => {
-//   if (!page || !PAGE_MENUS[page]) return {};
-
-//   const defaultMenuId = PAGE_MENUS[page]?.defaultMenu || 'default';
-//   const menuConfig = PAGE_MENUS[page]?.items?.id[defaultMenuId]?.config || {};
-
-//   return menuConfig.components || {};
-// };
 
 // PAGE_MENUS Config(components, drawer) 상태 가져오기
 const getPageMenuConfig = (page) => {
@@ -142,14 +136,6 @@ const DefaultLayout = ({ children }) => {
     );
   }
 
-  // 현재 활성 메뉴 결정
-  // let currentActiveMenu = 'default';
-  // if (pageLayout && typeof pageLayout.menu === 'string') {
-  //   currentActiveMenu = pageLayout.menu;
-  // } else if (DEFAULT_MENU_IDS[currentPage]) {
-  //   currentActiveMenu = DEFAULT_MENU_IDS[currentPage];
-  // }
-
   const handleLogout = () => {
     dispatch(logout());
     navigate('/login');
@@ -180,6 +166,7 @@ const DefaultLayout = ({ children }) => {
 
       <div className="flex pt-16 min-h-[calc(100vh-64px)]">
         <Sider collapsed={sidebarCollapsed} onToggle={toggleSidebar}>
+          {/* 메인 네비게이션 - 첫 번째 자식 */}
           <Navigation>
             <NavList>
               {SIDEBAR_ITEMS.map((item) => (
@@ -198,6 +185,9 @@ const DefaultLayout = ({ children }) => {
               ))}
             </NavList>
           </Navigation>
+
+          {/* 액션 버튼 - 두 번째 자식 */}
+          <SidebarActionButton collapsed={sidebarCollapsed} />
         </Sider>
 
         <Content
