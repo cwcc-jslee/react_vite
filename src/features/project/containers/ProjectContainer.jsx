@@ -24,7 +24,6 @@ import ProjectAddLayout from '../layouts/ProjectAddLayout';
 import ProjectDetailLayout from '../layouts/ProjectDetailLayout';
 
 // Components
-import ProjectDetailContainer from './ProjectDetailContainer';
 import ProjectDrawer from '../components/drawer/ProjectDrawer';
 
 // 알림 서비스 추가

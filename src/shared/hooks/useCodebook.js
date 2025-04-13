@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { snakeToCamelCase } from '../utils/transformUtils';
+import { convertKeysToCamelCase } from '../utils/transformUtils';
 import {
   fetchCodebooksByTypes,
   selectCodebookByType,
@@ -35,7 +35,7 @@ export const useCodebook = (codeTypes) => {
     return codeTypes.reduce((acc, type) => {
       const data = selectCodebookByType(type)(state)?.data || [];
       // 스네이크 케이스를 카멜 케이스로 변환
-      acc[type] = snakeToCamelCase(data);
+      acc[type] = convertKeysToCamelCase(data);
       return acc;
     }, {});
   });

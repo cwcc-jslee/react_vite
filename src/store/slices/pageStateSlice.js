@@ -7,7 +7,7 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { notification } from '../../shared/services/notification';
-import { snakeToCamelCase } from '../../shared/utils/transformUtils';
+import { convertKeysToCamelCase } from '../../shared/utils/transformUtils';
 
 // 초기 상태 정의
 const initialState = {
@@ -362,7 +362,7 @@ const pageStateSlice = createSlice({
         (action) => action.type.endsWith('/fetchItems/fulfilled'),
         (state, action) => {
           state.status = 'succeeded';
-          state.items = snakeToCamelCase(action.payload.data);
+          state.items = convertKeysToCamelCase(action.payload.data);
           state.pagination.total = action.payload.meta.pagination.total;
           state.error = null;
         },
@@ -386,7 +386,7 @@ const pageStateSlice = createSlice({
         (action) => action.type.endsWith('/fetchDetail/fulfilled'),
         (state, action) => {
           state.selectedItem.status = 'succeeded';
-          state.selectedItem.data = action.payload[0];
+          state.selectedItem.data = convertKeysToCamelCase(action.payload[0]);
         },
       )
       .addMatcher(

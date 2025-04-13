@@ -117,22 +117,90 @@ export const camelToSnakeCase = (str) => {
 };
 
 /**
+ * 스네이크케이스(snake_case)를 카멜케이스(camelCase)로 변환하는 함수
+ *
+ * @param {string} str - 변환할 스네이크케이스 문자열
+ * @returns {string} 카멜케이스로 변환된 문자열
+ */
+export const snakeToCamelCase = (str) => {
+  // 첫 글자가 _ 인 경우 특별 처리 (예: _private_field -> _privateField)
+  if (str.startsWith('_')) {
+    return (
+      '_' +
+      str
+        .substring(1)
+        .replace(/_([a-z])/gi, (_, letter) => letter.toUpperCase())
+    );
+  }
+
+  return str.replace(/_([a-z])/gi, (_, letter) => letter.toUpperCase());
+};
+
+/**
+ * 객체의 모든 키를 카멜케이스에서 스네이크케이스로 재귀적으로 변환하는 함수
+ *
+ * @param {Object|Array} data - 변환할 객체 또는 배열
+ * @returns {Object|Array} 키가 스네이크케이스로 변환된 객체 또는 배열
+ */
+export const convertKeysToCamelCase = (data) => {
+  // 기본 타입 또는 null/undefined 처리
+  if (data === null || data === undefined || typeof data !== 'object') {
+    return data;
+  }
+
+  // 배열 처리
+  if (Array.isArray(data)) {
+    return data.map((item) => convertKeysToCamelCase(item));
+  }
+
+  // 특수 객체 타입 처리 (Date, RegExp 등)
+  if (
+    data instanceof Date ||
+    data instanceof RegExp ||
+    data instanceof Map ||
+    data instanceof Set
+  ) {
+    return data;
+  }
+
+  // 일반 객체 처리
+  return Object.fromEntries(
+    Object.entries(data).map(([key, value]) => {
+      const camelKey = snakeToCamelCase(key);
+      const transformedValue = convertKeysToCamelCase(value);
+      return [camelKey, transformedValue];
+    }),
+  );
+};
+
+/**
  * 객체의 모든 키를 카멜케이스에서 스네이크케이스로 재귀적으로 변환하는 함수
  *
  * @param {Object|Array} data - 변환할 객체 또는 배열
  * @returns {Object|Array} 키가 스네이크케이스로 변환된 객체 또는 배열
  */
 export const convertKeysToSnakeCase = (data) => {
+  // 기본 타입 또는 null/undefined 처리
   if (data === null || data === undefined || typeof data !== 'object') {
     return data;
   }
 
-  // 배열인 경우 각 요소에 대해 재귀 호출
+  // 배열 처리
   if (Array.isArray(data)) {
     return data.map((item) => convertKeysToSnakeCase(item));
   }
 
-  // 객체인 경우 각 키를 변환하고 값에 대해 재귀 호출
+  // 특수 객체 타입 처리 (Date, RegExp 등)
+  if (
+    data instanceof Date ||
+    data instanceof RegExp ||
+    data instanceof Map ||
+    data instanceof Set
+  ) {
+    return data;
+  }
+
+  // 일반 객체 처리
   return Object.fromEntries(
     Object.entries(data).map(([key, value]) => {
       const snakeKey = camelToSnakeCase(key);
@@ -140,62 +208,6 @@ export const convertKeysToSnakeCase = (data) => {
       return [snakeKey, transformedValue];
     }),
   );
-};
-
-/**
- * snake_case 키를 camelCase로 변환 (개선된 버전)
- * @param {Object} obj - snake_case 키를 가진 객체
- * @returns {Object} camelCase 키를 가진 객체
- */
-export const snakeToCamelCase = (obj) => {
-  // 기본 타입 또는 null/undefined 처리
-  if (obj === null || obj === undefined || typeof obj !== 'object') {
-    return obj;
-  }
-
-  // 배열 처리
-  if (Array.isArray(obj)) {
-    return obj.map((item) => snakeToCamelCase(item));
-  }
-
-  // 특수 객체 타입 처리 (Map, Set 등)
-  if (
-    obj instanceof Map ||
-    obj instanceof Set ||
-    obj instanceof Date ||
-    obj instanceof RegExp
-  ) {
-    return obj;
-  }
-
-  const result = {};
-
-  // 객체의 각 키-값 쌍 처리
-  for (const key in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, key)) {
-      // 첫 글자의 _ 처리를 포함한 snake_case -> camelCase 변환
-      let camelKey = key;
-
-      // 첫 글자가 _ 인 경우 특별 처리 (예: _private_field -> _privateField)
-      if (key.startsWith('_')) {
-        camelKey =
-          '_' +
-          key
-            .substring(1)
-            .replace(/_([a-z])/gi, (_, letter) => letter.toUpperCase());
-      } else {
-        camelKey = key.replace(/_([a-z])/gi, (_, letter) =>
-          letter.toUpperCase(),
-        );
-      }
-
-      // 값이 객체인 경우 재귀적으로 처리
-      const value = obj[key];
-      result[camelKey] = snakeToCamelCase(value);
-    }
-  }
-
-  return result;
 };
 
 /**

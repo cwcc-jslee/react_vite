@@ -13,6 +13,7 @@ import {
  */
 const ProjectDetailTable = ({ data = {} }) => {
   if (!data) return null;
+  console.log(`>>>>> data : `, data);
 
   return (
     <Description>
