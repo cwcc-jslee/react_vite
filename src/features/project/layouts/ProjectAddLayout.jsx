@@ -20,7 +20,7 @@ const ProjectAddLayout = ({ formProps, codebooks }) => {
       <ProjectAddFormSection {...formProps} codebooks={codebooks} />
 
       {/* 프로젝트 작업 칸반보드 섹션 */}
-      <ProjectTaskBoardSection codebooks={codebooks} />
+      <ProjectTaskBoardSection />
     </div>
   );
 };

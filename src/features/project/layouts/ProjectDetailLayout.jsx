@@ -9,7 +9,7 @@ import ProjectTaskBoardSection from '../sections/ProjectTaskBoardSection';
 /**
  * 프로젝트 상세 페이지 레이아웃 컴포넌트
  */
-const ProjectDetailLayout = ({ formProps, kanbanProps }) => {
+const ProjectDetailLayout = () => {
   // Detail 상태 가져오기
   const selectedItem = useSelector((state) => state.pageState.selectedItem);
   const { data, status, error } = selectedItem;
@@ -39,7 +39,7 @@ const ProjectDetailLayout = ({ formProps, kanbanProps }) => {
   return (
     <div className="flex flex-col space-y-6">
       {/* 프로젝트 기본정보 테이블 섹션 */}
-      <ProjectDetailTableSection data={otherData} />
+      <ProjectDetailTableSection data={otherData} projectTasks={projectTasks} />
 
       {/* 프로젝트 Task 섹션 */}
       {/* <ProjectTaskSection tasks={tasks} /> */}

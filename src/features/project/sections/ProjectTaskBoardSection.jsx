@@ -8,6 +8,7 @@ import { projectTaskInitialState } from '../../../shared/constants/initialFormSt
 import { apiCommon } from '../../../shared/api/apiCommon';
 
 // 커스텀 훅
+import { useCodebook } from '@shared/hooks/useCodebook';
 import useModal from '../../../shared/hooks/useModal';
 import useProjectTask from '../hooks/useProjectTask';
 import useSelectData from '../../../shared/hooks/useSelectData';
@@ -19,7 +20,7 @@ import ProjectTaskForm from '../components/forms/ProjectTaskForm';
  * 프로젝트 작업 칸반보드 섹션 컴포넌트
  * 프로젝트 작업을 관리하는 칸반보드를 제공
  */
-const ProjectTaskBoardSection = ({ codebooks }) => {
+const ProjectTaskBoardSection = () => {
   // 칸반 보드 훅 사용
   const {
     buckets,
@@ -46,6 +47,11 @@ const ProjectTaskBoardSection = ({ codebooks }) => {
   const { data: usersData, isLoading: isUsersLoading } = useSelectData(
     apiCommon.getUsers,
   );
+  // API Codebook 조회
+  const { data: codebooks, isLoading: isLoadingCodebook } = useCodebook([
+    'priority_level', // 우선순위(긴급,중요,중간,낮음)
+    'task_progress', // 작업진행률
+  ]);
 
   /**
    * 새 버킷(컬럼) 추가 핸들러
