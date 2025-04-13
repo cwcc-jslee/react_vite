@@ -167,6 +167,13 @@ const uiSlice = createSlice({
         };
       }
     },
+
+    /**
+     * 하위 메뉴 변경
+     */
+    changeSubMenu: (state, action) => {
+      // 구현필요
+    },
   },
   extraReducers: (builder) => {
     // pageState와 pageForm 슬라이스와 연동
@@ -192,6 +199,7 @@ export const {
   closeDrawer,
   setActiveMenu,
   changePageMenu,
+  changeSubMenu,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

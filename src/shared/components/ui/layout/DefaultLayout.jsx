@@ -8,8 +8,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../../../features/auth/store/authSlice';
-// import { fetchFrequentCodebooks } from '../../../../features/codebook/store/codebookSlice';
-import { useCodebook } from '../../../hooks/useCodebook.js';
 import { changePage } from '../../../../store/slices/uiSlice';
 import {
   SIDEBAR_ITEMS,
@@ -215,7 +213,7 @@ const DefaultLayout = ({ children }) => {
           sidebarCollapsed={sidebarCollapsed}
           removeContentPadding={true}
         >
-          {/* 상단 영역 (브레드크럼 + 메뉴) */}
+          {/* 상단 영역 (브레드크럼 + 메뉴 + 서브 메뉴) */}
           <div className="border-b border-gray-200">
             <BreadcrumbWithMenu
               breadcrumbItems={breadcrumbItems}

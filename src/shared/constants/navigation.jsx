@@ -333,6 +333,160 @@ export const PAGE_MENUS = {
   },
 };
 
+// 페이지별 하위 메뉴 정의
+export const PAGE_SUB_MENUS = {
+  // 프로젝트 상세 페이지의 하위 메뉴
+  projectDetail: {
+    defaultSubMenu: 'table', // 기본 하위 메뉴
+    items: {
+      table: {
+        label: '테이블',
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              fillRule="evenodd"
+              d="M5 4a3 3 0 00-3 3v6a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3H5zm-1 9v-1h5v2H5a1 1 0 01-1-1zm7 1h4a1 1 0 001-1v-1h-5v2zm0-4h5V8h-5v2zM9 8H4v2h5V8z"
+              clipRule="evenodd"
+            />
+          </svg>
+        ),
+        config: {
+          sections: {
+            projectDetailHeader: true,
+            projectDetailTable: true,
+            projectTaskBoard: false,
+            projectTimeline: false,
+            projectChart: false,
+            projectMembers: false,
+          },
+          components: {
+            projectDetailInfo: true,
+          },
+        },
+      },
+      board: {
+        label: '보드',
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+        ),
+        config: {
+          sections: {
+            projectDetailHeader: true,
+            projectDetailTable: false,
+            projectTaskBoard: true,
+            projectTimeline: false,
+            projectChart: false,
+            projectMembers: false,
+          },
+          components: {
+            projectTaskBoard: true,
+          },
+        },
+      },
+      timeline: {
+        label: '타임라인',
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+          </svg>
+        ),
+        config: {
+          sections: {
+            projectDetailHeader: true,
+            projectDetailTable: false,
+            projectTaskBoard: false,
+            projectTimeline: true,
+            projectChart: false,
+            projectMembers: false,
+          },
+          components: {
+            projectTimeline: true,
+          },
+        },
+      },
+      chart: {
+        label: '차트',
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+            <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+          </svg>
+        ),
+        config: {
+          sections: {
+            projectDetailHeader: true,
+            projectDetailTable: false,
+            projectTaskBoard: false,
+            projectTimeline: false,
+            projectChart: true,
+            projectMembers: false,
+          },
+          components: {
+            projectChart: true,
+          },
+        },
+      },
+      members: {
+        label: '구성원',
+        icon: (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 12.094A5.973 5.973 0 004 15v1H1v-1a3 3 0 013.75-2.906z" />
+          </svg>
+        ),
+        config: {
+          sections: {
+            projectDetailHeader: true,
+            projectDetailTable: false,
+            projectTaskBoard: false,
+            projectTimeline: false,
+            projectChart: false,
+            projectMembers: true,
+          },
+          components: {
+            projectMembers: true,
+          },
+        },
+      },
+    },
+  },
+  // 필요한 경우 다른 페이지의 하위 메뉴도 추가 가능
+  // sfaDetail: { ... }
+};
+
+// 메인 메뉴와 하위 메뉴의 매핑 관계
+export const MENU_SUB_MENU_MAPPING = {
+  project: {
+    detail: 'projectDetail', // 'project' 페이지의 'detail' 메뉴는 'projectDetail' 하위 메뉴 사용
+  },
+};
+
 // 각 페이지의 기본 메뉴 ID 정의
 export const DEFAULT_MENU_IDS = {
   project: 'default',
