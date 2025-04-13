@@ -1,6 +1,8 @@
 // src/shared/components/ui/layout/DefaultLayout.jsx
-// 애플리케이션의 기본 레이아웃 구조를 정의하며 전체 UI 프레임워크를 제공합니다.
-// 헤더, 사이드바, 콘텐츠 영역 및 경로 기반 네비게이션을 통합적으로 관리합니다.
+/**
+ * 애플리케이션의 기본 레이아웃 구조를 정의하며 전체 UI 프레임워크를 제공합니다.
+ * 헤더, 사이드바, 콘텐츠 영역 및 경로 기반 네비게이션을 통합적으로 관리하며 계층적 UI 구조를 지원합니다.
+ */
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -9,7 +11,11 @@ import { logout } from '../../../../features/auth/store/authSlice';
 // import { fetchFrequentCodebooks } from '../../../../features/codebook/store/codebookSlice';
 import { useCodebook } from '../../../hooks/useCodebook.js';
 import { changePage } from '../../../../store/slices/uiSlice';
-import { SIDEBAR_ITEMS, PAGE_MENUS } from '../../../constants/navigation';
+import {
+  SIDEBAR_ITEMS,
+  PAGE_MENUS,
+  DEFAULT_LAYOUTS,
+} from '../../../constants/navigation';
 import { Button } from '../index.jsx';
 import {
   Layout,
@@ -52,7 +58,7 @@ const getCurrentPageFromPath = (path) => {
   return segments.length > 0 ? segments[0] : '';
 };
 
-// PAGE_MENUS Config(components, drawer) 상태 가져오기
+// PAGE_MENUS Config(layout, components, sections, drawer) 상태 가져오기
 const getPageMenuConfig = (page) => {
   if (!page || !PAGE_MENUS[page]) return {};
 
@@ -83,16 +89,30 @@ const DefaultLayout = ({ children }) => {
   useEffect(() => {
     // 이전에 저장된 페이지와 현재 페이지가 다르면 초기화
     if (currentPage && pageLayout.page !== currentPage) {
-      const defaultComponents = getPageMenuConfig(currentPage)?.components;
+      const config = getPageMenuConfig(currentPage);
+      const defaultComponents = config?.components || {};
+      const defaultSections = config?.sections || {};
       const defaultMenu = PAGE_MENUS[currentPage]?.defaultMenu || 'default';
+      const defaultLayout =
+        config?.layout || DEFAULT_LAYOUTS[currentPage] || 'default';
 
       dispatch(
         changePage({
           page: currentPage,
+          defaultSections,
           defaultComponents,
           defaultMenu,
+          defaultLayout,
         }),
       );
+
+      console.log('페이지 변경: ', {
+        page: currentPage,
+        sections: defaultSections,
+        components: defaultComponents,
+        menu: defaultMenu,
+        layout: defaultLayout,
+      });
     }
   }, [currentPage, pageLayout.page, dispatch]);
 
@@ -206,7 +226,17 @@ const DefaultLayout = ({ children }) => {
           </div>
 
           {/* 본문 영역 (필터 + 콘텐츠) */}
-          <div className="p-0">{children}</div>
+          <div className="p-0">
+            {/* 현재 레이아웃 정보 디버깅 */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="bg-gray-100 p-1 text-xs text-gray-500 border-b">
+                Page: {pageLayout.page} | Menu: {pageLayout.menu} | Layout:{' '}
+                {pageLayout.layout || 'default'}
+              </div>
+            )}
+
+            {children}
+          </div>
         </Content>
       </div>
     </Layout>

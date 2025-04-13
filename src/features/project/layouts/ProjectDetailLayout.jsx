@@ -1,9 +1,10 @@
-// src/features/project/layouts/ProjectAddLayout.jsx
+// src/features/project/layouts/ProjectDetailLayout.jsx
+// 프로젝트 상세 정보와 태스크를 표시하는 레이아웃 컴포넌트
+// 프로젝트 데이터를 추출하고 변환하여 하위 컴포넌트에 전달합니다
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useSelector } from 'react-redux';
 import ProjectDetailTableSection from '../sections/ProjectDetailTableSection';
-import ProjectTaskSection from '../sections/ProjectTaskSection';
 import ProjectTaskBoardSection from '../sections/ProjectTaskBoardSection';
 
 /**
@@ -34,17 +35,26 @@ const ProjectDetailLayout = () => {
   }
 
   // status가 succeeded일 때만 데이터 추출 실행
-  const { projectTaskBuckets = [], projectTasks = [], ...otherData } = data;
+  const {
+    projectTaskBuckets = [],
+    projectTasks = [],
+    ...projectData
+  } = data || {};
 
   return (
     <div className="flex flex-col space-y-6">
       {/* 프로젝트 기본정보 테이블 섹션 */}
-      <ProjectDetailTableSection data={otherData} projectTasks={projectTasks} />
+      <ProjectDetailTableSection
+        data={projectData}
+        projectTaskBuckets={projectTaskBuckets}
+        projectTasks={projectTasks}
+      />
 
-      {/* 프로젝트 Task 섹션 */}
-      {/* <ProjectTaskSection tasks={tasks} /> */}
-
-      <ProjectTaskBoardSection />
+      {/* 프로젝트 태스크 보드 섹션 */}
+      <ProjectTaskBoardSection
+        projectTaskBuckets={projectTaskBuckets}
+        projectTasks={projectTasks}
+      />
     </div>
   );
 };

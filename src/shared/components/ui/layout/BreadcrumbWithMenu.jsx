@@ -30,21 +30,23 @@ const BreadcrumbWithMenu = ({
   //     ? pageMenus[currentPage].menus
   //     : {};
 
-  // 현재 페이지의 메뉴 항목 키들을 배열로 가져오기
-  const currentPageMenus = pageMenus[currentPage]?.items
-    ? Object.entries(pageMenus[currentPage].items).map(([key, value]) => ({
-        key: key,
-        label: value.label,
-      }))
-    : [];
+  // 현재 페이지의 메뉴 항목들을 배열로 변환하고 visible 속성으로 필터링
+  const currentPageMenus =
+    currentPage && pageMenus[currentPage]?.items
+      ? Object.entries(pageMenus[currentPage].items)
+          .filter(([_, value]) => value.visible !== false) // visible이 명시적으로 false가 아닌 항목만 포함
+          .map(([key, value]) => ({
+            key: key,
+            label: value.label,
+          }))
+      : [];
 
-  console.log('현재 페이지 메뉴 항목:', currentPageMenus);
+  console.log('표시 가능한 페이지 메뉴 항목:', currentPageMenus);
 
   // 메뉴 클릭 핸들러
   const handleMenuClick = (menuId) => {
     const currentMenu = pageMenus[currentPage]?.items[menuId];
     console.log(`메뉴 클릭: ${menuId}`, currentMenu);
-    console.log('현재 페이지 메뉴 항목:', currentPageMenus);
 
     // 페이지 메뉴 변경 시 상태 초기화
     dispatch(setCurrentPath(currentPage));
@@ -60,13 +62,13 @@ const BreadcrumbWithMenu = ({
   };
 
   // 메뉴 항목 존재 확인
-  const hasMenuItems = Object.keys(currentPageMenus).length > 0;
-  console.log(`메뉴 항목 존재 여부: ${hasMenuItems}`);
+  const hasMenuItems = currentPageMenus.length > 0;
+  console.log(`표시 가능한 메뉴 항목 여부: ${hasMenuItems}`);
 
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center py-2 px-4 bg-white">
       {/* 브레드크럼과 페이지별 메뉴를 같은 줄에 배치 */}
-      <div className="flex flex-col sm:flex-row sm:items-center mb-2 sm:mb-0">
+      <div className="flex flex-col sm:flex-row sm:items-center mb-2 sm:mb-0 w-full">
         <div className="mr-4 w-[150px]">
           <Breadcrumb items={breadcrumbItems} />
         </div>
@@ -74,7 +76,7 @@ const BreadcrumbWithMenu = ({
         {/* 페이지별 메뉴 */}
         <div className="flex space-x-2 mt-2 sm:mt-0">
           {hasMenuItems ? (
-            Object.entries(currentPageMenus).map(([index, menuInfo]) => (
+            currentPageMenus.map((menuInfo, index) => (
               <button
                 key={menuInfo.key}
                 onClick={() => handleMenuClick(menuInfo.key)}

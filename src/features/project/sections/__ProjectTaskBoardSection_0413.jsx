@@ -1,8 +1,6 @@
 // src/features/project/sections/ProjectTaskBoardSection.jsx
-// 프로젝트 태스크 관리를 위한 칸반보드 섹션
-// 프로젝트 태스크와 버킷을 시각적으로 관리할 수 있는 UI 제공
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { FiPlus } from 'react-icons/fi';
 import KanbanColumn from '../components/card/KanbanColumn';
 import ModalRenderer from '../../../shared/components/ui/modal/ModalRenderer';
@@ -21,14 +19,8 @@ import ProjectTaskForm from '../components/forms/ProjectTaskForm';
 /**
  * 프로젝트 작업 칸반보드 섹션 컴포넌트
  * 프로젝트 작업을 관리하는 칸반보드를 제공
- * @param {Object} props
- * @param {Array} props.projectTaskBuckets - 프로젝트 태스크 버킷 목록
- * @param {Array} props.projectTasks - 프로젝트 태스크 목록
  */
-const ProjectTaskBoardSection = ({
-  projectTaskBuckets = [],
-  projectTasks = [],
-}) => {
+const ProjectTaskBoardSection = () => {
   // 칸반 보드 훅 사용
   const {
     buckets,
@@ -48,8 +40,7 @@ const ProjectTaskBoardSection = ({
     updateTask,
     loadTemplate,
     resetKanbanBoard,
-    syncProjectTasksToKanban, // 새로 추가된 함수 사용
-  } = useProjectTask();
+  } = useProjectTask(projectTaskInitialState);
 
   const { modalState, openModal, closeModal, handleConfirm } = useModal();
   // API 사용자 정보 조회
@@ -61,13 +52,6 @@ const ProjectTaskBoardSection = ({
     'priority_level', // 우선순위(긴급,중요,중간,낮음)
     'task_progress', // 작업진행률
   ]);
-
-  // projectTaskBuckets와 projectTasks 데이터를 kanbanSlice로 동기화
-  useEffect(() => {
-    if (projectTaskBuckets.length > 0 || projectTasks.length > 0) {
-      syncProjectTasksToKanban(projectTaskBuckets, projectTasks);
-    }
-  }, [projectTaskBuckets, projectTasks, syncProjectTasksToKanban]);
 
   /**
    * 새 버킷(컬럼) 추가 핸들러
@@ -182,6 +166,35 @@ const ProjectTaskBoardSection = ({
           </div>
         </div>
       </div>
+
+      {/* 칸반 보드 통계 요약 - 새로 추가된 부분 */}
+      {/* {buckets.length > 0 && (
+        <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 text-sm text-gray-600">
+          <div className="flex justify-between items-center">
+            <div>
+              <span className="font-medium">버킷:</span> {buckets.length}개
+            </div>
+            <div>
+              <span className="font-medium">작업:</span>{' '}
+              {buckets.reduce(
+                (acc, bucket) => acc + (bucket.tasks ? bucket.tasks.length : 0),
+                0,
+              )}
+              개
+            </div>
+            <div>
+              <span className="font-medium">완료된 작업:</span>{' '}
+              {buckets.reduce((acc, bucket) => {
+                const completedTasks = bucket.tasks
+                  ? bucket.tasks.filter((task) => task.completed)
+                  : [];
+                return acc + completedTasks.length;
+              }, 0)}
+              개
+            </div>
+          </div>
+        </div>
+      )} */}
 
       {/* 모달 렌더러 */}
       <ModalRenderer

@@ -74,11 +74,19 @@ const ACTION_CONFIG = {
     menuId: 'add',
     permissions: ['user'],
     config: {
-      components: {
-        projectChart: false,
-        projectTable: false,
-        projectAddSection: true,
+      layout: 'add',
+      sections: {
+        projectAddForm: true,
+        projectTaskBoard: true,
+        projectCharts: false,
+        projectListTable: false,
+        projectDetailTable: false,
       },
+      // components: {
+      //   projectChart: false,
+      //   projectTable: false,
+      //   projectAddSection: true,
+      // },
       drawer: {
         visible: false, // 드로어 표시 여부
       },

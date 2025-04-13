@@ -30,54 +30,6 @@ import {
 } from '../store/kanbanSlice';
 
 /**
- * 프로젝트 태스크 데이터를 칸반 보드 형식으로 변환하는 유틸리티 함수
- * @param {Array} projectTaskBuckets - 프로젝트 태스크 버킷 배열
- * @param {Array} projectTasks - 프로젝트 태스크 배열
- * @returns {Array} 칸반 보드 형식으로 변환된 버킷 배열
- */
-export const convertProjectDataToKanbanFormat = (
-  projectTaskBuckets = [],
-  projectTasks = [],
-) => {
-  if (!projectTaskBuckets.length && !projectTasks.length) return [];
-
-  // 변환된 칸반 데이터 생성
-  return projectTaskBuckets.map((bucket, index) => {
-    // 현재 버킷에 속한 태스크 필터링
-    const bucketTasks = projectTasks
-      .filter((task) => {
-        // projectTaskBucket의 id나 documentId를 사용하여 매칭
-        return (
-          (task.projectTaskBucket?.id &&
-            task.projectTaskBucket.id === bucket.id) ||
-          (task.projectTaskBucket?.documentId &&
-            task.projectTaskBucket.documentId === bucket.documentId)
-        );
-      })
-      .map((task, taskIndex) => {
-        // projectTaskBucket 키를 제외하고 필요한 속성만 추출
-        const { projectTaskBucket, ...taskWithoutBucket } = task;
-
-        return {
-          ...taskWithoutBucket,
-          position: taskIndex,
-          // 기본 필드가 없는 경우 기본값 설정
-          name: task.name || task.title || '무제',
-          task_schedule_type: task.task_schedule_type || 'ongoing',
-        };
-      });
-
-    return {
-      bucket: bucket.name,
-      id: bucket.id,
-      documentId: bucket.documentId,
-      position: bucket.position || index,
-      tasks: bucketTasks,
-    };
-  });
-};
-
-/**
  * 칸반 보드 작업 관리를 위한 커스텀 훅
  * @param {Array} initialColumns - 초기 컬럼 데이터 (첫 렌더링 시에만 사용)
  * @returns {Object} 칸반 보드 관리 함수 및 상태
@@ -103,40 +55,6 @@ const useProjectTask = (initialColumns = []) => {
       }
     };
   }, [dispatch, initialColumns, buckets.length]);
-
-  /**
-   * 프로젝트 태스크 데이터를 칸반 형식으로 변환하여 저장
-   * @param {Array} projectTaskBuckets - 프로젝트 태스크 버킷 배열
-   * @param {Array} projectTasks - 프로젝트 태스크 배열
-   */
-  const syncProjectTasksToKanban = useCallback(
-    (projectTaskBuckets = [], projectTasks = []) => {
-      if (!projectTaskBuckets.length && !projectTasks.length) return;
-
-      // 데이터 변환 로깅 (개발 모드에서만)
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('프로젝트 태스크 버킷 원본 데이터:', projectTaskBuckets);
-        console.log('프로젝트 태스크 원본 데이터:', projectTasks);
-      }
-
-      // 데이터를 칸반 형식으로 변환
-      const convertedBuckets = convertProjectDataToKanbanFormat(
-        projectTaskBuckets,
-        projectTasks,
-      );
-
-      // 변환된 데이터 로깅 (개발 모드에서만)
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('변환된 칸반 데이터:', convertedBuckets);
-      }
-
-      // 변환된 데이터를 칸반 스토어에 저장
-      if (convertedBuckets.length > 0) {
-        dispatch(setBuckets(convertedBuckets));
-      }
-    },
-    [dispatch],
-  );
 
   // 직접 버킷 설정 (기존 useProjectTask와 호환성 유지)
   const setProjectBuckets = useCallback(
@@ -380,7 +298,6 @@ const useProjectTask = (initialColumns = []) => {
 
     // 상태 설정 함수
     setProjectBuckets,
-    syncProjectTasksToKanban, // 새로 추가된 함수
 
     // 편집 관련 함수
     startEditing: startEditingTask,

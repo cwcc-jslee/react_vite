@@ -23,25 +23,21 @@ const ProjectListLayout = ({
   return (
     <>
       {/* 차트 섹션 (상태, 진행률, 트리맵) */}
-      {uiComponents.projectChart && (
-        <ProjectChartsSection
-          projectStatus={chartsData.projectStatus}
-          projectProgress={chartsData.projectProgress}
-        />
-      )}
+      <ProjectChartsSection
+        projectStatus={chartsData?.projectStatus}
+        projectProgress={chartsData?.projectProgress}
+      />
 
       {/* 테이블 섹션 */}
-      {uiComponents.projectTable && (
-        <ProjectListTableSection
-          items={items}
-          pagination={pagination}
-          loading={loading}
-          error={error}
-          handlePageChange={handlePageChange}
-          handlePageSizeChange={handlePageSizeChange}
-          loadProjectDetail={loadProjectDetail}
-        />
-      )}
+      <ProjectListTableSection
+        items={items}
+        pagination={pagination}
+        loading={loading}
+        error={error}
+        handlePageChange={handlePageChange}
+        handlePageSizeChange={handlePageSizeChange}
+        loadProjectDetail={loadProjectDetail}
+      />
     </>
   );
 };

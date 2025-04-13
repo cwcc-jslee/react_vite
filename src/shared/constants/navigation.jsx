@@ -103,7 +103,14 @@ export const PAGE_MENUS = {
       list: {
         label: '현황',
         permissions: ['user'],
+        visible: true, // 메뉴 표시 여부
         config: {
+          layout: 'list', // 레이아웃 타입
+          sections: {
+            sfaHeader: true,
+            sfaMonthlyStatus: true,
+            sfaContent: true,
+          },
           components: {
             monthlyStatus: true,
             sfaTable: true,
@@ -115,27 +122,17 @@ export const PAGE_MENUS = {
           },
         },
       },
-      // add: {
-      //   label: '매출등록',
-      //   permissions: ['user'],
-      //   config: {
-      //     components: {
-      //       monthlyStatus: true,
-      //       sfaTable: true,
-      //       searchForm: false,
-      //       forecastTable: false,
-      //     },
-      //     drawer: {
-      //       visible: true, // 드로어 표시 여부
-      //       mode: 'add',
-      //       data: null,
-      //     },
-      //   },
-      // },
       search: {
         label: '상세조회',
         permissions: ['user'],
+        visible: true,
         config: {
+          layout: 'search',
+          sections: {
+            sfaHeader: true,
+            sfaSearchForm: true,
+            sfaContent: true,
+          },
           components: {
             monthlyStatus: false,
             sfaTable: true,
@@ -150,7 +147,14 @@ export const PAGE_MENUS = {
       forecast: {
         label: '매출예측',
         permissions: ['user'],
+        visible: true,
         config: {
+          layout: 'forecast',
+          sections: {
+            sfaHeader: true,
+            sfaForecast: true,
+            sfaContent: true,
+          },
           components: {
             monthlyStatus: false,
             sfaTable: true,
@@ -171,7 +175,16 @@ export const PAGE_MENUS = {
       list: {
         label: '현황',
         permissions: ['user'],
+        visible: true,
         config: {
+          layout: 'list',
+          sections: {
+            projectCharts: true,
+            projectListTable: true,
+            projectAddForm: false,
+            projectDetailTable: false,
+            projectTaskBoard: false,
+          },
           components: {
             projectChart: true,
             projectTable: true,
@@ -199,7 +212,16 @@ export const PAGE_MENUS = {
       detail: {
         label: '상세정보',
         permissions: ['user'],
+        visible: true,
         config: {
+          layout: 'detail',
+          sections: {
+            projectDetailTable: true,
+            projectTaskBoard: true,
+            projectCharts: false,
+            projectListTable: false,
+            projectAddForm: false,
+          },
           components: {
             projectChart: false,
             projectTable: false,
@@ -220,7 +242,14 @@ export const PAGE_MENUS = {
       list: {
         label: '현황',
         permissions: ['user'],
+        visible: true,
         config: {
+          layout: 'list',
+          sections: {
+            customerHeader: true,
+            customerTable: true,
+            customerDetail: false,
+          },
           components: {
             customerTable: true,
             //   searchForm: false,
@@ -230,24 +259,17 @@ export const PAGE_MENUS = {
           },
         },
       },
-      // add: {
-      //   label: '고객등록',
-      //   permissions: ['user'],
-      //   config: {
-      //     components: {
-      //       customerTable: true,
-      //       //   searchForm: false,
-      //     },
-      //     drawer: {
-      //       visible: true, // 드로어 표시 여부
-      //       mode: 'add',
-      //     },
-      //   },
-      // },
       search: {
         label: '상세조회',
         permissions: ['user'],
+        visible: true,
         config: {
+          layout: 'search',
+          sections: {
+            customerHeader: true,
+            customerSearchForm: true,
+            customerTable: true,
+          },
           components: {
             customerTable: true,
             //   searchForm: false,
@@ -266,7 +288,15 @@ export const PAGE_MENUS = {
       list: {
         label: '현황',
         permissions: ['user'],
+        visible: true,
         config: {
+          layout: 'list',
+          sections: {
+            contactHeader: true,
+            contactSearch: true,
+            contactTable: true,
+            contactExcel: false,
+          },
           components: {
             contactSearchForm: true,
             contactTable: true,
@@ -277,25 +307,18 @@ export const PAGE_MENUS = {
           },
         },
       },
-      // add: {
-      //   label: '담당자등록',
-      //   permissions: ['user'],
-      //   config: {
-      //     components: {
-      //       contactSearchForm: true,
-      //       contactTable: true,
-      //       contactExcelUpload: false,
-      //     },
-      //     drawer: {
-      //       visible: true, // 드로어 표시 여부
-      //       mode: 'addSingle',
-      //     },
-      //   },
-      // },
       search: {
         label: '상세조회',
         permissions: ['user'],
+        visible: true,
         config: {
+          layout: 'search',
+          sections: {
+            contactHeader: true,
+            contactSearch: true,
+            contactTable: true,
+            contactExcel: false,
+          },
           components: {
             contactSearchForm: true,
             contactTable: true,
@@ -315,5 +338,14 @@ export const DEFAULT_MENU_IDS = {
   project: 'default',
   customer: 'view',
   sfa: 'list',
+  // 기타 페이지...
+};
+
+// 각 페이지의 기본 레이아웃 정의
+export const DEFAULT_LAYOUTS = {
+  project: 'list',
+  customer: 'list',
+  sfa: 'list',
+  contact: 'list',
   // 기타 페이지...
 };

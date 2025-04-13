@@ -29,6 +29,14 @@ import ProjectDrawer from '../components/drawer/ProjectDrawer';
 // 알림 서비스 추가
 import { notification } from '../../../shared/services/notification';
 
+// 레이아웃 타입 매핑
+const LAYOUT_COMPONENTS = {
+  list: ProjectListLayout,
+  add: ProjectAddLayout,
+  detail: ProjectDetailLayout,
+  // 필요시 다른 레이아웃 컴포넌트 추가
+};
+
 /**
  * Project 메인 컨테이너 컴포넌트
  * 페이지 상태 관리 및 레이아웃 조합 역할 담당
@@ -52,8 +60,15 @@ const ProjectContainer = () => {
   } = useProjectStore();
 
   // 레이아웃 관련 상태 가져오기
-  const components = useSelector((state) => state.ui.pageLayout.components);
+  // Redux 상태에서 현재 레이아웃 설정 가져오기
+  const { layout, sections, components } = useSelector(
+    (state) => state.ui.pageLayout,
+  );
   const drawer = useSelector((state) => state.ui.drawer);
+
+  // 현재 레이아웃 컴포넌트 결정
+  // 레이아웃이 없거나 매핑되지 않은 경우 기본값은 'list' 레이아웃
+  const ActiveLayout = LAYOUT_COMPONENTS[layout] || LAYOUT_COMPONENTS.list;
 
   // 프로젝트 상태 데이터 가져오기
   const { state } = useProject();
@@ -152,11 +167,50 @@ const ProjectContainer = () => {
   //   codebooks,
   // };
 
+  // 레이아웃 타입에 따라 필요한 props 구성
+  const getLayoutProps = () => {
+    const commonProps = {
+      components,
+      // ...props,
+    };
+
+    switch (layout) {
+      case 'list':
+        return {
+          ...commonProps,
+          chartsData,
+          items,
+          pagination,
+          loading,
+          error,
+          handlePageChange,
+          handlePageSizeChange,
+          loadProjectDetail,
+        };
+      case 'add':
+        return {
+          ...commonProps,
+          // 추가 레이아웃에 필요한 추가 props
+        };
+      case 'detail':
+        return {
+          ...commonProps,
+          // 상세 레이아웃에 필요한 추가 props
+        };
+      default:
+        return commonProps;
+    }
+  };
+
+  console.log(`Rendering ${layout} layout for Project page`);
+  console.log(`*******chartdata ${layout} : `, chartsData);
+
   return (
     <>
       <Section>
+        <ActiveLayout {...getLayoutProps()} />
         {/* 프로젝트 목록/현황 레이아웃 */}
-        {components.projectTable && (
+        {/* {components.listLayout && (
           <ProjectListLayout
             chartsData={chartsData}
             items={items}
@@ -168,15 +222,15 @@ const ProjectContainer = () => {
             loadProjectDetail={loadProjectDetail}
             uiComponents={components}
           />
-        )}
+        )} */}
 
         {/* 프로젝트 추가 레이아웃 */}
-        {components.projectAddSection && (
+        {/* {components.addLayout && (
           <ProjectAddLayout formProps={formProps} codebooks={codebooks} />
-        )}
+        )} */}
 
         {/* 프로젝트 상세 섹션 */}
-        {components.projectDetailSection && <ProjectDetailLayout />}
+        {/* {components.detailLayout && <ProjectDetailLayout />} */}
       </Section>
 
       {/* 프로젝트 드로어 */}
