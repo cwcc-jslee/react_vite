@@ -357,16 +357,14 @@ export const PAGE_SUB_MENUS = {
         ),
         config: {
           sections: {
-            projectDetailHeader: true,
-            projectDetailTable: true,
+            projectDetailTableSection: true,
+            projectTaskTable: true,
             projectTaskBoard: false,
-            projectTimeline: false,
-            projectChart: false,
-            projectMembers: false,
+            projectTaskTimeline: false,
+            projectTaskChart: false,
+            projectTaskMembers: false,
           },
-          components: {
-            projectDetailInfo: true,
-          },
+          components: {},
         },
       },
       board: {
@@ -383,16 +381,14 @@ export const PAGE_SUB_MENUS = {
         ),
         config: {
           sections: {
-            projectDetailHeader: true,
-            projectDetailTable: false,
+            projectDetailTableSection: true,
+            projectTaskTable: false,
             projectTaskBoard: true,
-            projectTimeline: false,
-            projectChart: false,
-            projectMembers: false,
+            projectTaskTimeline: false,
+            projectTaskChart: false,
+            projectTaskMembers: false,
           },
-          components: {
-            projectTaskBoard: true,
-          },
+          components: {},
         },
       },
       timeline: {
@@ -409,16 +405,14 @@ export const PAGE_SUB_MENUS = {
         ),
         config: {
           sections: {
-            projectDetailHeader: true,
-            projectDetailTable: false,
+            projectDetailTableSection: true,
+            projectTaskTable: false,
             projectTaskBoard: false,
-            projectTimeline: true,
-            projectChart: false,
-            projectMembers: false,
+            projectTaskTimeline: true,
+            projectTaskChart: false,
+            projectTaskMembers: false,
           },
-          components: {
-            projectTimeline: true,
-          },
+          components: {},
         },
       },
       chart: {
@@ -436,16 +430,14 @@ export const PAGE_SUB_MENUS = {
         ),
         config: {
           sections: {
-            projectDetailHeader: true,
-            projectDetailTable: false,
+            projectDetailTableSection: true,
+            projectTaskTable: false,
             projectTaskBoard: false,
-            projectTimeline: false,
-            projectChart: true,
-            projectMembers: false,
+            projectTaskTimeline: false,
+            projectTaskChart: true,
+            projectTaskMembers: false,
           },
-          components: {
-            projectChart: true,
-          },
+          components: {},
         },
       },
       members: {
@@ -462,16 +454,14 @@ export const PAGE_SUB_MENUS = {
         ),
         config: {
           sections: {
-            projectDetailHeader: true,
-            projectDetailTable: false,
+            projectDetailTableSection: true,
+            projectTaskTable: false,
             projectTaskBoard: false,
-            projectTimeline: false,
-            projectChart: false,
-            projectMembers: true,
+            projectTaskTimeline: false,
+            projectTaskChart: false,
+            projectTaskMembers: true,
           },
-          components: {
-            projectMembers: true,
-          },
+          components: {},
         },
       },
     },

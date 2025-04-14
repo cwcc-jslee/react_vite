@@ -18,6 +18,7 @@ const BreadcrumbWithMenu = ({
   currentPage = '',
   pageMenus = {},
   activeMenu = 'default',
+  subMenu = {},
 }) => {
   const dispatch = useDispatch();
   // const { subMenuActive, subMenuKey, subMenu } = useSelector(
@@ -39,9 +40,9 @@ const BreadcrumbWithMenu = ({
 
   // 현재 활성화된 하위 메뉴 그룹 가져오기
   let currentSubMenus = [];
-  const subMenuActive = true;
-  const subMenuKey = 'projectDetail';
-  const subMenu = 'table'; // table, board,
+  const subMenuActive = subMenu && Object.keys(subMenu).length > 0;
+  const subMenuKey = subMenu.key;
+  const activeSubMenu = subMenu.menu; // table, board,
   if (subMenuActive && subMenuKey && PAGE_SUB_MENUS[subMenuKey]) {
     currentSubMenus = Object.entries(PAGE_SUB_MENUS[subMenuKey].items)
       .filter(([_, value]) => value.visible !== false)
@@ -123,7 +124,7 @@ const BreadcrumbWithMenu = ({
                 onClick={() => handleSubMenuClick(subMenuItem.key)}
                 className={`px-3 py-1 rounded-md text-sm font-medium flex items-center
                     ${
-                      subMenu === subMenuItem.key
+                      activeSubMenu === subMenuItem.key
                         ? 'bg-green-100 text-green-700'
                         : 'text-gray-600 hover:bg-gray-100'
                     }

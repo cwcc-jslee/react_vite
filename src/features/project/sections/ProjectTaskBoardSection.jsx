@@ -6,7 +6,6 @@ import React, { useEffect } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import KanbanColumn from '../components/card/KanbanColumn';
 import ModalRenderer from '../../../shared/components/ui/modal/ModalRenderer';
-import { projectTaskInitialState } from '../../../shared/constants/initialFormState';
 import { apiCommon } from '../../../shared/api/apiCommon';
 
 // 커스텀 훅

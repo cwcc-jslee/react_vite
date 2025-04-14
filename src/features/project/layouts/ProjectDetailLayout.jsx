@@ -5,6 +5,7 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import ProjectDetailTableSection from '../sections/ProjectDetailTableSection';
+import ProjectTaskSection from '../sections/ProjectTaskSection';
 import ProjectTaskBoardSection from '../sections/ProjectTaskBoardSection';
 
 /**
@@ -49,12 +50,14 @@ const ProjectDetailLayout = () => {
         projectTaskBuckets={projectTaskBuckets}
         projectTasks={projectTasks}
       />
+      {/* 프로젝트 테스트 섹션 */}
+      <ProjectTaskSection />
 
       {/* 프로젝트 태스크 보드 섹션 */}
-      <ProjectTaskBoardSection
+      {/* <ProjectTaskBoardSection
         projectTaskBuckets={projectTaskBuckets}
         projectTasks={projectTasks}
-      />
+      /> */}
     </div>
   );
 };

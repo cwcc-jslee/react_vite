@@ -133,6 +133,7 @@ export const useProjectStore = () => {
           type: 'ui/changePageMenu',
           payload: {
             menuId: 'detail',
+            subMenu: { key: 'projectDetail', menu: 'table' },
             config: detailMenuConfig,
           },
         });

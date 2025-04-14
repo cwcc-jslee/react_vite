@@ -220,6 +220,7 @@ const DefaultLayout = ({ children }) => {
               currentPage={currentPage}
               pageMenus={PAGE_MENUS}
               activeMenu={pageLayout.menu}
+              subMenu={pageLayout.subMenu}
             />
           </div>
 

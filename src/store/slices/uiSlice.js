@@ -11,6 +11,7 @@ const initialState = {
   pageLayout: {
     page: null, // 현재 페이지 (ex: 'project', 'sfa')
     menu: 'default', // 현재 활성화된 메뉴
+    subMenu: {}, // 서브 메뉴 (ex {key:'projectDetail', menu:'table'})
     layout: null, // 현재 레이아웃 타입 (ex: 'list', 'detail', 'add')
     sections: {}, // 섹션 표시 상태 (계층적 구조의 중간 레벨)
     components: {}, // 개별 컴포넌트 표시 상태 (최하위 레벨)
@@ -41,6 +42,7 @@ const uiSlice = createSlice({
         defaultSections = {},
         defaultComponents = {},
         defaultMenu = 'default',
+        defaultSubMenu = {},
         defaultLayout = 'list',
       } = action.payload;
 
@@ -48,6 +50,7 @@ const uiSlice = createSlice({
       state.pageLayout.sections = defaultSections;
       state.pageLayout.components = defaultComponents;
       state.pageLayout.menu = defaultMenu;
+      state.pageLayout.subMenu = defaultSubMenu;
       state.pageLayout.layout = defaultLayout;
     },
 
@@ -133,10 +136,13 @@ const uiSlice = createSlice({
      * (메뉴에 따른 레이아웃, 섹션, 컴포넌트, 드로어 등 변경)
      */
     changePageMenu: (state, action) => {
-      const { menuId, config } = action.payload;
+      const { menuId, subMenu = {}, config } = action.payload;
 
       // 활성 메뉴 업데이트
       state.pageLayout.menu = menuId;
+
+      // 서브 메뉴 업데이트
+      state.pageLayout.subMenu = subMenu;
 
       // 레이아웃 업데이트
       if (config.layout) {
@@ -172,7 +178,10 @@ const uiSlice = createSlice({
      * 하위 메뉴 변경
      */
     changeSubMenu: (state, action) => {
+      const { subMenuId } = action.payload;
       // 구현필요
+      // 서브 메뉴 업데이트
+      state.pageLayout.subMenu.menu = subMenuId;
     },
   },
   extraReducers: (builder) => {
