@@ -1,6 +1,7 @@
 // src/features/project/layouts/ProjectAddLayout.jsx
 
 import React, { useEffect } from 'react';
+import { useCodebook } from '../../../shared/hooks/useCodebook';
 import useProjectTask from '../hooks/useProjectTask';
 import ProjectAddFormSection from '../sections/ProjectAddFormSection';
 import ProjectTaskBoardSection from '../sections/ProjectTaskBoardSection';
@@ -14,9 +15,16 @@ import ProjectTaskBoardSection from '../sections/ProjectTaskBoardSection';
  * @param {Object} props.kanbanProps - 칸반보드 관련 속성
  * @returns {JSX.Element} 프로젝트 추가 레이아웃
  */
-const ProjectAddLayout = ({ formProps, codebooks }) => {
+const ProjectAddLayout = ({ formProps }) => {
   // 칸반 보드 훅 사용
   const { resetKanbanBoard } = useProjectTask();
+  const { data: codebooks, isLoading: isLoadingCodebook } = useCodebook([
+    'priorityLevel', // 우선순위(긴급,중요,중간,낮음)
+    'taskProgress', // 작업진행률
+    'fy', // 회계년도
+    'importanceLevel', //중요도
+    'pjtStatus', // 프로젝트 상태
+  ]);
 
   useEffect(() => {
     // 컴포넌트 언마운트 시 버킷 상태 초기화
@@ -31,7 +39,7 @@ const ProjectAddLayout = ({ formProps, codebooks }) => {
       <ProjectAddFormSection {...formProps} codebooks={codebooks} />
 
       {/* 프로젝트 작업 칸반보드 섹션 */}
-      <ProjectTaskBoardSection />
+      <ProjectTaskBoardSection codebooks={codebooks} />
     </div>
   );
 };

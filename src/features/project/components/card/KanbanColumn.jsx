@@ -214,7 +214,6 @@ const KanbanColumn = ({
               return (
                 <TaskCard
                   key={actualIndex}
-                  codebooks={codebooks}
                   task={task}
                   bucketIndex={bucketIndex}
                   taskIndex={actualIndex}

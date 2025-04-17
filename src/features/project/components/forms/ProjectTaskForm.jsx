@@ -280,7 +280,7 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
             onChange={handleInputChange}
           >
             <option value="">선택하세요</option>
-            {codebooks?.priority_level?.map((item) => (
+            {codebooks?.priorityLevel?.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
               </option>
@@ -295,7 +295,7 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
             onChange={handleInputChange}
           >
             <option value="">선택하세요</option>
-            {codebooks?.task_progress?.map((item) => (
+            {codebooks?.taskProgress?.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
               </option>

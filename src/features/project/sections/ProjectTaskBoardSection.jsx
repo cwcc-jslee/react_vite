@@ -24,7 +24,7 @@ import ProjectTaskForm from '../components/forms/ProjectTaskForm';
  * @param {Array} props.projectTaskBuckets - 프로젝트 태스크 버킷 목록
  * @param {Array} props.projectTasks - 프로젝트 태스크 목록
  */
-const ProjectTaskBoardSection = () => {
+const ProjectTaskBoardSection = ({ codebooks }) => {
   // 칸반 보드 훅 사용
   const {
     buckets,
@@ -50,10 +50,10 @@ const ProjectTaskBoardSection = () => {
     apiCommon.getUsers,
   );
   // API Codebook 조회
-  const { data: codebooks, isLoading: isLoadingCodebook } = useCodebook([
-    'priority_level', // 우선순위(긴급,중요,중간,낮음)
-    'task_progress', // 작업진행률
-  ]);
+  // const { data: codebooks, isLoading: isLoadingCodebook } = useCodebook([
+  //   'priority_level', // 우선순위(긴급,중요,중간,낮음)
+  //   'task_progress', // 작업진행률
+  // ]);
 
   /**
    * 새 버킷(컬럼) 추가 핸들러

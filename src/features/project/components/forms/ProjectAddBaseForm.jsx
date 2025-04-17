@@ -185,7 +185,7 @@ const ProjectAddBaseForm = ({
               onChange={updateField}
               // disabled={isSubmitting}
             >
-              {codebooks?.pjt_status?.map((item) => (
+              {codebooks?.pjtStatus?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
@@ -200,7 +200,7 @@ const ProjectAddBaseForm = ({
               onChange={updateField}
               // disabled={isSubmitting}
             >
-              {codebooks?.importance_level?.map((item) => (
+              {codebooks?.importanceLevel?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>

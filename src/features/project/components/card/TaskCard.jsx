@@ -19,7 +19,6 @@ import ConfirmDialog from './ConfirmDialog';
  */
 const TaskCard = ({
   task,
-  codebooks,
   bucketIndex,
   taskIndex,
   startEditing,
