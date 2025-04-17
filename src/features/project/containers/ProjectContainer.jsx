@@ -101,9 +101,7 @@ const ProjectContainer = () => {
   ]);
 
   // 칸반 보드 훅 사용
-  const { buckets, loadTemplate, resetKanbanBoard } = useProjectTask(
-    projectTaskInitialState,
-  );
+  const { buckets, loadTemplate, resetKanbanBoard } = useProjectTask();
 
   /**
    * 폼 필드 업데이트 이벤트 핸들러

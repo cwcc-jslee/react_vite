@@ -24,10 +24,7 @@ import ProjectTaskForm from '../components/forms/ProjectTaskForm';
  * @param {Array} props.projectTaskBuckets - 프로젝트 태스크 버킷 목록
  * @param {Array} props.projectTasks - 프로젝트 태스크 목록
  */
-const ProjectTaskBoardSection = ({
-  projectTaskBuckets = [],
-  projectTasks = [],
-}) => {
+const ProjectTaskBoardSection = () => {
   // 칸반 보드 훅 사용
   const {
     buckets,
@@ -45,9 +42,6 @@ const ProjectTaskBoardSection = ({
     deleteColumn,
     moveColumn,
     updateTask,
-    loadTemplate,
-    resetKanbanBoard,
-    syncProjectTasksToKanban, // 새로 추가된 함수 사용
   } = useProjectTask();
 
   const { modalState, openModal, closeModal, handleConfirm } = useModal();
@@ -60,13 +54,6 @@ const ProjectTaskBoardSection = ({
     'priority_level', // 우선순위(긴급,중요,중간,낮음)
     'task_progress', // 작업진행률
   ]);
-
-  // projectTaskBuckets와 projectTasks 데이터를 kanbanSlice로 동기화
-  useEffect(() => {
-    if (projectTaskBuckets.length > 0 || projectTasks.length > 0) {
-      syncProjectTasksToKanban(projectTaskBuckets, projectTasks);
-    }
-  }, [projectTaskBuckets, projectTasks, syncProjectTasksToKanban]);
 
   /**
    * 새 버킷(컬럼) 추가 핸들러
@@ -127,18 +114,19 @@ const ProjectTaskBoardSection = ({
   };
 
   // 칸반 데이터가 유효한지 확인
-  const isKanbanDataValid = validateKanbanData();
+  // const isKanbanDataValid = validateKanbanData();
 
   return (
-    <div className="bg-white rounded-md shadow-sm">
-      <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+    <>
+      {/* <div className="bg-white rounded-md shadow-sm"> */}
+      {/* <div className="p-4 border-b border-gray-200 flex justify-between items-center">
         <h2 className="text-lg font-medium text-gray-800">프로젝트 테스크</h2>
         {!isKanbanDataValid && (
           <span className="text-xs text-amber-600">
             최소한 하나의 버킷이 필요합니다
           </span>
         )}
-      </div>
+      </div> */}
 
       {/* 칸반보드 컨테이너 */}
       <div className="flex flex-row h-full flex-grow overflow-hidden">
@@ -188,7 +176,8 @@ const ProjectTaskBoardSection = ({
         closeModal={closeModal}
         handleConfirm={handleConfirm}
       />
-    </div>
+      {/* </div> */}
+    </>
   );
 };
 

@@ -2,7 +2,7 @@
 // 프로젝트 상세 정보와 태스크를 표시하는 레이아웃 컴포넌트
 // 프로젝트 데이터를 추출하고 변환하여 하위 컴포넌트에 전달합니다
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import ProjectDetailTableSection from '../sections/ProjectDetailTableSection';
 import ProjectTaskSection from '../sections/ProjectTaskSection';
@@ -42,16 +42,21 @@ const ProjectDetailLayout = () => {
     ...projectData
   } = data || {};
 
+  console.log(`>>>> projectTaskBuckets : `, projectTaskBuckets);
+  console.log(`>>>> projectTasks : `, projectTasks);
+
   return (
     <div className="flex flex-col space-y-6">
       {/* 프로젝트 기본정보 테이블 섹션 */}
       <ProjectDetailTableSection
         data={projectData}
-        projectTaskBuckets={projectTaskBuckets}
         projectTasks={projectTasks}
       />
       {/* 프로젝트 테스트 섹션 */}
-      <ProjectTaskSection />
+      <ProjectTaskSection
+        projectTaskBuckets={projectTaskBuckets}
+        projectTasks={projectTasks}
+      />
 
       {/* 프로젝트 태스크 보드 섹션 */}
       {/* <ProjectTaskBoardSection

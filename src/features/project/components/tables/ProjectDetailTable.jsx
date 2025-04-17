@@ -31,7 +31,6 @@ const StatusBadge = ({ isCompleted }) => {
  * 프로젝트 상세 정보 테이블 컴포넌트
  * @param {Object} props
  * @param {Object} props.data - 프로젝트 상세 데이터
- * @param {Array} props.projectTaskBuckets - 프로젝트 태스크 버킷 목록
  * @param {Array} props.projectTasks - 프로젝트 태스크 목록
  */
 const ProjectDetailTable = ({ data = {}, projectTasks = [] }) => {

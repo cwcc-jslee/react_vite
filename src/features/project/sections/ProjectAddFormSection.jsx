@@ -4,22 +4,16 @@ import React, { useState, useEffect } from 'react';
 import ProjectAddBaseForm from '../components/forms/ProjectAddBaseForm';
 import { Button, Row, Col, Group } from '../../../shared/components/ui';
 
+// 커스텀훅
+import useProjectTask from '../hooks/useProjectTask';
+
 /**
  * 프로젝트 기본정보 입력 폼 섹션 컴포넌트
  * 프로젝트의 기본 정보를 입력받는 폼 컴포넌트를 포함
- *
- * @param {Object} props - 컴포넌트 속성
- * @param {Object} props.codebooks - 코드북 데이터
- * @param {Function} props.handleTemplateSelect - 템플릿 선택 핸들러
- * @param {Function} props.updateField - 필드 업데이트 핸들러
- * @param {Function} props.handleFormSubmit - 폼 제출 핸들러
- * @param {Function} props.handleReset - 폼 초기화 핸들러
- * @param {boolean} props.isSubmitting - 제출 중 상태
- * @returns {JSX.Element} 프로젝트 폼 섹션
  */
 const ProjectAddFormSection = ({
   codebooks,
-  handleTemplateSelect,
+  // handleTemplateSelect,
   updateField,
   handleFormSubmit,
   handleReset,
@@ -33,6 +27,9 @@ const ProjectAddFormSection = ({
 
   // 폼 진행 상태 추적
   const [formProgress, setFormProgress] = useState(0);
+
+  // 칸반 보드 훅 사용
+  const { buckets, loadTemplate, resetKanbanBoard } = useProjectTask();
 
   /**
    * 필수 입력 필드 검증
@@ -54,18 +51,14 @@ const ProjectAddFormSection = ({
    * 템플릿 선택 처리 확장 핸들러
    * 섹션 내에서 추가 로직 처리 후 상위 핸들러 호출
    */
-  const handleTemplateSelectExtended = (templateId) => {
-    if (templateId) {
-      setFormValidity((prev) => ({
-        ...prev,
-        isTemplateSelected: true,
-      }));
-      // 템플릿 선택 시 폼 진행률 업데이트
-      setFormProgress((prev) => Math.min(prev + 20, 100));
-    }
+  const handleTemplateSelect = async (templateId) => {
+    if (!templateId) return;
 
-    // 상위 컴포넌트의 핸들러 호출
-    handleTemplateSelect(templateId);
+    try {
+      await loadTemplate(templateId);
+    } catch (error) {
+      console.error('템플릿 로드 오류:', error);
+    }
   };
 
   /**
@@ -140,7 +133,7 @@ const ProjectAddFormSection = ({
       <div className="p-4">
         <ProjectAddBaseForm
           codebooks={codebooks}
-          handleTemplateSelect={handleTemplateSelectExtended}
+          handleTemplateSelect={handleTemplateSelect}
           updateField={handleFieldChangeExtended}
           isSubmitting={isSubmitting}
         />

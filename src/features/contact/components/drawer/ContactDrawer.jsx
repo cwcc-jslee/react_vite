@@ -21,14 +21,8 @@ const ContactDrawer = ({ drawer }) => {
     data: codebooks,
     isLoading,
     error,
-  } = useCodebook(['sfa_sales_type', 'sfa_classification']);
-  const sfaSalesTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
-  const sfaClassificationData = useSelector(
-    selectCodebookByType('sfa_classification'),
-  );
+  } = useCodebook(['sfaSalesType', 'sfaClassification']);
 
-  // const { drawerState, setDrawer, setDrawerClose } = useContact();
-  // const { visible, baseMode, subMode, data } = drawerState;
   const { visible, mode, featureMode, data } = drawer;
 
   const setDrawerClose = () => {

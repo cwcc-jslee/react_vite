@@ -1,6 +1,7 @@
 // src/features/project/layouts/ProjectAddLayout.jsx
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import useProjectTask from '../hooks/useProjectTask';
 import ProjectAddFormSection from '../sections/ProjectAddFormSection';
 import ProjectTaskBoardSection from '../sections/ProjectTaskBoardSection';
 
@@ -14,6 +15,16 @@ import ProjectTaskBoardSection from '../sections/ProjectTaskBoardSection';
  * @returns {JSX.Element} 프로젝트 추가 레이아웃
  */
 const ProjectAddLayout = ({ formProps, codebooks }) => {
+  // 칸반 보드 훅 사용
+  const { resetKanbanBoard } = useProjectTask();
+
+  useEffect(() => {
+    // 컴포넌트 언마운트 시 버킷 상태 초기화
+    return () => {
+      resetKanbanBoard();
+    };
+  }, [resetKanbanBoard]);
+
   return (
     <div className="flex flex-col space-y-6">
       {/* 프로젝트 기본정보 입력 폼 섹션 */}

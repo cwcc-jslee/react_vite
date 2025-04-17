@@ -157,7 +157,7 @@ const EditableCustomerDetailTable = ({
             onChange={(e) => setSelectedFunnel(e.target.value)}
           >
             <option value="">유입경로 선택</option>
-            {codebooks?.co_funnel?.map((item) => (
+            {codebooks?.coFunnel?.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
               </option>
@@ -223,7 +223,7 @@ const EditableCustomerDetailTable = ({
             </DescriptionItem>
             <DescriptionItem>
               {editingSection === 'basic'
-                ? renderSelectField('coClassification', 'co_classification')
+                ? renderSelectField('coClassification', 'coClassification')
                 : data.co_classification?.name || '-'}
             </DescriptionItem>
           </DescriptionRow>
@@ -235,7 +235,7 @@ const EditableCustomerDetailTable = ({
             </DescriptionItem>
             <DescriptionItem>
               {editingSection === 'basic'
-                ? renderSelectField('businessScale', 'business_scale')
+                ? renderSelectField('businessScale', 'businessScale')
                 : data.business_scale?.name || '-'}
             </DescriptionItem>
             <DescriptionItem label width="w-[140px]">
@@ -353,7 +353,7 @@ const EditableCustomerDetailTable = ({
             <DescriptionItem>
               {editingSection === 'company' ? (
                 <div className="flex flex-wrap items-center gap-4">
-                  {codebooks?.business_type?.map((type) => (
+                  {codebooks?.businessType?.map((type) => (
                     <div key={type.id} className="flex items-center space-x-2">
                       <Checkbox
                         name={`businessType_${type.id}`}
@@ -372,8 +372,8 @@ const EditableCustomerDetailTable = ({
                     </div>
                   ))}
                 </div>
-              ) : data.business_type && data.business_type.length > 0 ? (
-                data.business_type.map((type) => type.name).join(', ')
+              ) : data.businessType && data.businessType.length > 0 ? (
+                data.businessType.map((type) => type.name).join(', ')
               ) : (
                 '-'
               )}
@@ -527,7 +527,7 @@ const EditableCustomerDetailTable = ({
               {editingSection === 'support' ? (
                 <div className="flex flex-wrap items-center gap-4">
                   {/* 지원사업 옵션 */}
-                  {codebooks?.support_program?.map((program) => (
+                  {codebooks?.supportProgram?.map((program) => (
                     <div
                       key={program.id}
                       className="flex items-center space-x-2"
@@ -549,8 +549,8 @@ const EditableCustomerDetailTable = ({
                     </div>
                   ))}
                 </div>
-              ) : data.support_program && data.support_program.length > 0 ? (
-                data.support_program.map((program) => program.name).join(', ')
+              ) : data.supportProgram && data.supportProgram.length > 0 ? (
+                data.supportProgram.map((program) => program.name).join(', ')
               ) : (
                 '-'
               )}

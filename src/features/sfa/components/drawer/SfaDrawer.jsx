@@ -27,14 +27,14 @@ const SfaDrawer = ({ drawer }) => {
   const dispatch = useDispatch();
   // Codebook 데이터 조회
   const {
-    data: codebook,
+    data: codebooks,
     isLoading,
     error,
-  } = useCodebook(['sfa_sales_type', 'sfa_classification']);
-  const sfaSalesTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
-  const sfaClassificationData = useSelector(
-    selectCodebookByType('sfa_classification'),
-  );
+  } = useCodebook(['sfaSalesType', 'sfaClassification']);
+  // const sfaSalesTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
+  // const sfaClassificationData = useSelector(
+  //   selectCodebookByType('sfa_classification'),
+  // );
   const { togglePaymentSelection, resetPaymentForm } = useSfaForm(); // Custom hook을 통한 form 관련 로직 분리
 
   // const { drawerState, setDrawer } = useSfa();
@@ -113,7 +113,7 @@ const SfaDrawer = ({ drawer }) => {
   // ViewContent 컴포넌트 - 조회 모드 UI
   const AddContent = () => (
     <SfaAddForm
-      codebook={codebook}
+      codebooks={codebooks}
       // sfaSalesTypeData={sfaSalesTypeData}
       // sfaClassificationData={sfaClassificationData}
     />
@@ -139,10 +139,11 @@ const SfaDrawer = ({ drawer }) => {
     <>
       <h1>기본정보수정</h1>
       <EditableSfaDetail
+        codebooks={codebooks}
         data={data}
         featureMode={featureMode}
-        sfaSalesTypeData={sfaSalesTypeData}
-        sfaClassificationData={sfaClassificationData}
+        // sfaSalesTypeData={sfaSalesTypeData}
+        // sfaClassificationData={sfaClassificationData}
         // onUpdate={handleFieldUpdate}
       />
 

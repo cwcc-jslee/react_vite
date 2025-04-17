@@ -249,25 +249,30 @@ const kanbanSlice = createSlice({
     resetKanban: (state) => {
       return {
         ...initialState,
-        buckets: [
-          {
-            bucket: '할 일',
-            tasks: [],
-            position: 0,
-          },
-          {
-            bucket: '진행 중',
-            tasks: [],
-            position: 1,
-          },
-          {
-            bucket: '완료',
-            tasks: [],
-            position: 2,
-          },
-        ],
       };
     },
+    // resetKanban: (state) => {
+    //   return {
+    //     ...initialState,
+    //     buckets: [
+    //       {
+    //         bucket: '할 일',
+    //         tasks: [],
+    //         position: 0,
+    //       },
+    //       {
+    //         bucket: '진행 중',
+    //         tasks: [],
+    //         position: 1,
+    //       },
+    //       {
+    //         bucket: '완료',
+    //         tasks: [],
+    //         position: 2,
+    //       },
+    //     ],
+    //   };
+    // },
   },
   extraReducers: (builder) => {
     builder;

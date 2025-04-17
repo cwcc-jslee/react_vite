@@ -1,6 +1,6 @@
 // src/features/project/components/tables/ProjectTaskTable.jsx
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Checkbox,
   Badge,
@@ -14,21 +14,9 @@ import { FiCheckSquare, FiClock, FiCalendar } from 'react-icons/fi';
 /**
  * 프로젝트 작업 테이블 컴포넌트
  * 프로젝트의 작업 목록을 테이블 형태로 표시
- *
- * @param {Object} props - 컴포넌트 속성
- * @param {Array} props.tasks - 작업 목록 데이터
- * @param {Object} props.pagination - 페이지네이션 정보
- * @param {boolean} props.loading - 로딩 상태
- * @param {string} props.error - 에러 메시지
- * @param {Function} props.handlePageChange - 페이지 변경 핸들러
- * @param {Function} props.handlePageSizeChange - 페이지 크기 변경 핸들러
- * @param {Function} props.onTaskComplete - 작업 완료 상태 변경 핸들러
- * @param {Function} props.onTaskEdit - 작업 편집 핸들러
- * @returns {JSX.Element} 프로젝트 작업 테이블
  */
 const ProjectTaskTable = ({
-  tasks = [],
-  pagination = { current: 1, pageSize: 10, total: 0 },
+  buckets = [],
   loading = false,
   error = null,
   handlePageChange = () => {},
@@ -36,6 +24,21 @@ const ProjectTaskTable = ({
   onTaskComplete = () => {},
   onTaskEdit = () => {},
 }) => {
+  // 모든 버킷의 작업을 하나의 배열로 통합
+  const allTasks = useMemo(() => {
+    const tasks = [];
+    buckets.forEach((bucket) => {
+      // 각 작업에 bucket 이름 추가
+      const tasksWithBucket = bucket.tasks.map((task) => ({
+        ...task,
+        bucket: bucket.bucket, // 버킷 이름 추가
+        bucketId: bucket.id, // 버킷 ID 추가
+      }));
+      tasks.push(...tasksWithBucket);
+    });
+    return tasks;
+  }, [buckets]);
+
   // 우선순위에 따른 배지 색상 결정
   const getPriorityColor = (priority) => {
     switch (priority?.toLowerCase()) {
@@ -53,6 +56,9 @@ const ProjectTaskTable = ({
         return 'bg-gray-500';
     }
   };
+
+  console.log(`==== buckets `, buckets);
+  console.log(`==== allTasks `, allTasks);
 
   // 날짜 포맷팅 함수
   const formatDate = (dateString) => {
@@ -164,10 +170,10 @@ const ProjectTaskTable = ({
               <LoadingState />
             ) : error ? (
               <ErrorState message={error} />
-            ) : !tasks?.length ? (
+            ) : !allTasks?.length ? (
               <EmptyState />
             ) : (
-              tasks.map((task, index) => (
+              allTasks.map((task, index) => (
                 <tr
                   key={task.id || index}
                   className={`hover:bg-gray-50 ${
@@ -175,15 +181,12 @@ const ProjectTaskTable = ({
                   }`}
                 >
                   {/* 순번 */}
-                  <td className="px-3 py-2 text-center text-sm">
-                    {(pagination.current - 1) * pagination.pageSize + index + 1}
-                  </td>
-
+                  <td className="px-3 py-2 text-center text-sm">{index + 1}</td>
                   {/* 완료 체크박스 */}
                   <td className="px-3 py-2 text-center">
                     <Checkbox
                       checked={task.completed}
-                      onChange={() => onTaskComplete(task.id, !task.completed)}
+                      // onChange={() => onTaskComplete(task.id, !task.completed)}
                     />
                   </td>
 
@@ -247,25 +250,77 @@ const ProjectTaskTable = ({
 
                   {/* 시작일 */}
                   <td className="px-3 py-2 text-center text-sm">
-                    {formatDate(task.startDate)}
+                    <Tooltip
+                      content={
+                        <>
+                          {task.startDate && (
+                            <div>확정: {formatDate(task.startDate)}</div>
+                          )}
+                          {task.planStartDate && (
+                            <div>예정: {formatDate(task.planStartDate)}</div>
+                          )}
+                        </>
+                      }
+                    >
+                      <span
+                        className={`inline-flex items-center ${
+                          task.startDate
+                            ? 'text-gray-900'
+                            : 'text-gray-500 italic'
+                        }`}
+                      >
+                        {formatDate(task.startDate || task.planStartDate)}
+                        {!task.startDate && task.planStartDate && (
+                          <span className="ml-1 text-xs text-gray-500">
+                            (예)
+                          </span>
+                        )}
+                      </span>
+                    </Tooltip>
                   </td>
 
                   {/* 완료일 */}
                   <td className="px-3 py-2 text-center text-sm">
-                    {formatDate(task.endDate)}
+                    <Tooltip
+                      content={
+                        <>
+                          {task.endDate && (
+                            <div>확정: {formatDate(task.endDate)}</div>
+                          )}
+                          {task.plannedEndDate && (
+                            <div>예정: {formatDate(task.planEndDate)}</div>
+                          )}
+                        </>
+                      }
+                    >
+                      <span
+                        className={`inline-flex items-center ${
+                          task.endDate
+                            ? 'text-gray-900'
+                            : 'text-gray-500 italic'
+                        }`}
+                      >
+                        {formatDate(task.endDate || task.planEndDate)}
+                        {!task.endDate && task.planEndDate && (
+                          <span className="ml-1 text-xs text-gray-500">
+                            (예)
+                          </span>
+                        )}
+                      </span>
+                    </Tooltip>
                   </td>
 
                   {/* 기간 */}
                   <td className="px-3 py-2 text-center text-sm">
-                    {calculateDuration(task.startDate, task.endDate)}
+                    {calculateDuration(task.planStartDate, task.planEndDate)}
                   </td>
 
                   {/* 작업시간 */}
                   <td className="px-3 py-2 text-center text-sm">
-                    {task.workHours ? (
+                    {task.totalWorkHours ? (
                       <div className="flex items-center justify-center gap-1">
                         <FiClock className="text-gray-500" size={14} />
-                        <span>{task.workHours}h</span>
+                        <span>{task.totalWorkHours}h</span>
                       </div>
                     ) : (
                       '-'
@@ -275,7 +330,11 @@ const ProjectTaskTable = ({
                   {/* 완료% */}
                   <td className="px-3 py-2">
                     <Progress
-                      percent={task.progress || 0}
+                      percent={
+                        typeof task.taskProgress?.name === 'string'
+                          ? parseInt(task.taskProgress.name, 10) // 10은 10진법
+                          : task.taskProgress?.name || 0
+                      }
                       size="sm"
                       showInfo={true}
                     />
@@ -283,12 +342,12 @@ const ProjectTaskTable = ({
 
                   {/* 우선순위 */}
                   <td className="px-3 py-2 text-center">
-                    {task.priority ? (
+                    {task.priorityLevel ? (
                       <Badge
                         className={`${getPriorityColor(
                           task.priority,
                         )} text-white`}
-                        label={task.priority}
+                        label={task.priorityLevel}
                       />
                     ) : (
                       '-'
@@ -300,17 +359,6 @@ const ProjectTaskTable = ({
           </tbody>
         </table>
       </div>
-
-      {/* 페이지네이션 */}
-      {!loading && !error && tasks?.length > 0 && (
-        <Pagination
-          current={pagination.current}
-          pageSize={pagination.pageSize}
-          total={pagination.total}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-        />
-      )}
     </Card>
   );
 };

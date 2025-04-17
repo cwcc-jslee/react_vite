@@ -22,7 +22,7 @@ import {
   Message,
 } from '../../../../../shared/components/ui';
 
-const SfaAddForm = ({ codebook, sfaSalesTypeData, sfaClassificationData }) => {
+const SfaAddForm = ({ codebooks }) => {
   const {
     formData,
     errors,
@@ -134,7 +134,7 @@ const SfaAddForm = ({ codebook, sfaSalesTypeData, sfaClassificationData }) => {
               error={errors.sfaSalesType}
             >
               <option value="">선택하세요</option>
-              {codebook.sfa_sales_type?.map((item) => (
+              {codebooks.sfaSalesType?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
@@ -152,7 +152,7 @@ const SfaAddForm = ({ codebook, sfaSalesTypeData, sfaClassificationData }) => {
               error={errors.sfaClassification}
             >
               <option value="">선택하세요</option>
-              {codebook.sfa_classification?.map((item) => (
+              {codebooks.sfaClassification?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>

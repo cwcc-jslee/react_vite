@@ -35,7 +35,7 @@ const SalesByPayment = ({
     data: codebooks,
     isLoading: isLoadingCodebook,
     error,
-  } = useCodebook(['re_payment_method', 'sfa_percentage']);
+  } = useCodebook(['rePaymentMethod', 'sfaPercentage']);
 
   // 이익/마진 금액 자동 계산 useEffect 수정
   useEffect(() => {
@@ -174,7 +174,7 @@ const SalesByPayment = ({
               required
             >
               <option value="">결제구분 선택</option>
-              {codebooks?.re_payment_method?.map((method) => (
+              {codebooks?.rePaymentMethod?.map((method) => (
                 <option key={method.id} value={method.code}>
                   {method.name}
                 </option>
@@ -199,7 +199,7 @@ const SalesByPayment = ({
               }
             >
               <option value="">매출확률 선택</option>
-              {codebooks?.sfa_percentage?.map((percent) => (
+              {codebooks?.sfaPercentage?.map((percent) => (
                 <option key={percent.id} value={percent.code}>
                   {percent.name}
                 </option>

@@ -31,18 +31,18 @@ import {
 
 /**
  * 프로젝트 태스크 데이터를 칸반 보드 형식으로 변환하는 유틸리티 함수
- * @param {Array} projectTaskBuckets - 프로젝트 태스크 버킷 배열
+ * @param {Array} taskBuckets - 프로젝트 태스크 버킷 배열
  * @param {Array} projectTasks - 프로젝트 태스크 배열
  * @returns {Array} 칸반 보드 형식으로 변환된 버킷 배열
  */
 export const convertProjectDataToKanbanFormat = (
-  projectTaskBuckets = [],
+  taskBuckets = [],
   projectTasks = [],
 ) => {
-  if (!projectTaskBuckets.length && !projectTasks.length) return [];
+  if (!taskBuckets.length && !projectTasks.length) return [];
 
   // 변환된 칸반 데이터 생성
-  return projectTaskBuckets.map((bucket, index) => {
+  return taskBuckets.map((bucket, index) => {
     // 현재 버킷에 속한 태스크 필터링
     const bucketTasks = projectTasks
       .filter((task) => {
@@ -106,22 +106,22 @@ const useProjectTask = (initialColumns = []) => {
 
   /**
    * 프로젝트 태스크 데이터를 칸반 형식으로 변환하여 저장
-   * @param {Array} projectTaskBuckets - 프로젝트 태스크 버킷 배열
+   * @param {Array} taskBuckets - 프로젝트 태스크 버킷 배열
    * @param {Array} projectTasks - 프로젝트 태스크 배열
    */
   const syncProjectTasksToKanban = useCallback(
-    (projectTaskBuckets = [], projectTasks = []) => {
-      if (!projectTaskBuckets.length && !projectTasks.length) return;
+    (taskBuckets = [], projectTasks = []) => {
+      if (!taskBuckets.length && !projectTasks.length) return;
 
       // 데이터 변환 로깅 (개발 모드에서만)
       if (process.env.NODE_ENV !== 'production') {
-        console.log('프로젝트 태스크 버킷 원본 데이터:', projectTaskBuckets);
+        console.log('프로젝트 태스크 버킷 원본 데이터:', taskBuckets);
         console.log('프로젝트 태스크 원본 데이터:', projectTasks);
       }
 
       // 데이터를 칸반 형식으로 변환
       const convertedBuckets = convertProjectDataToKanbanFormat(
-        projectTaskBuckets,
+        taskBuckets,
         projectTasks,
       );
 

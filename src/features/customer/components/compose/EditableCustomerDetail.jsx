@@ -24,11 +24,11 @@ const EditableCustomerDetail = ({ data, onUpdate, editable = true }) => {
     isLoading: isLoadingCodebook,
     error,
   } = useCodebook([
-    'co_classification',
-    'business_scale',
-    'co_funnel',
+    'coClassification',
+    'businessScale',
+    'coFunnel',
     'employee',
-    'business_type',
+    'businessType',
     'region',
   ]);
 

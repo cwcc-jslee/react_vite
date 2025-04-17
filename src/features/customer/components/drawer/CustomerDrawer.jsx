@@ -25,17 +25,13 @@ const CustomerDrawer = ({ drawer }) => {
     isLoading: isLoadingCodebook,
     error,
   } = useCodebook([
-    'co_classification',
-    'business_scale',
-    'co_funnel',
+    'coClassification',
+    'businessScale',
+    'coFunnel',
     'employee',
-    'business_type',
+    'businessType',
     'region',
   ]);
-  const sfaSalesTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
-  const sfaClassificationData = useSelector(
-    selectCodebookByType('sfa_classification'),
-  );
   //   const { togglePaymentSelection, resetPaymentForm } = useSfaForm(); // Custom hook을 통한 form 관련 로직 분리
 
   // const { drawerState, setDrawer, setDrawerClose } = useCustomer();

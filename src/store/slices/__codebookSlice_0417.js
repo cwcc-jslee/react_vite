@@ -5,11 +5,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { apiClient } from '../../shared/api/apiService';
 import { buildMultipleCodebookTypesQuery } from '../../shared/api/queries';
-import {
-  camelToSnakeCase,
-  snakeToCamelCase,
-  convertKeysToCamelCase,
-} from '../../shared/utils/transformUtils';
+import { convertKeysToCamelCase } from '../../shared/utils/transformUtils';
 
 // 단일 코드북 타입 데이터를 가져오는 비동기 액션
 export const fetchCodebookByType = createAsyncThunk(
@@ -17,9 +13,7 @@ export const fetchCodebookByType = createAsyncThunk(
   async (codeType, { rejectWithValue }) => {
     try {
       console.log(`Fetching codebook for type: ${codeType}`);
-      // codeType을 스네이크 케이스로 변환
-      const snakeCaseType = camelToSnakeCase(codeType);
-      const query = buildMultipleCodebookTypesQuery([snakeCaseType]);
+      const query = buildMultipleCodebookTypesQuery([codeType]);
       console.log('Built query:', query);
 
       const response = await apiClient.get(`/codebooks?${query}`);
@@ -35,7 +29,7 @@ export const fetchCodebookByType = createAsyncThunk(
         code: item.code,
         name: item.name,
         sort: item.sort,
-        // type: snakeToCamelCase(item.codetype.type),
+        type: item.codetype.type,
       }));
 
       console.log(`Processed ${items.length} items for type ${codeType}`);
@@ -76,9 +70,7 @@ export const fetchCodebooksByTypes = createAsyncThunk(
       }
 
       console.log('Fetching these codebook types:', typesToFetch);
-      // 타입명을 스네이크 케이스로 변환
-      const snakeCaseTypes = typesToFetch.map((type) => camelToSnakeCase(type));
-      const query = buildMultipleCodebookTypesQuery(snakeCaseTypes);
+      const query = buildMultipleCodebookTypesQuery(typesToFetch);
       console.log('Built query:', query);
 
       const response = await apiClient.get(`/codebooks?${query}`);
@@ -90,7 +82,7 @@ export const fetchCodebooksByTypes = createAsyncThunk(
 
       // API 응답 데이터를 codetype별로 그룹화
       const groupedData = response.data.data.reduce((acc, item) => {
-        const type = snakeToCamelCase(item.codetype.type);
+        const type = item.codetype.type;
 
         if (!acc[type]) {
           acc[type] = { data: [] };
@@ -101,7 +93,7 @@ export const fetchCodebooksByTypes = createAsyncThunk(
           code: item.code,
           name: item.name,
           sort: item.sort,
-          // type: type,
+          type: type,
         });
 
         return acc;
@@ -162,7 +154,7 @@ const codebookSlice = createSlice({
         console.log(`Codebook fetch pending for type: ${codeType}`);
 
         state.status = 'loading';
-        // 현재 로딩 중인 타입에 추가 (camelCase 유지)
+        // 현재 로딩 중인 타입에 추가
         if (!state.pendingTypes.includes(codeType)) {
           state.pendingTypes.push(codeType);
         }
@@ -171,8 +163,8 @@ const codebookSlice = createSlice({
         const { type, data } = action.payload;
         console.log(`Codebook fetch fulfilled for type: ${type}`, data);
 
-        // 코드북 데이터 저장 시 camelCase로 변환
-        state.typeSpecificData[type] = convertKeysToCamelCase(data);
+        // 코드북 데이터 저장
+        state.typeSpecificData[type] = data;
 
         // 로드된 타입에 추가
         if (!state.loadedTypes.includes(type)) {
@@ -238,7 +230,7 @@ const codebookSlice = createSlice({
         // 코드북 데이터 저장
         state.typeSpecificData = {
           ...state.typeSpecificData,
-          ...convertKeysToCamelCase(data),
+          ...data,
         };
 
         // 로드된 타입에 추가하고 로딩 중인 타입에서 제거

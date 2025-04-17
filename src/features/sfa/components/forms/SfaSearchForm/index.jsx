@@ -23,16 +23,16 @@ const SfaSearchForm = () => {
   const { updateDetailFilter } = useSfaSearchFilter();
 
   const {
-    data: codebook,
+    data: codebooks,
     isLoading,
     error,
   } = useCodebook([
-    're_payment_method',
-    'sfa_percentage',
-    'sfa_sales_type',
-    'sfa_classification',
+    'rePaymentMethod',
+    'sfaPercentage',
+    'sfaSalesType',
+    'sfaClassification',
   ]);
-  console.log(`>> SFA useCodebook : `, codebook);
+  console.log(`>> SFA useCodebook : `, codebooks);
 
   const INITFORMDATA = {
     name: '',
@@ -148,7 +148,7 @@ const SfaSearchForm = () => {
               onChange={handleInputChange}
             >
               <option value="">선택하세요</option>
-              {codebook?.sfa_classification?.map((item) => (
+              {codebooks?.sfaClassification?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
@@ -164,7 +164,7 @@ const SfaSearchForm = () => {
               onChange={handleInputChange}
             >
               <option value="">선택하세요</option>
-              {codebook?.sfa_sales_type?.map((item) => (
+              {codebooks?.sfaSalesType?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
@@ -211,7 +211,7 @@ const SfaSearchForm = () => {
             >
               <option value="">선택하세요</option>
               <option value="confirmed">확정</option>
-              {codebook.sfa_percentage?.map((item) => (
+              {codebooks.sfaPercentage?.map((item) => (
                 <option key={item.id} value={item.name}>
                   {item.name}
                 </option>
@@ -257,7 +257,7 @@ const SfaSearchForm = () => {
               onChange={handleInputChange}
             >
               <option value="">선택하세요</option>
-              {codebook.re_payment_method?.map((item) => (
+              {codebooks.rePaymentMethod?.map((item) => (
                 <option key={item.id} value={item.name}>
                   {item.name}
                 </option>

@@ -74,13 +74,13 @@ const CoFunnelInput = ({
     }
 
     // 코드북 데이터가 없는 경우 처리
-    if (!codebooks?.co_funnel) {
+    if (!codebooks?.coFunnel) {
       console.log('코드북 데이터가 아직 로드되지 않았습니다.');
       return;
     }
 
     // 타입 변환을 통한 비교 (문자열 id와 숫자 id 모두 처리)
-    const funnelItem = codebooks.co_funnel.find(
+    const funnelItem = codebooks.coFunnel.find(
       (item) => String(item.id) === String(selectedFunnel),
     );
 
@@ -155,7 +155,7 @@ const CoFunnelInput = ({
                 : '유입경로 선택'}
             </option>
             {!isMaxLimitReached &&
-              codebooks?.co_funnel?.map((item) => (
+              codebooks?.coFunnel?.map((item) => (
                 <option key={item.id} value={String(item.id)}>
                   {item.name}
                 </option>

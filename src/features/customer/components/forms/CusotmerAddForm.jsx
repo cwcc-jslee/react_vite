@@ -6,7 +6,6 @@
 
 import React from 'react';
 import CustomerSearchInput from '../../../../shared/components/customer/CustomerSearchInput';
-import { useCodebook } from '../../../../shared/hooks/useCodebook';
 import {
   Form,
   FormItem,
@@ -180,7 +179,7 @@ const CustomerAddForm = ({ codebooks, isLoadingCodebook }) => {
               disabled={isSubmitting}
             >
               <option value="">선택하세요</option>
-              {codebooks?.co_classification?.map((item) => (
+              {codebooks?.coClassification?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
@@ -198,7 +197,7 @@ const CustomerAddForm = ({ codebooks, isLoadingCodebook }) => {
               disabled={isSubmitting}
             >
               <option value="">선택하세요</option>
-              {codebooks?.business_scale?.map((item) => (
+              {codebooks?.businessScale?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>
@@ -253,7 +252,7 @@ const CustomerAddForm = ({ codebooks, isLoadingCodebook }) => {
           <FormItem direction="vertical" className="flex-1">
             <Label className="text-left">업태 (다중선택)</Label>
             <div className="flex flex-wrap items-center gap-4">
-              {codebooks?.business_type?.map((type) => (
+              {codebooks?.businessType?.map((type) => (
                 <div key={type.id} className="flex items-center space-x-2">
                   <Checkbox
                     name={`businessType_${type.id}`}
