@@ -22,7 +22,6 @@ import ConfirmDialog from './ConfirmDialog';
  *
  */
 const KanbanColumn = ({
-  codebooks,
   bucket,
   bucketIndex,
   totalColumns,

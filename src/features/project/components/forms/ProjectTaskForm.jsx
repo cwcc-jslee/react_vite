@@ -70,10 +70,12 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
   // 새 체크리스트 항목을 위한 상태
   const [newChecklistItem, setNewChecklistItem] = useState('');
 
-  const isScheduled = taskFormData.taskScheduleType;
+  const isScheduled = taskFormData.taskScheduleType === 'scheduled';
 
   // 체크리스트 통계
   const checklistStats = getChecklistStats();
+
+  console.log(`==== task ==== : `, task);
 
   // 체크리스트 입력 핸들러
   const handleNewChecklistItemKeyDown = (e) => {
@@ -268,15 +270,25 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
         <FormItem direction="vertical" className="flex-1">
           <Label className="text-left">작업일정 구분</Label>
           <Switch
-            checked={taskFormData.taskScheduleType}
+            // checked={taskFormData.taskScheduleType}
+            // onChange={handleSwitchChange}
+            checked={taskFormData.taskScheduleType === 'scheduled'}
             onChange={handleSwitchChange}
+            // onChange={() => {
+            //   updateField(
+            //     'taskScheduleType',
+            //     taskFormData.taskScheduleType === 'scheduled'
+            //       ? 'ongoing'
+            //       : 'scheduled',
+            //   );
+            // }}
           />
         </FormItem>
         <FormItem direction="vertical" className="flex-1">
           <Label className="text-left">우선순위</Label>
           <Select
             name="priorityLevel"
-            value={taskFormData?.priorityLevel}
+            value={taskFormData?.priorityLevel?.id}
             onChange={handleInputChange}
           >
             <option value="">선택하세요</option>
@@ -291,7 +303,7 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
           <Label className="text-left">진행상태</Label>
           <Select
             name="taskProgress"
-            value={taskFormData?.taskProgress}
+            value={taskFormData?.taskProgress?.id}
             onChange={handleInputChange}
           >
             <option value="">선택하세요</option>

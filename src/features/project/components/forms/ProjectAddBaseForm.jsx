@@ -54,13 +54,6 @@ const ProjectAddBaseForm = ({
   const { data: taskTempleteData, isLoading: isTaskTempleteLoading } =
     useSelectData(projectApiService.getTaskTemplate);
 
-  // 템플릿 상세 정보 조회
-  // const {
-  //   data: templateDetailData,
-  //   isLoading: isTemplateDetailLoading,
-  //   refetch: refetchTemplateDetail,
-  // } = useSelectData(projectApiService.getTaskTemplate, selectedTemplateId);
-
   const { data: teamsData, isLoading: isTeamsLoading } = useSelectData(
     apiCommon.getTeams,
   );
@@ -81,19 +74,20 @@ const ProjectAddBaseForm = ({
 
   // 팀 옵션 목록 생성
   const teamOptions = [
-    { value: '', label: '선택하세요' },
+    { id: '', name: '선택하세요' },
     ...(teamsData?.data || []).map((team) => ({
-      value: team?.id?.toString() || '',
-      label: team?.name || '이름 없음',
+      id: team?.id?.toString() || '',
+      code: team?.code?.toString() || '',
+      name: team?.name || '이름 없음',
     })),
   ];
 
   // 서비스 옵션 목록 생성 (코드북 아이템 특수 구조 처리)
   const serviceOptions = [
-    { value: '', label: '선택하세요' },
+    { id: '', name: '선택하세요' },
     ...(serviceData?.data?.[0]?.structure || []).map((item) => ({
-      value: item?.id?.toString() || '',
-      label: item?.name || '이름 없음',
+      id: item?.id?.toString() || '',
+      name: item?.name || '이름 없음',
     })),
   ];
 
@@ -161,8 +155,17 @@ const ProjectAddBaseForm = ({
             </Label>
             <Select
               name="fy"
-              value={formData.fy}
-              onChange={updateField}
+              value={formData.fy?.id}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                // id를 이용해 전체 객체 찾기
+                // id 값이 숫자로 저장되어 있을 경우를 대비해 두 가지 비교 시도
+                const selectedItem = codebooks?.fy?.find(
+                  (item) =>
+                    item.id === selectedId || item.id === Number(selectedId),
+                );
+                updateField('fy', selectedItem);
+              }}
               // disabled={isSubmitting}
             >
               <option value="">선택하세요</option>
@@ -181,8 +184,15 @@ const ProjectAddBaseForm = ({
             <Label className="text-left">상태</Label>
             <Select
               name="pjtStatus"
-              value={formData.pjtStatus}
-              onChange={updateField}
+              value={formData.pjtStatus?.id}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                const selectedItem = codebooks?.pjtStatus?.find(
+                  (item) =>
+                    item.id === selectedId || item.id === Number(selectedId),
+                );
+                updateField('pjtStatus', selectedItem);
+              }}
               // disabled={isSubmitting}
             >
               {codebooks?.pjtStatus?.map((item) => (
@@ -196,9 +206,16 @@ const ProjectAddBaseForm = ({
             <Label className="text-left">중요도</Label>
             <Select
               name="importanceLevel"
-              value={formData.importanceLevel}
-              onChange={updateField}
+              value={formData.importanceLevel?.id}
               // disabled={isSubmitting}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                const selectedItem = codebooks?.importanceLevel?.find(
+                  (item) =>
+                    item.id === selectedId || item.id === Number(selectedId),
+                );
+                updateField('importanceLevel', selectedItem);
+              }}
             >
               {codebooks?.importanceLevel?.map((item) => (
                 <option key={item.id} value={item.id}>
@@ -215,12 +232,19 @@ const ProjectAddBaseForm = ({
             </Label>
             <Select
               name="service"
-              value={formData.service || ''}
-              onChange={updateField}
+              value={formData.service?.id || ''}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                const selectedItem = serviceOptions?.find(
+                  (item) =>
+                    item.id === selectedId || item.id === Number(selectedId),
+                );
+                updateField('service', selectedItem);
+              }}
             >
               {serviceOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+                <option key={option.id} value={option.id}>
+                  {option.name}
                 </option>
               ))}
             </Select>
@@ -233,12 +257,20 @@ const ProjectAddBaseForm = ({
             </Label>
             <Select
               name="team"
-              value={formData.team || ''}
-              onChange={updateField}
+              value={formData.team?.id || ''}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                const selectedItem = teamOptions?.find(
+                  (item) =>
+                    item.id === selectedId || item.id === Number(selectedId),
+                );
+                console.log(`####### : `, teamOptions);
+                updateField('team', selectedItem);
+              }}
             >
               {teamOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+                <option key={option.id} value={option.id}>
+                  {option.name}
                 </option>
               ))}
             </Select>

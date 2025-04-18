@@ -51,7 +51,10 @@ const pageFormSlice = createSlice({
     // 폼 초기화 (생성 또는 수정 시작 시 호출)
     initForm: (state, action) => {
       const {
-        data = { pjtStatus: 86, importanceLevel: 121 },
+        data = {
+          pjtStatus: { id: 86, code: '시작전', name: '시작전' },
+          importanceLevel: { id: 121, code: 'medium', name: '중간' },
+        },
         mode = 'create',
         id = null,
       } = action.payload || {};
@@ -68,7 +71,10 @@ const pageFormSlice = createSlice({
 
     // 폼 완전 초기화
     resetForm: (state) => {
-      state.data = { pjtStatus: 86, importanceLevel: 121 };
+      state.data = {
+        pjtStatus: { id: 86, code: '시작전', name: '시작전' },
+        importanceLevel: { id: 121, code: 'medium', name: '중간' },
+      };
       state.errors = {};
       state.isSubmitting = false;
       state.mode = 'create';

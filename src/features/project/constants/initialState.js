@@ -30,7 +30,10 @@ export const projectReduxInitialState = {
 
   // 폼은 필요할 때만 생성
   form: {
-    data: { pjtStatus: 86, importanceLevel: 121 },
+    data: {
+      pjtStatus: { id: 86, code: '시작전', name: '시작전' },
+      importanceLevel: { id: 121, code: 'medium', name: '중간' },
+    },
     errors: {},
     isSubmitting: false,
   },

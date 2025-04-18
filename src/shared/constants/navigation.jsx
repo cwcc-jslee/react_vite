@@ -39,6 +39,13 @@ export const SIDEBAR_ITEMS = [
     icon: <FaProjectDiagram className="h-5 w-5" />,
   },
   {
+    id: 'oneofftask',
+    path: '/oneofftask',
+    label: 'OneOffTask',
+    permissions: ['user'],
+    icon: <LuListTodo className="h-5 w-5" />,
+  },
+  {
     id: 'todo',
     path: '/todo',
     label: 'ToDo',

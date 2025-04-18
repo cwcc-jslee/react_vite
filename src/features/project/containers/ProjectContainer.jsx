@@ -5,10 +5,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useProject } from '../context/ProjectProvider';
 import useProjectStore from '../hooks/useProjectStore';
 import { Section } from '../../../shared/components/ui/layout/components';
-import { projectTaskInitialState } from '../../../shared/constants/initialFormState';
 
 // 커스텀 훅 사용
-import { useCodebook } from '../../../shared/hooks/useCodebook';
+// import { useCodebook } from '../../../shared/hooks/useCodebook';
 import useProjectSubmit from '../hooks/useProjectSubmit';
 import useProjectTask from '../hooks/useProjectTask';
 
@@ -28,14 +27,6 @@ import ProjectDrawer from '../components/drawer/ProjectDrawer';
 
 // 알림 서비스 추가
 import { notification } from '../../../shared/services/notification';
-
-// 레이아웃 타입 매핑
-const LAYOUT_COMPONENTS = {
-  list: ProjectListLayout,
-  add: ProjectAddLayout,
-  detail: ProjectDetailLayout,
-  // 필요시 다른 레이아웃 컴포넌트 추가
-};
 
 /**
  * Project 메인 컨테이너 컴포넌트
@@ -66,10 +57,6 @@ const ProjectContainer = () => {
   );
   const drawer = useSelector((state) => state.ui.drawer);
 
-  // 현재 레이아웃 컴포넌트 결정
-  // 레이아웃이 없거나 매핑되지 않은 경우 기본값은 'list' 레이아웃
-  const ActiveLayout = LAYOUT_COMPONENTS[layout] || LAYOUT_COMPONENTS.list;
-
   // 프로젝트 상태 데이터 가져오기
   const { state } = useProject();
   const {
@@ -90,15 +77,6 @@ const ProjectContainer = () => {
   // 프로젝트 추가 관련 상태 및 훅
   // ==========================================
   const { handleFormSubmit, isSubmitting } = useProjectSubmit();
-
-  // API 데이터 상태 조회
-  const { data: codebooks, isLoading: isLoadingCodebook } = useCodebook([
-    'priority_level', // 우선순위(긴급,중요,중간,낮음)
-    'task_progress', // 작업진행률
-    'fy', // 회계년도
-    'importance_level', //중요도
-    'pjt_status', // 프로젝트 상태
-  ]);
 
   // 칸반 보드 훅 사용
   const { buckets, loadTemplate, resetKanbanBoard } = useProjectTask();
@@ -152,7 +130,6 @@ const ProjectContainer = () => {
 
   // 폼 섹션에 전달할 속성
   const formProps = {
-    // codebooks,
     handleTemplateSelect,
     updateField,
     handleFormSubmit: onFormSubmit,
@@ -160,44 +137,34 @@ const ProjectContainer = () => {
     isSubmitting,
   };
 
-  // 칸반보드 섹션에 전달할 속성
-  // const kanbanProps = {
-  //   codebooks,
-  // };
+  // 공통 속성
+  const commonProps = {
+    components,
+  };
 
-  // 레이아웃 타입에 따라 필요한 props 구성
-  const getLayoutProps = () => {
-    const commonProps = {
-      components,
-      // ...props,
-    };
+  // 목록 레이아웃에 사용할 props
+  const listLayoutProps = {
+    components,
+    chartsData,
+    items,
+    pagination,
+    loading,
+    error,
+    handlePageChange,
+    handlePageSizeChange,
+    loadProjectDetail,
+  };
 
-    switch (layout) {
-      case 'list':
-        return {
-          ...commonProps,
-          chartsData,
-          items,
-          pagination,
-          loading,
-          error,
-          handlePageChange,
-          handlePageSizeChange,
-          loadProjectDetail,
-        };
-      case 'add':
-        return {
-          ...commonProps,
-          // 추가 레이아웃에 필요한 추가 props
-        };
-      case 'detail':
-        return {
-          ...commonProps,
-          // 상세 레이아웃에 필요한 추가 props
-        };
-      default:
-        return commonProps;
-    }
+  // 추가 레이아웃에 사용할 props
+  const addLayoutProps = {
+    components,
+    ...formProps,
+  };
+
+  // 상세 레이아웃에 사용할 props
+  const detailLayoutProps = {
+    components,
+    // 필요한 상세 props 추가
   };
 
   console.log(`Rendering ${layout} layout for Project page`);
@@ -206,33 +173,14 @@ const ProjectContainer = () => {
   return (
     <>
       <Section>
-        <ActiveLayout {...getLayoutProps()} />
-        {/* 프로젝트 목록/현황 레이아웃 */}
-        {/* {components.listLayout && (
-          <ProjectListLayout
-            chartsData={chartsData}
-            items={items}
-            pagination={pagination}
-            loading={loading}
-            error={error}
-            handlePageChange={handlePageChange}
-            handlePageSizeChange={handlePageSizeChange}
-            loadProjectDetail={loadProjectDetail}
-            uiComponents={components}
-          />
-        )} */}
-
-        {/* 프로젝트 추가 레이아웃 */}
-        {/* {components.addLayout && (
-          <ProjectAddLayout formProps={formProps} codebooks={codebooks} />
-        )} */}
-
-        {/* 프로젝트 상세 섹션 */}
-        {/* {components.detailLayout && <ProjectDetailLayout />} */}
+        {/* 레이아웃 타입에 따라 직접 조건부 렌더링 */}
+        {layout === 'list' && <ProjectListLayout {...listLayoutProps} />}
+        {layout === 'add' && <ProjectAddLayout formProps={formProps} />}
+        {layout === 'detail' && <ProjectDetailLayout {...detailLayoutProps} />}
       </Section>
 
       {/* 프로젝트 드로어 */}
-      {/* {drawer.visible && <ProjectDrawer drawer={drawer} />} */}
+      {drawer.visible && <ProjectDrawer drawer={drawer} />}
     </>
   );
 };

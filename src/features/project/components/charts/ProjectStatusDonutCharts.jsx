@@ -7,7 +7,7 @@ import ChartContainer from '../../../../shared/components/charts/ChartContainer'
  * 프로젝트 상태별 수량을 도넛 차트로 표시하는 컴포넌트 (리팩토링 버전)
  * @returns {JSX.Element} 프로젝트 상태 차트 컴포넌트
  */
-const ProjectStatusDonutCharts = ({ projectStatus }) => {
+const ProjectStatusDonutCharts = ({ projectStatus = [] }) => {
   // 선택된 섹션 상태 추가
   const [activeIndex, setActiveIndex] = useState(null);
 
