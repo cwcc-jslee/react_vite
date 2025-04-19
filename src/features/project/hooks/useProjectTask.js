@@ -327,12 +327,12 @@ const useProjectTask = (initialColumns = []) => {
 
             // priority_level이 없으면 기본값 추가
             if (!('priorityLevel' in newTask)) {
-              newTask.priorityLevel = 116; // '중간'
+              newTask.priorityLevel = { id: 116, code: 'medium', name: '중간' };
             }
 
             // task_progress가 없으면 기본값 추가
             if (!('taskProgress' in newTask)) {
-              newTask.taskProgress = 91; // '0%'
+              newTask.taskProgress = { id: 91, code: '0', name: '0%' };
             }
 
             return newTask;

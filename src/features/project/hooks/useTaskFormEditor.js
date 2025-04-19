@@ -52,8 +52,16 @@ const useTaskEditor = (
         taskScheduleType: initialTask?.taskScheduleType || 'scheduled', // 기본값은 'scheduled'
         // days: initialTask.days || '',
         // dueDate: initialTask.dueDate || '',
-        taskProgress: initialTask?.taskProgress || {},
-        priorityLevel: initialTask?.priorityLevel || {},
+        taskProgress: initialTask?.taskProgress || {
+          id: 91,
+          code: '0',
+          name: '0%',
+        },
+        priorityLevel: initialTask?.priorityLevel || {
+          id: 116,
+          code: 'medium',
+          name: '중간',
+        },
         planStartDate: initialTask?.planStartDate || '',
         planEndDate: initialTask?.planEndDate || '',
         planningTimeData: initialTask?.planningTimeData || {},
@@ -161,12 +169,6 @@ const useTaskEditor = (
   };
 
   // 특정 필드용 핸들러
-  // const handleSwitchChange = () => {
-  //   setTaskFormData((prev) => ({
-  //     ...prev,
-  //     taskScheduleType: !prev.taskScheduleType,
-  //   }));
-  // };
   const handleSwitchChange = () => {
     setTaskFormData((prev) => ({
       ...prev,

@@ -289,7 +289,20 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
           <Select
             name="priorityLevel"
             value={taskFormData?.priorityLevel?.id}
-            onChange={handleInputChange}
+            // onChange={handleInputChange}
+            onChange={(e) => {
+              const selectedId = e.target.value;
+              const selectedItem = selectedId
+                ? codebooks?.priorityLevel?.find(
+                    (item) => item.id.toString() === selectedId,
+                  )
+                : {};
+
+              setTaskFormData((prev) => ({
+                ...prev,
+                priorityLevel: selectedItem,
+              }));
+            }}
           >
             <option value="">선택하세요</option>
             {codebooks?.priorityLevel?.map((item) => (
@@ -304,7 +317,21 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
           <Select
             name="taskProgress"
             value={taskFormData?.taskProgress?.id}
-            onChange={handleInputChange}
+            // onChange={handleInputChange}
+            disabled={true}
+            onChange={(e) => {
+              const selectedId = e.target.value;
+              const selectedItem = selectedId
+                ? codebooks?.taskProgress?.find(
+                    (item) => item.id.toString() === selectedId,
+                  )
+                : {};
+
+              setTaskFormData((prev) => ({
+                ...prev,
+                taskProgress: selectedItem,
+              }));
+            }}
           >
             <option value="">선택하세요</option>
             {codebooks?.taskProgress?.map((item) => (
@@ -548,7 +575,7 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
         <Button onClick={onCancel} variant="outline">
           취소
         </Button>
-        <Button onClick={handleSave}>수정</Button>
+        <Button onClick={handleSave}>등록</Button>
       </div>
     </>
   );

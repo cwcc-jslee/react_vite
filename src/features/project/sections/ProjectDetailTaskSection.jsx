@@ -2,19 +2,21 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { FiPlus } from 'react-icons/fi';
 
 // 커스텀 훅
 import useProjectTask from '../hooks/useProjectTask';
 
 // 컴포넌트
 import ProjectTaskTable from '../components/tables/ProjectTaskTable';
-import ProjectTaskBoardSection from './ProjectTaskBoardSection';
+import KanbanColumn from '../components/card/KanbanColumn';
+import ProjectDetailTaskBoard from '../components/card/ProjectDetailTaskBoard';
 
 /**
  * 프로젝트 작업 섹션 컴포넌트
  * 프로젝트의 작업 목록을 다양한 뷰 모드로 표시
  */
-const ProjectTaskSection = ({
+const ProjectDetailTaskSection = ({
   projectTaskBuckets = [],
   projectTasks = [],
   //
@@ -27,14 +29,44 @@ const ProjectTaskSection = ({
   onTaskEdit = () => {},
 }) => {
   // 칸반 보드 훅 사용
-  const { buckets, syncProjectTasksToKanban, resetKanbanBoard } =
-    useProjectTask();
+  const {
+    buckets,
+    syncProjectTasksToKanban,
+    resetKanbanBoard,
+    editState,
+    startEditing,
+    startEditingColumnTitle,
+    handleEditChange,
+    saveEdit,
+    cancelEdit,
+    addTask,
+    addColumn,
+    toggleTaskCompletion,
+    toggleCompletedSection,
+    deleteTask,
+    deleteColumn,
+    moveColumn,
+    updateTask,
+  } = useProjectTask();
   // Redux 상태에서 현재 레이아웃 설정 가져오기
   const { subMenu } = useSelector((state) => state.ui.pageLayout);
   const activeMenu = subMenu.menu;
 
   // 유효한 데이터가 있는지 확인 (projectTaskBuckets이 있어야 함)
   const hasValidData = projectTaskBuckets.length > 0 && projectTasks.length > 0;
+
+  /**
+   * 새 버킷(컬럼) 추가 핸들러
+   * 섹션 내부에서 로컬로 처리하는 로직
+   */
+  const handleAddColumnClick = () => {
+    const newColumn = {
+      bucket: '새 버킷',
+      tasks: [],
+    };
+
+    addColumn(newColumn);
+  };
 
   // 데이터가 유효하지 않을 경우 보여줄 메시지
   const NoDataMessage = () => (
@@ -109,7 +141,47 @@ const ProjectTaskSection = ({
             />
           )}
 
-          {activeMenu === 'board' && <ProjectTaskBoardSection />}
+          {/* {activeMenu === 'board' && <ProjectDetailTaskBoard />} */}
+          {activeMenu === 'board' && (
+            <div
+              className="kanban-container flex h-full overflow-x-auto overflow-y-hidden flex-grow"
+              style={{ height: 'calc(100vh - 250px)' }}
+            >
+              {buckets.map((bucket, index) => (
+                <KanbanColumn
+                  key={index}
+                  bucket={bucket}
+                  bucketIndex={index}
+                  totalColumns={buckets.length}
+                  startEditingColumnTitle={startEditingColumnTitle}
+                  editState={editState}
+                  handleEditChange={handleEditChange}
+                  saveEdit={saveEdit}
+                  cancelEdit={cancelEdit}
+                  onAddTask={addTask}
+                  startEditing={startEditing}
+                  toggleTaskCompletion={toggleTaskCompletion}
+                  toggleCompletedSection={toggleCompletedSection}
+                  deleteTask={deleteTask}
+                  deleteColumn={deleteColumn}
+                  moveColumn={moveColumn}
+                  // onOpenTaskEditModal={handleOpenTaskEditModal}
+                />
+              ))}
+
+              {/* 버킷 추가 버튼 */}
+              <div className="flex-shrink-0 w-72 h-full flex items-start p-2">
+                <button
+                  className="w-full h-10 bg-indigo-600 text-white border-2 border-indigo-600 rounded-sm flex items-center justify-center text-sm"
+                  disabled={true}
+                  onClick={handleAddColumnClick}
+                >
+                  <FiPlus className="mr-2" size={18} />
+                  <span>버킷 추가</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {activeMenu === 'timeline' && (
             <div className="p-6 text-center text-gray-500 border border-dashed border-gray-300 rounded-md">
@@ -134,4 +206,4 @@ const ProjectTaskSection = ({
   );
 };
 
-export default ProjectTaskSection;
+export default ProjectDetailTaskSection;

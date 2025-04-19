@@ -4,8 +4,6 @@
 
 import React, { useEffect } from 'react';
 import { FiPlus } from 'react-icons/fi';
-import KanbanColumn from '../components/card/KanbanColumn';
-import ModalRenderer from '../../../shared/components/ui/modal/ModalRenderer';
 import { apiCommon } from '../../../shared/api/apiCommon';
 
 // 커스텀 훅
@@ -15,6 +13,8 @@ import useProjectTask from '../hooks/useProjectTask';
 import useSelectData from '../../../shared/hooks/useSelectData';
 
 // 컴포넌트
+import KanbanColumn from '../components/card/KanbanColumn';
+import ModalRenderer from '../../../shared/components/ui/modal/ModalRenderer';
 import ProjectTaskForm from '../components/forms/ProjectTaskForm';
 
 /**
@@ -24,7 +24,7 @@ import ProjectTaskForm from '../components/forms/ProjectTaskForm';
  * @param {Array} props.projectTaskBuckets - 프로젝트 태스크 버킷 목록
  * @param {Array} props.projectTasks - 프로젝트 태스크 목록
  */
-const ProjectTaskBoardSection = () => {
+const ProjectAddTasksSection = () => {
   // 칸반 보드 훅 사용
   const {
     buckets,
@@ -95,7 +95,7 @@ const ProjectTaskBoardSection = () => {
   const handleOpenTaskEditModal = (task, bucketIndex, taskIndex) => {
     openModal(
       'custom',
-      '작업 수정',
+      '작업 등록',
       <ProjectTaskForm
         task={task}
         codebooks={codebooks}
@@ -167,4 +167,4 @@ const ProjectTaskBoardSection = () => {
   );
 };
 
-export default ProjectTaskBoardSection;
+export default ProjectAddTasksSection;

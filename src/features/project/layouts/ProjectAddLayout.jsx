@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { useCodebook } from '../../../shared/hooks/useCodebook';
 import useProjectTask from '../hooks/useProjectTask';
 import ProjectAddFormSection from '../sections/ProjectAddFormSection';
-import ProjectTaskBoardSection from '../sections/ProjectTaskBoardSection';
+import ProjectAddTasksSection from '../sections/ProjectAddTasksSection';
 
 /**
  * 프로젝트 추가 페이지 레이아웃 컴포넌트
@@ -32,7 +32,7 @@ const ProjectAddLayout = ({ formProps }) => {
       <ProjectAddFormSection {...formProps} codebooks={codebooks} />
 
       {/* 프로젝트 작업 칸반보드 섹션 */}
-      <ProjectTaskBoardSection />
+      <ProjectAddTasksSection />
     </div>
   );
 };

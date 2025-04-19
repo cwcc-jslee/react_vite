@@ -5,8 +5,7 @@
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import ProjectDetailTableSection from '../sections/ProjectDetailTableSection';
-import ProjectTaskSection from '../sections/ProjectTaskSection';
-import ProjectTaskBoardSection from '../sections/ProjectTaskBoardSection';
+import ProjectDetailTaskSection from '../sections/ProjectDetailTaskSection';
 
 /**
  * 프로젝트 상세 페이지 레이아웃 컴포넌트
@@ -52,17 +51,11 @@ const ProjectDetailLayout = () => {
         data={projectData}
         projectTasks={projectTasks}
       />
-      {/* 프로젝트 테스트 섹션 */}
-      <ProjectTaskSection
+      {/* 프로젝트 테스크 섹션 */}
+      <ProjectDetailTaskSection
         projectTaskBuckets={projectTaskBuckets}
         projectTasks={projectTasks}
       />
-
-      {/* 프로젝트 태스크 보드 섹션 */}
-      {/* <ProjectTaskBoardSection
-        projectTaskBuckets={projectTaskBuckets}
-        projectTasks={projectTasks}
-      /> */}
     </div>
   );
 };
