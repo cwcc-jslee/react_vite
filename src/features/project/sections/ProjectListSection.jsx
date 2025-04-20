@@ -1,7 +1,7 @@
-// src/features/project/sections/ProjectListTableSection.jsx
+// src/features/project/sections/ProjectListSection.jsx
 
 import React from 'react';
-import ProjectListTable from '../components/tables/ProjectListTable';
+import ProjectList from '../components/tables/ProjectList';
 
 /**
  * 프로젝트 목록 테이블 섹션 컴포넌트
@@ -17,7 +17,7 @@ import ProjectListTable from '../components/tables/ProjectListTable';
  * @param {Function} props.loadProjectDetail - 프로젝트 상세 정보 로드 핸들러
  * @returns {JSX.Element} 프로젝트 테이블 섹션
  */
-const ProjectListTableSection = ({
+const ProjectListSection = ({
   items,
   pagination,
   loading,
@@ -28,7 +28,7 @@ const ProjectListTableSection = ({
 }) => {
   return (
     <div className="mt-6">
-      <ProjectListTable
+      <ProjectList
         items={items}
         pagination={pagination}
         loading={loading}
@@ -41,4 +41,4 @@ const ProjectListTableSection = ({
   );
 };
 
-export default ProjectListTableSection;
+export default ProjectListSection;

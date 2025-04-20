@@ -1,27 +1,23 @@
 // src/features/project/components/table/ProjectTable.jsx
 import React from 'react';
-import { useDispatch } from 'react-redux';
 import { Button } from '../../../../shared/components/ui';
 import { Card } from '../../../../shared/components/ui/card/Card';
 import { Pagination } from '../../../../shared/components/ui/pagination/Pagination';
-import { fetchProjectDetail } from '../../store/projectStoreActions';
-// import useProjectStore from '../../hooks/useProjectStore';
 
 // 컴포넌트
 
 const COLUMNS = [
+  { key: 'no', title: 'NO', align: 'left' },
   { key: 'id', title: 'ID', align: 'left' },
-  { key: 'customer', title: '고객사', align: 'left' },
-  { key: 'name', title: '프로젝트명', align: 'left' },
-  // { key: 'risk', title: '위험도', align: 'left' },
-  { key: 'importanceLevel', title: '중요도', align: 'center' },
-  { key: 'service', title: '서비스', align: 'center' },
-  { key: 'pjtStatus', title: '상태', align: 'center' },
-  { key: 'progress', title: '진행률', align: 'center' },
-  // { key: 'tag', title: '시작일', align: 'center' },
-  { key: 'planEndDate', title: '완료(예정)일', align: 'center' },
-  { key: 'lastDate', title: '최근작업일', align: 'center' },
-  { key: 'workCount', title: '작업시간', align: 'center' },
+  { key: 'projectTask', title: '작업명', align: 'left' },
+  { key: 'taskProgress', title: '작업진행률', align: 'left' },
+  { key: 'user', title: '담당자', align: 'left' },
+  { key: 'workDate', title: '작업일', align: 'left' },
+  { key: 'workHours', title: '작업시간', align: 'center' },
+  { key: 'nonBillableHours', title: '기타시간', align: 'center' },
+  { key: 'revision_number', title: '수정횟수', align: 'center' },
+  { key: 'team', title: '사업부', align: 'center' },
+  { key: 'note', title: 'note', align: 'center' },
   { key: 'action', title: 'Action', align: 'center' },
 ];
 
@@ -77,60 +73,30 @@ const TableRow = ({
   currentPage,
   loadProjectDetail,
 }) => {
-  const dispatch = useDispatch();
-  const actualIndex = (currentPage - 1) * pageSize + index + 1;
-
   // 프로젝트 상세정보 조회 핸들러
   const handleViewDetail = () => {
     loadProjectDetail(item.id);
   };
 
-  // business_type 표시를 위한 헬퍼 함수
-  const formatBusinessType = (types) => {
-    if (!Array.isArray(types) || types.length === 0) return '-';
-
-    if (types.length === 1) {
-      return types[0].name;
-    }
-
-    // 첫 번째 항목 + 추가 항목 수
-    return `${types[0].name} +${types.length - 1}`;
-  };
-
-  // funnel 표시를 위한 헬퍼 함수
-  const getNameFromArray = (arrayData) => {
-    if (!Array.isArray(arrayData) || arrayData.length === 0) return '-';
-    return arrayData.map((item) => item.name).join(', ');
-  };
-
-  // 일반적인 값 포맷팅을 위한 헬퍼 함수
-  const formatValue = (value) => {
-    if (value === null || value === undefined) return '-';
-    if (typeof value === 'string') return value;
-    if (typeof value === 'number') return String(value);
-    return '-';
-  };
-
   return (
     <tr className="hover:bg-gray-50">
+      <td className="px-3 py-2 text-center text-sm">{index + 1}</td>
       <td className="px-3 py-2 text-center text-sm">{item.id}</td>
       <td className="px-3 py-2 text-center text-sm">
-        {item?.sfa?.customer?.name || item?.customer?.name || '-'}
+        {item?.projectTask?.name || '-'}
       </td>
-      <td className="px-3 py-2 text-sm">{item.name || '-'}</td>
+      <td className="px-3 py-2 text-sm">{item?.taskProgress?.name || '-'}</td>
+      <td className="px-3 py-2 text-center text-sm">{'-'}</td>
+      <td className="px-3 py-2 text-center text-sm">{item?.workDate}</td>
+      <td className="px-3 py-2 text-center text-sm">{item?.workHours}</td>
       <td className="px-3 py-2 text-center text-sm">
-        {item?.importanceLevel?.name}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">{item?.service?.name}</td>
-      <td className="px-3 py-2 text-center text-sm">{item?.pjtStatus?.name}</td>
-      <td className="px-3 py-2 text-center text-sm">{'계산'}</td>
-      <td className="px-3 py-2 text-center text-sm">
-        {item?.planEndDate || '-'}
+        {item?.nonBillableHours}
       </td>
       <td className="px-3 py-2 text-center text-sm">
-        {item?.lastWorkupdateDate}
+        {item?.revisionNumber || '-'}
       </td>
-      <td className="px-3 py-2 text-center text-sm">{'계산'}</td>
+      <td className="px-3 py-2 text-center text-sm">{item?.team || '-'}</td>
+      <td className="px-3 py-2 text-center text-sm">{item?.notes || '-'}</td>
       <td className="px-3 py-2 text-center">
         <Button variant="outline" size="sm" onClick={handleViewDetail}>
           View
@@ -140,7 +106,7 @@ const TableRow = ({
   );
 };
 
-const ProjectListTable = ({
+const ProjectWorkList = ({
   items,
   pagination,
   filters,
@@ -150,6 +116,7 @@ const ProjectListTable = ({
   handlePageSizeChange,
   loadProjectDetail,
 }) => {
+  console.log(`################### `, items);
   return (
     <Card>
       <div className="overflow-x-auto">
@@ -205,4 +172,4 @@ const ProjectListTable = ({
   );
 };
 
-export default ProjectListTable;
+export default ProjectWorkList;

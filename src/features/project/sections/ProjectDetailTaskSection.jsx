@@ -1,6 +1,6 @@
 // src/features/project/sections/ProjectTaskSection.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { FiPlus } from 'react-icons/fi';
 
@@ -8,7 +8,7 @@ import { FiPlus } from 'react-icons/fi';
 import useProjectTask from '../hooks/useProjectTask';
 
 // 컴포넌트
-import ProjectTaskTable from '../components/tables/ProjectTaskTable';
+import ProjectTaskList from '../components/tables/ProjectTaskList';
 import KanbanColumn from '../components/card/KanbanColumn';
 import ProjectDetailTaskBoard from '../components/card/ProjectDetailTaskBoard';
 
@@ -67,6 +67,21 @@ const ProjectDetailTaskSection = ({
 
     addColumn(newColumn);
   };
+
+  const allTasksWithIndices = useMemo(() => {
+    const tasks = [];
+    buckets.forEach((bucket, bucketIndex) => {
+      const tasksWithBucket = bucket.tasks.map((task, taskIndex) => ({
+        ...task,
+        bucket: bucket.bucket,
+        bucketId: bucket.id,
+        _bucketIndex: bucketIndex,
+        _taskIndex: taskIndex,
+      }));
+      tasks.push(...tasksWithBucket);
+    });
+    return tasks;
+  }, [buckets]);
 
   // 데이터가 유효하지 않을 경우 보여줄 메시지
   const NoDataMessage = () => (
@@ -130,8 +145,8 @@ const ProjectDetailTaskSection = ({
         <>
           {/* 뷰 모드에 따른 컴포넌트 렌더링 */}
           {activeMenu === 'table' && (
-            <ProjectTaskTable
-              buckets={buckets}
+            <ProjectTaskList
+              allTasks={allTasksWithIndices}
               loading={loading}
               error={error}
               handlePageChange={handlePageChange}

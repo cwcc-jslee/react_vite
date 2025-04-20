@@ -171,24 +171,33 @@ export const PAGE_MENUS = {
           },
         },
       },
-      // add: {
-      //   label: '등록',
-      //   permissions: ['user'],
-      //   config: {
-      //     components: {
-      //       projectChart: false,
-      //       projectTable: false,
-      //       projectAddSection: true,
-      //     },
-      //     drawer: {
-      //       visible: false, // 드로어 표시 여부
-      //     },
-      //   },
-      // },
+      work: {
+        label: 'work',
+        permissions: ['user'],
+        visible: true,
+        config: {
+          layout: 'work',
+          sections: {
+            projectCharts: true,
+            projectListTable: true,
+            projectAddForm: false,
+            projectDetailTable: false,
+            projectTaskBoard: false,
+          },
+          components: {
+            // projectChart: true,
+            // projectTable: true,
+            // projectAddSection: false,
+          },
+          drawer: {
+            visible: false, // 드로어 표시 여부
+          },
+        },
+      },
       detail: {
         label: '상세정보',
         permissions: ['user'],
-        visible: true,
+        visible: false,
         config: {
           layout: 'detail',
           sections: {

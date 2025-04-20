@@ -6,8 +6,8 @@
  */
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { notification } from '../../shared/services/notification';
-import { convertKeysToCamelCase } from '../../shared/utils/transformUtils';
+import { notification } from '@shared/services/notification';
+import { convertKeysToCamelCase } from '@shared/utils/transformUtils';
 
 // 초기 상태 정의
 const initialState = {
@@ -48,6 +48,7 @@ const initialState = {
  * @param {string} pageType - 페이지 타입 ('project', 'customer', 등)
  * @param {Function} apiFunction - API 호출 함수 (파라미터를 받아 Promise 반환)
  */
+// createFetchItems 에서 fetchItems 로 변경(함수명 통일화..)
 export const createFetchItems = (pageType, apiFunction) =>
   createAsyncThunk(
     `pageState/${pageType}/fetchItems`,

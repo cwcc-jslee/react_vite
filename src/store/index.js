@@ -14,6 +14,7 @@ import uiReducer from './slices/uiSlice';
 // 페이지 상태 관리 리듀서 (새로 추가)
 import pageStateReducer from './slices/pageStateSlice';
 import pageFormReducer from './slices/pageFormSlice';
+import workReducer from './slices/workSlice';
 
 // 변경 삭제 예정
 // import projectReducer from '../features/project/store/projectSlice';
@@ -34,9 +35,12 @@ export const store = configureStore({
     // 새로 추가된 리듀서
     ui: uiReducer,
 
-    // 새로운 페이지 상태 관리 리듀서 (project, customer, sfa, work 등 통합)
+    // 새로운 페이지 상태 관리 리듀서 (project, customer, sfa 등 통합)
     pageState: pageStateReducer,
     pageForm: pageFormReducer,
+
+    // work 상태 관리 리듀서(다른 페이지에서 사용 필요하여 별도 구성)
+    work: workReducer,
 
     // 삭제, 이동 예정
     // project: projectReducer, // 삭제 예정..

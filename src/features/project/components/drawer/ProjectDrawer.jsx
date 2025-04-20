@@ -1,18 +1,66 @@
 /**
  * PROJECT 전용 Drawer 컴포넌트
  */
-
 // src/features/project/components/drawer/ProjectDrawer.jsx
-import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { setDrawer } from '../../../../store/slices/uiSlice.js';
-import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { setDrawer, closeDrawer } from '../../../../store/slices/uiSlice.js';
 import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer.jsx';
 import ActionMenuBar from '../../../../shared/components/ui/button/ActionMenuBar.jsx';
 
+// 컴포넌트
+import ProjectTaskDescription from '../description/ProjectTaskDescription.jsx';
+
 const ProjectDrawer = ({ drawer }) => {
   const dispatch = useDispatch();
-  const { visible, mode, featureMode, data } = drawer;
+  const { visible, mode, options = {} } = drawer;
+  const { taskId, bucketIndex, taskIndex } = options;
+
+  // 프로젝트 작업 상태 가져오기
+  const projectTaskState = useSelector((state) => state.projectTask);
+
+  // 현재 선택된 작업 정보
+  const [currentTask, setCurrentTask] = useState(null);
+
+  // 작업 검색 시 인덱스 먼저 시도, 실패 시 ID로 검색
+  const getTaskForStore = () => {
+    // 인덱스로 먼저 시도
+    if (bucketIndex !== undefined && taskIndex !== undefined) {
+      const task = projectTaskState.buckets[bucketIndex]?.tasks[taskIndex];
+      if (task && task.id === taskId) {
+        return { task, bucketIndex, taskIndex };
+      }
+    }
+
+    // 인덱스가 유효하지 않거나 ID가 일치하지 않으면 ID로 검색
+    if (taskId) {
+      for (let i = 0; i < projectTaskState.buckets.length; i++) {
+        const bucket = projectTaskState.buckets[i];
+        const taskIdx = bucket.tasks.findIndex((t) => t.id === taskId);
+        if (taskIdx !== -1) {
+          return {
+            task: bucket.tasks[taskIdx],
+            bucketIndex: i,
+            taskIndex: taskIdx,
+          };
+        }
+      }
+    }
+
+    return null;
+  };
+
+  // drawer가 열릴 때마다 선택된 작업 정보 가져오기
+  useEffect(() => {
+    if (visible) {
+      const taskInfo = getTaskForStore();
+      if (taskInfo) {
+        setCurrentTask(taskInfo.task);
+      } else {
+        console.error('작업을 찾을 수 없습니다');
+      }
+    }
+  }, [visible, options, projectTaskState]);
 
   const controlMenus = [
     {
@@ -25,102 +73,40 @@ const ProjectDrawer = ({ drawer }) => {
         // dispatch(setDrawer({ mode: 'view' }));
       },
     },
-    {
-      key: 'edit',
-      label: 'Edit',
-      active: mode === 'edit',
-      onClick: () => {
-        // setActiveControl('edit');
-        dispatch(setDrawer({ mode: 'edit', featureMode: 'editBase' }));
-      },
-    },
   ];
 
-  const functionMenus =
-    mode === 'edit'
-      ? [
-          {
-            key: 'editBase',
-            label: '기본정보수정',
-            active: featureMode === 'editBase',
-            // onClick: () => {
-            //   dispatch(setDrawer({ featureMode: 'editBase' }));
-            //   resetPaymentForm();
-            // },
-          },
-          {
-            key: 'addPayment',
-            label: '결제매출등록',
-            active: featureMode === 'addPayment',
-            // onClick: () => {
-            //   dispatch(setDrawer({ featureMode: 'addPayment' }));
-            //   resetPaymentForm();
-            // },
-          },
-          {
-            key: 'editPayment',
-            label: '결제매출수정',
-            active: featureMode === 'editPayment',
-            // onClick: () => {
-            //   dispatch(setDrawer({ featureMode: 'editPayment' }));
-            //   resetPaymentForm();
-            // },
-          },
-        ]
-      : [];
+  const functionMenus = [];
 
   // Drawer 헤더 타이틀 설정
   const getHeaderTitle = () => {
-    if (mode) {
+    if (currentTask && mode) {
       const titles = {
-        add: '매출등록',
-        view: 'PROJECT 상세정보',
-        edit: 'PROJECT 수정',
+        view: `TASK 상세정보 - (${currentTask.id})${currentTask.name}`,
       };
       return titles[mode] || '';
     }
     return '';
   };
 
-  const ViewContent = ({ data }) => (
-    <>
-      {/* <ProjectDetailTable data={data} />
-      <ProjectPaymentSection
-        data={data}
-        controlMode={mode}
-        featureMode={featureMode}
-        togglePaymentSelection={togglePaymentSelection}
-      /> */}
-    </>
-  );
+  // 작업 저장 핸들러
+  const handleSaveTask = (updatedTask) => {
+    const taskInfo = getTaskForStore();
+    if (taskInfo) {
+      // updateTask(taskInfo.bucketIndex, taskInfo.taskIndex, updatedTask);
+      dispatch(setDrawer({ mode: 'view' }));
+    }
+  };
 
-  // EditContent 컴포넌트 - 수정 모드 UI
-  const EditContent = ({ data }) => (
-    <>
-      <h1>기본정보수정</h1>
-      {/* <EditableProjectDetail
-        data={data}
-        featureMode={featureMode}
-        projectSalesTypeData={projectSalesTypeData}
-        projectClassificationData={projectClassificationData}
-        // onUpdate={handleFieldUpdate}
-      />
+  const setDrawerClose = () => {
+    dispatch(closeDrawer());
+  };
 
-      {mode === 'edit' && (
-        <ProjectAddPaymentForm
-          data={data}
-          controlMode={mode}
-          featureMode={featureMode}
-        />
-      )}
-      <ProjectPaymentSection
-        data={data}
-        controlMode={mode}
-        featureMode={featureMode}
-        togglePaymentSelection={togglePaymentSelection}
-      /> */}
-    </>
-  );
+  // 작업 정보 조회 컴포넌트
+  const ViewContent = ({ task }) => {
+    if (!task)
+      return <div className="p-4">작업 정보를 불러오는 중입니다...</div>;
+    return <ProjectTaskDescription data={task} />;
+  };
 
   return (
     <BaseDrawer
@@ -138,8 +124,7 @@ const ProjectDrawer = ({ drawer }) => {
       controlMode={mode}
     >
       {/* {renderDrawerContent()} */}
-      {mode === 'view' && <ViewContent data={data} />}
-      {mode === 'edit' && <EditContent data={data} />}
+      {mode === 'view' && <ViewContent task={currentTask} />}
     </BaseDrawer>
   );
 };
