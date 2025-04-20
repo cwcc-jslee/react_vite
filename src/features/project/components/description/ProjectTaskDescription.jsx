@@ -41,6 +41,24 @@ const ProjectTaskDescription = ({ data }) => {
     return `${workDays}일 / ${plannedHours}시간(${personnelCount}명*${workDays}일*${allocationRate}%)`;
   };
 
+  // 작업할당
+  const renderAssignedUsers = () => {
+    if (!data.users || data.users.length === 0) return '-';
+
+    return (
+      <div className="flex ">
+        {data.users.map((user, index) => (
+          <div
+            key={user.id || index}
+            className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-md text-xs"
+          >
+            {user.username ? user.username.substring(0, 3) : '??'}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <Description>
       {/* 1행: 매출유형, 지원프로그램 */}
@@ -135,7 +153,7 @@ const ProjectTaskDescription = ({ data }) => {
         <DescriptionItem label width="w-[140px]">
           작업할당
         </DescriptionItem>
-        <DescriptionItem>{itemsAndTeams}</DescriptionItem>
+        <DescriptionItem>{renderAssignedUsers()}</DescriptionItem>
       </DescriptionRow>
 
       {/* 6행: 비고 */}

@@ -9,7 +9,7 @@ import ProjectWorkListSection from '../sections/ProjectWorkListSection';
  * 상단에 차트 섹션과 하단에 테이블 섹션으로 구성
  *
  */
-const ProjectWorkLayout = ({ items, pagination, loading, error }) => {
+const ProjectWorkLayout = () => {
   return (
     <>
       {/* 차트 섹션 (상태, 진행률, 트리맵) */}
@@ -20,13 +20,9 @@ const ProjectWorkLayout = ({ items, pagination, loading, error }) => {
 
       {/* 테이블 섹션 */}
       <ProjectWorkListSection
-        items={items}
-        pagination={pagination}
-        loading={loading}
-        error={error}
-        // handlePageChange={handlePageChange}
-        // handlePageSizeChange={handlePageSizeChange}
-        // loadProjectDetail={loadProjectDetail}
+      // handlePageChange={handlePageChange}
+      // handlePageSizeChange={handlePageSizeChange}
+      // loadProjectDetail={loadProjectDetail}
       />
     </>
   );

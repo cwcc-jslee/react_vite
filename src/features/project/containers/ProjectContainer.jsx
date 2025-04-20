@@ -9,7 +9,6 @@ import { useProject } from '../context/ProjectProvider';
 import useProjectStore from '../hooks/useProjectStore';
 import useProjectSubmit from '../hooks/useProjectSubmit';
 import useProjectTask from '../hooks/useProjectTask';
-import useWorkStore from '../../work/hooks/useWorkStore';
 
 // Redux 액션
 import {
@@ -50,15 +49,6 @@ const ProjectContainer = () => {
     handlePageSizeChange,
     loadProjectDetail,
   } = useProjectStore();
-
-  // 작업리스트 상태 및 액션 훅
-  const {
-    items: workItems,
-    pagination: workPagination,
-    filters: workFilters,
-    loading: workLoading,
-    error: workError,
-  } = useWorkStore();
 
   // 레이아웃 관련 상태 가져오기
   // Redux 상태에서 현재 레이아웃 설정 가져오기
@@ -177,16 +167,6 @@ const ProjectContainer = () => {
     // 필요한 상세 props 추가
   };
 
-  // 작업 레이아웃 props
-  const workLayoutProps = {
-    components,
-    items: workItems,
-    pagination: workPagination,
-    filters: workFilters,
-    loading: workLoading,
-    error: workError,
-  };
-
   console.log(`Rendering ${layout} layout for Project page`);
   console.log(`*******chartdata ${layout} : `, chartsData);
 
@@ -195,7 +175,7 @@ const ProjectContainer = () => {
       <Section>
         {/* 레이아웃 타입에 따라 직접 조건부 렌더링 */}
         {layout === 'list' && <ProjectListLayout {...listLayoutProps} />}
-        {layout === 'work' && <ProjectWorkLayout {...workLayoutProps} />}
+        {layout === 'work' && <ProjectWorkLayout />}
         {layout === 'add' && <ProjectAddLayout formProps={formProps} />}
         {layout === 'detail' && <ProjectDetailLayout {...detailLayoutProps} />}
       </Section>

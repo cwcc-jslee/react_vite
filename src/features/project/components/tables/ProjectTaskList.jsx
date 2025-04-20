@@ -247,13 +247,23 @@ const ProjectTaskList = ({
 
                   {/* 할당대상 */}
                   <td className="px-3 py-2 text-center text-sm">
-                    {task.assignee ? (
+                    {task.users && task.users.length > 0 ? (
                       <div className="flex items-center justify-center">
-                        <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-800">
-                          {task.assignee.name
-                            ? task.assignee.name.substring(0, 2)
-                            : '??'}
-                        </div>
+                        {task.users.slice(0, 2).map((user, index) => (
+                          <div
+                            key={user.id || index}
+                            className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-800 -ml-1 first:ml-0"
+                          >
+                            {user.username
+                              ? user.username.substring(1, 3)
+                              : '??'}
+                          </div>
+                        ))}
+                        {task.users.length > 2 && (
+                          <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 -ml-1">
+                            +{task.users.length - 2}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       '-'

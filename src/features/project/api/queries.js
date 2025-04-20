@@ -142,16 +142,16 @@ export const buildProjectDetailQuery = (id) => {
               fields: ['*'],
               sort: ['id:asc'],
             },
+            users: {
+              fields: ['username', 'email'],
+              // populate: {
+              //   role: {
+              //     fields: [],
+              //   },
+              // },
+            },
           },
         },
-        // users: {
-        //   fields: ['*'],
-        //   populate: {
-        //     role: {
-        //       fields: [],
-        //     },
-        //   },
-        // },
       },
     },
     {

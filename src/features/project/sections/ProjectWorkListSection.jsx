@@ -1,6 +1,11 @@
 // src/features/project/sections/ProjectWorkListSection.jsx
 
 import React from 'react';
+
+// 커스텀 훅
+import useWorkStore from '../../work/hooks/useWorkStore';
+
+// 컴포넌트트
 import ProjectWorkList from '../components/tables/ProjectWorkList';
 
 /**
@@ -17,7 +22,11 @@ import ProjectWorkList from '../components/tables/ProjectWorkList';
  * @param {Function} props.loadProjectDetail - 프로젝트 상세 정보 로드 핸들러
  * @returns {JSX.Element} 프로젝트 테이블 섹션
  */
-const ProjectWorkListSection = ({ items, pagination, loading, error }) => {
+const ProjectWorkListSection = () => {
+  // 작업리스트 상태 및 액션 훅
+  const { items, pagination, loading, error, handleFilterChange } =
+    useWorkStore();
+
   return (
     <div className="mt-6">
       <ProjectWorkList

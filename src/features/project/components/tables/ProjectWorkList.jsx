@@ -86,7 +86,9 @@ const TableRow = ({
         {item?.projectTask?.name || '-'}
       </td>
       <td className="px-3 py-2 text-sm">{item?.taskProgress?.name || '-'}</td>
-      <td className="px-3 py-2 text-center text-sm">{'-'}</td>
+      <td className="px-3 py-2 text-center text-sm">
+        {item.user.username || '-'}
+      </td>
       <td className="px-3 py-2 text-center text-sm">{item?.workDate}</td>
       <td className="px-3 py-2 text-center text-sm">{item?.workHours}</td>
       <td className="px-3 py-2 text-center text-sm">

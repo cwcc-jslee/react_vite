@@ -6,11 +6,13 @@ import { FiPlus } from 'react-icons/fi';
 
 // 커스텀 훅
 import useProjectTask from '../hooks/useProjectTask';
+import useWorkStore from '../../work/hooks/useWorkStore';
 
 // 컴포넌트
 import ProjectTaskList from '../components/tables/ProjectTaskList';
 import KanbanColumn from '../components/card/KanbanColumn';
 import ProjectDetailTaskBoard from '../components/card/ProjectDetailTaskBoard';
+import ProjectWorkListSection from './ProjectWorkListSection';
 
 /**
  * 프로젝트 작업 섹션 컴포넌트
@@ -51,6 +53,8 @@ const ProjectDetailTaskSection = ({
   // Redux 상태에서 현재 레이아웃 설정 가져오기
   const { subMenu } = useSelector((state) => state.ui.pageLayout);
   const activeMenu = subMenu.menu;
+
+  const { handleFilterChange, handleResetFilters } = useWorkStore();
 
   // 유효한 데이터가 있는지 확인 (projectTaskBuckets이 있어야 함)
   const hasValidData = projectTaskBuckets.length > 0 && projectTasks.length > 0;
@@ -210,11 +214,7 @@ const ProjectDetailTaskSection = ({
             </div>
           )}
 
-          {activeMenu === 'members' && (
-            <div className="p-6 text-center text-gray-500 border border-dashed border-gray-300 rounded-md">
-              사용자 뷰는 현재 개발 중입니다.
-            </div>
-          )}
+          {activeMenu === 'members' && <ProjectWorkListSection />}
         </>
       )}
     </div>

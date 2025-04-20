@@ -49,9 +49,9 @@ export const buildWorkListQuery = (params) => {
       team: {
         fields: ['name'],
       },
-      // user: {
-      //   fields: ['name'],
-      // },
+      user: {
+        fields: ['username', 'email'],
+      },
     },
     pagination: {
       start: pagination.current
