@@ -4,6 +4,7 @@ import Modal from './modal/Modal';
 import { Row, Col } from './grid/Grid';
 export { default as Tooltip } from './tooltip/Tooltip';
 export { default as Progress } from './progress/Progress';
+export { default as Tag } from './tag/Tag';
 
 export { Modal, Row, Col };
 /**

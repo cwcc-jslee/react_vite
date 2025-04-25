@@ -18,6 +18,7 @@ const ContactPage = React.lazy(() =>
 const ProjectPage = React.lazy(() =>
   import('../features/project/pages/ProjectPage'),
 );
+const TodoPage = React.lazy(() => import('../features/todo/pages/TodoPage'));
 
 // QueryClient 설정
 const queryClient = new QueryClient({
@@ -56,6 +57,7 @@ const App = () => {
               <Route path="/customer" element={<CustomerPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/project" element={<ProjectPage />} />
+              <Route path="/todo" element={<TodoPage />} />
             </Routes>
           </Suspense>
         </DefaultLayout>

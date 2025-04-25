@@ -22,7 +22,7 @@ import {
   deleteProject,
   PROJECT_PAGE_TYPE,
 } from '../store/projectStoreActions';
-import { PAGE_MENUS } from '../../../shared/constants/navigation';
+import { PAGE_MENUS } from '@shared/constants/navigation';
 
 /**
  * 프로젝트 페이지 상태 관리 훅
@@ -45,40 +45,6 @@ export const useProjectStore = () => {
 
   // 현재 선택된 메뉴 ID
   const activeMenuId = uiState.pageLayout.menu;
-
-  // 페이지 초기화 (컴포넌트 마운트 시 호출)
-  useEffect(() => {
-    // 1. 페이지 경로 설정
-    dispatch(setCurrentPath(PROJECT_PAGE_TYPE));
-
-    // 2. 페이지 레이아웃 및 메뉴 초기화
-    const defaultMenuId = PAGE_MENUS.project.defaultMenu;
-    const defaultMenuConfig = PAGE_MENUS.project.items[defaultMenuId].config;
-
-    dispatch({
-      type: 'ui/changePage',
-      payload: {
-        page: PROJECT_PAGE_TYPE,
-        defaultMenu: defaultMenuId,
-        defaultComponents: defaultMenuConfig.components,
-      },
-    });
-
-    // 3. 필터 설정
-    const defaultFilters = {
-      pjt_status: { $in: [88, 89] }, // 진행중(88), 검수중(89)
-    };
-
-    // 4. 필터 적용 및 초기 프로젝트 목록 로드
-    dispatch(setFilters(defaultFilters));
-    dispatch(fetchProjects());
-
-    // 컴포넌트 언마운트 시 정리
-    return () => {
-      // 필요한 정리 작업 수행
-      dispatch(clearSelectedItem());
-    };
-  }, [dispatch]);
 
   // 프로젝트 목록 새로고침
   const refreshProjects = useCallback(

@@ -15,6 +15,7 @@ import uiReducer from './slices/uiSlice';
 import pageStateReducer from './slices/pageStateSlice';
 import pageFormReducer from './slices/pageFormSlice';
 import workReducer from './slices/workSlice';
+import taskReducer from './slices/taskSlice';
 
 // 변경 삭제 예정
 // import projectReducer from '../features/project/store/projectSlice';
@@ -41,6 +42,7 @@ export const store = configureStore({
 
     // work 상태 관리 리듀서(다른 페이지에서 사용 필요하여 별도 구성)
     work: workReducer,
+    task: taskReducer,
 
     // 삭제, 이동 예정
     // project: projectReducer, // 삭제 예정..

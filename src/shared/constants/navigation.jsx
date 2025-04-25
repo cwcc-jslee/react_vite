@@ -171,6 +171,29 @@ export const PAGE_MENUS = {
           },
         },
       },
+      search: {
+        label: '상세조회',
+        permissions: ['user'],
+        visible: true,
+        config: {
+          layout: 'search',
+          sections: {
+            projectCharts: false,
+            projectListTable: true,
+            projectAddForm: false,
+            projectDetailTable: false,
+            projectTaskBoard: false,
+          },
+          components: {
+            projectChart: true,
+            projectTable: true,
+            projectAddSection: false,
+          },
+          drawer: {
+            visible: false, // 드로어 표시 여부
+          },
+        },
+      },
       work: {
         label: 'work',
         permissions: ['user'],
@@ -266,6 +289,78 @@ export const PAGE_MENUS = {
       // },
     },
   },
+  // ToDo
+  todo: {
+    defaultMenu: 'todayTasks',
+    items: {
+      todayTasks: {
+        label: '오늘할일',
+        permissions: ['user'],
+        visible: true,
+        config: {
+          layout: 'todayTasks',
+          sections: {
+            contactHeader: true,
+            contactSearch: true,
+            contactTable: true,
+            contactExcel: false,
+          },
+          components: {
+            contactSearchForm: true,
+            contactTable: true,
+            contactExcelUpload: false,
+          },
+          drawer: {
+            visible: false, // 드로어 표시 여부
+          },
+        },
+      },
+      assignedTasks: {
+        label: '나에게 할당',
+        permissions: ['user'],
+        visible: true,
+        config: {
+          layout: 'assignedTasks',
+          sections: {
+            contactHeader: true,
+            contactSearch: true,
+            contactTable: true,
+            contactExcel: false,
+          },
+          components: {
+            contactSearchForm: true,
+            contactTable: true,
+            contactExcelUpload: false,
+          },
+          drawer: {
+            visible: false, // 드로어 표시 여부
+          },
+        },
+      },
+      recentWork: {
+        label: '최근작업',
+        permissions: ['user'],
+        visible: true,
+        config: {
+          layout: 'recentWork',
+          sections: {
+            contactHeader: true,
+            contactSearch: true,
+            contactTable: true,
+            contactExcel: false,
+          },
+          components: {
+            contactSearchForm: true,
+            contactTable: true,
+            contactExcelUpload: false,
+          },
+          drawer: {
+            visible: false, // 드로어 표시 여부
+          },
+        },
+      },
+    },
+  },
   // CONTACT
   contact: {
     defaultMenu: 'list',
@@ -292,28 +387,6 @@ export const PAGE_MENUS = {
           },
         },
       },
-      // search: {
-      //   label: '상세조회',
-      //   permissions: ['user'],
-      //   visible: true,
-      //   config: {
-      //     layout: 'search',
-      //     sections: {
-      //       contactHeader: true,
-      //       contactSearch: true,
-      //       contactTable: true,
-      //       contactExcel: false,
-      //     },
-      //     components: {
-      //       contactSearchForm: true,
-      //       contactTable: true,
-      //       contactExcelUpload: false,
-      //     },
-      //     drawer: {
-      //       visible: false, // 드로어 표시 여부
-      //     },
-      //   },
-      // },
     },
   },
 };

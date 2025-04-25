@@ -10,6 +10,7 @@ import { apiService } from '@shared/api/apiService';
 import { apiClient } from '@shared/api/apiClient';
 import { handleApiError } from '@shared/api/errorHandlers';
 import { buildWorkListQuery } from '../api/queries';
+import { buildProjectTaskListQuery } from '../../project/api/queries';
 import { normalizeResponse } from '@shared/api/normalize';
 import qs from 'qs';
 
@@ -41,6 +42,34 @@ export const workApiService = {
       return response.data;
     } catch (error) {
       handleApiError(error, '프로젝트 생성 중 오류가 발생했습니다.');
+    }
+  },
+
+  /**
+   * 작업(할일) 목록 조회
+   */
+  getTaskList: async (params) => {
+    try {
+      const query = buildProjectTaskListQuery(params);
+      const response = await apiService.get(`/project-tasks?${query}`);
+
+      return normalizeResponse(response);
+    } catch (error) {
+      console.error('[API] getTaskList error:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 작업(할일) 생성
+   */
+  createTask: async (taskData) => {
+    try {
+      const { data } = await apiService.post('/project-tasks', taskData);
+      return data;
+    } catch (error) {
+      console.error('[API] createTask error:', error);
+      throw error;
     }
   },
 };

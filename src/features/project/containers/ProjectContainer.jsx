@@ -1,8 +1,15 @@
 // src/features/project/containers/ProjectContainer.jsx
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Section } from '../../../shared/components/ui/layout/components';
+import {
+  setCurrentPath,
+  setFilters,
+  clearSelectedItem,
+} from '../../../store/slices/pageStateSlice';
+import { fetchProjects, PROJECT_PAGE_TYPE } from '../store/projectStoreActions';
+import { PAGE_MENUS } from '@shared/constants/navigation';
 
 // 커스텀 훅 사용
 import { useProject } from '../context/ProjectProvider';
@@ -18,6 +25,7 @@ import {
 
 // Layout
 import ProjectListLayout from '../layouts/ProjectListLayout';
+import ProjectSearchLayout from '../layouts/ProjectSearchLayout';
 import ProjectWorkLayout from '../layouts/ProjectWorkLayout';
 import ProjectAddLayout from '../layouts/ProjectAddLayout';
 import ProjectDetailLayout from '../layouts/ProjectDetailLayout';
@@ -80,6 +88,40 @@ const ProjectContainer = () => {
 
   // 칸반 보드 훅 사용
   const { buckets, loadTemplate, resetKanbanBoard } = useProjectTask();
+
+  // 페이지 초기화 (컴포넌트 마운트 시 호출)
+  useEffect(() => {
+    // 1. 페이지 경로 설정
+    dispatch(setCurrentPath(PROJECT_PAGE_TYPE));
+
+    // 2. 페이지 레이아웃 및 메뉴 초기화
+    const defaultMenuId = PAGE_MENUS.project.defaultMenu;
+    const defaultMenuConfig = PAGE_MENUS.project.items[defaultMenuId].config;
+
+    dispatch({
+      type: 'ui/changePage',
+      payload: {
+        page: PROJECT_PAGE_TYPE,
+        defaultMenu: defaultMenuId,
+        defaultComponents: defaultMenuConfig.components,
+      },
+    });
+
+    // 3. 필터 설정
+    const defaultFilters = {
+      pjt_status: { $in: [88, 89] }, // 진행중(88), 검수중(89)
+    };
+
+    // 4. 필터 적용 및 초기 프로젝트 목록 로드
+    dispatch(setFilters(defaultFilters));
+    dispatch(fetchProjects());
+
+    // 컴포넌트 언마운트 시 정리
+    return () => {
+      // 필요한 정리 작업 수행
+      dispatch(clearSelectedItem());
+    };
+  }, [dispatch]);
 
   /**
    * 폼 필드 업데이트 이벤트 핸들러
@@ -175,6 +217,7 @@ const ProjectContainer = () => {
       <Section>
         {/* 레이아웃 타입에 따라 직접 조건부 렌더링 */}
         {layout === 'list' && <ProjectListLayout {...listLayoutProps} />}
+        {layout === 'search' && <ProjectSearchLayout {...listLayoutProps} />}
         {layout === 'work' && <ProjectWorkLayout />}
         {layout === 'add' && <ProjectAddLayout formProps={formProps} />}
         {layout === 'detail' && <ProjectDetailLayout {...detailLayoutProps} />}

@@ -159,3 +159,49 @@ export const buildProjectDetailQuery = (id) => {
     },
   );
 };
+
+export const buildProjectTaskListQuery = (params) => {
+  const { pagination = { start: 0, limit: 25 }, filters = {} } = params;
+
+  // 기본 필터 정의 (삭제되지 않은 항목만 조회)
+  const baseFilter = { is_deleted: { $eq: false } };
+
+  // 필터 결합
+  const combinedFilters = combineFilters(baseFilter, filters);
+
+  // 쿼리 구성
+  const query = {
+    filters: combinedFilters,
+    fields: ['*'],
+    populate: {
+      project: {
+        fields: ['name'],
+      },
+      project_task_bucket: {
+        fields: ['name'],
+      },
+      task_progress: {
+        fields: ['name'],
+      },
+      priority_level: {
+        fields: ['name'],
+      },
+      project_task_checklists: {
+        fields: ['*'],
+        sort: ['id:asc'],
+      },
+      users: {
+        fields: ['username', 'email'],
+      },
+    },
+    pagination: {
+      start: pagination.current
+        ? (pagination.current - 1) * pagination.pageSize
+        : pagination.start,
+      limit: pagination.pageSize || pagination.limit,
+    },
+    sort: ['id:desc'],
+  };
+
+  return qs.stringify(query, { encodeValuesOnly: true });
+};
