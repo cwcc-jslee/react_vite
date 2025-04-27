@@ -5,6 +5,8 @@ import { Row, Col } from './grid/Grid';
 export { default as Tooltip } from './tooltip/Tooltip';
 export { default as Progress } from './progress/Progress';
 export { default as Tag } from './tag/Tag';
+// Badge 컴포넌트는 아래에서 직접 정의하므로 여기서 import하지 않습니다
+// export { default as Badge } from './badge/Badge';
 
 export { Modal, Row, Col };
 /**
@@ -722,6 +724,68 @@ export const Alert = ({
       {...props}
     >
       {children}
+    </div>
+  );
+};
+
+/**
+ * Dropdown: 드롭다운 메뉴 컴포넌트
+ */
+export const Dropdown = ({
+  children,
+  menu,
+  trigger = ['hover'],
+  className = '',
+}) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+
+  const handleClick = () => {
+    if (trigger.includes('click')) {
+      setIsOpen(!isOpen);
+    }
+  };
+
+  const handleMouseEnter = () => {
+    if (trigger.includes('hover')) {
+      setIsOpen(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (trigger.includes('hover')) {
+      setIsOpen(false);
+    }
+  };
+
+  const handleMenuItemClick = (item) => {
+    setIsOpen(false);
+    if (menu.onClick) {
+      menu.onClick(item);
+    }
+  };
+
+  return (
+    <div
+      className={`relative inline-block ${className}`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <div onClick={handleClick}>{children}</div>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 py-1">
+          {menu.items.map((item) => (
+            <button
+              key={item.key}
+              className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              onClick={() => handleMenuItemClick(item)}
+            >
+              {item.icon && <span className="mr-2">{item.icon}</span>}
+              {item.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

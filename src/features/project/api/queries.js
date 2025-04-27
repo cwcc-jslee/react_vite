@@ -184,7 +184,7 @@ export const buildProjectTaskListQuery = (params) => {
         fields: ['name'],
       },
       priority_level: {
-        fields: ['name'],
+        fields: ['name', 'code'],
       },
       project_task_checklists: {
         fields: ['*'],

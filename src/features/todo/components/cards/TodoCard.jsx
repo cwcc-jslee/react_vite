@@ -1,82 +1,242 @@
 // src/features/project/components/tables/ProjectTaskList.jsx
+// 프로젝트 작업 카드 컴포넌트 - 작업 정보를 직관적인 카드 형태로 표시
+// 작업 일정 상태(정상, 지연)를 시각적으로 표시하고 남은 일수/경과 일수를 계산하여 보여줌
 
 import React, { useMemo } from 'react';
 import { useDispatch } from 'react-redux';
-import { Checkbox, Badge, Tooltip, Progress, Tag } from '@shared/components/ui';
+import {
+  Checkbox,
+  Badge,
+  Tooltip,
+  Progress,
+  Tag,
+  Dropdown,
+} from '@shared/components/ui';
+import {
+  FiCalendar,
+  FiClock,
+  FiAlertCircle,
+  FiCheckCircle,
+  FiMenu,
+  FiEdit,
+  FiEye,
+} from 'react-icons/fi';
+import dayjs from 'dayjs';
 
-/**
- * 프로젝트 작업 테이블 컴포넌트
- * 프로젝트의 작업 목록을 테이블 형태로 표시
- */
 const TodoCard = ({
   task = null, // 작업 데이터 객체
+  onAction = () => {}, // 작업 액션 핸들러 (상세보기, 수정 등)
+  isSelected = false, // 현재 선택된 작업인지 여부
 }) => {
   if (!task) return null;
 
-  // 날짜 포맷 헬퍼 함수
+  // 날짜 포맷 헬퍼 함수 (dayjs 사용)
   const formatDate = (dateString) => {
     if (!dateString) return '날짜 미정';
-
-    const date = new Date(dateString);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-      2,
-      '0',
-    )}-${String(date.getDate()).padStart(2, '0')}`;
+    return dayjs(dateString).format('YYYY-MM-DD');
   };
 
+  // 일정 상태 계산 함수
+  const getScheduleStatus = useMemo(() => {
+    // 오늘 날짜 (시간 제외)
+    const today = dayjs().startOf('day');
+
+    // 종료일 (확정 또는 예정)
+    const endDateStr = task.endDate || task.planEndDate;
+    if (!endDateStr)
+      return {
+        status: 'normal',
+        daysText: '기한 미정',
+        statusClass: 'text-gray-500',
+      };
+
+    const endDate = dayjs(endDateStr).startOf('day');
+
+    // 남은 일수 또는 지연된 일수 계산
+    const diffDays = endDate.diff(today, 'day');
+
+    if (diffDays < 0) {
+      // 지연: 종료일이 지남
+      return {
+        status: 'delayed',
+        daysText: `${Math.abs(diffDays)}일 지연`,
+        statusClass: 'text-red-600 font-bold',
+      };
+    } else if (diffDays === 0) {
+      // 오늘이 마감일
+      return {
+        status: 'today',
+        daysText: '오늘 마감',
+        statusClass: 'text-orange-500 font-bold',
+      };
+    } else if (diffDays <= 3) {
+      // 임박: 3일 이하 남음
+      return {
+        status: 'urgent',
+        daysText: `${diffDays}일 남음`,
+        statusClass: 'text-amber-500 font-bold',
+      };
+    } else {
+      // 정상: 여유 있음
+      return {
+        status: 'normal',
+        daysText: `${diffDays}일 남음`,
+        statusClass: 'text-green-600',
+      };
+    }
+  }, [task.endDate, task.planEndDate]);
+
   // 우선순위 라벨 및 색상 설정
-  const getPriorityBadge = (level) => {
-    if (!level) return null;
+  const getPriorityBadge = (priority) => {
+    if (!priority) return null;
 
-    const priorityMap = {
-      high: { label: '높음', className: 'bg-red-100 text-red-800' },
-      medium: { label: '중간', className: 'bg-yellow-100 text-yellow-800' },
-      low: { label: '낮음', className: 'bg-green-100 text-green-800' },
-      normal: { label: '보통', className: 'bg-blue-100 text-blue-800' },
+    // priority가 객체인지 확인하고 code 값을 추출
+    const priorityCode = priority?.code || priority;
+
+    // 디버깅용 콘솔 로그 추가
+    console.log('Priority Object:', priority);
+    console.log('Priority Code:', priorityCode);
+
+    // priorityCode가 문자열인지 확인
+    const priorityKey =
+      typeof priorityCode === 'string'
+        ? priorityCode.toLowerCase()
+        : String(priorityCode).toLowerCase();
+    console.log('Priority Key for Map:', priorityKey);
+
+    // 우선순위 코드별 색상 매핑
+    const priorityColorMap = {
+      urgent: 'bg-red-400 text-red-800',
+      high: 'bg-orange-400 text-orange-800',
+      medium: 'bg-yellow-400 text-yellow-800',
+      low: 'bg-green-400 text-green-800',
+      normal: 'bg-blue-400 text-blue-800',
     };
 
-    const priority = priorityMap[level.toLowerCase()] || {
-      label: level,
-      className: 'bg-gray-100 text-gray-800',
-    };
+    // priorityCode로 색상 매핑
+    const colorClass =
+      priorityColorMap[priorityKey] || 'bg-gray-400 text-gray-800';
 
-    return (
-      <Badge className={`mr-2 ${priority.className}`}>{priority.label}</Badge>
-    );
+    // 라벨은 항상 객체의 name 속성을 사용
+    const label = priority?.name || String(priorityCode);
+
+    console.log('Selected Color:', colorClass);
+    console.log('Selected Label:', label);
+
+    return <Badge className={`mr-2 ${colorClass}`}>{label}</Badge>;
+  };
+
+  // task_schedule_type이 ongoing인지 확인
+  const isOngoing = task.taskScheduleType === 'ongoing';
+
+  // 카드 테두리 색상 (일정 상태에 따라 변경)
+  const cardBorderClass = useMemo(() => {
+    // 선택된 상태일 때 다른 테두리 스타일 적용
+    if (isSelected) return 'border-blue-500 border-2 shadow-lg';
+
+    if (isOngoing) return 'border-gray-200';
+
+    switch (getScheduleStatus.status) {
+      case 'delayed':
+        return 'border-red-300 border-2';
+      case 'today':
+        return 'border-orange-300 border-2';
+      case 'urgent':
+        return 'border-amber-300 border-2';
+      default:
+        return 'border-gray-200';
+    }
+  }, [isOngoing, getScheduleStatus, isSelected]);
+
+  // 메뉴 클릭 핸들러
+  const handleMenuItemClick = (item) => {
+    // 상위 컴포넌트로 작업과 액션 전달
+    onAction(task, item.key);
   };
 
   return (
-    <div className="w-full p-4 mb-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+    <div
+      className={`w-full p-4 mb-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border ${cardBorderClass}`}
+    >
       <div className="flex justify-between items-center mb-3">
         <div className="flex items-center">
+          {/* 일정 상태 배지 - 위치 이동 */}
+          {!isOngoing && (
+            <div className="mr-3">
+              <Badge
+                className={`px-2 py-1 rounded-md flex items-center ${
+                  getScheduleStatus.status === 'delayed'
+                    ? 'bg-red-400 text-red-800'
+                    : getScheduleStatus.status === 'today'
+                    ? 'bg-orange-400 text-orange-800'
+                    : getScheduleStatus.status === 'urgent'
+                    ? 'bg-amber-400 text-amber-800'
+                    : 'bg-green-400 text-green-800'
+                }`}
+              >
+                {getScheduleStatus.status === 'delayed' && (
+                  <FiAlertCircle className="mr-1" size={14} />
+                )}
+                {getScheduleStatus.status === 'today' && (
+                  <FiClock className="mr-1" size={14} />
+                )}
+                {getScheduleStatus.status === 'urgent' && (
+                  <FiClock className="mr-1" size={14} />
+                )}
+                {getScheduleStatus.status === 'normal' && (
+                  <FiCheckCircle className="mr-1" size={14} />
+                )}
+                <span>
+                  {getScheduleStatus.status === 'delayed'
+                    ? '지연'
+                    : getScheduleStatus.status === 'today'
+                    ? '오늘 마감'
+                    : getScheduleStatus.status === 'urgent'
+                    ? '임박'
+                    : '정상'}
+                </span>
+              </Badge>
+            </div>
+          )}
           {task.project && (
             <Tag color="blue" className="mr-2">
-              {task.project.name || '프로젝트 없음'}
+              {typeof task.project === 'object'
+                ? task.project.name || '프로젝트 없음'
+                : String(task.project)}
             </Tag>
           )}
           {task.projectTaskBucket && (
             <Tag color="cyan">
-              {task?.projectTaskBucket?.name || '버킷 없음'}
+              {typeof task.projectTaskBucket === 'object'
+                ? task.projectTaskBucket.name || '버킷 없음'
+                : String(task.projectTaskBucket)}
             </Tag>
           )}
         </div>
         <div className="flex items-center">
-          <Tooltip title="작업 상세 보기">
-            <button className="p-2 text-blue-500 hover:text-blue-700">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                <path
-                  fillRule="evenodd"
-                  d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
+          <Tooltip title="작업 메뉴">
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'view',
+                    icon: <FiEye size={14} />,
+                    label: '작업보기',
+                  },
+                  {
+                    key: 'edit',
+                    icon: <FiEdit size={14} />,
+                    label: '작업등록',
+                  },
+                ],
+                onClick: handleMenuItemClick,
+              }}
+              trigger={['click']}
+            >
+              <button className="p-2 text-blue-500 hover:text-blue-700">
+                <FiMenu size={18} />
+              </button>
+            </Dropdown>
           </Tooltip>
         </div>
       </div>
@@ -84,7 +244,7 @@ const TodoCard = ({
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
         <div className="w-full md:w-1/4">
           <div className="flex items-center mb-2">
-            {/* {getPriorityBadge(task?.priorityLevel)} */}
+            {getPriorityBadge(task?.priorityLevel)}
             <h3 className="text-lg font-bold text-gray-800">{task.name}</h3>
           </div>
           {task.task_progress && (
@@ -93,7 +253,7 @@ const TodoCard = ({
                 <span className="text-xs font-medium text-gray-500 mr-2">
                   진행률:
                 </span>
-                <span className="text-xs font-bold">{task.task_progress}%</span>
+                <span className="text-xs font-bold">{task.taskProgress}%</span>
               </div>
               <Progress
                 percent={task.taskProgress || 0}
@@ -110,30 +270,73 @@ const TodoCard = ({
 
         <div className="w-full md:w-1/4 mt-3 md:mt-0">
           <div className="flex flex-col">
-            <div className="flex items-center mb-1">
-              <span className="text-sm font-medium text-gray-500 mr-2">
-                시작일:
-              </span>
-              <span className="text-sm text-gray-700">
-                {formatDate(task.startDate)}
-              </span>
-            </div>
-            <div className="flex items-center mb-1">
-              <span className="text-sm font-medium text-gray-500 mr-2">
-                종료일:
-              </span>
-              <span className="text-sm text-gray-700">
-                {formatDate(task.endDate)}
-              </span>
-            </div>
-            <div className="flex items-center">
-              <span className="text-sm font-medium text-gray-500 mr-2">
-                최근 작업일:
-              </span>
-              <span className="text-sm text-gray-700">
-                {formatDate(task.lastWorkupdateDate)}
-              </span>
-            </div>
+            {isOngoing ? (
+              <div className="flex items-center mb-1">
+                <span className="text-sm inline-flex items-center text-amber-600">
+                  <FiClock className="mr-1" size={14} />
+                  schedule type ongoing
+                </span>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center mb-1">
+                  <span className="text-sm font-medium text-gray-500 mr-2">
+                    시작일:
+                  </span>
+                  <span
+                    className={`text-sm inline-flex items-center ${
+                      task.startDate ? 'text-gray-700' : 'text-gray-500 italic'
+                    }`}
+                  >
+                    <FiCalendar className="mr-1" size={14} />
+                    {formatDate(task.startDate || task.planStartDate)}
+                    {!task.startDate && task.planStartDate && (
+                      <span className="ml-1 text-xs text-gray-500">(예)</span>
+                    )}
+                  </span>
+                </div>
+                <div className="flex items-center mb-1">
+                  <span className="text-sm font-medium text-gray-500 mr-2">
+                    종료일:
+                  </span>
+                  <span
+                    className={`text-sm inline-flex items-center ${
+                      task.endDate ? 'text-gray-700' : 'text-gray-500 italic'
+                    }`}
+                  >
+                    <FiCalendar className="mr-1" size={14} />
+                    {formatDate(task.endDate || task.planEndDate)}
+                    {!task.endDate && task.planEndDate && (
+                      <span className="ml-1 text-xs text-gray-500">(예)</span>
+                    )}
+                  </span>
+                </div>
+                {/* 일정 상태 표시 */}
+                <div className="flex items-center">
+                  <span className="text-sm font-medium text-gray-500 mr-2">
+                    일정 상태:
+                  </span>
+                  <span
+                    className={`text-sm inline-flex items-center ${getScheduleStatus.statusClass}`}
+                  >
+                    {/* JSX 요소를 직접 사용하지 않고 조건부 렌더링으로 변경 */}
+                    {getScheduleStatus.status === 'delayed' && (
+                      <FiAlertCircle className="mr-1" size={16} />
+                    )}
+                    {getScheduleStatus.status === 'today' && (
+                      <FiClock className="mr-1" size={16} />
+                    )}
+                    {getScheduleStatus.status === 'urgent' && (
+                      <FiClock className="mr-1" size={16} />
+                    )}
+                    {getScheduleStatus.status === 'normal' && (
+                      <FiCheckCircle className="mr-1" size={16} />
+                    )}
+                    {getScheduleStatus.daysText}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -144,6 +347,14 @@ const TodoCard = ({
             </span>
             <span className="text-sm font-bold text-gray-700">
               {task.totalWorkHours ? `${task.totalWorkHours}시간` : '기록 없음'}
+            </span>
+          </div>
+          <div className="flex items-center mb-2">
+            <span className="text-sm font-medium text-gray-500 mr-2">
+              최근 작업일:
+            </span>
+            <span className="text-sm text-gray-700">
+              {formatDate(task.lastWorkupdateDate)}
             </span>
           </div>
           <div className="flex items-center">
@@ -167,10 +378,6 @@ const TodoCard = ({
               )}
             </div>
           </div>
-        </div>
-
-        <div className="w-full md:w-1/4 mt-3 md:mt-0">
-          {/* workDetails 참조 제거 */}
         </div>
       </div>
     </div>

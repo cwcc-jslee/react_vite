@@ -7,7 +7,7 @@ import { Section } from '@shared/components/ui/layout/components';
 // 커스텀 훅 사용
 
 // Layout
-import TodoListLayout from '../layouts/TodoListLayout';
+import TodoLayout from '../layouts/TodoLayout';
 import WorkListLayout from '../layouts/WorkListLayout';
 
 // Redux 액션
@@ -50,7 +50,7 @@ const TodoContainer = () => {
   return (
     <>
       <Section>
-        {layout === 'todayTasks' && <TodoListLayout />}
+        {layout === 'todayTasks' && <TodoLayout />}
         {layout === 'recentWork' && <WorkListLayout />}
       </Section>
 
