@@ -9,7 +9,11 @@
 import { apiService } from '../../../shared/api/apiService';
 import { apiClient } from '../../../shared/api/apiClient';
 import { handleApiError } from '../../../shared/api/errorHandlers';
-import { buildProjectListQuery, buildProjectDetailQuery } from '../api/queries';
+import {
+  buildProjectListQuery,
+  buildProjectDetailQuery,
+  buildProjectTaskListQuery,
+} from '../api/queries';
 import { normalizeResponse } from '../../../shared/api/normalize';
 import qs from 'qs';
 

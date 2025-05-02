@@ -33,6 +33,7 @@ export const projectReduxInitialState = {
     data: {
       pjtStatus: { id: 86, code: '시작전', name: '시작전' },
       importanceLevel: { id: 121, code: 'medium', name: '중간' },
+      workType: 'project',
     },
     errors: {},
     isSubmitting: false,

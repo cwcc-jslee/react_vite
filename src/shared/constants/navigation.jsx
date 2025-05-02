@@ -39,13 +39,6 @@ export const SIDEBAR_ITEMS = [
     icon: <FaProjectDiagram className="h-5 w-5" />,
   },
   {
-    id: 'oneofftask',
-    path: '/oneofftask',
-    label: 'OneOffTask',
-    permissions: ['user'],
-    icon: <LuListTodo className="h-5 w-5" />,
-  },
-  {
     id: 'todo',
     path: '/todo',
     label: 'ToDo',
@@ -171,6 +164,29 @@ export const PAGE_MENUS = {
           },
         },
       },
+      singletask: {
+        label: 'SingleTask',
+        permissions: ['user'],
+        visible: true,
+        config: {
+          layout: 'list',
+          sections: {
+            projectCharts: false,
+            projectListTable: true,
+            projectAddForm: false,
+            projectDetailTable: false,
+            projectTaskBoard: false,
+          },
+          components: {
+            // projectChart: true,
+            // projectTable: true,
+            // projectAddSection: false,
+          },
+          drawer: {
+            visible: false, // 드로어 표시 여부
+          },
+        },
+      },
       search: {
         label: '상세조회',
         permissions: ['user'],
@@ -217,6 +233,7 @@ export const PAGE_MENUS = {
           },
         },
       },
+
       detail: {
         label: '상세정보',
         permissions: ['user'],

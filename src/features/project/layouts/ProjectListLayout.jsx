@@ -1,6 +1,7 @@
 // src/features/project/layouts/ProjectListLayout.jsx
 
 import React from 'react';
+import { useSelector } from 'react-redux';
 import ProjectChartsSection from '../sections/ProjectChartsSection';
 import ProjectListSection from '../sections/ProjectListSection';
 
@@ -20,13 +21,17 @@ const ProjectListLayout = ({
   loadProjectDetail,
   uiComponents,
 }) => {
+  const sections = useSelector((state) => state.ui.pageLayout.sections);
+
   return (
     <>
       {/* 차트 섹션 (상태, 진행률, 트리맵) */}
-      <ProjectChartsSection
-        projectStatus={chartsData?.projectStatus}
-        projectProgress={chartsData?.projectProgress}
-      />
+      {sections.projectCharts && (
+        <ProjectChartsSection
+          projectStatus={chartsData?.projectStatus}
+          projectProgress={chartsData?.projectProgress}
+        />
+      )}
 
       {/* 테이블 섹션 */}
       <ProjectListSection

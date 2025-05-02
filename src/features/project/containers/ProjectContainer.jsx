@@ -1,6 +1,6 @@
 // src/features/project/containers/ProjectContainer.jsx
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Section } from '../../../shared/components/ui/layout/components';
 import {
@@ -45,6 +45,8 @@ import { notification } from '../../../shared/services/notification';
  */
 const ProjectContainer = () => {
   const dispatch = useDispatch();
+  // 이전 메뉴 상태를 추적하기 위한 ref
+  const prevMenuRef = useRef(null);
 
   // 프로젝트 페이지 상태 및 액션 훅
   const {
@@ -64,6 +66,8 @@ const ProjectContainer = () => {
     (state) => state.ui.pageLayout,
   );
   const drawer = useSelector((state) => state.ui.drawer);
+  // 현재 선택된 메뉴 상태 가져오기
+  const currentMenu = useSelector((state) => state.ui.pageLayout.menu);
 
   // 프로젝트 상태 데이터 가져오기
   const { state } = useProject();
@@ -110,6 +114,7 @@ const ProjectContainer = () => {
     // 3. 필터 설정
     const defaultFilters = {
       pjt_status: { $in: [88, 89] }, // 진행중(88), 검수중(89)
+      work_type: 'project', // 작업 유형이 'project'인 값
     };
 
     // 4. 필터 적용 및 초기 프로젝트 목록 로드
@@ -122,6 +127,28 @@ const ProjectContainer = () => {
       dispatch(clearSelectedItem());
     };
   }, [dispatch]);
+
+  // 메뉴 변경 시 필터 업데이트
+  useEffect(() => {
+    // 메뉴가 없거나 이전과 동일한 메뉴면 실행하지 않음
+    if (!currentMenu || currentMenu === prevMenuRef.current) return;
+
+    // 현재 메뉴에 따라 work_type 필터 설정
+    let workTypeFilter = 'project'; // 기본값
+
+    if (currentMenu === 'singletask') {
+      workTypeFilter = 'single';
+    }
+
+    // 올바른 액션 사용
+    dispatch(setFilters({ work_type: workTypeFilter }));
+
+    // API 재요청
+    dispatch(fetchProjects());
+
+    // 현재 메뉴 저장
+    prevMenuRef.current = currentMenu;
+  }, [currentMenu, dispatch]);
 
   /**
    * 폼 필드 업데이트 이벤트 핸들러

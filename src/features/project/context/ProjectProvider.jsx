@@ -5,7 +5,8 @@
  * @filename src/features/project/context/ProjectContext.jsx
  */
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
-import { apiService } from '../../../shared/api/apiService';
+import { apiService } from '@shared/api/apiService';
+import { projectApiService } from '../services/projectApiService';
 
 const initialState = {
   projectStatus: {
@@ -27,6 +28,17 @@ const initialState = {
   error: null,
   loadingProgress: false,
   errorProgress: null,
+  // Oneoff task 관련 상태 추가
+  oneoffTasks: {
+    items: [],
+    pagination: {
+      page: 1,
+      pageSize: 10,
+      total: 0,
+    },
+    loading: false,
+    error: null,
+  },
 };
 
 const ProjectContext = createContext(null);
@@ -60,6 +72,35 @@ const projectReducer = (state, action) => {
         ...state,
         errorProgress: action.payload,
         loadingProgress: false,
+      };
+    // Oneoff task 관련 액션 추가
+    case 'FETCH_ONEOFF_TASKS_START':
+      return {
+        ...state,
+        oneoffTasks: {
+          ...state.oneoffTasks,
+          loading: true,
+          error: null,
+        },
+      };
+    case 'FETCH_ONEOFF_TASKS_SUCCESS':
+      return {
+        ...state,
+        oneoffTasks: {
+          items: action.payload.items,
+          pagination: action.payload.pagination,
+          loading: false,
+          error: null,
+        },
+      };
+    case 'FETCH_ONEOFF_TASKS_ERROR':
+      return {
+        ...state,
+        oneoffTasks: {
+          ...state.oneoffTasks,
+          loading: false,
+          error: action.payload,
+        },
       };
     default:
       return state;

@@ -25,24 +25,14 @@ import {
 
 // 프로젝트 정보 입력 폼 컴포넌트
 const ProjectAddBaseForm = ({
-  // formData,
   codebooks,
+  formData,
   updateField,
-  handleTemplateSelect,
-  // onTemplateSelect,
-  // handleFormSubmit,
+  isSubmitting,
 }) => {
   const dispatch = useDispatch();
 
-  // Redux 상태 가져오기
-  const {
-    data: formData = {},
-    errors = {},
-    isSubmitting = false,
-  } = useSelector((state) => state.pageForm);
-
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
-  // const [selectedTemplateId, setSelectedTemplateId] = useState(null);
 
   // API 데이터 조회
   const {
@@ -50,9 +40,6 @@ const ProjectAddBaseForm = ({
     isLoading: isSfaLoading,
     refetch: refetchSfa,
   } = useSelectData(apiCommon.getSfasByCustomer, selectedCustomerId);
-
-  const { data: taskTempleteData, isLoading: isTaskTempleteLoading } =
-    useSelectData(projectApiService.getTaskTemplate);
 
   const { data: teamsData, isLoading: isTeamsLoading } = useSelectData(
     apiCommon.getTeams,
@@ -88,15 +75,6 @@ const ProjectAddBaseForm = ({
     ...(serviceData?.data?.[0]?.structure || []).map((item) => ({
       id: item?.id?.toString() || '',
       name: item?.name || '이름 없음',
-    })),
-  ];
-
-  // task templete 옵션 목록
-  const templeteOptions = [
-    { value: '', label: '선택하세요' },
-    ...(taskTempleteData?.data || []).map((item) => ({
-      value: item?.id?.toString() || '',
-      label: item?.name || '이름 없음',
     })),
   ];
 
@@ -309,47 +287,9 @@ const ProjectAddBaseForm = ({
               // disabled={isSubmitting}
             />
           </FormItem>
-
-          {/* 템플릿 선택 필드 */}
-          <FormItem className="flex-1">
-            <Label className="text-left">템플릿</Label>
-            <Select onChange={(e) => handleTemplateSelect(e.target.value)}>
-              {templeteOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {isTaskTempleteLoading && option.value === ''
-                    ? '로딩 중...'
-                    : option.label}
-                </option>
-              ))}
-            </Select>
-            {/* {isTemplateDetailLoading && selectedTemplateId && (
-                    <p className="text-xs text-indigo-600 mt-1">
-                    템플릿 작업 로딩 중...
-                    </p>
-                    )} */}
-          </FormItem>
+          <FormItem className="flex-1"></FormItem>
         </Group>
       </Col>
-      {/* <Col span={2}>
-        <Group direction="vertical" className="gap-6">
-          <Button type="submit" disabled={isSubmitting} className="w-full">
-            취소
-          </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={isSubmitting}
-            className="w-full"
-            onClick={(e) => {
-              // 버튼 클릭 시에도 이벤트 전파 방지
-              e.preventDefault();
-              handleFormSubmit(e);
-            }}
-          >
-            {isSubmitting ? '처리중...' : '저장'}
-          </Button>
-        </Group>
-      </Col> */}
     </Row>
   );
 };

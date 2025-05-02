@@ -40,6 +40,7 @@ export const buildProjectListQuery = (params) => {
       'start_date',
       'end_date',
       'last_workupdate_date',
+      'work_type',
       'is_completed',
       'createdAt',
     ],
@@ -175,7 +176,7 @@ export const buildProjectTaskListQuery = (params) => {
     fields: ['*'],
     populate: {
       project: {
-        fields: ['name'],
+        fields: ['name', 'work_type'],
       },
       project_task_bucket: {
         fields: ['name'],
