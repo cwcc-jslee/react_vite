@@ -177,6 +177,16 @@ export const buildProjectTaskListQuery = (params) => {
     populate: {
       project: {
         fields: ['name', 'work_type'],
+        populate: {
+          sfa: {
+            fields: ['name'],
+            populate: {
+              customer: {
+                fields: ['name'],
+              },
+            },
+          },
+        },
       },
       project_task_bucket: {
         fields: ['name'],

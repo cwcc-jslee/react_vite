@@ -1,6 +1,6 @@
 /**
- * 프로젝트 서비스 - API 통신 및 데이터 처리를 담당
- * 프로젝트 CRUD 작업과 관련된 모든 API 호출 및 데이터 변환을 처리합니다.
+ * 작업 서비스 - API 통신 및 데이터 처리를 담당
+ * 작업 CRUD 작업과 관련된 모든 API 호출 및 데이터 변환을 처리합니다.
  *
  * @version 1.0.0
  * @filename src/features/work/services/workApiService.js
@@ -16,7 +16,7 @@ import qs from 'qs';
 
 export const workApiService = {
   /**
-   * 프로젝트트 목록 조회
+   * 작업트 목록 조회
    * @param {Object} params - 검색 파라미터
    */
   getWorkList: async (params) => {
@@ -27,13 +27,13 @@ export const workApiService = {
 
       return normalizeResponse(response);
     } catch (error) {
-      handleApiError(error, '프로젝트 목록을 불러오는 중 오류가 발생했습니다.');
+      handleApiError(error, '작업업 목록을 불러오는 중 오류가 발생했습니다.');
     }
   },
 
   /**
-   * 새 프로젝트 생성
-   * @param {Object} workData - 저장할 프로젝트 데이터
+   * 새 작업 생성
+   * @param {Object} workData - 저장할 작업 데이터
    * @returns {Promise} API 응답 Promise
    */
   createWork: async (workData) => {
@@ -41,7 +41,7 @@ export const workApiService = {
       const response = await apiService.post('/works', workData);
       return response.data;
     } catch (error) {
-      handleApiError(error, '프로젝트 생성 중 오류가 발생했습니다.');
+      handleApiError(error, '작업업 생성 중 오류가 발생했습니다.');
     }
   },
 

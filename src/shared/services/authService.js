@@ -1,25 +1,45 @@
 // src/shared/services/authService.js
 
 /**
+ * JWT 토큰 저장
+ * @param {string} token - JWT 토큰
+ */
+export const setAuthToken = (token) => {
+  try {
+    sessionStorage.setItem('jwt', token);
+  } catch (error) {
+    console.error('토큰 저장 실패:', error);
+    throw error;
+  }
+};
+
+/**
  * JWT 토큰 가져오기
  * @returns {string} JWT 토큰
  * @throws {Error} 토큰이 없거나 유효하지 않은 경우
  */
 export const getAuthToken = () => {
   try {
-    const userStr = sessionStorage?.getItem('user');
-    if (!userStr) {
-      throw new Error('사용자 정보가 없습니다.');
+    const token = sessionStorage.getItem('jwt');
+    if (!token) {
+      throw new Error('토큰이 없습니다.');
     }
-
-    const user = JSON.parse(userStr);
-    if (!user?.jwt) {
-      throw new Error('토큰 정보가 없습니다.');
-    }
-
-    return user.jwt;
+    return token;
   } catch (error) {
     console.error('토큰 가져오기 실패:', error);
+    throw error;
+  }
+};
+
+/**
+ * 사용자 정보 저장
+ * @param {Object} userData - 사용자 정보
+ */
+export const setUserData = (userData) => {
+  try {
+    sessionStorage.setItem('user', JSON.stringify(userData));
+  } catch (error) {
+    console.error('사용자 정보 저장 실패:', error);
     throw error;
   }
 };
@@ -50,5 +70,18 @@ export const isTokenValid = () => {
     return !!token;
   } catch {
     return false;
+  }
+};
+
+/**
+ * 로그아웃 처리
+ */
+export const removeAuthToken = () => {
+  try {
+    sessionStorage.removeItem('jwt');
+    sessionStorage.removeItem('user');
+  } catch (error) {
+    console.error('로그아웃 처리 실패:', error);
+    throw error;
   }
 };

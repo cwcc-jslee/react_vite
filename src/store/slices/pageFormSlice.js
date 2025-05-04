@@ -1,3 +1,10 @@
+// src/store/slices/pageFormSlice.js
+/**
+ * 페이지 폼 상태 관리를 위한 Redux 슬라이스
+ * 각 페이지의 폼 상태(데이터, 에러, 제출 상태 등)를 관리합니다.
+ * 페이지 간 이동 시 폼 상태 초기화는 pageStateSlice의 currentPath를 사용합니다.
+ */
+
 import { createSlice } from '@reduxjs/toolkit';
 
 // 초기 상태 정의

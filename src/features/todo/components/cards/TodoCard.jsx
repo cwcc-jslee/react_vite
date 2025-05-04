@@ -4,6 +4,7 @@
 
 import React, { useMemo } from 'react';
 import { useDispatch } from 'react-redux';
+import { setDrawer } from '../../../../store/slices/uiSlice';
 import {
   Checkbox,
   Badge,
@@ -28,6 +29,8 @@ const TodoCard = ({
   onAction = () => {}, // 작업 액션 핸들러 (상세보기, 수정 등)
   isSelected = false, // 현재 선택된 작업인지 여부
 }) => {
+  const dispatch = useDispatch();
+
   if (!task) return null;
 
   // 날짜 포맷 헬퍼 함수 (dayjs 사용)
@@ -94,15 +97,15 @@ const TodoCard = ({
     const priorityCode = priority?.code || priority;
 
     // 디버깅용 콘솔 로그 추가
-    console.log('Priority Object:', priority);
-    console.log('Priority Code:', priorityCode);
+    // console.log('Priority Object:', priority);
+    // console.log('Priority Code:', priorityCode);
 
     // priorityCode가 문자열인지 확인
     const priorityKey =
       typeof priorityCode === 'string'
         ? priorityCode.toLowerCase()
         : String(priorityCode).toLowerCase();
-    console.log('Priority Key for Map:', priorityKey);
+    // console.log('Priority Key for Map:', priorityKey);
 
     // 우선순위 코드별 색상 매핑
     const priorityColorMap = {
@@ -120,8 +123,8 @@ const TodoCard = ({
     // 라벨은 항상 객체의 name 속성을 사용
     const label = priority?.name || String(priorityCode);
 
-    console.log('Selected Color:', colorClass);
-    console.log('Selected Label:', label);
+    // console.log('Selected Color:', colorClass);
+    // console.log('Selected Label:', label);
 
     return <Badge className={`mr-2 ${colorClass}`}>{label}</Badge>;
   };
@@ -150,8 +153,21 @@ const TodoCard = ({
 
   // 메뉴 클릭 핸들러
   const handleMenuItemClick = (item) => {
-    // 상위 컴포넌트로 작업과 액션 전달
-    onAction(task, item.key);
+    if (item.key === 'add') {
+      // 작업등록 클릭 시 Drawer 열기
+      dispatch(
+        setDrawer({
+          visible: true,
+          mode: 'add',
+          options: {
+            taskId: task.id,
+          },
+        }),
+      );
+    } else {
+      // 다른 메뉴 항목 클릭 시 기존 동작 유지
+      onAction(task, item.key);
+    }
   };
 
   return (
@@ -224,7 +240,7 @@ const TodoCard = ({
                     label: '작업보기',
                   },
                   {
-                    key: 'edit',
+                    key: 'add',
                     icon: <FiEdit size={14} />,
                     label: '작업등록',
                   },

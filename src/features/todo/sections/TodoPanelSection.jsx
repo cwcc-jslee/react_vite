@@ -1,19 +1,10 @@
 import React from 'react';
 import { Card, Button } from '@shared/components/ui';
+import WorkAddForm from '../../work/components/forms/WorkAddForm';
 
 /**
  * Todo 패널 섹션 컴포넌트
  * 선택된 작업의 상세 정보를 표시하는 패널 담당
- *
- * @param {Object} props
- * @param {Object} props.task - 표시할 작업 객체
- * @param {string} props.panelType - 패널 타입 ('view', 'edit' 등)
- * @param {Function} props.onClose - 패널 닫기 함수
- * @param {string} [props.title] - 패널 제목 (기본값: 패널 타입에 따라 자동 설정)
- * @param {string} [props.headerBgColor] - 헤더 배경색 (기본값: 패널 타입에 따라 자동 설정)
- * @param {React.ReactNode} [props.headerActions] - 헤더에 추가할 액션 버튼들
- * @param {boolean} [props.isLoading] - 로딩 상태 여부
- * @param {React.ReactNode} [props.children] - 패널 내부 컨텐츠 (없으면 기본 컨텐츠 사용)
  */
 const TodoPanelSection = ({
   task,
@@ -30,18 +21,13 @@ const TodoPanelSection = ({
     switch (panelType) {
       case 'view':
         return {
-          title: '작업 상세 정보',
+          title: '작업 리스트',
           headerBgColor: 'bg-blue-50',
         };
-      case 'edit':
+      case 'add':
         return {
-          title: '작업 수정',
+          title: '작업 등록',
           headerBgColor: 'bg-orange-50',
-        };
-      case 'create':
-        return {
-          title: '새 작업 생성',
-          headerBgColor: 'bg-green-50',
         };
       default:
         return {
@@ -76,6 +62,8 @@ const TodoPanelSection = ({
             {/* 필요한 추가 정보 표시 */}
           </div>
         );
+      case 'add':
+        return <WorkAddForm />;
       case 'edit':
         return <p>작업 수정 폼이 여기에 들어갑니다.</p>;
       default:

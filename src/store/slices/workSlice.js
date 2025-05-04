@@ -81,11 +81,22 @@ const initialState = {
   filters: {},
 
   // 폼 상태
-  // form: {
-  //   data: {},
-  //   errors: {},
-  //   isSubmitting: false,
-  // },
+  form: {
+    data: {
+      projectTask: '',
+      taskProgress: '',
+      workDate: '',
+      workHours: '',
+      nonBillableHours: '',
+      revisionNumber: '',
+      user: '',
+      team: '',
+      notes: '',
+    },
+    errors: {},
+    isSubmitting: false,
+    isValid: true,
+  },
 };
 
 const workSlice = createSlice({
@@ -118,6 +129,37 @@ const workSlice = createSlice({
     },
 
     // 폼 데이터 변경
+    updateWorkFormField: (state, action) => {
+      const { name, value } = action.payload;
+      state.form.data[name] = value;
+
+      // 에러 초기화
+      if (state.form.errors[name]) {
+        state.form.errors[name] = null;
+      }
+    },
+
+    // 폼 데이터 초기화
+    resetWorkForm: (state) => {
+      state.form = initialState.form;
+    },
+
+    // 폼 에러 설정
+    setWorkFormErrors: (state, action) => {
+      state.form.errors = action.payload;
+    },
+
+    // 폼 제출 상태 설정
+    setWorkFormSubmitting: (state, action) => {
+      state.form.isSubmitting = action.payload;
+    },
+
+    // 폼 유효성 설정
+    setWorkFormIsValid: (state, action) => {
+      state.form.isValid = action.payload;
+    },
+
+    // 폼 데이터 변경
     updateFormField: (state, action) => {
       const { name, value } = action.payload;
       state.form.data = {
@@ -147,6 +189,36 @@ const workSlice = createSlice({
         ...state.form.errors,
         ...action.payload,
       };
+    },
+
+    // 폼 유효성 설정
+    setFormIsValid: (state, action) => {
+      state.form.isValid = action.payload;
+    },
+
+    // 폼 제출 상태 설정
+    setFormSubmitting: (state, action) => {
+      state.form.isSubmitting = action.payload;
+    },
+
+    // 폼 데이터 변경
+    setItems: (state, action) => {
+      state.items = action.payload;
+    },
+
+    // 폼 데이터 변경
+    setPagination: (state, action) => {
+      state.pagination = { ...state.pagination, ...action.payload };
+    },
+
+    // 폼 데이터 변경
+    setStatus: (state, action) => {
+      state.status = action.payload;
+    },
+
+    // 폼 데이터 변경
+    setError: (state, action) => {
+      state.error = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -203,9 +275,20 @@ export const {
   setPageSize,
   setFilters,
   resetFilters,
+  updateWorkFormField,
+  setWorkFormErrors,
+  setWorkFormSubmitting,
+  resetWorkForm,
+  setWorkFormIsValid,
   updateFormField,
   resetForm,
   setFormErrors,
+  setFormIsValid,
+  setFormSubmitting,
+  setItems,
+  setPagination,
+  setStatus,
+  setError,
 } = workSlice.actions;
 
 export default workSlice.reducer;

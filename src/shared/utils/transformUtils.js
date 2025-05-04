@@ -268,6 +268,32 @@ export const mapFieldsToDB = (data, fieldMap) => {
 };
 
 /**
+ * 폼 데이터 전처리
+ * - 불필요한 임시 필드 제거
+ * - null이나 빈 문자열인 필드 제거
+ * - 깊은 복사로 원본 데이터 유지
+ *
+ * @param {Object} data - 처리할 데이터
+ * @returns {Object} 전처리된 데이터
+ */
+export const prepareFormData = (data) => {
+  // 깊은 복사로 원본 데이터 유지
+  const clonedData = JSON.parse(JSON.stringify(data));
+
+  // 불필요한 임시 필드 제거
+  const { __temp, ...cleanData } = clonedData;
+
+  // null이나 빈 문자열인 경우 해당 키 삭제
+  Object.keys(cleanData).forEach((key) => {
+    if (cleanData[key] === '' || cleanData[key] === null) {
+      delete cleanData[key];
+    }
+  });
+
+  return cleanData;
+};
+
+/**
  * 모든 변환 함수를 포함하는 객체
  * 이전 코드와의 호환성을 위해 제공
  */
@@ -280,6 +306,7 @@ export const transformUtils = {
   snakeToCamelCase,
   transformMultiSelect,
   mapFieldsToDB,
+  prepareFormData,
 };
 
 // 기본 내보내기

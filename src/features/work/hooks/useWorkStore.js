@@ -1,7 +1,15 @@
 // src/features/work/hooks/useWorkStore.js
 /**
- * 프로젝트 페이지 상태 관리를 위한 커스텀 훅
- * pageState 슬라이스를 사용하여 프로젝트 관련 상태와 액션을 제공합니다.
+ * 작업(Work) 관련 Redux 상태 관리를 위한 커스텀 훅
+ *
+ * 주요 기능:
+ * 1. 작업 데이터 CRUD 작업
+ * 2. Redux 상태 관리
+ * 3. 작업 목록 조회 및 필터링
+ * 4. 작업 상세 정보 관리
+ *
+ * 사용 예시:
+ * const { works, loading, error, fetchWorks, createWork } = useWorkStore();
  */
 
 import { useEffect, useCallback } from 'react';
@@ -12,6 +20,9 @@ import {
   setPageSize,
   setFilters,
   resetFilters,
+  updateWorkFormField,
+  setWorkFormErrors,
+  resetWorkForm,
 } from '../../../store/slices/workSlice';
 
 /**
@@ -22,7 +33,7 @@ export const useWorkStore = () => {
   const dispatch = useDispatch();
   const workState = useSelector((state) => state.work);
   const uiState = useSelector((state) => state.ui);
-  const { items, pagination, filters, status, error } = workState;
+  const { items, pagination, filters, status, error, form } = workState;
 
   // 페이지 초기화 (컴포넌트 마운트 시 호출)
   useEffect(() => {
@@ -83,6 +94,14 @@ export const useWorkStore = () => {
     dispatch(fetchWorks({ filters: {} }));
   }, [dispatch]);
 
+  // 폼 관련 함수들
+  const updateFormField = useCallback(
+    ({ target: { name, value } }) => {
+      dispatch(updateWorkFormField({ name, value }));
+    },
+    [dispatch],
+  );
+
   return {
     // 스토어 상태
     items,
@@ -98,6 +117,10 @@ export const useWorkStore = () => {
     handlePageSizeChange,
     handleFilterChange,
     handleResetFilters,
+
+    // 폼 관련 반환값들
+    form,
+    updateFormField,
   };
 };
 

@@ -1,16 +1,31 @@
 // src/features/auth/store/authSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authApi } from '../api/authApi';
-import { setAuthToken, removeAuthToken } from '../utils/authUtils';
+import {
+  setAuthToken,
+  setUserData,
+  removeAuthToken,
+} from '../../../shared/services/authService';
 
 export const loginUser = createAsyncThunk(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await authApi.login(credentials);
-      setAuthToken(response.data);
+      const { jwt } = response.data;
+      setAuthToken(jwt);
 
-      return response.data;
+      // 로그인 성공 후 사용자 정보와 팀 정보를 함께 가져옴
+      const userResponse = await authApi.getMe(jwt);
+      const userData = {
+        ...response.data,
+        user: userResponse.data,
+      };
+
+      // 사용자 정보 저장
+      setUserData(userData);
+
+      return userData;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Login failed');
     }

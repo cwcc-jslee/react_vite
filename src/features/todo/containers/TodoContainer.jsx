@@ -9,6 +9,7 @@ import { Section } from '@shared/components/ui/layout/components';
 // Layout
 import TodoLayout from '../layouts/TodoLayout';
 import WorkListLayout from '../layouts/WorkListLayout';
+import TodoDrawer from '../components/drawer/TodoDrawer';
 
 // Redux 액션
 import {
@@ -54,8 +55,7 @@ const TodoContainer = () => {
         {layout === 'recentWork' && <WorkListLayout />}
       </Section>
 
-      {/* 프로젝트 드로어 */}
-      {/* {drawer.visible && <TodoDrawer drawer={drawer} />} */}
+      {drawer.visible && <TodoDrawer drawer={drawer} />}
     </>
   );
 };

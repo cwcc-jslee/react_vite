@@ -9,4 +9,19 @@ export const authApi = {
     };
     return apiClient.post('/auth/local', payload);
   },
+
+  getMe: async (token) => {
+    return apiClient.get('/users/me', {
+      params: {
+        populate: {
+          team: {
+            fields: ['id', 'name', 'code'],
+          },
+        },
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
 };
