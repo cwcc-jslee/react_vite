@@ -32,6 +32,7 @@ const TodoCard = ({
   const dispatch = useDispatch();
 
   if (!task) return null;
+  console.log('>>>task', task);
 
   // 날짜 포맷 헬퍼 함수 (dayjs 사용)
   const formatDate = (dateString) => {
@@ -170,6 +171,50 @@ const TodoCard = ({
     }
   };
 
+  // 원형 진행률 컴포넌트
+  const CircularProgress = ({ progress, revisionNumber }) => {
+    const radius = 20;
+    const circumference = 2 * Math.PI * radius;
+    // progress 값에서 %를 제거하고 숫자로 변환
+    const progressValue = parseInt(progress.replace('%', ''));
+    const progressOffset =
+      circumference - (progressValue / 100) * circumference;
+
+    return (
+      <div className="relative w-12 h-12">
+        <svg className="w-full h-full transform -rotate-90">
+          {/* 배경 원 */}
+          <circle
+            cx="24"
+            cy="24"
+            r={radius}
+            className="stroke-gray-200"
+            strokeWidth="4"
+            fill="none"
+          />
+          {/* 진행률 원 */}
+          <circle
+            cx="24"
+            cy="24"
+            r={radius}
+            className="stroke-blue-500"
+            strokeWidth="4"
+            fill="none"
+            strokeDasharray={circumference}
+            strokeDashoffset={progressOffset}
+            strokeLinecap="round"
+          />
+        </svg>
+        {/* 중앙 텍스트 */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-xs font-bold text-gray-700">
+            {revisionNumber}
+          </span>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div
       className={`w-full p-4 mb-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 border ${cardBorderClass}`}
@@ -213,6 +258,11 @@ const TodoCard = ({
                 </span>
               </Badge>
             </div>
+          )}
+          {task.taskScheduleType && (
+            <Tag color="purple" className="mr-2">
+              {task.project.workType}
+            </Tag>
           )}
           {task.project && (
             <Tag color="blue" className="mr-2">
@@ -263,23 +313,35 @@ const TodoCard = ({
             {getPriorityBadge(task?.priorityLevel)}
             <h3 className="text-lg font-bold text-gray-800">{task.name}</h3>
           </div>
-          {task.task_progress && (
-            <div className="mt-2">
-              <div className="flex items-center mb-1">
-                <span className="text-xs font-medium text-gray-500 mr-2">
-                  진행률:
-                </span>
-                <span className="text-xs font-bold">{task.taskProgress}%</span>
-              </div>
-              <Progress
-                percent={task.taskProgress || 0}
-                size="small"
-                status={task.taskProgress >= 100 ? 'success' : 'active'}
-                strokeColor={{
-                  '0%': '#108ee9',
-                  '100%': '#87d068',
-                }}
+          {task.taskProgress && (
+            <div className="mt-2 flex items-center">
+              <CircularProgress
+                progress={task.taskProgress?.name || '0%'}
+                revisionNumber={task.revisionNumber || 0}
               />
+              <div className="ml-3">
+                {/* <div className="flex items-center mb-1">
+                  <span className="text-xs font-medium text-gray-500 mr-2">
+                    진행률:
+                  </span>
+                  <span className="text-xs font-bold">
+                    {task.taskProgress?.name || '0%'}
+                  </span>
+                </div> */}
+                <Progress
+                  percent={parseInt(
+                    task.taskProgress?.name?.replace('%', '') || '0',
+                  )}
+                  size="small"
+                  status={
+                    task.taskProgress?.name === '100%' ? 'success' : 'active'
+                  }
+                  strokeColor={{
+                    '0%': '#108ee9',
+                    '100%': '#87d068',
+                  }}
+                />
+              </div>
             </div>
           )}
         </div>

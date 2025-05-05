@@ -11,6 +11,7 @@ import {
   FiMoreVertical,
   FiTrash2,
   FiAlertTriangle,
+  FiEdit,
 } from 'react-icons/fi';
 import ConfirmDialog from './ConfirmDialog';
 
@@ -29,6 +30,7 @@ const TaskCard = ({
   toggleTaskCompletion,
   deleteTask,
   onOpenTaskEditModal,
+  isSingleWorkType,
 }) => {
   const {
     name,
@@ -156,15 +158,31 @@ const TaskCard = ({
             {menuOpen && (
               <div
                 ref={menuRef}
-                className="absolute right-0 mt-1 w-36 bg-white shadow-lg rounded-md py-1 z-20 border border-gray-200"
+                className="absolute right-2 mt-1 w-36 bg-white shadow-lg rounded-md py-1 z-20 border border-gray-200"
               >
                 <button
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
-                  onClick={handleDeleteClick}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                  onClick={() => {
+                    onOpenTaskEditModal(task, bucketIndex, taskIndex);
+                    setMenuOpen(false);
+                  }}
                 >
-                  <FiTrash2 className="mr-2" size={14} />
-                  작업 삭제
+                  <FiEdit className="mr-2" size={14} />
+                  작업 수정
                 </button>
+
+                {!isSingleWorkType && (
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
+                    onClick={() => {
+                      deleteTask(bucketIndex, taskIndex);
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <FiTrash2 className="mr-2" size={14} />
+                    작업 삭제
+                  </button>
+                )}
               </div>
             )}
           </div>

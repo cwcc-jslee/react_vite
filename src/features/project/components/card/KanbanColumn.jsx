@@ -33,10 +33,12 @@ const KanbanColumn = ({
   onAddTask,
   startEditing,
   toggleTaskCompletion,
+  toggleCompletedSection,
   deleteTask,
   deleteColumn,
   moveColumn,
   onOpenTaskEditModal,
+  isSingleWorkType,
 }) => {
   // 메뉴 상태 관리
   const [menuOpen, setMenuOpen] = useState(false);
@@ -159,49 +161,60 @@ const KanbanColumn = ({
                   이름 바꾸기
                 </button>
 
-                <button
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
-                  onClick={() => {
-                    setShowDeleteDialog(true);
-                    setMenuOpen(false);
-                  }}
-                >
-                  <FiTrash2 className="mr-2" size={14} />
-                  삭제
-                </button>
+                {!isSingleWorkType && (
+                  <>
+                    <button
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center"
+                      onClick={() => {
+                        setShowDeleteDialog(true);
+                        setMenuOpen(false);
+                      }}
+                    >
+                      <FiTrash2 className="mr-2" size={14} />
+                      삭제
+                    </button>
 
-                {/* 왼쪽으로 이동 버튼 (첫 번째 컬럼이 아닐 때만 표시) */}
-                {bucketIndex > 0 && (
-                  <button
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                    onClick={() => handleMoveColumn('left')}
-                  >
-                    <FiArrowLeft className="mr-2" size={14} />
-                    왼쪽으로 이동
-                  </button>
-                )}
+                    {/* 왼쪽으로 이동 버튼 (첫 번째 컬럼이 아닐 때만 표시) */}
+                    {bucketIndex > 0 && (
+                      <button
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                        onClick={() => handleMoveColumn('left')}
+                      >
+                        <FiArrowLeft className="mr-2" size={14} />
+                        왼쪽으로 이동
+                      </button>
+                    )}
 
-                {/* 오른쪽으로 이동 버튼 (마지막 컬럼이 아닐 때만 표시) */}
-                {bucketIndex < totalColumns - 1 && (
-                  <button
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                    onClick={() => handleMoveColumn('right')}
-                  >
-                    <FiArrowRight className="mr-2" size={14} />
-                    오른쪽으로 이동
-                  </button>
+                    {/* 오른쪽으로 이동 버튼 (마지막 컬럼이 아닐 때만 표시) */}
+                    {bucketIndex < totalColumns - 1 && (
+                      <button
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                        onClick={() => handleMoveColumn('right')}
+                      >
+                        <FiArrowRight className="mr-2" size={14} />
+                        오른쪽으로 이동
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             )}
 
             {/* 작업 추가 버튼 */}
-            <button
-              className="w-full h-10 flex items-center justify-center text-indigo-600 border-2 border-indigo-600 rounded-sm text-sm"
-              onClick={handleAddTaskClick}
-            >
-              <FiPlus className="mr-2" size={18} />
-              <span>작업 추가</span>
-            </button>
+            <div className="p-2">
+              <button
+                className={`w-full h-10 flex items-center justify-center ${
+                  isSingleWorkType
+                    ? 'text-gray-500 border-gray-300 cursor-not-allowed'
+                    : 'text-indigo-600 border-indigo-600'
+                } border-2 rounded-sm text-sm`}
+                onClick={handleAddTaskClick}
+                disabled={isSingleWorkType}
+              >
+                <FiPlus className="mr-2" size={18} />
+                <span>작업 추가</span>
+              </button>
+            </div>
           </div>
 
           {/* 작업 카드 목록 - 스크롤 가능하도록 수정 */}
@@ -224,6 +237,7 @@ const KanbanColumn = ({
                   toggleTaskCompletion={toggleTaskCompletion}
                   deleteTask={deleteTask}
                   onOpenTaskEditModal={onOpenTaskEditModal}
+                  isSingleWorkType={isSingleWorkType}
                 />
               );
             })}
@@ -272,6 +286,7 @@ const KanbanColumn = ({
                           toggleTaskCompletion={toggleTaskCompletion}
                           deleteTask={deleteTask}
                           onOpenTaskEditModal={onOpenTaskEditModal}
+                          isSingleWorkType={isSingleWorkType}
                         />
                       );
                     })}

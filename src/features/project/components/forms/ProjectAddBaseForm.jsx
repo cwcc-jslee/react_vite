@@ -29,6 +29,9 @@ const ProjectAddBaseForm = ({
   formData,
   updateField,
   isSubmitting,
+  // workTypeOptions,
+  templeteOptions,
+  handleTemplateSelect,
 }) => {
   const dispatch = useDispatch();
 
@@ -78,23 +81,55 @@ const ProjectAddBaseForm = ({
     })),
   ];
 
+  // work_type 옵션 목록
+  const workTypeOptions = [
+    { value: 'project', label: '프로젝트' },
+    { value: 'single', label: '단건' },
+  ];
+
   return (
     <Row gutter={16} className="w-full">
       <Col span={24} className="space-y-4">
-        {/* 고객사 입력 필드 */}
+        {/* 1열: work_type, 고객사, SFA, 프로젝트명 */}
         <Group direction="horizontal" className="gap-6">
+          <FormItem className="flex-1">
+            <Label required className="text-left">
+              작업유형
+            </Label>
+            <Select
+              name="workType"
+              value={formData.workType || 'project'}
+              onChange={(e) => {
+                const value = e.target.value;
+                updateField('workType', value);
+                // 작업 유형에 따른 템플릿 설정
+                if (value === 'single') {
+                  updateField('templateId', '3');
+                  handleTemplateSelect('3');
+                } else if (value === 'project') {
+                  updateField('templateId', '2');
+                  handleTemplateSelect('2');
+                }
+              }}
+            >
+              {workTypeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+          </FormItem>
+
           <FormItem className="flex-1">
             <Label required className="text-left">
               고객사
             </Label>
             <CustomerSearchInput
-              // value={selectedCustomerId}
               onSelect={(e) => setSelectedCustomerId(e.id)}
               size="small"
             />
           </FormItem>
 
-          {/* SFA 선택 필드 */}
           <FormItem className="flex-1">
             <Label required className="text-left">
               SFA
@@ -103,7 +138,6 @@ const ProjectAddBaseForm = ({
               name="sfa"
               value={formData.sfa || ''}
               onChange={updateField}
-              // disabled={isSfaLoading || !selectedCustomerId}
             >
               {sfaOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -115,7 +149,6 @@ const ProjectAddBaseForm = ({
             </Select>
           </FormItem>
 
-          {/* 프로젝트명 입력 필드 */}
           <FormItem className="flex-1">
             <Label required className="text-left">
               프로젝트명
@@ -124,40 +157,12 @@ const ProjectAddBaseForm = ({
               name="name"
               value={formData.name || ''}
               onChange={updateField}
-              // disabled={isSubmitting}
             />
-          </FormItem>
-          <FormItem className="flex-1">
-            <Label required className="text-left">
-              사업년도
-            </Label>
-            <Select
-              name="fy"
-              value={formData.fy?.id}
-              onChange={(e) => {
-                const selectedId = e.target.value;
-                // id를 이용해 전체 객체 찾기
-                // id 값이 숫자로 저장되어 있을 경우를 대비해 두 가지 비교 시도
-                const selectedItem = codebooks?.fy?.find(
-                  (item) =>
-                    item.id === selectedId || item.id === Number(selectedId),
-                );
-                updateField('fy', selectedItem);
-              }}
-              // disabled={isSubmitting}
-            >
-              <option value="">선택하세요</option>
-              {codebooks?.fy?.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
           </FormItem>
         </Group>
 
+        {/* 2열: 상태, 중요도, 서비스, 사업부 */}
         <Group direction="horizontal" className="gap-6">
-          {/* 중요도, 프로젝트 상태 */}
           <FormItem className="flex-1">
             <Label className="text-left">상태</Label>
             <Select
@@ -171,7 +176,6 @@ const ProjectAddBaseForm = ({
                 );
                 updateField('pjtStatus', selectedItem);
               }}
-              // disabled={isSubmitting}
             >
               {codebooks?.pjtStatus?.map((item) => (
                 <option key={item.id} value={item.id}>
@@ -180,12 +184,12 @@ const ProjectAddBaseForm = ({
               ))}
             </Select>
           </FormItem>
+
           <FormItem className="flex-1">
             <Label className="text-left">중요도</Label>
             <Select
               name="importanceLevel"
               value={formData.importanceLevel?.id}
-              // disabled={isSubmitting}
               onChange={(e) => {
                 const selectedId = e.target.value;
                 const selectedItem = codebooks?.importanceLevel?.find(
@@ -203,7 +207,6 @@ const ProjectAddBaseForm = ({
             </Select>
           </FormItem>
 
-          {/* 서비스 선택 필드 */}
           <FormItem className="flex-1">
             <Label required className="text-left">
               서비스
@@ -228,7 +231,6 @@ const ProjectAddBaseForm = ({
             </Select>
           </FormItem>
 
-          {/* 사업부 선택 필드 */}
           <FormItem className="flex-1">
             <Label required className="text-left">
               사업부
@@ -242,7 +244,6 @@ const ProjectAddBaseForm = ({
                   (item) =>
                     item.id === selectedId || item.id === Number(selectedId),
                 );
-                console.log(`####### : `, teamOptions);
                 updateField('team', selectedItem);
               }}
             >
@@ -254,8 +255,33 @@ const ProjectAddBaseForm = ({
             </Select>
           </FormItem>
         </Group>
-        {/* 계획 시작일 / 계획 종료일 */}
+
+        {/* 3열: 사업년도, 계획시작일, 계획종료일 */}
         <Group direction="horizontal" className="gap-6">
+          <FormItem className="flex-1">
+            <Label required className="text-left">
+              사업년도
+            </Label>
+            <Select
+              name="fy"
+              value={formData.fy?.id}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                const selectedItem = codebooks?.fy?.find(
+                  (item) =>
+                    item.id === selectedId || item.id === Number(selectedId),
+                );
+                updateField('fy', selectedItem);
+              }}
+            >
+              <option value="">선택하세요</option>
+              {codebooks?.fy?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </FormItem>
           <FormItem className="flex-1">
             <Label required className="text-left">
               계획 시작일
@@ -267,6 +293,7 @@ const ProjectAddBaseForm = ({
               onChange={updateField}
             />
           </FormItem>
+
           <FormItem className="flex-1">
             <Label required className="text-left">
               계획 종료일
@@ -278,16 +305,41 @@ const ProjectAddBaseForm = ({
               onChange={updateField}
             />
           </FormItem>
+
+          <FormItem className="flex-1">
+            <Label className="text-left">템플릿</Label>
+            <Select
+              name="template"
+              value={formData.templateId || ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                updateField('templateId', value);
+                handleTemplateSelect(value);
+              }}
+              disabled={formData.workType === 'single'}
+            >
+              {templeteOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+          </FormItem>
+        </Group>
+
+        {/* 4열: 비고 */}
+        <Group direction="horizontal" className="gap-6">
           <FormItem className="flex-1">
             <Label className="text-left">비고</Label>
             <Input
               name="remark"
               value={formData.remark || ''}
               onChange={updateField}
-              // disabled={isSubmitting}
             />
           </FormItem>
           <FormItem className="flex-1"></FormItem>
+          {/* <FormItem className="flex-1"></FormItem> */}
+          <FormItem className="flex-2"></FormItem>
         </Group>
       </Col>
     </Row>

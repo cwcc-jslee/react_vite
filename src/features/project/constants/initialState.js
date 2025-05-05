@@ -10,8 +10,8 @@ export const projectInitialState = {
   team: '',
 };
 
-// 프로젝트 Redux 초기 상태
-export const projectReduxInitialState = {
+// 프로젝트  초기 상태
+export const initialState = {
   // 데이터 상태
   items: [],
   selectedProject: null,
@@ -34,10 +34,32 @@ export const projectReduxInitialState = {
       pjtStatus: { id: 86, code: '시작전', name: '시작전' },
       importanceLevel: { id: 121, code: 'medium', name: '중간' },
       workType: 'project',
+      fy: { id: 114, code: '25', name: '25년' },
     },
     errors: {},
     isSubmitting: false,
   },
+};
+
+// 프로젝트 Redux 초기 상태
+export const projectReduxInitialState = {
+  // 데이터 상태
+  items: [],
+  selectedProject: null,
+  status: 'idle',
+  error: null,
+
+  // 페이지네이션 상태
+  pagination: {
+    current: 1,
+    pageSize: 20,
+    total: 0,
+  },
+
+  // 필터 상태
+  filters: {},
+
+  // 폼은 필요할 때만 생성
 };
 
 // 프로젝트 폼 초기화 함수 (재사용성 높임)

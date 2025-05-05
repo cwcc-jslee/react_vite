@@ -1,10 +1,21 @@
 // src/features/project/hooks/useProjectForm.js
 /**
  * 프로젝트 폼 관리를 위한 커스텀 훅
- * pageFormSlice를 사용하여 프로젝트 폼 상태를 관리합니다.
+ *
+ * 주요 역할:
+ * 1. 프로젝트 폼 상태 관리 (데이터, 에러, 유효성)
+ * 2. 폼 필드 값 변경 및 유효성 검사
+ * 3. 폼 제출 처리 (생성/수정)
+ * 4. 폼 초기화 및 리셋
+ * 5. 폼 진행 상태 관리
+ *
+ * 사용 예시:
+ * - 프로젝트 생성 폼
+ * - 프로젝트 수정 폼
+ * - 프로젝트 상세 정보 입력
  */
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   initForm,
@@ -30,7 +41,7 @@ import {
 import {
   createProject,
   updateProject,
-  PROJECT_PAGE_TYPE,
+  // PROJECT_PAGE_TYPE,
 } from '../store/projectStoreActions';
 
 /**
@@ -39,6 +50,7 @@ import {
  */
 export const useProjectForm = () => {
   const dispatch = useDispatch();
+  const [formProgress, setFormProgress] = useState(0);
 
   // 폼 상태 선택자
   const formData = useSelector(selectFormData);
@@ -49,70 +61,70 @@ export const useProjectForm = () => {
   const editingId = useSelector(selectEditingId);
   const isDirty = useSelector(selectFormDirty);
 
-  // 페이지 타입 설정 (컴포넌트 마운트 시 호출)
-  useEffect(() => {
-    dispatch(setCurrentPath(PROJECT_PAGE_TYPE));
-
-    // 언마운트 시 정리
-    return () => {
-      // 필요한 정리 작업 수행
-    };
-  }, [dispatch]);
-
-  // 폼 초기화 (새 프로젝트 생성)
-  const initCreateForm = useCallback(
-    (initialData = {}) => {
+  // 핵심 폼 초기화 함수 (저수준 API)
+  const initializeForm = useCallback(
+    ({ data = {}, mode = 'create', id = null }) => {
       dispatch(
         initForm({
-          data: initialData,
-          mode: 'create',
-          id: null,
+          data,
+          mode,
+          id,
         }),
       );
+      // if (mode === 'edit') {
+      //   dispatch(setFormMode('edit'));
+      //   dispatch(setEditingId(id));
+      // }
+      setFormProgress(0);
     },
     [dispatch],
   );
 
-  // 폼 초기화 (기존 프로젝트 수정)
-  const initEditForm = useCallback(
-    (project) => {
-      if (!project) return;
-
-      dispatch(
-        initForm({
-          data: project,
-          mode: 'edit',
-          id: project.id,
-        }),
-      );
-
-      dispatch(setFormMode('edit'));
-      dispatch(setEditingId(project.id));
-    },
-    [dispatch],
-  );
-
-  // 폼 초기화 (모드에 따라 다르게 처리)
-  const initProjectForm = useCallback(
-    (project = null) => {
-      if (project && project.id) {
-        initEditForm(project);
-      } else {
-        initCreateForm(project || {});
-      }
-    },
-    [initCreateForm, initEditForm],
-  );
-
-  // 폼 리셋
-  const resetProjectForm = useCallback(() => {
+  // 폼 리셋 함수
+  const resetFormState = useCallback(() => {
     dispatch(resetForm());
+    setFormProgress(0);
   }, [dispatch]);
 
-  // 필드 값 변경 처리
+  // 편의 메서드들 (고수준 API)
+  const createForm = useCallback(
+    (initialData = {}) => {
+      initializeForm({ data: initialData, mode: 'create' });
+    },
+    [initializeForm],
+  );
+
+  const editForm = useCallback(
+    (project) => {
+      if (!project?.id) return;
+      initializeForm({
+        data: project,
+        mode: 'edit',
+        id: project.id,
+      });
+    },
+    [initializeForm],
+  );
+
+  // 폼 필드 변경 핸들러
   const updateField = useCallback(
-    (name, value) => {
+    (nameOrEvent, valueOrNothing) => {
+      // 이벤트 객체인 경우 처리
+      const name =
+        typeof nameOrEvent === 'string' ? nameOrEvent : nameOrEvent.target.name;
+      const value =
+        typeof valueOrNothing === 'undefined'
+          ? nameOrEvent.target.value
+          : valueOrNothing;
+
+      // Redux action dispatch using action creator
       dispatch(updateFormField({ name, value }));
+
+      // 필드 변경 시 폼 진행률 업데이트
+      setFormProgress((prev) => {
+        const increment = prev < 40 ? 5 : prev < 70 ? 3 : 2;
+        return Math.min(prev + increment, 90); // 제출하기 전까지 최대 90%
+      });
     },
     [dispatch],
   );
@@ -256,6 +268,15 @@ export const useProjectForm = () => {
     }
   }, [formMode, handleCreateProject, handleUpdateProject]);
 
+  // 진행 상태 색상 계산
+  const getProgressColor = useCallback(() => {
+    return formProgress < 30
+      ? 'bg-red-500'
+      : formProgress < 70
+      ? 'bg-amber-500'
+      : 'bg-green-500';
+  }, [formProgress]);
+
   return {
     // 상태
     formData,
@@ -265,12 +286,13 @@ export const useProjectForm = () => {
     isFormValid,
     editingId,
     isDirty,
+    formProgress,
 
     // 액션 메서드
-    initProjectForm,
-    initCreateForm,
-    initEditForm,
-    resetProjectForm,
+    initForm: initializeForm, // 저수준 API (이름 충돌 방지를 위해 별칭 사용)
+    createForm, // 고수준 API
+    editForm, // 고수준 API
+    resetForm: resetFormState, // 이름 충돌 방지를 위해 별칭 사용
     updateField,
     updateFields,
     setErrors,
@@ -279,6 +301,7 @@ export const useProjectForm = () => {
     handleCreateProject,
     handleUpdateProject,
     handleSubmit,
+    getProgressColor,
   };
 };
 

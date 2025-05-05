@@ -5,6 +5,8 @@
 import React, { useEffect } from 'react';
 import { FiPlus } from 'react-icons/fi';
 import { apiCommon } from '../../../shared/api/apiCommon';
+import { useSelector } from 'react-redux';
+import { selectFormData } from '../../../store/slices/pageFormSlice';
 
 // 커스텀 훅
 import { useCodebook } from '@shared/hooks/useCodebook';
@@ -25,6 +27,10 @@ import ProjectTaskForm from '../components/forms/ProjectTaskForm';
  * @param {Array} props.projectTasks - 프로젝트 태스크 목록
  */
 const ProjectAddTasksSection = () => {
+  // 리덕스에서 workType 가져오기
+  const formData = useSelector(selectFormData);
+  const isSingleWorkType = formData?.workType === 'single';
+
   // 칸반 보드 훅 사용
   const {
     buckets,
@@ -140,14 +146,20 @@ const ProjectAddTasksSection = () => {
               deleteColumn={deleteColumn}
               moveColumn={moveColumn}
               onOpenTaskEditModal={handleOpenTaskEditModal}
+              isSingleWorkType={isSingleWorkType}
             />
           ))}
 
           {/* 버킷 추가 버튼 */}
           <div className="flex-shrink-0 w-72 h-full flex items-start p-2">
             <button
-              className="w-full h-10 bg-indigo-600 text-white border-2 border-indigo-600 rounded-sm flex items-center justify-center text-sm"
+              className={`w-full h-10 ${
+                isSingleWorkType
+                  ? 'bg-gray-300 text-gray-500 border-gray-300 cursor-not-allowed'
+                  : 'bg-indigo-600 text-white border-indigo-600'
+              } border-2 rounded-sm flex items-center justify-center text-sm`}
               onClick={handleAddColumnClick}
+              disabled={isSingleWorkType}
             >
               <FiPlus className="mr-2" size={18} />
               <span>버킷 추가</span>

@@ -168,48 +168,44 @@ const ProjectContainer = () => {
   /**
    * 템플릿 선택 핸들러
    */
-  const handleTemplateSelect = async (templateId) => {
-    if (!templateId) return;
+  // const handleTemplateSelect = async (templateId) => {
+  //   if (!templateId) return;
 
-    try {
-      await loadTemplate(templateId);
-    } catch (error) {
-      console.error('템플릿 로드 오류:', error);
-    }
-  };
+  //   try {
+  //     await loadTemplate(templateId);
+  //   } catch (error) {
+  //     console.error('템플릿 로드 오류:', error);
+  //   }
+  // };
 
   /**
    * 폼 제출 핸들러
    */
-  const onFormSubmit = (e) => {
-    handleFormSubmit(e, buckets);
-  };
+  // const onFormSubmit = (e) => {
+  //   handleFormSubmit(e, buckets);
+  // };
 
   /**
    * 폼 초기화 핸들러
    */
-  const handleReset = () => {
-    dispatch(resetForm());
-    resetKanbanBoard();
-    notification.info({
-      message: '폼 초기화',
-      description: '모든 입력 내용이 초기화되었습니다.',
-    });
-  };
+  // const handleReset = () => {
+  //   dispatch(resetForm());
+  //   resetKanbanBoard();
+  //   notification.info({
+  //     message: '폼 초기화',
+  //     description: '모든 입력 내용이 초기화되었습니다.',
+  //   });
+  // };
 
   // 폼 섹션에 전달할 속성
-  const formProps = {
-    handleTemplateSelect,
-    updateField,
-    handleFormSubmit: onFormSubmit,
-    handleReset,
-    isSubmitting,
-  };
+  // const formProps = {
+  //   // 필요한 props만 남김
+  // };
 
   // 공통 속성
-  const commonProps = {
-    components,
-  };
+  // const commonProps = {
+  //   components,
+  // };
 
   // 목록 레이아웃에 사용할 props
   const listLayoutProps = {
@@ -225,10 +221,10 @@ const ProjectContainer = () => {
   };
 
   // 추가 레이아웃에 사용할 props
-  const addLayoutProps = {
-    components,
-    ...formProps,
-  };
+  // const addLayoutProps = {
+  //   components,
+  //   ...formProps,
+  // };
 
   // 상세 레이아웃에 사용할 props
   const detailLayoutProps = {
@@ -246,7 +242,7 @@ const ProjectContainer = () => {
         {layout === 'list' && <ProjectListLayout {...listLayoutProps} />}
         {layout === 'search' && <ProjectSearchLayout {...listLayoutProps} />}
         {layout === 'work' && <ProjectWorkLayout />}
-        {layout === 'add' && <ProjectAddLayout formProps={formProps} />}
+        {layout === 'add' && <ProjectAddLayout />}
         {layout === 'detail' && <ProjectDetailLayout {...detailLayoutProps} />}
       </Section>
 
