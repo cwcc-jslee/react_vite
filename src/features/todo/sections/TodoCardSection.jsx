@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import TodoCard from '../components/cards/TodoCard';
 import useTodoPageData from '../hooks/useTodoPageData';
 import { Button, Switch, Alert } from '@shared/components/ui';
+import dayjs from 'dayjs';
 
 /**
  * ToDo 카드 목록 섹션 컴포넌트
@@ -10,19 +11,18 @@ import { Button, Switch, Alert } from '@shared/components/ui';
 const TodoCardSection = ({ onTaskAction, selectedTaskId }) => {
   // 필터 상태 관리
   const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(true);
-  const [showOnlyActiveProjects, setShowOnlyActiveProjects] = useState(true);
-  const [retryCount, setRetryCount] = useState(0); // 재시도 횟수 추적
+  const [taskDateFilter, setTaskDateFilter] = useState('started');
+  const [retryCount, setRetryCount] = useState(0);
 
   // 커스텀 훅을 사용하여 데이터 로드
   const { tasks, isLoading, error, refreshData } = useTodoPageData({
-    key: retryCount, // 재시도 카운트를 키로 사용
+    key: retryCount,
   });
 
   // 필터 변경 핸들러
   const handleFilterChange = useCallback(
-    (newMyTasks, newActiveProjects) => {
+    (newMyTasks, newDateFilter) => {
       if (error) {
-        // 에러 상태에서 필터 변경 시 수동으로 데이터 새로고침
         setRetryCount((prevCount) => prevCount + 1);
       }
     },
@@ -39,41 +39,50 @@ const TodoCardSection = ({ onTaskAction, selectedTaskId }) => {
   const toggleMyTasks = useCallback(
     (checked) => {
       setShowOnlyMyTasks(checked);
-      handleFilterChange(checked, showOnlyActiveProjects);
+      handleFilterChange(checked, taskDateFilter);
     },
-    [showOnlyActiveProjects, handleFilterChange],
+    [taskDateFilter, handleFilterChange],
   );
 
-  const toggleActiveProjects = useCallback(
-    (checked) => {
-      setShowOnlyActiveProjects(checked);
-      handleFilterChange(showOnlyMyTasks, checked);
-    },
-    [showOnlyMyTasks, handleFilterChange],
-  );
+  // 날짜 필터 토글 핸들러
+  const toggleTaskDateFilter = useCallback(() => {
+    const newFilter = taskDateFilter === 'started' ? 'upcoming' : 'started';
+    setTaskDateFilter(newFilter);
+    handleFilterChange(showOnlyMyTasks, newFilter);
+  }, [taskDateFilter, showOnlyMyTasks, handleFilterChange]);
+
+  // 필터링된 작업 목록
+  const filteredTasks = useCallback(() => {
+    if (!tasks) return [];
+
+    const today = dayjs().startOf('day');
+
+    return tasks.filter((task) => {
+      const planStartDate = dayjs(task.planStartDate).startOf('day');
+
+      if (taskDateFilter === 'started') {
+        return planStartDate.isBefore(today) || planStartDate.isSame(today);
+      } else {
+        return planStartDate.isAfter(today);
+      }
+    });
+  }, [tasks, taskDateFilter]);
 
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">할 일 목록</h2>
         <div className="flex space-x-4">
-          {/* <div className="flex items-center">
-            <Switch
-              checked={showOnlyMyTasks}
-              onChange={toggleMyTasks}
-              className="mr-2"
-              disabled={isLoading}
-            />
-            <span className="text-sm">내 작업만 보기</span>
-          </div> */}
           <div className="flex items-center">
             <Switch
-              checked={showOnlyActiveProjects}
-              onChange={toggleActiveProjects}
+              checked={taskDateFilter === 'started'}
+              onChange={toggleTaskDateFilter}
               className="mr-2"
               disabled={isLoading}
             />
-            <span className="text-sm">진행 중인 프로젝트만</span>
+            <span className="text-sm">
+              {taskDateFilter === 'started' ? '시작됨' : '작업예정'}
+            </span>
           </div>
           <Button
             onClick={handleManualRefresh}
@@ -117,9 +126,9 @@ const TodoCardSection = ({ onTaskAction, selectedTaskId }) => {
       )}
 
       {/* 작업 목록 표시 */}
-      {!isLoading && !error && tasks.length > 0 ? (
+      {!isLoading && !error && filteredTasks().length > 0 ? (
         <div>
-          {tasks.map((task) => (
+          {filteredTasks().map((task) => (
             <TodoCard
               key={task.id}
               task={task}
@@ -130,11 +139,9 @@ const TodoCardSection = ({ onTaskAction, selectedTaskId }) => {
         </div>
       ) : !isLoading && !error ? (
         <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
-          {showOnlyMyTasks && showOnlyActiveProjects
-            ? '진행 중인 프로젝트에 배정된 작업이 없습니다.'
-            : showOnlyMyTasks
-            ? '배정된 작업이 없습니다.'
-            : '등록된 할일이 없습니다.'}
+          {taskDateFilter === 'started'
+            ? '시작된 작업이 없습니다.'
+            : '예정된 작업이 없습니다.'}
         </div>
       ) : null}
     </div>

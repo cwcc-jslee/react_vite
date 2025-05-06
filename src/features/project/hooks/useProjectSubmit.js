@@ -113,6 +113,10 @@ export const useProjectSubmit = () => {
     async (e, projectBuckets) => {
       if (e && e.preventDefault) e.preventDefault();
 
+      const startTime = Date.now();
+      let totalBuckets = 0;
+      let totalTasks = 0;
+
       // 진행 상태 초기화
       setProgress(0);
       setCurrentBucketIndex(0);
@@ -120,30 +124,44 @@ export const useProjectSubmit = () => {
 
       // 최신 buckets 상태 확인
       const currentBuckets = projectBuckets || buckets;
-      console.log('>>> Current buckets state:', currentBuckets);
 
       // 1-1. 기본 폼 유효성 검사
       const { isValid, errors: validationErrors } =
         validateProjectForm(formData);
 
       if (!isValid) {
-        dispatch(setFormErrors(validationErrors));
-        const formError = Object.values(validationErrors)[0];
-        notification.error({
-          message: '기본폼 등록 오류',
-          description: formError,
-        });
-        return false;
+        return {
+          success: false,
+          project: null,
+          error: {
+            message: Object.values(validationErrors)[0],
+            code: 'VALIDATION_ERROR',
+            details: validationErrors,
+          },
+          metadata: {
+            totalBuckets: 0,
+            totalTasks: 0,
+            processingTime: Date.now() - startTime,
+          },
+        };
       }
 
       // 1-2. 버킷/태스크 유효성 검사
       if (!currentBuckets || currentBuckets.length === 0) {
-        // 버킷이 없을 경우 에러 처리
-        notification.error({
-          message: '버킷 등록 오류',
-          description: '최소 1개 이상의 버킷이 필요합니다.',
-        });
-        return false;
+        return {
+          success: false,
+          project: null,
+          error: {
+            message: '최소 1개 이상의 버킷이 필요합니다.',
+            code: 'BUCKET_REQUIRED',
+            details: { buckets: currentBuckets },
+          },
+          metadata: {
+            totalBuckets: 0,
+            totalTasks: 0,
+            processingTime: Date.now() - startTime,
+          },
+        };
       }
 
       // Task 유효성 검사
@@ -151,11 +169,20 @@ export const useProjectSubmit = () => {
         (bucket) => bucket.tasks && bucket.tasks.length > 0,
       );
       if (!hasTasks) {
-        notification.error({
-          message: 'Task 등록 오류',
-          description: '최소 1개 이상의 Task가 필요합니다.',
-        });
-        return false;
+        return {
+          success: false,
+          project: null,
+          error: {
+            message: '최소 1개 이상의 Task가 필요합니다.',
+            code: 'TASK_REQUIRED',
+            details: { buckets: currentBuckets },
+          },
+          metadata: {
+            totalBuckets: currentBuckets.length,
+            totalTasks: 0,
+            processingTime: Date.now() - startTime,
+          },
+        };
       }
 
       // 버킷별 Task 유효성 검사
@@ -163,25 +190,42 @@ export const useProjectSubmit = () => {
         (bucket) => !bucket.tasks || bucket.tasks.length === 0,
       );
       if (emptyBuckets.length > 0) {
-        notification.error({
-          message: 'Task 등록 오류',
-          description: `'${emptyBuckets
-            .map((b) => b.bucket)
-            .join(', ')}' 버킷에 Task가 없습니다.`,
-        });
-        return false;
+        return {
+          success: false,
+          project: null,
+          error: {
+            message: `'${emptyBuckets
+              .map((b) => b.bucket)
+              .join(', ')}' 버킷에 Task가 없습니다.`,
+            code: 'EMPTY_BUCKET',
+            details: { emptyBuckets },
+          },
+          metadata: {
+            totalBuckets: currentBuckets.length,
+            totalTasks: 0,
+            processingTime: Date.now() - startTime,
+          },
+        };
       }
 
       const { isValid: isTasksValid, errors: validationTasksErrors } =
         validateProjectTaskForm(currentBuckets);
 
       if (!isTasksValid) {
-        const tasksError = Object.values(validationTasksErrors)[0];
-        notification.error({
-          message: 'TASK 등록 오류',
-          description: tasksError,
-        });
-        return false;
+        return {
+          success: false,
+          project: null,
+          error: {
+            message: Object.values(validationTasksErrors)[0],
+            code: 'TASK_VALIDATION_ERROR',
+            details: validationTasksErrors,
+          },
+          metadata: {
+            totalBuckets: currentBuckets.length,
+            totalTasks: 0,
+            processingTime: Date.now() - startTime,
+          },
+        };
       }
 
       try {
@@ -199,9 +243,6 @@ export const useProjectSubmit = () => {
         const processedProjectBuckets =
           processProjectBuckets(cleanProjectBuckets);
 
-        console.log(`>>> 전처리된2 프로젝트 데이터:`, processedFormData);
-        console.log(`>>> 전처리된2 버킷 데이터:`, processedProjectBuckets);
-
         setProgress(10);
 
         // 3. 키 정보 스네이크케이스로 변환
@@ -210,11 +251,6 @@ export const useProjectSubmit = () => {
           processedProjectBuckets.length > 0
             ? convertKeysToSnakeCase(processedProjectBuckets)
             : [];
-
-        console.log(
-          `>>> 관계 필드 및 스네이크케이스 변환 후 데이터:`,
-          snakeCaseBaseForm,
-        );
 
         setProgress(15);
         setProcessingStep('프로젝트 생성');
@@ -227,13 +263,20 @@ export const useProjectSubmit = () => {
 
         // 제출 실패 시 종료
         if (!resultAction?.data) {
-          setIsSubmitting(false);
-          setProgress(0);
-          notification.error({
-            message: '프로젝트 생성 실패',
-            description: '프로젝트 생성 중 오류가 발생했습니다.',
-          });
-          return false;
+          return {
+            success: false,
+            project: null,
+            error: {
+              message: '프로젝트 생성 중 오류가 발생했습니다.',
+              code: 'PROJECT_CREATION_FAILED',
+              details: { resultAction },
+            },
+            metadata: {
+              totalBuckets: 0,
+              totalTasks: 0,
+              processingTime: Date.now() - startTime,
+            },
+          };
         }
 
         // 생성된 프로젝트 정보
@@ -244,23 +287,25 @@ export const useProjectSubmit = () => {
 
         // 5. 버킷이 없는 경우 종료
         if (snakeCaseProjectBuckets.length === 0) {
-          // 폼과 버킷 상태 초기화
-          // dispatch(resetForm());
-          // dispatch(resetBuckets());
-
-          notification.error({
-            message: '버킷 정보 등록 실패',
-            description: '버킷 정보가 없습니다.',
-          });
-          setProgress(100);
-          // dispatch(setSubmitting(false));
-          setIsSubmitting(false);
-          return createdProject;
+          return {
+            success: false,
+            project: createdProject,
+            error: {
+              message: '버킷 정보가 없습니다.',
+              code: 'NO_BUCKETS',
+              details: { projectId },
+            },
+            metadata: {
+              totalBuckets: 0,
+              totalTasks: 0,
+              processingTime: Date.now() - startTime,
+            },
+          };
         }
 
         // 6. 각 버킷과 해당 태스크를 순차적으로 처리
         let finalProject = createdProject;
-        const totalBuckets = snakeCaseProjectBuckets.length;
+        totalBuckets = snakeCaseProjectBuckets.length;
 
         // 각 버킷당 할당된 진행률 (20%~90% 사이에서 분배)
         const progressPerBucket = 70 / totalBuckets;
@@ -278,17 +323,12 @@ export const useProjectSubmit = () => {
               position: bucket.position,
             };
 
-            // 버킷 생성 API 호출 - async/await로 응답을 확실히 기다림
-            console.log(`>>> 버킷 생성 요청 시작: "${bucket.bucket}"`);
-
             let bucketResponse;
             try {
               bucketResponse = await projectTaskService.createBucket(
                 bucketPayload,
               );
-              console.log(`>>> 버킷 생성 응답 수신:`, bucketResponse);
             } catch (error) {
-              console.error(`>>> 버킷 생성 오류:`, error);
               throw new Error(
                 `버킷 "${bucket.bucket}" 생성 중 오류 발생: ${
                   error.message || '알 수 없는 오류'
@@ -296,7 +336,6 @@ export const useProjectSubmit = () => {
               );
             }
 
-            // 버킷 응답에서 bucketId 추출 확인
             let bucketId;
             if (bucketResponse && bucketResponse.id) {
               bucketId = bucketResponse.id;
@@ -305,40 +344,25 @@ export const useProjectSubmit = () => {
               bucketResponse.data &&
               bucketResponse.data.id
             ) {
-              // 응답 구조가 다른 경우 data.id에서 추출 시도
               bucketId = bucketResponse.data.id;
             } else {
-              console.error(
-                '버킷 생성 응답에서 ID를 찾을 수 없습니다:',
-                bucketResponse,
-              );
               throw new Error('버킷 ID를 찾을 수 없습니다.');
             }
 
-            console.log(`>>> 생성된 버킷 ID: ${bucketId}`);
-
-            // 버킷별 첫 단계 진행률 업데이트
             setProgress(20 + bucketIndex * progressPerBucket);
 
-            // 6-2. 태스크가 없으면 다음 버킷으로
             if (!bucket.tasks || bucket.tasks.length === 0) {
               continue;
             }
 
-            // 6-3. 각 태스크 순차적 또는 병렬 생성
             setProcessingStep(`버킷 "${bucket.bucket}"의 태스크 생성 중`);
             const tasks = bucket.tasks;
             const tasksCount = tasks.length;
+            totalTasks += tasksCount;
 
-            // 태스크가 많을 경우 병렬 처리, 적을 경우 순차 처리
             if (tasksCount > 10) {
-              // bucketId 확인 후 병렬 처리
-              console.log(
-                `>>>>>> 태스크 병렬 처리 시작 - 버킷 ID: ${bucketId}`,
-              );
               if (!bucketId) {
-                console.error('버킷 ID가 없어 태스크 생성을 건너뜁니다');
-                continue; // 다음 버킷으로 이동
+                continue;
               }
 
               const taskPromises = tasks.map((task) => {
@@ -352,20 +376,12 @@ export const useProjectSubmit = () => {
 
               await Promise.all(taskPromises);
             } else {
-              // 순차 처리 (태스크가 적은 경우)
               const progressPerTask = progressPerBucket / (tasksCount || 1);
 
               for (let taskIndex = 0; taskIndex < tasksCount; taskIndex++) {
                 const task = tasks[taskIndex];
-                // bucketId가 유효한지 확인 후 태스크 페이로드 생성
-                console.log(
-                  `>>>>>> 태스크 생성 준비 - 사용 버킷 ID: ${bucketId}`,
-                );
                 if (!bucketId) {
-                  console.error('버킷 ID가 없어 태스크 생성을 건너뜁니다', {
-                    task,
-                  });
-                  continue; // 이 태스크를 건너뜀
+                  continue;
                 }
 
                 const taskPayload = createTaskPayload(
@@ -373,11 +389,9 @@ export const useProjectSubmit = () => {
                   bucketId,
                   task,
                 );
-                console.log(`>>>>>> createTaskPayload : `, taskPayload);
 
                 await projectTaskService.createTask(taskPayload);
 
-                // 태스크별 진행률 업데이트
                 setProgress(
                   20 +
                     bucketIndex * progressPerBucket +
@@ -386,53 +400,60 @@ export const useProjectSubmit = () => {
               }
             }
 
-            // 버킷 완료 진행률 업데이트
             setProgress(20 + (bucketIndex + 1) * progressPerBucket);
           }
 
           setProgress(90);
           setProcessingStep('최종 프로젝트 데이터 조회');
 
-          // 7. 최종 프로젝트 데이터 조회
-          // strapi 5.x 버전부터 documentId로 쿼리 필요
-          // const finalProjectData =
-          //   await projectBucketService.getProjectWithStructure(projectId);
-          // finalProject = finalProjectData;
-
-          // 폼과 버킷 상태 초기화
-          dispatch(resetForm());
-          // dispatch(resetBuckets());
-
-          setProgress(100);
-
-          notification.success({
-            message: '프로젝트 등록 성공',
-            description:
-              '프로젝트와 모든 버킷/태스크가 성공적으로 등록되었습니다.',
-          });
-
-          return finalProject;
+          return {
+            success: true,
+            project: finalProject,
+            error: null,
+            metadata: {
+              totalBuckets,
+              totalTasks,
+              processingTime: Date.now() - startTime,
+            },
+          };
         } catch (structureError) {
-          console.error('Structure creation error:', structureError);
-          notification.warning({
-            message: '구조 등록 부분 오류',
-            description: `버킷 ${
-              currentBucketIndex + 1
-            }/${totalBuckets}에서 오류가 발생했습니다. 프로젝트는 생성되었습니다.`,
-          });
-
-          // 프로젝트는 생성되었으므로 프로젝트 정보 반환
-          return finalProject;
+          return {
+            success: false,
+            project: finalProject,
+            error: {
+              message: `버킷 ${
+                currentBucketIndex + 1
+              }/${totalBuckets}에서 오류가 발생했습니다. 프로젝트는 생성되었습니다.`,
+              code: 'STRUCTURE_CREATION_ERROR',
+              details: {
+                error: structureError,
+                currentBucketIndex,
+                totalBuckets,
+              },
+            },
+            metadata: {
+              totalBuckets,
+              totalTasks,
+              processingTime: Date.now() - startTime,
+            },
+          };
         }
       } catch (error) {
-        console.error('Project submission error:', error);
-        notification.error({
-          message: '프로젝트 등록 실패',
-          description: error.message || '프로젝트 등록 중 오류가 발생했습니다.',
-        });
-        return false;
+        return {
+          success: false,
+          project: null,
+          error: {
+            message: error.message || '프로젝트 등록 중 오류가 발생했습니다.',
+            code: 'UNKNOWN_ERROR',
+            details: { error },
+          },
+          metadata: {
+            totalBuckets,
+            totalTasks,
+            processingTime: Date.now() - startTime,
+          },
+        };
       } finally {
-        // dispatch(setSubmitting(false));
         setIsSubmitting(false);
         setProcessingStep('');
       }

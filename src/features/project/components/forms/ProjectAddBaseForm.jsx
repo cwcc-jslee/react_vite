@@ -289,7 +289,7 @@ const ProjectAddBaseForm = ({
             <Input
               type="date"
               name="planStartDate"
-              value={formData?.planStartDate}
+              value={formData?.planStartDate || ''}
               onChange={updateField}
             />
           </FormItem>

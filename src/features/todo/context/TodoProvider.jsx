@@ -127,7 +127,7 @@ export const TodoProvider = ({ children }) => {
     const taskTypeCondition = {
       $and: [
         { task_schedule_type: { $eq: 'scheduled' } },
-        { plan_start_date: { $lt: today } },
+        // { plan_start_date: { $lt: today } },
       ],
     };
 
