@@ -80,8 +80,7 @@ const KanbanColumn = ({
   const handleAddTaskClick = () => {
     const newTask = {
       name: '새 작업',
-      days: '',
-      planEndDate: '',
+      taskScheduleType: 'scheduled',
     };
 
     onAddTask(bucketIndex, newTask);

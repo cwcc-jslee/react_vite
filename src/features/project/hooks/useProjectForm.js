@@ -40,7 +40,7 @@ import {
 } from '../../../store/slices/pageFormSlice';
 import {
   createProject,
-  updateProject,
+  // updateProject,
   // PROJECT_PAGE_TYPE,
 } from '../store/projectStoreActions';
 
@@ -220,53 +220,53 @@ export const useProjectForm = () => {
   }, [dispatch, formData, validateForm]);
 
   // 프로젝트 수정 처리
-  const handleUpdateProject = useCallback(async () => {
-    if (!validateForm() || !editingId) return false;
+  // const handleUpdateProject = useCallback(async () => {
+  //   if (!validateForm() || !editingId) return false;
 
-    dispatch(submitFormStart());
+  //   dispatch(submitFormStart());
 
-    try {
-      // 폼 데이터 전처리
-      const preparedData = prepareFormData(formData);
+  //   try {
+  //     // 폼 데이터 전처리
+  //     const preparedData = prepareFormData(formData);
 
-      // 프로젝트 수정 액션 디스패치
-      const resultAction = await dispatch(
-        updateProject({
-          itemId: editingId,
-          data: preparedData,
-        }),
-      );
+  //     // 프로젝트 수정 액션 디스패치
+  //     const resultAction = await dispatch(
+  //       updateProject({
+  //         itemId: editingId,
+  //         data: preparedData,
+  //       }),
+  //     );
 
-      if (updateProject.fulfilled.match(resultAction)) {
-        dispatch(submitFormSuccess());
-        return true;
-      } else {
-        // 서버 에러 처리
-        const errorData = resultAction.payload || {
-          global: '프로젝트 수정 실패',
-        };
-        dispatch(submitFormFailure(errorData));
-        return false;
-      }
-    } catch (error) {
-      // 예외 처리
-      dispatch(
-        submitFormFailure({
-          global: error.message || '프로젝트 수정 중 오류가 발생했습니다',
-        }),
-      );
-      return false;
-    }
-  }, [dispatch, formData, validateForm, editingId]);
+  //     if (updateProject.fulfilled.match(resultAction)) {
+  //       dispatch(submitFormSuccess());
+  //       return true;
+  //     } else {
+  //       // 서버 에러 처리
+  //       const errorData = resultAction.payload || {
+  //         global: '프로젝트 수정 실패',
+  //       };
+  //       dispatch(submitFormFailure(errorData));
+  //       return false;
+  //     }
+  //   } catch (error) {
+  //     // 예외 처리
+  //     dispatch(
+  //       submitFormFailure({
+  //         global: error.message || '프로젝트 수정 중 오류가 발생했습니다',
+  //       }),
+  //     );
+  //     return false;
+  //   }
+  // }, [dispatch, formData, validateForm, editingId]);
 
   // 폼 제출 처리 (생성 또는 수정)
   const handleSubmit = useCallback(async () => {
     if (formMode === 'edit') {
-      return handleUpdateProject();
+      // return handleUpdateProject();
     } else {
       return handleCreateProject();
     }
-  }, [formMode, handleCreateProject, handleUpdateProject]);
+  }, [formMode, handleCreateProject]);
 
   // 진행 상태 색상 계산
   const getProgressColor = useCallback(() => {
@@ -299,7 +299,7 @@ export const useProjectForm = () => {
     clearErrors,
     validateForm,
     handleCreateProject,
-    handleUpdateProject,
+    // handleUpdateProject,
     handleSubmit,
     getProgressColor,
   };

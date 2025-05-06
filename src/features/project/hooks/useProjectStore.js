@@ -28,8 +28,8 @@ import {
   fetchProjects,
   fetchProjectDetail,
   createProject,
-  updateProject,
-  deleteProject,
+  // updateProject,
+  // deleteProject,
   PROJECT_PAGE_TYPE,
 } from '../store/projectStoreActions';
 import { PAGE_MENUS } from '@shared/constants/navigation';
@@ -172,32 +172,32 @@ export const useProjectStore = () => {
   );
 
   // 프로젝트 수정
-  const handleUpdateProject = useCallback(
-    async (projectId, data) => {
-      const resultAction = await dispatch(
-        updateProject({ itemId: projectId, data }),
-      );
-      if (!resultAction.error) {
-        // 수정 성공 시 목록 화면으로 이동
-        backToList();
-      }
-      return !resultAction.error;
-    },
-    [dispatch, backToList],
-  );
+  // const handleUpdateProject = useCallback(
+  //   async (projectId, data) => {
+  //     const resultAction = await dispatch(
+  //       updateProject({ itemId: projectId, data }),
+  //     );
+  //     if (!resultAction.error) {
+  //       // 수정 성공 시 목록 화면으로 이동
+  //       backToList();
+  //     }
+  //     return !resultAction.error;
+  //   },
+  //   [dispatch, backToList],
+  // );
 
   // 프로젝트 삭제
-  const handleDeleteProject = useCallback(
-    async (projectId) => {
-      const resultAction = await dispatch(deleteProject(projectId));
-      if (!resultAction.error) {
-        // 삭제 성공 시 목록 화면으로 이동
-        backToList();
-      }
-      return !resultAction.error;
-    },
-    [dispatch, backToList],
-  );
+  // const handleDeleteProject = useCallback(
+  //   async (projectId) => {
+  //     const resultAction = await dispatch(deleteProject(projectId));
+  //     if (!resultAction.error) {
+  //       // 삭제 성공 시 목록 화면으로 이동
+  //       backToList();
+  //     }
+  //     return !resultAction.error;
+  //   },
+  //   [dispatch, backToList],
+  // );
 
   // 현재 보여질 컴포넌트 상태
   const components = uiState.pageLayout.components || {};
@@ -228,8 +228,8 @@ export const useProjectStore = () => {
     handleResetFilters,
     loadProjectDetail,
     handleCreateProject,
-    handleUpdateProject,
-    handleDeleteProject,
+    // handleUpdateProject,
+    // handleDeleteProject,
   };
 };
 

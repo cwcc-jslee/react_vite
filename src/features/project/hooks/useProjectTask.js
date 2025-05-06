@@ -315,10 +315,11 @@ const useProjectTask = (initialColumns = []) => {
             });
 
             // 특수 처리: taskScheduleType 값에 따른 처리
-            if (newTask.taskScheduleType === 'ongoing') {
-              newTask.taskScheduleType = false;
-            } else {
-              newTask.taskScheduleType = true;
+            if (
+              !('taskScheduleType' in newTask) ||
+              newTask.taskScheduleType !== 'ongoing'
+            ) {
+              newTask.taskScheduleType = 'scheduled';
               // 인원, 투입률, 작업일 초기화
               if (!('priorityLevel' in newTask)) {
                 newTask.planningTimeData = {};

@@ -11,6 +11,7 @@ import {
   Select,
   Label,
   FormItem,
+  Form,
 } from '@shared/components/ui';
 import { notification } from '@shared/services/notification';
 import { projectApiService } from '../services/projectApiService';
@@ -117,6 +118,8 @@ const ProjectAddFormSection = () => {
     })),
   ];
 
+  console.log(`>>> isSubmitting: ${isSubmitting}`);
+
   return (
     <div className="bg-white rounded-md shadow-sm">
       <div className="p-4 border-b border-gray-200">
@@ -141,6 +144,7 @@ const ProjectAddFormSection = () => {
                 variant="outline"
                 size="md"
                 disabled={isSubmitting}
+                className={isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}
               >
                 초기화
               </Button>
@@ -150,8 +154,11 @@ const ProjectAddFormSection = () => {
                 size="md"
                 disabled={isSubmitting || formProgress < 50}
                 className={
-                  formProgress < 50 ? 'opacity-50 cursor-not-allowed' : ''
+                  isSubmitting || formProgress < 50
+                    ? 'opacity-50 cursor-not-allowed'
+                    : ''
                 }
+                loading={isSubmitting}
               >
                 {isSubmitting ? '저장 중...' : '저장하기'}
               </Button>

@@ -11,6 +11,11 @@ import {
   createUpdateItem,
   createDeleteItem,
 } from '../../../store/slices/pageStateSlice';
+import {
+  setFormErrors,
+  setSubmitting,
+  resetForm,
+} from '../../../store/slices/pageFormSlice';
 import { projectApiService } from '../services/projectApiService';
 
 // 프로젝트 페이지 타입 상수
@@ -49,6 +54,9 @@ export const deleteProject = createDeleteItem(
   fetchProjects,
 );
 
+// 폼 관련 액션 재export
+export { setFormErrors, setSubmitting, resetForm };
+
 // 액션 생성자 객체 (일괄 내보내기용)
 export const projectActions = {
   fetchProjects,
@@ -56,6 +64,9 @@ export const projectActions = {
   createProject,
   updateProject,
   deleteProject,
+  setFormErrors,
+  setSubmitting,
+  resetForm,
 };
 
 export default projectActions;

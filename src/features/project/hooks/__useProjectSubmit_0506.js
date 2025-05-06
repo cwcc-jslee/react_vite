@@ -8,11 +8,12 @@ import { useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   createProject,
+  updateProject,
   setFormErrors,
-  // setSubmitting,
+  setSubmitting,
   resetForm,
-} from '../store/projectStoreActions';
-// import { resetBuckets } from '../store/projectTaskSlice';
+  resetBuckets,
+} from '../store/projectSlice';
 import { notification } from '../../../shared/services/notification';
 import {
   validateProjectForm,
@@ -20,7 +21,6 @@ import {
 } from '../utils/validateProjectForm';
 import { convertKeysToSnakeCase } from '../../../shared/utils/transformUtils';
 import { projectTaskService } from '../services/projectTaskService';
-import { projectApiService } from '../services/projectApiService';
 
 /**
  * 프로젝트 제출 관련 기능을 제공하는 커스텀 훅
@@ -30,69 +30,13 @@ import { projectApiService } from '../services/projectApiService';
  */
 export const useProjectSubmit = () => {
   const dispatch = useDispatch();
-  const { data: formData } = useSelector((state) => state.pageForm);
+  const { data: formData, isSubmitting } = useSelector(
+    (state) => state.pageForm,
+  );
   const buckets = useSelector((state) => state.projectTask.buckets);
   const [progress, setProgress] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentBucketIndex, setCurrentBucketIndex] = useState(0);
   const [processingStep, setProcessingStep] = useState('');
-
-  /**
-   * 데이터 정리 함수 (빈 값, 임시 데이터 제거)
-   * @param {Object} data - 처리할 데이터
-   * @returns {Object} 정리된 데이터
-   */
-  const prepareCleanData = useCallback((data) => {
-    // 깊은 복사로 원본 데이터 유지
-    const clonedData = JSON.parse(JSON.stringify(data));
-
-    // 불필요한 임시 필드 제거
-    const { __temp, ...cleanData } = clonedData;
-
-    // null이나 빈 문자열인 경우 해당 키 삭제
-    Object.keys(cleanData).forEach((key) => {
-      if (cleanData[key] === '' || cleanData[key] === null) {
-        delete cleanData[key];
-      }
-    });
-
-    return cleanData;
-  }, []);
-
-  /**
-   * 버킷/태스크 데이터 정리 함수
-   * @param {Array} buckets - 버킷 데이터 배열
-   * @returns {Array} 정리된 버킷 데이터 배열
-   */
-  const cleanProjectBucketData = useCallback(
-    (buckets) => {
-      if (!buckets || !Array.isArray(buckets)) return [];
-
-      return buckets.map((bucket) => ({
-        bucket: bucket.bucket,
-        position: bucket.position,
-        tasks:
-          bucket.tasks?.map((task) => {
-            const cleanedTask = prepareCleanData(task);
-
-            // taskScheduleType이 'ongoing'인 경우 특정 키 삭제
-            if (cleanedTask.taskScheduleType === 'ongoing') {
-              // 키가 없을 수 있으므로 기본값 undefined로 설정
-              const {
-                planningTimeData = undefined,
-                planStartDate = undefined,
-                planEndDate = undefined,
-                ...restTask
-              } = cleanedTask;
-              return restTask;
-            }
-
-            return cleanedTask;
-          }) || [],
-      }));
-    },
-    [prepareCleanData],
-  );
 
   /**
    * 프로젝트 폼 제출 처리 함수
@@ -190,25 +134,27 @@ export const useProjectSubmit = () => {
 
         // 2. 데이터 전처리
         const cleanBaseFormData = prepareCleanData(formData);
-        const cleanProjectBuckets = cleanProjectBucketData(currentBuckets);
+        let cleanProjectBuckets =
+          currentBuckets && currentBuckets.length > 0
+            ? JSON.parse(JSON.stringify(currentBuckets))
+            : [];
 
         // 프로젝트 기본 데이터의 관계 필드 처리 (users 등)
         const processedFormData = processRelationFields(cleanBaseFormData);
 
         // 버킷/태스크 데이터 전처리 (관계 필드 처리 및 데이터 형식 변환)
-        const processedProjectBuckets =
-          processProjectBuckets(cleanProjectBuckets);
+        cleanProjectBuckets = processProjectBuckets(cleanProjectBuckets);
 
-        console.log(`>>> 전처리된2 프로젝트 데이터:`, processedFormData);
-        console.log(`>>> 전처리된2 버킷 데이터:`, processedProjectBuckets);
+        console.log(`>>> 전처리된 프로젝트 데이터:`, processedFormData);
+        console.log(`>>> 전처리된 버킷 데이터:`, cleanProjectBuckets);
 
         setProgress(10);
 
         // 3. 키 정보 스네이크케이스로 변환
         const snakeCaseBaseForm = convertKeysToSnakeCase(processedFormData);
         const snakeCaseProjectBuckets =
-          processedProjectBuckets.length > 0
-            ? convertKeysToSnakeCase(processedProjectBuckets)
+          cleanProjectBuckets.length > 0
+            ? convertKeysToSnakeCase(cleanProjectBuckets)
             : [];
 
         console.log(
@@ -220,24 +166,18 @@ export const useProjectSubmit = () => {
         setProcessingStep('프로젝트 생성');
 
         // 4. 프로젝트 API 제출
-        setIsSubmitting(true);
-        const resultAction = await projectApiService.createProject(
-          snakeCaseBaseForm,
-        );
+        dispatch(setSubmitting(true));
+        const resultAction = await dispatch(createProject(snakeCaseBaseForm));
 
         // 제출 실패 시 종료
-        if (!resultAction?.data) {
-          setIsSubmitting(false);
+        if (!createProject.fulfilled.match(resultAction)) {
+          dispatch(setSubmitting(false));
           setProgress(0);
-          notification.error({
-            message: '프로젝트 생성 실패',
-            description: '프로젝트 생성 중 오류가 발생했습니다.',
-          });
           return false;
         }
 
         // 생성된 프로젝트 정보
-        const createdProject = resultAction.data;
+        const createdProject = resultAction.payload;
         const projectId = createdProject.id;
 
         setProgress(20);
@@ -245,16 +185,15 @@ export const useProjectSubmit = () => {
         // 5. 버킷이 없는 경우 종료
         if (snakeCaseProjectBuckets.length === 0) {
           // 폼과 버킷 상태 초기화
-          // dispatch(resetForm());
-          // dispatch(resetBuckets());
+          dispatch(resetForm());
+          dispatch(resetBuckets());
 
           notification.error({
             message: '버킷 정보 등록 실패',
             description: '버킷 정보가 없습니다.',
           });
           setProgress(100);
-          // dispatch(setSubmitting(false));
-          setIsSubmitting(false);
+          dispatch(setSubmitting(false));
           return createdProject;
         }
 
@@ -401,7 +340,7 @@ export const useProjectSubmit = () => {
 
           // 폼과 버킷 상태 초기화
           dispatch(resetForm());
-          // dispatch(resetBuckets());
+          dispatch(resetBuckets());
 
           setProgress(100);
 
@@ -432,8 +371,7 @@ export const useProjectSubmit = () => {
         });
         return false;
       } finally {
-        // dispatch(setSubmitting(false));
-        setIsSubmitting(false);
+        dispatch(setSubmitting(false));
         setProcessingStep('');
       }
     },
@@ -577,12 +515,124 @@ export const useProjectSubmit = () => {
     };
   };
 
+  /**
+   * 데이터 정리 함수 (빈 값, 임시 데이터 제거)
+   * @param {Object} data - 처리할 데이터
+   * @returns {Object} 정리된 데이터
+   */
+  const prepareCleanData = useCallback((data) => {
+    // 깊은 복사로 원본 데이터 유지
+    const clonedData = JSON.parse(JSON.stringify(data));
+
+    // 불필요한 임시 필드 제거
+    const { __temp, ...cleanData } = clonedData;
+
+    // null이나 빈 문자열인 경우 해당 키 삭제
+    Object.keys(cleanData).forEach((key) => {
+      if (cleanData[key] === '' || cleanData[key] === null) {
+        delete cleanData[key];
+      }
+    });
+
+    return cleanData;
+  }, []);
+
+  /**
+   * 프로젝트 업데이트 함수
+   * @param {string|number} projectId - 프로젝트 ID
+   * @param {Object} projectData - 업데이트할 프로젝트 데이터
+   * @param {Array} projectBuckets - 버킷/태스크 데이터 (선택적)
+   * @returns {Promise<Object|null>} 업데이트된 프로젝트 또는 null
+   */
+  const updateProjectData = useCallback(
+    async (projectId, projectData, projectBuckets) => {
+      try {
+        dispatch(setSubmitting(true));
+        setProgress(10);
+        setProcessingStep('프로젝트 업데이트 중');
+
+        // 1. 데이터 분리 및 전처리
+        const baseFormData = projectData || formData;
+
+        // 2. 데이터 전처리 (빈 값 제거)
+        const cleanBaseFormData = prepareCleanData(baseFormData);
+        let cleanProjectBuckets =
+          projectBuckets && projectBuckets.length > 0
+            ? JSON.parse(JSON.stringify(projectBuckets))
+            : [];
+
+        // 관계 필드 처리 (users 등)
+        const processedFormData = processRelationFields(cleanBaseFormData);
+
+        // 버킷/태스크 데이터 전처리
+        cleanProjectBuckets = processProjectBuckets(cleanProjectBuckets);
+
+        setProgress(20);
+
+        // 3. 키 정보 스네이크케이스로 변환
+        const snakeCaseBaseForm = convertKeysToSnakeCase(processedFormData);
+        const snakeCaseProjectBuckets =
+          cleanProjectBuckets.length > 0
+            ? convertKeysToSnakeCase(cleanProjectBuckets)
+            : [];
+
+        setProgress(30);
+
+        // 전체 제출 데이터 통합
+        const submitData = {
+          ...snakeCaseBaseForm,
+        };
+
+        // 칸반 보드 데이터가 있으면 포함
+        if (snakeCaseProjectBuckets.length > 0) {
+          submitData.structure = snakeCaseProjectBuckets;
+        }
+
+        setProgress(40);
+
+        // 4. API 제출
+        const resultAction = await dispatch(
+          updateProject({
+            projectId,
+            data: submitData,
+          }),
+        );
+
+        setProgress(100);
+        setProcessingStep('');
+
+        // 폼과 버킷 상태 초기화
+        if (updateProject.fulfilled.match(resultAction)) {
+          dispatch(resetForm());
+          dispatch(resetBuckets());
+        }
+
+        return updateProject.fulfilled.match(resultAction)
+          ? resultAction.payload
+          : null;
+      } catch (error) {
+        console.error('Project update error:', error);
+        notification.error({
+          message: '프로젝트 수정 실패',
+          description: error.message || '프로젝트 수정 중 오류가 발생했습니다.',
+        });
+        return null;
+      } finally {
+        dispatch(setSubmitting(false));
+        setProgress(0);
+        setProcessingStep('');
+      }
+    },
+    [formData, dispatch, prepareCleanData],
+  );
+
   return {
     isSubmitting,
     progress,
     processingStep,
     currentBucketIndex,
     handleFormSubmit,
+    updateProjectData,
     prepareCleanData,
   };
 };
