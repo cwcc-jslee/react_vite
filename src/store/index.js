@@ -19,7 +19,7 @@ import taskReducer from './slices/taskSlice';
 
 // 변경 삭제 예정
 // import projectReducer from '../features/project/store/projectSlice';
-import kanbanReducer from '../features/project/store/kanbanSlice';
+import projectTaskReducer from '../features/project/store/projectTaskSlice';
 // import sfaReducer from './slices/sfaSlice';
 // import customerReducer from './slices/customerSlice';
 
@@ -46,7 +46,7 @@ export const store = configureStore({
 
     // 삭제, 이동 예정
     // project: projectReducer, // 삭제 예정..
-    projectTask: kanbanReducer,
+    projectTask: projectTaskReducer,
     // sfa: sfaReducer, // 아직 구현되지 않은 경우 주석 처리
     // customer: customerReducer, // 아직 구현되지 않은 경우 주석 처리
   },

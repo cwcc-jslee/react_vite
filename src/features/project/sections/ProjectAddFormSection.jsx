@@ -13,12 +13,15 @@ import {
   FormItem,
 } from '@shared/components/ui';
 import { notification } from '@shared/services/notification';
+import { projectApiService } from '../services/projectApiService';
+import { initialState } from '../constants/initialState';
+
+// 커스텀 훅 사용
 import useProjectTask from '../hooks/useProjectTask';
 import { useSelectData } from '@shared/hooks/useSelectData';
-import { projectApiService } from '../services/projectApiService';
 import { useCodebook } from '@shared/hooks/useCodebook';
 import { useProjectForm } from '../hooks/useProjectForm';
-import { initialState } from '../constants/initialState';
+import { useProjectSubmit } from '../hooks/useProjectSubmit';
 
 /**
  * 프로젝트 기본정보 입력 폼 섹션 컴포넌트
@@ -28,7 +31,7 @@ const ProjectAddFormSection = () => {
   const {
     formData,
     // formErrors,
-    isSubmitting,
+    // isSubmitting,
     // formMode,
     // isFormValid,
     // editingId,
@@ -56,6 +59,9 @@ const ProjectAddFormSection = () => {
     'pjtStatus', // 프로젝트 상태
   ]);
 
+  // 프로젝트 추가 관련 상태 및 훅
+  const { handleFormSubmit, isSubmitting } = useProjectSubmit();
+
   // 칸반 보드 훅 사용
   const { buckets, loadTemplate, resetKanbanBoard } = useProjectTask();
 
@@ -70,28 +76,11 @@ const ProjectAddFormSection = () => {
     useSelectData(projectApiService.getTaskTemplate);
 
   /**
-   * 필수 입력 필드 검증
-   * @param {Object} formData - 폼 데이터
-   * @returns {boolean} 유효성 여부
-   */
-  const validateMandatoryFields = (formData) => {
-    // 예시: 실제 구현에서는 실제 폼 데이터를 기반으로 검증
-    // 실제 데이터 접근이 필요하다면 여기서 구현하거나 Container에서 전달 받아야 함
-    const mandatoryFields = ['name', 'customer', 'service'];
-    const hasAllMandatory = mandatoryFields.every(
-      (field) => formData && formData[field] && formData[field].trim !== '',
-    );
-
-    return hasAllMandatory;
-  };
-
-  /**
    * 폼 제출 핸들러
    */
-  const onFormSubmit = (e) => {
+  const onFormSubmit = async (e) => {
     e.preventDefault();
-    // 여기에 폼 제출 로직 추가
-    console.log('Form submitted with buckets:', buckets);
+    await handleFormSubmit(e, buckets);
   };
 
   /**

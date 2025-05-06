@@ -1,7 +1,33 @@
 // src/features/project/store/projectSlice.js
 /**
  * 프로젝트 상태 관리를 위한 Redux 슬라이스
- * 프로젝트, 버킷, 태스크 데이터의 CRUD 작업과 상태 관리를 담당합니다.
+ *
+ * 주요 기능:
+ * 1. 프로젝트 CRUD 작업
+ *    - 프로젝트 목록 조회 (fetchProjects)
+ *    - 프로젝트 상세 조회 (fetchProjectDetail)
+ *    - 프로젝트 생성 (createProject)
+ *    - 프로젝트 수정 (updateProject)
+ *    - 프로젝트 삭제 (deleteProject)
+ *
+ * 2. 폼 상태 관리
+ *    - 폼 데이터 초기화 및 리셋
+ *    - 폼 필드 업데이트 (단일/다중)
+ *    - 폼 에러 처리
+ *    - 제출 상태 관리
+ *
+ * 3. 페이지네이션 및 필터링
+ *    - 페이지 번호 및 크기 관리
+ *    - 필터 설정 및 초기화
+ *
+ * 4. UI 상태 관리
+ *    - 드로어 상태 관리
+ *    - 알림 시스템 연동
+ *
+ * 5. 에러 처리
+ *    - API 에러 처리
+ *    - 사용자 친화적인 에러 메시지
+ *    - 전역 에러 상태 관리
  */
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';

@@ -33,6 +33,7 @@ export const useProjectSubmit = () => {
   const { data: formData, isSubmitting } = useSelector(
     (state) => state.pageForm,
   );
+  const buckets = useSelector((state) => state.projectTask.buckets);
   const [progress, setProgress] = useState(0);
   const [currentBucketIndex, setCurrentBucketIndex] = useState(0);
   const [processingStep, setProcessingStep] = useState('');
@@ -61,6 +62,10 @@ export const useProjectSubmit = () => {
       setCurrentBucketIndex(0);
       setProcessingStep('유효성 검사');
 
+      // 최신 buckets 상태 확인
+      const currentBuckets = projectBuckets || buckets;
+      console.log('>>> Current buckets state:', currentBuckets);
+
       // 1-1. 기본 폼 유효성 검사
       const { isValid, errors: validationErrors } =
         validateProjectForm(formData);
@@ -76,21 +81,37 @@ export const useProjectSubmit = () => {
       }
 
       // 1-2. 버킷/태스크 유효성 검사
-      if (!projectBuckets || projectBuckets.length === 0) {
-        // 버킷이 없어도 프로젝트만 생성 가능
-        console.log('No buckets provided, will create project only.');
-      } else {
-        const { isValid: isTasksValid, errors: validationTasksErrors } =
-          validateProjectTaskForm(projectBuckets);
+      if (!currentBuckets || currentBuckets.length === 0) {
+        // 버킷이 없을 경우 에러 처리
+        notification.error({
+          message: '버킷 등록 오류',
+          description: '최소 1개 이상의 버킷이 필요합니다.',
+        });
+        return false;
+      }
 
-        if (!isTasksValid) {
-          const tasksError = Object.values(validationTasksErrors)[0];
-          notification.error({
-            message: 'TASK 등록 오류',
-            description: tasksError,
-          });
-          return false;
-        }
+      // Task 유효성 검사
+      const hasTasks = currentBuckets.some(
+        (bucket) => bucket.tasks && bucket.tasks.length > 0,
+      );
+      if (!hasTasks) {
+        notification.error({
+          message: 'Task 등록 오류',
+          description: '최소 1개 이상의 Task가 필요합니다.',
+        });
+        return false;
+      }
+
+      const { isValid: isTasksValid, errors: validationTasksErrors } =
+        validateProjectTaskForm(currentBuckets);
+
+      if (!isTasksValid) {
+        const tasksError = Object.values(validationTasksErrors)[0];
+        notification.error({
+          message: 'TASK 등록 오류',
+          description: tasksError,
+        });
+        return false;
       }
 
       try {
@@ -100,8 +121,8 @@ export const useProjectSubmit = () => {
         // 2. 데이터 전처리
         const cleanBaseFormData = prepareCleanData(formData);
         let cleanProjectBuckets =
-          projectBuckets && projectBuckets.length > 0
-            ? JSON.parse(JSON.stringify(projectBuckets))
+          currentBuckets && currentBuckets.length > 0
+            ? JSON.parse(JSON.stringify(currentBuckets))
             : [];
 
         // 프로젝트 기본 데이터의 관계 필드 처리 (users 등)
@@ -340,7 +361,7 @@ export const useProjectSubmit = () => {
         setProcessingStep('');
       }
     },
-    [formData, dispatch],
+    [formData, buckets, dispatch],
   );
 
   /**

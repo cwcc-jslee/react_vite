@@ -22,7 +22,7 @@ import { apiCommon } from '../../../../shared/api/apiCommon';
 import { projectApiService } from '../../services/projectApiService';
 import useSelectData from '../../../../shared/hooks/useSelectData';
 import CustomerSearchInput from '../../../../shared/components/customer/CustomerSearchInput';
-import { updateFormField } from '../../store/projectSlice';
+// import { updateFormField } from '../../store/projectSlice';
 
 /**
  * 프로젝트 메뉴별 추가 필드 컴포넌트

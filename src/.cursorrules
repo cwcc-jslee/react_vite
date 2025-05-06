@@ -52,7 +52,7 @@ src/features/project/
 │   ├── projectSubmitService.js
 │   └── projectTaskService.js
 ├── store/
-│   ├── kanbanSlice.js
+│   ├── projectTaskSlice.js
 │   ├── projectSlice.js
 │   └── projectStoreActions.js
 └── utils/
