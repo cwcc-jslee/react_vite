@@ -4,9 +4,17 @@
  * @version 1.0.0
  * @filename src/features/project/context/ProjectContext.jsx
  */
-import React, { createContext, useContext, useEffect, useReducer } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useReducer,
+  useCallback,
+} from 'react';
+import { useDispatch } from 'react-redux';
 import { apiService } from '@shared/api/apiService';
 import { projectApiService } from '../services/projectApiService';
+import { fetchProjects } from '../store/projectStoreActions';
 
 const initialState = {
   projectStatus: {
@@ -28,7 +36,14 @@ const initialState = {
   error: null,
   loadingProgress: false,
   errorProgress: null,
-  // Oneoff task 관련 상태 추가
+  // 검색 관련 상태 추가
+  search: {
+    filters: {},
+    isFetching: false,
+    lastFetchTime: 0,
+    error: null,
+  },
+  // Oneoff task 관련 상태
   oneoffTasks: {
     items: [],
     pagination: {
@@ -42,6 +57,9 @@ const initialState = {
 };
 
 const ProjectContext = createContext(null);
+
+const DEBOUNCE_TIME = 300;
+
 const projectReducer = (state, action) => {
   switch (action.type) {
     case 'FETCH_START':
@@ -73,7 +91,6 @@ const projectReducer = (state, action) => {
         errorProgress: action.payload,
         loadingProgress: false,
       };
-    // Oneoff task 관련 액션 추가
     case 'FETCH_ONEOFF_TASKS_START':
       return {
         ...state,
@@ -102,6 +119,33 @@ const projectReducer = (state, action) => {
           error: action.payload,
         },
       };
+    case 'SET_SEARCH_FILTERS':
+      return {
+        ...state,
+        search: {
+          ...state.search,
+          filters: action.payload,
+          isFetching: true,
+        },
+      };
+    case 'SEARCH_FETCH_COMPLETE':
+      return {
+        ...state,
+        search: {
+          ...state.search,
+          isFetching: false,
+          lastFetchTime: Date.now(),
+        },
+      };
+    case 'SEARCH_FETCH_ERROR':
+      return {
+        ...state,
+        search: {
+          ...state.search,
+          isFetching: false,
+          error: action.payload,
+        },
+      };
     default:
       return state;
   }
@@ -122,18 +166,46 @@ export const useProject = () => {
  * Project Provider 컴포넌트
  */
 export const ProjectProvider = ({ children }) => {
-  // 데이터 상태
   const [state, dispatch] = useReducer(projectReducer, initialState);
+  const reduxDispatch = useDispatch();
+  const { search } = state;
 
+  // 검색 관련 함수들
+  const handleSearch = useCallback((newFilters) => {
+    dispatch({ type: 'SET_SEARCH_FILTERS', payload: newFilters });
+  }, []);
+
+  const shouldFetch = useCallback(() => {
+    const now = Date.now();
+    return now - search.lastFetchTime >= DEBOUNCE_TIME;
+  }, [search.lastFetchTime]);
+
+  // 검색 필터 변경 시 API 호출
+  useEffect(() => {
+    if (!search.isFetching || !shouldFetch()) return;
+
+    const fetchData = async () => {
+      try {
+        console.log(`>>> fetchProjects 호출`, search.filters);
+        // Redux dispatch 사용
+        await reduxDispatch(fetchProjects({ filters: search.filters }));
+        dispatch({ type: 'SEARCH_FETCH_COMPLETE' });
+      } catch (error) {
+        console.error('Search failed:', error);
+        dispatch({ type: 'SEARCH_FETCH_ERROR', payload: error.message });
+      }
+    };
+
+    fetchData();
+  }, [search.filters, search.isFetching, shouldFetch, reduxDispatch]);
+
+  // 기존 데이터 fetch 함수들...
   const fetchStatusData = async () => {
     try {
       dispatch({ type: 'FETCH_START' });
-      // API 호출 로직
       const response = await apiService.get('/project-api/status');
-      // 데이터 추출
       const responseData = response.data.data;
 
-      // state에 맞는 형식으로 변환
       const formattedData = {
         projectStatus: {
           notStarted: responseData.notStarted || 0,
@@ -144,9 +216,7 @@ export const ProjectProvider = ({ children }) => {
           completed: responseData.recentlyCompleted || 0,
           total: responseData.total || 0,
         },
-        // API에서 monthlyStats가 없으므로 빈 배열 또는 별도로 구성 필요
         monthlyStats: [],
-        // 추가 데이터 저장
         monthsPeriod: responseData.monthsPeriod || 0,
       };
       dispatch({
@@ -158,20 +228,14 @@ export const ProjectProvider = ({ children }) => {
     }
   };
 
-  // 진행률 데이터 가져오는 함수
   const fetchProgressData = async () => {
     try {
       dispatch({ type: 'FETCH_PROGRESS_START' });
-      // progress API 호출
       const response = await apiService.get('/project-api/progress');
       const responseData = response.data.data;
 
-      console.log(`>>> fetchProgressData : `, responseData);
-      // 진행률 데이터 형식화
       const formattedProgressData = {
         distribution: responseData.progressDistribution || {},
-        // total: responseData.total || 0,
-        // ranges: responseData.ranges || {},
       };
 
       dispatch({
@@ -186,11 +250,6 @@ export const ProjectProvider = ({ children }) => {
     }
   };
 
-  // 진행률 데이터만 별도로 새로고침하는 함수
-  const refreshProgressData = async () => {
-    await fetchProgressData();
-  };
-
   // Provider 마운트시 자동으로 데이터 로드
   useEffect(() => {
     fetchStatusData();
@@ -202,6 +261,9 @@ export const ProjectProvider = ({ children }) => {
     state,
     fetchStatusData,
     fetchProgressData,
+    // 검색 관련 함수들 추가
+    handleSearch,
+    search: state.search,
   };
 
   return (

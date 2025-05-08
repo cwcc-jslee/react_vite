@@ -1,13 +1,9 @@
 // src/features/project/components/forms/ProjectSearchForm.jsx
 import React, { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
-import { useDispatch } from 'react-redux';
-import { setFilters } from '../../../../store/slices/pageStateSlice';
 import { CustomerSearchInput } from '@shared/components/customer/CustomerSearchInput';
 import { useCodebook } from '@shared/hooks/useCodebook';
 import { useTeam } from '@shared/hooks/useTeam';
-import useProjectStore from '../../hooks/useProjectStore';
-// import { useProjectItem } from '../../../../../shared/hooks/useProjectItem';
 import {
   Form,
   FormItem,
@@ -18,16 +14,16 @@ import {
   Button,
   Stack,
 } from '@shared/components/ui/index';
+import { useSearch } from '../../hooks/useSearch';
 
 const ProjectSearchForm = () => {
-  // const dispatch = useDispatch();
   const {
     data: codebooks,
     isLoading,
     error,
   } = useCodebook(['fy', 'pjtStatus']);
   const { data: teams, isLoading: teamLoading } = useTeam();
-  const { handleFilterChange, refreshProjects } = useProjectStore();
+  const { handleSearch, isFetching } = useSearch();
 
   const INIT_FORM_DATA = {
     name: '',
@@ -64,10 +60,6 @@ const ProjectSearchForm = () => {
     }
   };
 
-  useEffect(() => {
-    console.log(`### searchFormData `, searchFormData);
-  }, [searchFormData]);
-
   /**
    * 고객사 선택 핸들러
    * @param {Object} customer - 선택된 고객사 정보
@@ -82,6 +74,7 @@ const ProjectSearchForm = () => {
   // 검색 제출 핸들러
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log('검색 시작:', searchFormData);
 
     // 검색 필터 객체 구성
     const filters = {};
@@ -121,7 +114,9 @@ const ProjectSearchForm = () => {
         $lte: searchFormData.dateRange.endDate,
       };
     }
-    handleFilterChange(filters);
+
+    console.log('검색 필터:', filters);
+    handleSearch(filters);
   };
 
   // 검색 초기화 핸들러
@@ -131,13 +126,17 @@ const ProjectSearchForm = () => {
       ...INIT_FORM_DATA,
     });
 
-    // 필터 초기화 및 목록 갱신
-    refreshProjects({ filters: {} });
+    // 필터 초기화
+    handleSearch({});
   };
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-5 mb-5">
-      <Form onSubmit={handleSubmit} className="space-y-4">
+      <Form
+        className="space-y-4"
+        onSubmit={handleSubmit}
+        noValidate // HTML5 유효성 검사 비활성화
+      >
         {/* Stack 컴포넌트를 사용하여 3개의 항목을 한 줄에 표시 */}
         <Stack direction="horizontal" spacing="lg">
           <FormItem>
@@ -159,7 +158,7 @@ const ProjectSearchForm = () => {
             <Label>프로젝트상태</Label>
             <Select
               name="pjtStatus"
-              value={searchFormData.fy}
+              value={searchFormData.pjtStatus}
               onChange={handleInputChange}
             >
               <option value="">선택하세요</option>
@@ -225,21 +224,18 @@ const ProjectSearchForm = () => {
               onChange={handleInputChange}
             >
               <option value="">선택하세요</option>
-              {/* {codebooks.rePaymentMethod?.map((item) => (
-                <option key={item.id} value={item.name}>
-                  {item.name}
-                </option>
-              ))} */}
             </Select>
           </FormItem>
         </Stack>
 
-        {/* 세 번째 줄도 Stack으로 변경 */}
-        <Stack direction="horizontal" spacing="lg"></Stack>
-
         <Group direction="horizontal" className="justify-center">
-          <Button type="button" variant="primary" onClick={handleSubmit}>
-            검색
+          <Button
+            type="button" // submit에서 button으로 변경
+            variant="primary"
+            disabled={isFetching}
+            onClick={handleSubmit}
+          >
+            {isFetching ? '검색 중...' : '검색'}
           </Button>
           <Button type="button" variant="outline" onClick={handleReset}>
             초기화
