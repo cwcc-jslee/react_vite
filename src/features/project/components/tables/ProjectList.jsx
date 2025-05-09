@@ -5,7 +5,6 @@ import { Button } from '../../../../shared/components/ui';
 import { Card } from '../../../../shared/components/ui/card/Card';
 import { Pagination } from '../../../../shared/components/ui/pagination/Pagination';
 import { fetchProjectDetail } from '../../store/projectStoreActions';
-// import useProjectStore from '../../hooks/useProjectStore';
 
 // 컴포넌트
 

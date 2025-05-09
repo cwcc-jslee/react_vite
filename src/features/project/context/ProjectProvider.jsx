@@ -11,10 +11,10 @@ import React, {
   useReducer,
   useCallback,
 } from 'react';
-import { useDispatch } from 'react-redux';
+// import { useDispatch } from 'react-redux';
 import { apiService } from '@shared/api/apiService';
-import { projectApiService } from '../services/projectApiService';
-import { fetchProjects } from '../store/projectStoreActions';
+// import { projectApiService } from '../services/projectApiService';
+// import { fetchProjects } from '../store/projectStoreActions';
 
 const initialState = {
   projectStatus: {
@@ -167,7 +167,7 @@ export const useProject = () => {
  */
 export const ProjectProvider = ({ children }) => {
   const [state, dispatch] = useReducer(projectReducer, initialState);
-  const reduxDispatch = useDispatch();
+  // const reduxDispatch = useDispatch();
   const { search } = state;
 
   // 검색 관련 함수들
@@ -181,23 +181,23 @@ export const ProjectProvider = ({ children }) => {
   }, [search.lastFetchTime]);
 
   // 검색 필터 변경 시 API 호출
-  useEffect(() => {
-    if (!search.isFetching || !shouldFetch()) return;
+  // useEffect(() => {
+  //   if (!search.isFetching || !shouldFetch()) return;
 
-    const fetchData = async () => {
-      try {
-        console.log(`>>> fetchProjects 호출`, search.filters);
-        // Redux dispatch 사용
-        await reduxDispatch(fetchProjects({ filters: search.filters }));
-        dispatch({ type: 'SEARCH_FETCH_COMPLETE' });
-      } catch (error) {
-        console.error('Search failed:', error);
-        dispatch({ type: 'SEARCH_FETCH_ERROR', payload: error.message });
-      }
-    };
+  //   const fetchData = async () => {
+  //     try {
+  //       console.log(`>>> fetchProjects 호출`, search.filters);
+  //       // Redux dispatch 사용
+  //       await reduxDispatch(fetchProjects({ filters: search.filters }));
+  //       dispatch({ type: 'SEARCH_FETCH_COMPLETE' });
+  //     } catch (error) {
+  //       console.error('Search failed:', error);
+  //       dispatch({ type: 'SEARCH_FETCH_ERROR', payload: error.message });
+  //     }
+  //   };
 
-    fetchData();
-  }, [search.filters, search.isFetching, shouldFetch, reduxDispatch]);
+  //   fetchData();
+  // }, [search.filters, search.isFetching, shouldFetch, reduxDispatch]);
 
   // 기존 데이터 fetch 함수들...
   const fetchStatusData = async () => {

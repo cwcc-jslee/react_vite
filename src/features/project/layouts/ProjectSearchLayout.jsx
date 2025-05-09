@@ -10,7 +10,6 @@ import ProjectListSection from '../sections/ProjectListSection';
  *
  */
 const ProjectSearchLayout = ({
-  chartsData,
   items,
   pagination,
   loading,
@@ -18,7 +17,6 @@ const ProjectSearchLayout = ({
   handlePageChange,
   handlePageSizeChange,
   loadProjectDetail,
-  uiComponents,
 }) => {
   return (
     <>
