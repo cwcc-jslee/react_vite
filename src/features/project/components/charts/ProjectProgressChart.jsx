@@ -1,5 +1,5 @@
 // src/features/project/components/charts/ProjectProgressChart.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import {
   BarChart,
   Bar,
@@ -12,12 +12,16 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import ChartContainer from '../../../../shared/components/charts/ChartContainer';
+import { useProjectSearch } from '../../hooks/useProjectSearch';
 
 /**
  * 프로젝트 진행 단계별 수량을 세로 막대 차트로 표시하는 컴포넌트 (리팩토링 버전)
  * @returns {JSX.Element} 프로젝트 진행 상태 차트 컴포넌트
  */
 const ProjectProgressChart = ({ projectProgress = [] }) => {
+  const { handleProgressFilter } = useProjectSearch();
+  const [activeIndex, setActiveIndex] = useState(null);
+
   const renderBarLabel = (props) => {
     const { x, y, width, value } = props;
     return (
@@ -55,36 +59,42 @@ const ProjectProgressChart = ({ projectProgress = [] }) => {
       value: projectProgress['0%'],
       color: '#D13438',
       isProgress: true,
+      progress: 0,
     },
     {
       name: '10%',
       value: projectProgress['10%'],
       color: '#FF8C00',
       isProgress: true,
+      progress: 10,
     },
     {
       name: '25%',
       value: projectProgress['25%'],
       color: '#FF8C00',
       isProgress: true,
+      progress: 25,
     },
     {
       name: '50%',
       value: projectProgress['50%'],
       color: '#FFB900',
       isProgress: true,
+      progress: 50,
     },
     {
       name: '75%',
       value: projectProgress['75%'],
       color: '#107C10',
       isProgress: true,
+      progress: 75,
     },
     {
       name: '100%',
       value: projectProgress['100%'],
       color: '#0078D4',
       isProgress: true,
+      progress: 100,
     },
     // {
     //   name: '검수',
@@ -117,6 +127,21 @@ const ProjectProgressChart = ({ projectProgress = [] }) => {
     </>
   ));
 
+  // 막대 클릭 핸들러
+  const onBarClick = (_, index) => {
+    setActiveIndex(activeIndex === index ? null : index);
+
+    // 필터링 처리
+    if (activeIndex === index) {
+      // 같은 막대 재클릭 시 필터 초기화
+      handleProgressFilter('');
+    } else {
+      // 선택된 진행률로 필터링
+      const selectedProgress = progressData[index].progress;
+      handleProgressFilter(selectedProgress.toString());
+    }
+  };
+
   return (
     <ChartContainer title="프로젝트 진행 상태" legends={legendItems}>
       <div className="relative w-full h-full">
@@ -132,13 +157,16 @@ const ProjectProgressChart = ({ projectProgress = [] }) => {
             <XAxis dataKey="name" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 11 }} width={30} />
             <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="value" barSize={30}>
+            <Bar dataKey="value" barSize={30} onClick={onBarClick}>
               {progressData.map((entry, index) => (
                 <Cell
                   key={`cell-${index}`}
                   fill={entry.color}
                   stroke={entry.isProgress ? '#0078D4' : 'transparent'}
                   strokeWidth={entry.isProgress ? 1 : 0}
+                  opacity={
+                    activeIndex === null || activeIndex === index ? 1 : 0.3
+                  }
                 />
               ))}
               <LabelList dataKey="value" content={renderBarLabel} />

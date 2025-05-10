@@ -13,9 +13,9 @@ const COLUMNS = [
   { key: 'name', title: '프로젝트명', align: 'left' },
   // { key: 'risk', title: '위험도', align: 'left' },
   { key: 'importanceLevel', title: '중요도', align: 'center' },
-  { key: 'service', title: '서비스', align: 'center' },
   { key: 'pjtStatus', title: '상태', align: 'center' },
-  { key: 'progress', title: '진행률', align: 'center' },
+  { key: 'projectProgress', title: '진행률', align: 'center' },
+  { key: 'service', title: '서비스', align: 'center' },
   // { key: 'tag', title: '시작일', align: 'center' },
   { key: 'planEndDate', title: '완료(예정)일', align: 'center' },
   { key: 'lastDate', title: '최근작업일', align: 'center' },
@@ -119,9 +119,11 @@ const TableRow = ({
       <td className="px-3 py-2 text-center text-sm">
         {item?.importanceLevel?.name}
       </td>
-      <td className="px-3 py-2 text-center text-sm">{item?.service?.name}</td>
       <td className="px-3 py-2 text-center text-sm">{item?.pjtStatus?.name}</td>
-      <td className="px-3 py-2 text-center text-sm">{'계산'}</td>
+      <td className="px-3 py-2 text-center text-sm">
+        {item?.projectProgress ? `${item.projectProgress}%` : '-'}
+      </td>
+      <td className="px-3 py-2 text-center text-sm">{item?.service?.name}</td>
       <td className="px-3 py-2 text-center text-sm">
         {item?.planEndDate || '-'}
       </td>

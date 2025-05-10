@@ -1,6 +1,5 @@
 // src/features/project/components/forms/ProjectSearchForm.jsx
-import React, { useState, useEffect } from 'react';
-import dayjs from 'dayjs';
+import React from 'react';
 import { CustomerSearchInput } from '@shared/components/customer/CustomerSearchInput';
 import { useCodebook } from '@shared/hooks/useCodebook';
 import { useTeam } from '@shared/hooks/useTeam';
@@ -14,130 +13,34 @@ import {
   Button,
   Stack,
 } from '@shared/components/ui/index';
-import { useSearch } from '../../hooks/useSearch';
+import { useProjectSearch } from '../../hooks/useProjectSearch';
 
 const ProjectSearchForm = () => {
   const {
     data: codebooks,
     isLoading,
     error,
-  } = useCodebook(['fy', 'pjtStatus']);
+  } = useCodebook(['fy', 'pjtStatus', 'importanceLevel', 'workType']);
   const { data: teams, isLoading: teamLoading } = useTeam();
-  const { handleSearch, isFetching } = useSearch();
-
-  const INIT_FORM_DATA = {
-    name: '',
-    customer: '',
-    team: '',
-    pjtStatus: '',
-    dateRange: {
-      startDate: null,
-      endDate: null,
-    },
-  };
-
-  const [searchFormData, setSearchFormData] = useState({
-    ...INIT_FORM_DATA,
-  });
-
-  // 입력 필드 변경 처리
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-
-    if (name === 'startDate' || name === 'endDate') {
-      setSearchFormData((prev) => ({
-        ...prev,
-        dateRange: {
-          ...prev.dateRange,
-          [name]: value,
-        },
-      }));
-    } else {
-      setSearchFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
-  };
-
-  /**
-   * 고객사 선택 핸들러
-   * @param {Object} customer - 선택된 고객사 정보
-   */
-  const handleCustomerSelect = (customer) => {
-    setSearchFormData((prev) => ({
-      ...prev,
-      customer: customer.id,
-    }));
-  };
+  const {
+    handleSearch,
+    handleReset,
+    isFetching,
+    searchFormData,
+    handleInputChange,
+    handleCustomerSelect,
+  } = useProjectSearch();
 
   // 검색 제출 핸들러
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('검색 시작:', searchFormData);
-
-    // 검색 필터 객체 구성
-    const filters = {};
-
-    // 건명 필터 추가
-    if (searchFormData.name) {
-      filters.name = { $contains: searchFormData.name };
-    }
-
-    // 고객사 필터 추가
-    if (searchFormData.customer) {
-      filters.customer = { id: { $eq: searchFormData.customer } };
-    }
-
-    // 사업부 필터 추가
-    if (searchFormData.team) {
-      filters.team = { id: { $eq: searchFormData.team } };
-    }
-
-    // FY 필터 추가
-    if (searchFormData.fy) {
-      filters.fy = { $eq: searchFormData.fy };
-    }
-
-    // 프로젝트 상태태 필터 추가
-    if (searchFormData.pjtStatus) {
-      filters.pjt_status = { $eq: searchFormData.pjtStatus };
-    }
-
-    // 날짜 범위 필터 추가
-    if (
-      searchFormData.dateRange.startDate &&
-      searchFormData.dateRange.endDate
-    ) {
-      filters.created_at = {
-        $gte: searchFormData.dateRange.startDate,
-        $lte: searchFormData.dateRange.endDate,
-      };
-    }
-
-    console.log('검색 필터:', filters);
-    handleSearch(filters);
-  };
-
-  // 검색 초기화 핸들러
-  const handleReset = () => {
-    // 폼 데이터 초기화
-    setSearchFormData({
-      ...INIT_FORM_DATA,
-    });
-
-    // 필터 초기화
-    handleSearch({});
+    handleSearch();
   };
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-5 mb-5">
-      <Form
-        className="space-y-4"
-        onSubmit={handleSubmit}
-        noValidate // HTML5 유효성 검사 비활성화
-      >
-        {/* Stack 컴포넌트를 사용하여 3개의 항목을 한 줄에 표시 */}
+      <Form className="space-y-4" onSubmit={handleSubmit} noValidate>
+        {/* 첫 번째 줄 */}
         <Stack direction="horizontal" spacing="lg">
           <FormItem>
             <Label>FY</Label>
@@ -170,26 +73,23 @@ const ProjectSearchForm = () => {
             </Select>
           </FormItem>
           <FormItem>
-            <Label>기준일자</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                type="date"
-                name="startDate"
-                value={searchFormData.dateRange.startDate}
-                onChange={handleInputChange}
-              />
-              <span className="text-gray-500">~</span>
-              <Input
-                type="date"
-                name="endDate"
-                value={searchFormData.dateRange.endDate}
-                onChange={handleInputChange}
-              />
-            </div>
+            <Label>중요도</Label>
+            <Select
+              name="importanceLevel"
+              value={searchFormData.importanceLevel}
+              onChange={handleInputChange}
+            >
+              <option value="">선택하세요</option>
+              {codebooks.importanceLevel?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
           </FormItem>
         </Stack>
 
-        {/* 두 번째 줄도 Stack으로 변경 */}
+        {/* 두 번째 줄 */}
         <Stack direction="horizontal" spacing="lg">
           <FormItem>
             <Label>건명</Label>
@@ -200,6 +100,10 @@ const ProjectSearchForm = () => {
               onChange={handleInputChange}
               placeholder="건명 입력"
             />
+          </FormItem>
+          <FormItem>
+            <Label>고객사</Label>
+            <CustomerSearchInput onSelect={handleCustomerSelect} size="small" />
           </FormItem>
           <FormItem>
             <Label>사업부</Label>
@@ -216,21 +120,65 @@ const ProjectSearchForm = () => {
               ))}
             </Select>
           </FormItem>
+        </Stack>
+
+        {/* 세 번째 줄 */}
+        <Stack direction="horizontal" spacing="lg">
           <FormItem>
-            <Label>서비스</Label>
+            <Label>작업유형</Label>
             <Select
-              name="billingType"
-              value={searchFormData.billingType}
+              name="workType"
+              value={searchFormData.workType}
               onChange={handleInputChange}
             >
               <option value="">선택하세요</option>
+              {codebooks.workType?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
             </Select>
+          </FormItem>
+          <FormItem>
+            <Label>진행률</Label>
+            <Select
+              name="projectProgress"
+              value={searchFormData.projectProgress}
+              onChange={handleInputChange}
+            >
+              <option value="">선택하세요</option>
+              <option value="0">0%</option>
+              <option value="25">25%</option>
+              <option value="50">50%</option>
+              <option value="75">75%</option>
+              <option value="100">100%</option>
+            </Select>
+          </FormItem>
+          <FormItem>
+            <Label>기준일자</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                type="date"
+                name="startDate"
+                value={searchFormData.dateRange.startDate}
+                onChange={handleInputChange}
+                disabled={true}
+              />
+              <span className="text-gray-500">~</span>
+              <Input
+                type="date"
+                name="endDate"
+                value={searchFormData.dateRange.endDate}
+                onChange={handleInputChange}
+                disabled={true}
+              />
+            </div>
           </FormItem>
         </Stack>
 
         <Group direction="horizontal" className="justify-center">
           <Button
-            type="button" // submit에서 button으로 변경
+            type="button"
             variant="primary"
             disabled={isFetching}
             onClick={handleSubmit}

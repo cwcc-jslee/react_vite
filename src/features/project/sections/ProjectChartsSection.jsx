@@ -5,6 +5,7 @@ import { Row, Col } from '../../../shared/components/ui';
 import ProjectStatusDonutCharts from '../components/charts/ProjectStatusDonutCharts';
 import ProjectProgressChart from '../components/charts/ProjectProgressChart';
 import ProjectTreeMap from '../components/charts/ProjectTreeMap';
+import { useProjectSearch } from '../hooks/useProjectSearch';
 
 /**
  * 프로젝트 차트 섹션 컴포넌트
@@ -16,12 +17,20 @@ import ProjectTreeMap from '../components/charts/ProjectTreeMap';
  * @returns {JSX.Element} 프로젝트 차트 섹션
  */
 const ProjectChartsSection = ({ projectStatus, projectProgress }) => {
+  const { searchFormData } = useProjectSearch();
+  const isFiltered = searchFormData.pjtStatus !== '';
+
+  console.log(`>>>> projectStatus`, projectStatus);
+
   return (
     <Row gutter={[16, 16]}>
       {/* 왼쪽: 프로젝트 상태 도넛 차트 */}
       <Col span={8}>
         <div className="h-[420px]">
-          <ProjectStatusDonutCharts projectStatus={projectStatus} />
+          <ProjectStatusDonutCharts
+            projectStatus={projectStatus}
+            isFiltered={isFiltered}
+          />
         </div>
       </Col>
 
