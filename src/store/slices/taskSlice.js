@@ -7,6 +7,16 @@ import { notification } from '@shared/services/notification';
 import { convertKeysToCamelCase } from '@shared/utils/transformUtils';
 import { workApiService } from '../../features/work/services/workApiService';
 
+// 필터 기본값 상수 정의
+const DEFAULT_FILTERS = {};
+
+// 페이지네이션 기본값 상수 정의
+const DEFAULT_PAGINATION = {
+  current: 1,
+  pageSize: 20,
+  total: 0,
+};
+
 // 비동기 액션 생성
 export const fetchTasks = createAsyncThunk(
   'task/fetchTasks',
@@ -44,22 +54,6 @@ export const fetchTasks = createAsyncThunk(
   },
 );
 
-// 작업 생성 액션
-export const createTask = createAsyncThunk(
-  'task/createTask',
-  async (taskData, { rejectWithValue }) => {
-    try {
-      // API 호출
-      const response = await workApiService.createTask(taskData);
-      return convertKeysToCamelCase(response.data);
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.error?.message || error.message,
-      );
-    }
-  },
-);
-
 const initialState = {
   // 데이터 상태
   items: [],
@@ -67,17 +61,10 @@ const initialState = {
   error: null,
 
   // 페이지네이션 상태
-  pagination: {
-    current: 1,
-    pageSize: 20,
-    total: 0,
-  },
+  pagination: { ...DEFAULT_PAGINATION },
 
   // 필터 상태
-  filters: {},
-
-  // 선택된 작업
-  selectedTask: null,
+  filters: { ...DEFAULT_FILTERS },
 };
 
 const taskSlice = createSlice({
@@ -105,18 +92,8 @@ const taskSlice = createSlice({
 
     // 필터 초기화
     resetFilters: (state) => {
-      state.filters = {};
-      state.pagination.current = 1; // 필터 초기화 시 첫 페이지로
-    },
-
-    // 특정 작업 선택
-    selectTask: (state, action) => {
-      state.selectedTask = action.payload;
-    },
-
-    // 작업 선택 해제
-    clearSelectedTask: (state) => {
-      state.selectedTask = null;
+      state.filters = { ...DEFAULT_FILTERS };
+      state.pagination = { ...DEFAULT_PAGINATION };
     },
   },
   extraReducers: (builder) => {
@@ -124,6 +101,7 @@ const taskSlice = createSlice({
       // 작업 목록 조회
       .addCase(fetchTasks.pending, (state) => {
         state.status = 'loading';
+        state.error = null;
       })
       .addCase(fetchTasks.fulfilled, (state, action) => {
         state.status = 'succeeded';
@@ -138,39 +116,11 @@ const taskSlice = createSlice({
           message: '데이터 조회 실패',
           description: action.payload || '작업 목록을 불러오는데 실패했습니다.',
         });
-      })
-
-      // 작업 생성
-      .addCase(createTask.pending, (state) => {
-        state.status = 'loading';
-      })
-      .addCase(createTask.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        notification.success({
-          message: '작업 생성 완료',
-          description: '새 작업이 성공적으로 생성되었습니다.',
-        });
-        // 새 작업을 목록에 추가할 수 있음
-        // state.items = [action.payload, ...state.items];
-      })
-      .addCase(createTask.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.payload;
-        notification.error({
-          message: '작업 생성 실패',
-          description: action.payload || '작업 생성 중 오류가 발생했습니다.',
-        });
       });
   },
 });
 
-export const {
-  setPage,
-  setPageSize,
-  setFilters,
-  resetFilters,
-  selectTask,
-  clearSelectedTask,
-} = taskSlice.actions;
+export const { setPage, setPageSize, setFilters, resetFilters } =
+  taskSlice.actions;
 
 export default taskSlice.reducer;

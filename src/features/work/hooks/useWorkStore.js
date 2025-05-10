@@ -23,6 +23,7 @@ import {
   updateFormField,
   setFormErrors,
   resetForm,
+  initializeFormData,
 } from '../../../store/slices/workSlice';
 
 /**
@@ -72,6 +73,15 @@ export const useWorkStore = () => {
       updateField: (name, value) => dispatch(updateFormField({ name, value })),
       resetForm: () => dispatch(resetForm()),
       setErrors: (errors) => dispatch(setFormErrors(errors)),
+      initializeForm: (formData) => {
+        dispatch(resetForm());
+        dispatch(initializeFormData(formData));
+      },
+      // 폼 제출 후 처리
+      // afterSubmit: () => {
+      //   dispatch(resetForm());
+      //   dispatch(fetchWorks());
+      // },
     },
 
     // 작업 목록 새로고침

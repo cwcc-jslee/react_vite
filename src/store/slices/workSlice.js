@@ -14,7 +14,7 @@ const DEFAULT_FILTERS = {};
 // 페이지네이션 기본값 상수 정의
 const DEFAULT_PAGINATION = {
   current: 1,
-  pageSize: 20,
+  pageSize: 10,
   total: 0,
 };
 
@@ -189,6 +189,15 @@ const workSlice = createSlice({
       state.form.isSubmitting = false;
     },
 
+    // 폼 데이터 일괄 업데이트
+    initializeFormData: (state, action) => {
+      state.form.data = {
+        ...state.form.data,
+        ...action.payload,
+      };
+      state.form.errors = {};
+    },
+
     // 폼 에러 설정
     setFormErrors: (state, action) => {
       state.form.errors = {
@@ -288,6 +297,7 @@ export const {
   setWorkFormIsValid,
   updateFormField,
   resetForm,
+  initializeFormData,
   setFormErrors,
   setFormIsValid,
   setFormSubmitting,

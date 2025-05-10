@@ -9,8 +9,6 @@ import {
   Tooltip,
   Progress,
 } from '../../../../shared/components/ui';
-import { Card } from '../../../../shared/components/ui/card/Card';
-import { Pagination } from '../../../../shared/components/ui/pagination/Pagination';
 import { FiCheckSquare, FiClock, FiCalendar } from 'react-icons/fi';
 
 /**
@@ -84,12 +82,18 @@ const ProjectTaskList = ({
     { key: 'completed', title: '완료', align: 'center', width: '60px' },
     { key: 'name', title: '작업명', align: 'left' },
     { key: 'bucket', title: '버킷', align: 'center' },
+    { key: 'taskScheduleType', title: '일정구분', align: 'center' },
     { key: 'checklistProgress', title: '체크리스트', align: 'center' },
     { key: 'assignee', title: '할당대상', align: 'center' },
     { key: 'startDate', title: '시작일', align: 'center' },
     { key: 'endDate', title: '완료일', align: 'center' },
     { key: 'duration', title: '기간', align: 'center', width: '70px' },
-    { key: 'workHours', title: '작업시간', align: 'center', width: '80px' },
+    {
+      key: 'totalWorkHours',
+      title: '작업시간',
+      align: 'center',
+      width: '80px',
+    },
     { key: 'progress', title: '완료%', align: 'center', width: '80px' },
     { key: 'priority', title: '우선순위', align: 'center' },
   ];
@@ -157,231 +161,235 @@ const ProjectTaskList = ({
   };
 
   return (
-    <Card>
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50 border-y border-gray-200">
-              {columns.map((column) => (
-                <th
-                  key={column.key}
-                  className={`px-3 py-2 text-sm font-semibold text-gray-700 whitespace-nowrap
+    // <Card>
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead>
+          <tr className="bg-gray-50 border-y border-gray-200">
+            {columns.map((column) => (
+              <th
+                key={column.key}
+                className={`px-3 py-2 text-sm font-semibold text-gray-700 whitespace-nowrap
                     ${column.align === 'center' && 'text-center'}
                     ${column.align === 'right' && 'text-right'}
                   `}
-                  style={{ width: column.width }}
-                >
-                  {column.title}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {loading ? (
-              <LoadingState />
-            ) : error ? (
-              <ErrorState message={error} />
-            ) : !allTasks?.length ? (
-              <EmptyState />
-            ) : (
-              allTasks.map((task, index) => (
-                <tr
-                  key={task.id || index}
-                  className={`hover:bg-gray-50 ${
-                    task.completed ? 'bg-gray-50' : ''
-                  } cursor-pointer`}
-                  onClick={() => handleRowClick(task)}
-                >
-                  {/* 순번 */}
-                  <td className="px-3 py-2 text-center text-sm">{index + 1}</td>
-                  {/* 완료 체크박스 */}
-                  <td className="px-3 py-2 text-center">
-                    <Checkbox
-                      checked={task.completed}
-                      // onChange={(e) => onTaskComplete(task.id, e.target.checked)}
-                    />
-                  </td>
+                style={{ width: column.width }}
+              >
+                {column.title}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {loading ? (
+            <LoadingState />
+          ) : error ? (
+            <ErrorState message={error} />
+          ) : !allTasks?.length ? (
+            <EmptyState />
+          ) : (
+            allTasks.map((task, index) => (
+              <tr
+                key={task.id || index}
+                className={`hover:bg-gray-50 ${
+                  task.completed ? 'bg-gray-50' : ''
+                } cursor-pointer`}
+                onClick={() => handleRowClick(task)}
+              >
+                {/* 순번 */}
+                <td className="px-3 py-2 text-center text-sm">{index + 1}</td>
+                {/* 완료 체크박스 */}
+                <td className="px-3 py-2 text-center">
+                  <Checkbox
+                    checked={task.completed}
+                    // onChange={(e) => onTaskComplete(task.id, e.target.checked)}
+                  />
+                </td>
 
-                  {/* 작업명 */}
-                  <td className="px-3 py-2 text-sm">
-                    <div
-                      className={`${
-                        task.completed ? 'line-through text-gray-400' : ''
-                      }`}
-                      onClick={() => onTaskEdit(task.id)}
-                    >
-                      {task.name}
-                    </div>
-                  </td>
+                {/* 작업명 */}
+                <td className="px-3 py-2 text-sm">
+                  <div
+                    className={`${
+                      task.completed ? 'line-through text-gray-400' : ''
+                    }`}
+                    onClick={() => onTaskEdit(task.id)}
+                  >
+                    {task.name}
+                  </div>
+                </td>
 
-                  {/* 버킷 */}
-                  <td className="px-3 py-2 text-center text-sm">
-                    <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-md text-xs">
-                      {task.bucket}
+                {/* 버킷 */}
+                <td className="px-3 py-2 text-center text-sm">
+                  <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-md text-xs">
+                    {task.bucket}
+                  </span>
+                </td>
+
+                {/* 스케줄 타입 */}
+                <td className="px-3 py-2 text-center text-sm">
+                  {task.taskScheduleType === 'ongoing' ? (
+                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs">
+                      ONGOING
                     </span>
-                  </td>
+                  ) : task.taskScheduleType === 'scheduled' ? (
+                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs">
+                      SCHEDULED
+                    </span>
+                  ) : (
+                    '-'
+                  )}
+                </td>
 
-                  {/* 체크리스트 */}
-                  <td className="px-3 py-2 text-center">
-                    {task.checklist?.length > 0 ? (
-                      <Tooltip
-                        content={`${
-                          task.checklist.filter((item) => item.checked).length
-                        }/${task.checklist.length} 완료`}
-                      >
-                        <div className="flex items-center gap-1">
-                          <FiCheckSquare className="text-indigo-500" />
-                          <span className="text-xs">
-                            {
-                              task.checklist.filter((item) => item.checked)
-                                .length
-                            }
-                            /{task.checklist.length}
-                          </span>
+                {/* 체크리스트 */}
+                <td className="px-3 py-2 text-center">
+                  {task.checklist?.length > 0 ? (
+                    <Tooltip
+                      content={`${
+                        task.checklist.filter((item) => item.checked).length
+                      }/${task.checklist.length} 완료`}
+                    >
+                      <div className="flex items-center gap-1">
+                        <FiCheckSquare className="text-indigo-500" />
+                        <span className="text-xs">
+                          {task.checklist.filter((item) => item.checked).length}
+                          /{task.checklist.length}
+                        </span>
+                      </div>
+                    </Tooltip>
+                  ) : (
+                    '-'
+                  )}
+                </td>
+
+                {/* 할당대상 */}
+                <td className="px-3 py-2 text-center text-sm">
+                  {task.users && task.users.length > 0 ? (
+                    <div className="flex items-center justify-center">
+                      {task.users.slice(0, 2).map((user, index) => (
+                        <div
+                          key={user.id || index}
+                          className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-800 -ml-1 first:ml-0"
+                        >
+                          {user.username ? user.username.substring(1, 3) : '??'}
                         </div>
-                      </Tooltip>
-                    ) : (
-                      '-'
-                    )}
-                  </td>
+                      ))}
+                      {task.users.length > 2 && (
+                        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 -ml-1">
+                          +{task.users.length - 2}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    '-'
+                  )}
+                </td>
 
-                  {/* 할당대상 */}
-                  <td className="px-3 py-2 text-center text-sm">
-                    {task.users && task.users.length > 0 ? (
-                      <div className="flex items-center justify-center">
-                        {task.users.slice(0, 2).map((user, index) => (
-                          <div
-                            key={user.id || index}
-                            className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-800 -ml-1 first:ml-0"
-                          >
-                            {user.username
-                              ? user.username.substring(1, 3)
-                              : '??'}
-                          </div>
-                        ))}
-                        {task.users.length > 2 && (
-                          <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 -ml-1">
-                            +{task.users.length - 2}
-                          </div>
+                {/* 시작일 */}
+                <td className="px-3 py-2 text-center text-sm">
+                  <Tooltip
+                    content={
+                      <>
+                        {task.startDate && (
+                          <div>확정: {formatDate(task.startDate)}</div>
                         )}
-                      </div>
-                    ) : (
-                      '-'
-                    )}
-                  </td>
-
-                  {/* 시작일 */}
-                  <td className="px-3 py-2 text-center text-sm">
-                    <Tooltip
-                      content={
-                        <>
-                          {task.startDate && (
-                            <div>확정: {formatDate(task.startDate)}</div>
-                          )}
-                          {task.planStartDate && (
-                            <div>예정: {formatDate(task.planStartDate)}</div>
-                          )}
-                        </>
-                      }
+                        {task.planStartDate && (
+                          <div>예정: {formatDate(task.planStartDate)}</div>
+                        )}
+                      </>
+                    }
+                  >
+                    <span
+                      className={`inline-flex items-center ${
+                        task.startDate
+                          ? 'text-gray-900'
+                          : 'text-gray-500 italic'
+                      }`}
                     >
-                      <span
-                        className={`inline-flex items-center ${
-                          task.startDate
-                            ? 'text-gray-900'
-                            : 'text-gray-500 italic'
-                        }`}
-                      >
-                        {formatDate(task.startDate || task.planStartDate)}
-                        {!task.startDate && task.planStartDate && (
-                          <span className="ml-1 text-xs text-gray-500">
-                            (예)
-                          </span>
-                        )}
-                      </span>
-                    </Tooltip>
-                  </td>
+                      {formatDate(task.startDate || task.planStartDate)}
+                      {!task.startDate && task.planStartDate && (
+                        <span className="ml-1 text-xs text-gray-500">(예)</span>
+                      )}
+                    </span>
+                  </Tooltip>
+                </td>
 
-                  {/* 완료일 */}
-                  <td className="px-3 py-2 text-center text-sm">
-                    <Tooltip
-                      content={
-                        <>
-                          {task.endDate && (
-                            <div>확정: {formatDate(task.endDate)}</div>
-                          )}
-                          {task.plannedEndDate && (
-                            <div>예정: {formatDate(task.planEndDate)}</div>
-                          )}
-                        </>
-                      }
+                {/* 완료일 */}
+                <td className="px-3 py-2 text-center text-sm">
+                  <Tooltip
+                    content={
+                      <>
+                        {task.endDate && (
+                          <div>확정: {formatDate(task.endDate)}</div>
+                        )}
+                        {task.plannedEndDate && (
+                          <div>예정: {formatDate(task.planEndDate)}</div>
+                        )}
+                      </>
+                    }
+                  >
+                    <span
+                      className={`inline-flex items-center ${
+                        task.endDate ? 'text-gray-900' : 'text-gray-500 italic'
+                      }`}
                     >
-                      <span
-                        className={`inline-flex items-center ${
-                          task.endDate
-                            ? 'text-gray-900'
-                            : 'text-gray-500 italic'
-                        }`}
-                      >
-                        {formatDate(task.endDate || task.planEndDate)}
-                        {!task.endDate && task.planEndDate && (
-                          <span className="ml-1 text-xs text-gray-500">
-                            (예)
-                          </span>
-                        )}
-                      </span>
-                    </Tooltip>
-                  </td>
+                      {formatDate(task.endDate || task.planEndDate)}
+                      {!task.endDate && task.planEndDate && (
+                        <span className="ml-1 text-xs text-gray-500">(예)</span>
+                      )}
+                    </span>
+                  </Tooltip>
+                </td>
 
-                  {/* 기간 */}
-                  <td className="px-3 py-2 text-center text-sm">
-                    {calculateDuration(task.planStartDate, task.planEndDate)}
-                  </td>
+                {/* 기간 */}
+                <td className="px-3 py-2 text-center text-sm">
+                  {calculateDuration(task.planStartDate, task.planEndDate)}
+                </td>
 
-                  {/* 작업시간 */}
-                  <td className="px-3 py-2 text-center text-sm">
-                    {task.totalWorkHours ? (
-                      <div className="flex items-center justify-center gap-1">
-                        <FiClock className="text-gray-500" size={14} />
-                        <span>{task.totalWorkHours}h</span>
-                      </div>
-                    ) : (
-                      '-'
-                    )}
-                  </td>
+                {/* 작업시간 */}
+                <td className="px-3 py-2 text-center text-sm">
+                  {task.totalWorkHours ? (
+                    <div className="flex items-center justify-center gap-1">
+                      <FiClock className="text-gray-500" size={14} />
+                      <span>{task.totalWorkHours}h</span>
+                    </div>
+                  ) : (
+                    '-'
+                  )}
+                </td>
 
-                  {/* 완료% */}
-                  <td className="px-3 py-2">
-                    <Progress
-                      percent={
-                        typeof task.taskProgress?.name === 'string'
-                          ? parseInt(task.taskProgress.name, 10) // 10은 10진법
-                          : task.taskProgress?.name || 0
-                      }
-                      size="sm"
-                      showInfo={true}
+                {/* 완료% */}
+                <td className="px-3 py-2">
+                  <Progress
+                    percent={
+                      typeof task.taskProgress?.name === 'string'
+                        ? parseInt(task.taskProgress.name, 10) // 10은 10진법
+                        : task.taskProgress?.name || 0
+                    }
+                    size="sm"
+                    showInfo={true}
+                  />
+                </td>
+
+                {/* 우선순위 */}
+                <td className="px-3 py-2 text-center">
+                  {task.priorityLevel ? (
+                    <Badge
+                      className={`${getPriorityColor(
+                        task.priority,
+                      )} text-white`}
+                      label={task.priorityLevel}
                     />
-                  </td>
-
-                  {/* 우선순위 */}
-                  <td className="px-3 py-2 text-center">
-                    {task.priorityLevel ? (
-                      <Badge
-                        className={`${getPriorityColor(
-                          task.priority,
-                        )} text-white`}
-                        label={task.priorityLevel}
-                      />
-                    ) : (
-                      '-'
-                    )}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </Card>
+                  ) : (
+                    '-'
+                  )}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+    // </Card>
   );
 };
 

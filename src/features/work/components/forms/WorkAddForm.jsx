@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import dayjs from 'dayjs';
 import {
   Form,
@@ -15,9 +15,11 @@ import { notification } from '@shared/services/notification';
 import { useCodebook } from '@shared/hooks/useCodebook';
 import { useWorkStore } from '../../hooks/useWorkStore';
 import { useWorkSubmit } from '../../hooks/useWorkSubmit';
+import { closeDrawer } from '../../../../store/slices/uiSlice';
 
 const WorkAddForm = ({ taskId }) => {
-  const { form, updateFormField, validateForm, processSubmit } = useWorkStore();
+  const dispatch = useDispatch();
+  const { form, actions, validateForm, processSubmit } = useWorkStore();
   const { isSubmitting, handleFormSubmit } = useWorkSubmit();
 
   // task 상태 가져오기
@@ -71,12 +73,20 @@ const WorkAddForm = ({ taskId }) => {
         : null,
     };
 
-    Object.entries(initialFormData).forEach(([name, value]) => {
-      updateFormField({
-        target: { name, value },
-      });
-    });
-  }, []); // 마운트 시 1번만 실행
+    // setTimeout을 사용하여 마이크로태스크 큐에 넣어 실행
+    // 렌더링 중 상태 업데이트로 인한 React 경고를 방지하기 위해 사용
+    const timer = setTimeout(() => {
+      // 폼 초기화 액션 사용
+      actions.form.initializeForm(initialFormData);
+    }, 0);
+
+    // cleanup 함수
+    return () => {
+      clearTimeout(timer);
+      // 폼 초기화
+      actions.form.resetForm();
+    };
+  }, [currentTask?.id, user?.user?.id, today]);
 
   // 숫자 입력 검증 핸들러
   const handleNumberInput = (e) => {
@@ -105,12 +115,7 @@ const WorkAddForm = ({ taskId }) => {
       return;
     }
 
-    updateFormField({
-      target: {
-        name,
-        value: numericValue,
-      },
-    });
+    actions.form.updateField(name, numericValue);
   };
 
   // 진행율 변경 핸들러
@@ -124,24 +129,23 @@ const WorkAddForm = ({ taskId }) => {
       );
 
       if (selectedStatus) {
-        updateFormField({
-          target: {
-            name: 'taskProgress',
-            value: {
-              id: selectedStatus.id,
-              name: selectedStatus.name,
-            },
-          },
+        actions.form.updateField('taskProgress', {
+          id: selectedStatus.id,
+          name: selectedStatus.name,
         });
       }
     },
-    [codebooks.taskProgress, updateFormField],
+    [codebooks.taskProgress, actions.form],
   );
 
   // 폼 제출 핸들러
   const handleSubmit = async () => {
     try {
       await handleFormSubmit(form.data);
+      // 폼 제출 완료 후 처리
+
+      // drawer 닫기
+      dispatch(closeDrawer());
     } catch (error) {
       console.error('Form submission error:', error);
     }
@@ -194,7 +198,7 @@ const WorkAddForm = ({ taskId }) => {
           <Input
             type="date"
             name="workDate"
-            onChange={updateFormField}
+            onChange={actions.form.updateField}
             value={form.data.workDate}
             disabled={isSubmitting}
             required
@@ -270,7 +274,7 @@ const WorkAddForm = ({ taskId }) => {
             name="notes"
             placeholder="메모를 입력하세요"
             value={form.data.notes}
-            onChange={updateFormField}
+            onChange={actions.form.updateField}
             disabled={isSubmitting}
           />
         </FormItem>

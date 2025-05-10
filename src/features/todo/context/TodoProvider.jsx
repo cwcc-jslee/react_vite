@@ -7,45 +7,13 @@
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { apiService } from '@shared/api/apiService';
-import { fetchTasks } from '../../../store/slices/taskSlice';
 import { fetchWorks } from '../../../store/slices/workSlice';
+import { useProjectTaskStore } from '../../project/hooks/useProjectTaskStore';
 import dayjs from 'dayjs';
 
 const TodoContext = createContext(null);
 const todoReducer = (state, action) => {
   // switch (action.type) {
-  //   case 'FETCH_START':
-  //     return { ...state, loading: true, error: null };
-  //   case 'FETCH_SUCCESS':
-  //     return {
-  //       ...state,
-  //       loading: false,
-  //       todoStatus: action.payload.todoStatus,
-  //       monthlyStats: action.payload.monthlyStats,
-  //     };
-  //   case 'FETCH_ERROR':
-  //     return { ...state, loading: false, error: action.payload };
-  //   case 'FETCH_PROGRESS_START':
-  //     return {
-  //       ...state,
-  //       loadingProgress: true,
-  //       errorProgress: null,
-  //     };
-  //   case 'FETCH_PROGRESS_SUCCESS':
-  //     return {
-  //       ...state,
-  //       todoProgress: action.payload,
-  //       loadingProgress: false,
-  //     };
-  //   case 'FETCH_PROGRESS_ERROR':
-  //     return {
-  //       ...state,
-  //       errorProgress: action.payload,
-  //       loadingProgress: false,
-  //     };
-  //   default:
-  //     return state;
-  // }
 };
 
 /**
@@ -66,6 +34,7 @@ export const TodoProvider = ({ children }) => {
   const dispatch = useDispatch();
   // 현재 로그인한 사용자 정보 조회
   const currentUser = useSelector((state) => state.auth.user?.user || null);
+  const { actions: taskActions } = useProjectTaskStore();
 
   // 데이터 상태
   const [state, dispatchTodo] = useReducer(todoReducer, {
@@ -106,29 +75,9 @@ export const TodoProvider = ({ children }) => {
       };
     }
 
-    // task_schedule_type 조건 설정
-    const today = dayjs().format('YYYY-MM-DD');
-
-    // 날짜 필터링 조건
-    // const taskTypeCondition = {
-    //   $or: [
-    //     // 'scheduled' 타입은 오늘 날짜 이전의 데이터만
-    //     {
-    //       $and: [
-    //         { task_schedule_type: { $eq: 'scheduled' } },
-    //         { plan_start_date: { $lt: today } },
-    //       ],
-    //     },
-    //     // 'ongoing' 타입은 날짜 상관없이 모두 가져옴
-    //     { task_schedule_type: { $eq: 'ongoing' } },
-    //   ],
-    // };
     // 날짜 필터링 조건
     const taskTypeCondition = {
-      $and: [
-        { task_schedule_type: { $eq: 'scheduled' } },
-        // { plan_start_date: { $lt: today } },
-      ],
+      $and: [{ task_schedule_type: { $eq: 'scheduled' } }],
     };
 
     // 추가 필터 조건이 있는 경우 $and 배열에 추가
@@ -139,21 +88,7 @@ export const TodoProvider = ({ children }) => {
     // task_schedule_type 조건 추가
     filters.$and.push(taskTypeCondition);
 
-    // 사용자 지정 필터가 있으면 병합
-    // if (Object.keys(taskFilters).length > 0) {
-    //   filters.$and.push(taskFilters);
-    // }
-
     return filters;
-  };
-
-  const fetchTasksData = async () => {
-    try {
-      const taskFilters = getTaskFilters();
-      dispatch(fetchTasks({ filters: taskFilters }));
-    } catch (error) {
-      console.error('Task 데이터 로드 오류:', error);
-    }
   };
 
   const fetchWorkData = async () => {
@@ -166,13 +101,16 @@ export const TodoProvider = ({ children }) => {
 
   // Provider 마운트시 자동으로 데이터 로드
   useEffect(() => {
-    fetchTasksData();
+    // 초기 필터 설정 및 작업 목록 조회
+    const initialFilters = getTaskFilters();
+    taskActions.filter.initializeFilters(initialFilters);
+
+    // 작업 데이터 로드
     fetchWorkData();
-  }, []);
+  }, [currentUser?.id]); // currentUser.id가 변경될 때마다 필터 재설정
 
   // 컨텍스트 값 정의
   const value = {
-    ...state,
     // fetchTasksData,
   };
 

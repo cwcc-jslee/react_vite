@@ -41,6 +41,8 @@ export const buildProjectListQuery = (params) => {
       'end_date',
       'last_workupdate_date',
       'work_type',
+      'total_project_hours',
+      'total_project_non_billable_hours',
       'is_completed',
       'createdAt',
     ],
@@ -85,7 +87,7 @@ export const buildProjectDetailQuery = (id) => {
       filters: {
         id: { $eq: id },
       },
-      fields: [],
+      fields: ['*'],
       populate: {
         sfa: {
           fields: ['name'],

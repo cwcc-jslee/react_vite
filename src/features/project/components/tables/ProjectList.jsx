@@ -19,7 +19,7 @@ const COLUMNS = [
   // { key: 'tag', title: '시작일', align: 'center' },
   { key: 'planEndDate', title: '완료(예정)일', align: 'center' },
   { key: 'lastDate', title: '최근작업일', align: 'center' },
-  { key: 'workCount', title: '작업시간', align: 'center' },
+  { key: 'totalProjectHours', title: '작업시간', align: 'center' },
   { key: 'action', title: 'Action', align: 'center' },
 ];
 
@@ -128,7 +128,13 @@ const TableRow = ({
       <td className="px-3 py-2 text-center text-sm">
         {item?.lastWorkupdateDate}
       </td>
-      <td className="px-3 py-2 text-center text-sm">{'계산'}</td>
+      <td className="px-3 py-2 text-center text-sm">
+        {item?.totalProjectHours
+          ? `${item.totalProjectHours}/${
+              item.totalProjectNonBillableHours || 0
+            }`
+          : '-'}
+      </td>
       <td className="px-3 py-2 text-center">
         <Button variant="outline" size="sm" onClick={handleViewDetail}>
           View
