@@ -1,8 +1,27 @@
 // src/features/shared/hooks/useCodebook.js
-// 코드북 데이터를 효율적으로 관리하는 커스텀 훅입니다.
-// 리덕스 스토어에 캐싱된 데이터를 우선 사용하고, 필요한 경우에만 API 호출을 수행합니다.
+/**
+ * 코드북 데이터 관리를 위한 커스텀 훅 모음
+ *
+ * 로직 분리 구조:
+ * 1. useCodebookLoader
+ *    - 코드북 데이터 로드 상태 관리
+ *    - API 호출 및 에러 처리
+ *    - 로딩 상태 및 데이터 완료 상태 관리
+ *
+ * 2. useCodebookData
+ *    - 리덕스 스토어에서 코드북 데이터 조회
+ *    - 데이터 변환 및 메모이제이션
+ *
+ * 3. useCodebook (메인 훅)
+ *    - useCodebookLoader와 useCodebookData 조합
+ *    - 데이터 로드 필요 여부 판단
+ *    - 최종 데이터 및 상태 반환
+ *
+ * 사용 예시:
+ * const { data, isLoading, error, refetch } = useCodebook(['codeType1', 'codeType2']);
+ */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { convertKeysToCamelCase } from '../utils/transformUtils';
 import {
@@ -14,86 +33,109 @@ import {
   selectCodebookError,
 } from '../../store/slices/codebookSlice';
 
+// 메모이제이션된 selector 생성 함수
+const createMemoizedSelector = (type) => {
+  let lastResult = null;
+  let lastState = null;
+
+  return (state) => {
+    if (lastState === state) {
+      return lastResult;
+    }
+
+    const codebookData = selectCodebookByType(type)(state)?.data || [];
+    lastResult = convertKeysToCamelCase(codebookData);
+    lastState = state;
+    return lastResult;
+  };
+};
+
+/**
+ * 코드북 데이터 로드 상태를 관리하는 Hook
+ */
+const useCodebookLoader = (codeTypes) => {
+  const dispatch = useDispatch();
+  const [error, setError] = useState(null);
+
+  const loadedTypes = useSelector(selectLoadedTypes);
+  const pendingTypes = useSelector(selectPendingTypes);
+  const status = useSelector(selectCodebookStatus);
+  const reduxError = useSelector(selectCodebookError);
+
+  const isLoading = useMemo(() => {
+    if (status !== 'loading') return false;
+    return codeTypes.some((type) => {
+      const isPending = pendingTypes.includes(type);
+      const isNotLoaded = !loadedTypes.includes(type);
+      return isPending || isNotLoaded;
+    });
+  }, [status, codeTypes, loadedTypes, pendingTypes]);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const typesToFetch = codeTypes.filter(
+        (type) => !loadedTypes.includes(type) && !pendingTypes.includes(type),
+      );
+
+      if (typesToFetch.length > 0) {
+        await dispatch(fetchCodebooksByTypes(typesToFetch)).unwrap();
+      }
+      setError(null);
+    } catch (err) {
+      console.error('Failed to fetch codebook data:', err);
+      setError(err || reduxError);
+    }
+  }, [dispatch, codeTypes, loadedTypes, pendingTypes, reduxError]);
+
+  const isDataComplete = useMemo(() => {
+    return codeTypes.every((type) => loadedTypes.includes(type));
+  }, [codeTypes, loadedTypes]);
+
+  return {
+    isLoading,
+    error,
+    fetchData,
+    isDataComplete,
+    loadedTypes,
+  };
+};
+
+/**
+ * 코드북 데이터를 조회하는 Hook
+ */
+const useCodebookData = (codeTypes) => {
+  // 메모이제이션된 selector 생성
+  const selectors = useMemo(
+    () => codeTypes.map((type) => createMemoizedSelector(type)),
+    [codeTypes],
+  );
+
+  // 각 타입별 데이터를 개별적으로 선택
+  const typeDataResults = selectors.map((selector) => useSelector(selector));
+
+  // 최종 데이터 객체 생성
+  return useMemo(() => {
+    return codeTypes.reduce((acc, type, index) => {
+      acc[type] = typeDataResults[index];
+      return acc;
+    }, {});
+  }, [codeTypes, typeDataResults]);
+};
+
 /**
  * 여러 코드북 데이터를 효율적으로 조회하는 Hook
  * @param {string[]} codeTypes - 조회할 코드북 타입 배열
  * @returns {Object} 데이터 상태와 관리 함수들
  */
 export const useCodebook = (codeTypes) => {
-  const dispatch = useDispatch();
-  const [error, setError] = useState(null);
+  const { isLoading, error, fetchData, isDataComplete } =
+    useCodebookLoader(codeTypes);
+  const typesData = useCodebookData(codeTypes);
 
-  // 리덕스 상태에서 필요한 정보 선택
-  const loadedTypes = useSelector(selectLoadedTypes);
-  const pendingTypes = useSelector(selectPendingTypes);
-  const status = useSelector(selectCodebookStatus);
-  const reduxError = useSelector(selectCodebookError);
-
-  // 각 코드북 타입별 데이터를 선택
-  const typeSpecificData = useSelector((state) => {
-    // 여기서는 useSelector 내부이므로 훅이 아님
-    return codeTypes.reduce((acc, type) => {
-      const data = selectCodebookByType(type)(state)?.data || [];
-      // 스네이크 케이스를 카멜 케이스로 변환
-      acc[type] = convertKeysToCamelCase(data);
-      return acc;
-    }, {});
-  });
-
-  const typesData = useMemo(() => {
-    return typeSpecificData;
-  }, [typeSpecificData]);
-
-  // 로딩 상태 계산: 요청한 타입 중 하나라도 아직 로드 중이면 로딩 상태
-  const isLoading = useMemo(() => {
-    return (
-      status === 'loading' &&
-      codeTypes.some(
-        (type) =>
-          pendingTypes.includes(type) ||
-          (!loadedTypes.includes(type) && !pendingTypes.includes(type)),
-      )
-    );
-  }, [status, codeTypes, loadedTypes, pendingTypes]);
-
-  // 데이터 가져오기 함수
-  const fetchData = async () => {
-    try {
-      // 이미 로드된 타입 제외하고 필요한 타입만 요청
-      const typesToFetch = codeTypes.filter(
-        (type) => !loadedTypes.includes(type) && !pendingTypes.includes(type),
-      );
-
-      if (typesToFetch.length > 0) {
-        // 필요한 코드북 타입만 가져오기
-        await dispatch(fetchCodebooksByTypes(typesToFetch)).unwrap();
-      }
-
-      setError(null);
-    } catch (err) {
-      console.error('Failed to fetch codebook data:', err);
-      setError(err || reduxError);
-    }
-  };
-
-  // 데이터가 모두 로드되었는지 확인
-  const isDataComplete = useMemo(() => {
-    return codeTypes.every((type) => loadedTypes.includes(type));
-  }, [codeTypes, loadedTypes]);
-
-  // 컴포넌트 마운트 또는 요청 코드북 타입 변경 시 데이터 로드
-  useEffect(() => {
-    if (!isDataComplete) {
-      fetchData();
-    }
-  }, [JSON.stringify(codeTypes), isDataComplete]);
-
-  // 리덕스 에러 상태 변경 시 로컬 에러 상태 업데이트
-  useEffect(() => {
-    if (reduxError) {
-      setError(reduxError);
-    }
-  }, [reduxError]);
+  // 데이터가 없을 때 자동으로 API 호출
+  if (!isLoading && !isDataComplete) {
+    fetchData();
+  }
 
   return {
     data: typesData,

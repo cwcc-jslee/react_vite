@@ -22,7 +22,7 @@ const combineFilters = (baseFilter, userFilters = {}) => {
  * CUSTOMER 목록 조회를 위한 쿼리 파라미터 생성
  */
 export const buildProjectListQuery = (params) => {
-  const { pagination = { start: 0, limit: 25 }, filters = {} } = params;
+  const { pagination = { current: 1, pageSize: 25 }, filters = {} } = params;
 
   // 기본 필터 정의 (삭제되지 않은 항목만 조회)
   const baseFilter = { is_deleted: { $eq: false } };
@@ -70,10 +70,8 @@ export const buildProjectListQuery = (params) => {
       },
     },
     pagination: {
-      start: pagination.current
-        ? (pagination.current - 1) * pagination.pageSize
-        : pagination.start,
-      limit: pagination.pageSize || pagination.limit,
+      start: (pagination.current - 1) * pagination.pageSize,
+      limit: pagination.pageSize,
     },
     sort: ['id:desc'],
   };

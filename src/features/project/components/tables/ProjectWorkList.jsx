@@ -1,11 +1,9 @@
 // src/features/project/components/table/ProjectTable.jsx
 import React from 'react';
 import { Button } from '../../../../shared/components/ui';
-import { Card } from '../../../../shared/components/ui/card/Card';
 import { Pagination } from '../../../../shared/components/ui/pagination/Pagination';
 
-// 컴포넌트
-
+// 테이블 컬럼 정의
 const COLUMNS = [
   { key: 'no', title: 'NO', align: 'left' },
   { key: 'id', title: 'ID', align: 'left' },
@@ -21,86 +19,76 @@ const COLUMNS = [
   { key: 'action', title: 'Action', align: 'center' },
 ];
 
-// 테이블 로딩 상태 컴포넌트
-const TableLoadingIndicator = ({ columnsCount }) => {
-  return (
-    <tr>
-      <td colSpan={columnsCount} className="py-8">
-        <div className="flex items-center justify-center gap-3">
-          <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm text-gray-500">
-            데이터를 불러오는 중입니다...
-          </span>
-        </div>
-      </td>
+// 테이블 헤더 컴포넌트
+const TableHeader = () => (
+  <thead>
+    <tr className="bg-gray-50 border-y border-gray-200">
+      {COLUMNS.map((column) => (
+        <th
+          key={column.key}
+          className={`px-3 py-2 text-sm font-semibold text-gray-700 whitespace-nowrap
+            ${column.align === 'center' && 'text-center'}
+            ${column.align === 'right' && 'text-right'}
+          `}
+        >
+          {column.title}
+        </th>
+      ))}
     </tr>
-  );
-};
+  </thead>
+);
 
-// 테이블 빈 상태 컴포넌트
-const TableEmptyState = ({ columnsCount }) => {
-  return (
-    <tr>
-      <td colSpan={columnsCount} className="py-8">
-        <div className="flex flex-col items-center justify-center gap-2">
-          <span className="text-sm text-gray-500">데이터가 없습니다</span>
-        </div>
-      </td>
-    </tr>
-  );
-};
-
-// 테이블 에러 상태 컴포넌트
-const TableErrorState = ({ columnsCount, message }) => {
-  return (
-    <tr>
-      <td colSpan={columnsCount} className="py-8">
-        <div className="flex flex-col items-center justify-center gap-2">
-          <span className="text-sm text-red-500">
-            {message || '데이터를 불러오는 중 오류가 발생했습니다'}
-          </span>
-        </div>
-      </td>
-    </tr>
-  );
+// 객체를 문자열로 변환하는 유틸리티 함수
+const getDisplayValue = (value) => {
+  if (!value) return '-';
+  if (typeof value === 'object') {
+    if (value.name) return value.name;
+    if (value.id) return value.id;
+    if (value.documentId) return value.documentId;
+    return '-';
+  }
+  return String(value);
 };
 
 // 테이블 행 컴포넌트
-const TableRow = ({
-  item,
-  index,
-  pageSize,
-  currentPage,
-  loadProjectDetail,
-}) => {
-  // 프로젝트 상세정보 조회 핸들러
-  const handleViewDetail = () => {
-    loadProjectDetail(item.id);
-  };
+const TableRow = ({ item, index }) => {
+  if (!item) return null;
 
   return (
     <tr className="hover:bg-gray-50">
       <td className="px-3 py-2 text-center text-sm">{index + 1}</td>
-      <td className="px-3 py-2 text-center text-sm">{item.id}</td>
       <td className="px-3 py-2 text-center text-sm">
-        {item?.projectTask?.name || '-'}
-      </td>
-      <td className="px-3 py-2 text-sm">{item?.taskProgress?.name || '-'}</td>
-      <td className="px-3 py-2 text-center text-sm">
-        {item.user.username || '-'}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">{item?.workDate}</td>
-      <td className="px-3 py-2 text-center text-sm">{item?.workHours}</td>
-      <td className="px-3 py-2 text-center text-sm">
-        {item?.nonBillableHours}
+        {getDisplayValue(item.id)}
       </td>
       <td className="px-3 py-2 text-center text-sm">
-        {item?.revisionNumber || '-'}
+        {getDisplayValue(item.projectTask)}
       </td>
-      <td className="px-3 py-2 text-center text-sm">{item?.team || '-'}</td>
-      <td className="px-3 py-2 text-center text-sm">{item?.notes || '-'}</td>
+      <td className="px-3 py-2 text-sm">
+        {getDisplayValue(item.taskProgress)}
+      </td>
+      <td className="px-3 py-2 text-center text-sm">
+        {getDisplayValue(item.user)}
+      </td>
+      <td className="px-3 py-2 text-center text-sm">
+        {getDisplayValue(item.workDate)}
+      </td>
+      <td className="px-3 py-2 text-center text-sm">
+        {getDisplayValue(item.workHours)}
+      </td>
+      <td className="px-3 py-2 text-center text-sm">
+        {getDisplayValue(item.nonBillableHours)}
+      </td>
+      <td className="px-3 py-2 text-center text-sm">
+        {getDisplayValue(item.revisionNumber)}
+      </td>
+      <td className="px-3 py-2 text-center text-sm">
+        {getDisplayValue(item.team)}
+      </td>
+      <td className="px-3 py-2 text-center text-sm">
+        {getDisplayValue(item.notes)}
+      </td>
       <td className="px-3 py-2 text-center">
-        <Button variant="outline" size="sm" onClick={handleViewDetail}>
+        <Button variant="outline" size="sm">
           View
         </Button>
       </td>
@@ -108,69 +96,52 @@ const TableRow = ({
   );
 };
 
-const ProjectWorkList = ({
-  items,
-  pagination,
-  filters,
-  loading,
-  error,
-  handlePageChange,
-  handlePageSizeChange,
-  loadProjectDetail,
-}) => {
-  console.log(`################### `, items);
+// 테이블 본문 컴포넌트
+const TableBody = ({ items }) => {
+  if (!Array.isArray(items)) {
+    console.error('TableBody: items is not an array', items);
+    return null;
+  }
+
   return (
-    <Card>
+    <tbody className="divide-y divide-gray-200">
+      {items.map((item, index) => (
+        <TableRow key={item?.id || index} item={item} index={index} />
+      ))}
+    </tbody>
+  );
+};
+
+// 페이지네이션 컴포넌트
+const TablePagination = ({ pagination, actions }) => (
+  <Pagination
+    current={pagination.current}
+    pageSize={pagination.pageSize}
+    total={pagination.total}
+    onPageChange={actions.pagination.setPage}
+    onPageSizeChange={actions.pagination.setPageSize}
+  />
+);
+
+/**
+ * 프로젝트 작업 목록 테이블 컴포넌트
+ */
+const ProjectWorkList = ({ items, pagination, actions }) => {
+  if (!Array.isArray(items)) {
+    console.error('ProjectWorkList: items is not an array', items);
+    return null;
+  }
+
+  return (
+    <div className="w-full">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50 border-y border-gray-200">
-              {COLUMNS.map((column) => (
-                <th
-                  key={column.key}
-                  className={`px-3 py-2 text-sm font-semibold text-gray-700 whitespace-nowrap
-                    ${column.align === 'center' && 'text-center'}
-                    ${column.align === 'right' && 'text-right'}
-                  `}
-                >
-                  {column.title}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {loading ? (
-              <TableLoadingIndicator columnsCount={COLUMNS.length} />
-            ) : error ? (
-              <TableErrorState columnsCount={COLUMNS.length} message={error} />
-            ) : !items?.length ? (
-              <TableEmptyState columnsCount={COLUMNS.length} />
-            ) : (
-              items.map((item, index) => (
-                <TableRow
-                  key={item.id}
-                  item={item}
-                  index={index}
-                  pageSize={pagination.pageSize}
-                  currentPage={pagination.current}
-                  loadProjectDetail={loadProjectDetail}
-                />
-              ))
-            )}
-          </tbody>
+          <TableHeader />
+          <TableBody items={items} />
         </table>
       </div>
-
-      {!loading && !error && items?.length > 0 && (
-        <Pagination
-          current={pagination.current}
-          pageSize={pagination.pageSize}
-          total={pagination.total}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-        />
-      )}
-    </Card>
+      <TablePagination pagination={pagination} actions={actions} />
+    </div>
   );
 };
 

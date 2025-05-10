@@ -3,7 +3,6 @@
 // 프로젝트 데이터를 추출하고 변환하여 하위 컴포넌트에 전달합니다
 
 import React, { useEffect } from 'react';
-import { useSelector } from 'react-redux';
 
 // 커스텀 훅
 import { useProjectStore } from '../hooks/useProjectStore';
@@ -22,9 +21,34 @@ const ProjectDetailLayout = () => {
   const { data, status, error } = selectedItem || {};
 
   const {
-    handleFilterChange: handleWorkFilterChange,
-    handleResetFilters: handleWorkResetFilters,
+    actions: { filter: workFilterActions },
   } = useWorkStore();
+
+  // work 필터 변경
+  useEffect(() => {
+    if (data?.id) {
+      const projectTaskFilter = {
+        project_task: {
+          project: {
+            id: { $eq: data.id },
+          },
+        },
+      };
+
+      // 이전 필터와 동일한 경우 중복 호출 방지
+      const currentFilters = workFilterActions.getFilters();
+      if (
+        JSON.stringify(currentFilters) !== JSON.stringify(projectTaskFilter)
+      ) {
+        workFilterActions.setFilters(projectTaskFilter);
+      }
+    }
+
+    // 컴포넌트 언마운트 시 필터 초기화
+    return () => {
+      workFilterActions.resetFilters();
+    };
+  }, []);
 
   // 로딩 상태 처리
   if (status === 'loading') {
@@ -44,26 +68,6 @@ const ProjectDetailLayout = () => {
       </div>
     );
   }
-
-  // work 필터 변경
-  // useEffect(() => {
-  //   if (selectedItem.data.id) {
-  //     const projectTaskFilter = {
-  //       project_task: {
-  //         project: {
-  //           id: { $eq: selectedItem.data.id },
-  //         },
-  //       },
-  //     };
-
-  //     handleWorkFilterChange(projectTaskFilter);
-  //   }
-
-  //   // 컴포넌트 언마운트 시 버킷 상태 초기화
-  //   return () => {
-  //     handleWorkResetFilters();
-  //   };
-  // }, [selectedItem.data.id, handleWorkFilterChange, handleWorkResetFilters]);
 
   // status가 succeeded일 때만 데이터 추출 실행
   const {

@@ -17,8 +17,8 @@ const DEFAULT_FILTERS = {
 
 // 페이지네이션 기본값 상수 정의
 const DEFAULT_PAGINATION = {
-  page: 1,
-  limit: 10,
+  current: 1,
+  pageSize: 10,
   total: 0,
 };
 
@@ -63,7 +63,21 @@ export const fetchProjectDetail = createAsyncThunk(
   async (projectId, { rejectWithValue }) => {
     try {
       const response = await projectApiService.getProjectDetail(projectId);
-      return convertKeysToCamelCase(response.data);
+
+      if (
+        !response.data ||
+        !Array.isArray(response.data) ||
+        response.data.length === 0
+      ) {
+        return rejectWithValue('프로젝트 정보를 찾을 수 없습니다.');
+      }
+
+      const projectData = response.data[0];
+      if (!projectData) {
+        return rejectWithValue('프로젝트 데이터가 유효하지 않습니다.');
+      }
+
+      return convertKeysToCamelCase(projectData);
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.error?.message ||
@@ -102,18 +116,25 @@ const initialState = {
   },
   status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
   error: null,
-  filters: DEFAULT_FILTERS,
-  pagination: DEFAULT_PAGINATION,
+  filters: { ...DEFAULT_FILTERS },
+  pagination: { ...DEFAULT_PAGINATION },
+
+  // 폼 상태
   form: {
-    title: '',
-    description: '',
-    start_date: '',
-    end_date: '',
-    status: '',
-    priority: '',
-    manager: '',
-    members: [],
-    attachments: [],
+    data: {
+      title: '',
+      description: '',
+      start_date: '',
+      end_date: '',
+      status: '',
+      priority: '',
+      manager: '',
+      members: [],
+      attachments: [],
+    },
+    errors: {},
+    isSubmitting: false,
+    isValid: true,
   },
 };
 
@@ -212,7 +233,7 @@ const projectSlice = createSlice({
       })
       .addCase(fetchProjectDetail.fulfilled, (state, action) => {
         state.selectedItem.status = 'succeeded';
-        state.selectedItem.data = action.payload[0];
+        state.selectedItem.data = action.payload;
         state.selectedItem.error = null;
       })
       .addCase(fetchProjectDetail.rejected, (state, action) => {

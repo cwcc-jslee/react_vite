@@ -214,7 +214,7 @@ const ProjectDetailTaskSection = ({
             </div>
           )}
 
-          {activeMenu === 'members' && <ProjectWorkListSection />}
+          {activeMenu === 'work' && <ProjectWorkListSection />}
         </>
       )}
     </div>

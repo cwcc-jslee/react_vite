@@ -422,6 +422,10 @@ export const PAGE_SUB_MENUS = {
         label: '보드',
         icon: <FaThLarge className="h-5 w-5" />,
       },
+      work: {
+        label: '작업',
+        icon: <FaUserFriends className="h-5 w-5" />,
+      },
       timeline: {
         label: '타임라인',
         icon: <RiTimeLine className="h-5 w-5" />,
@@ -429,10 +433,6 @@ export const PAGE_SUB_MENUS = {
       chart: {
         label: '차트',
         icon: <FaChartBar className="h-5 w-5" />,
-      },
-      members: {
-        label: '구성원',
-        icon: <FaUserFriends className="h-5 w-5" />,
       },
     },
   },

@@ -12,7 +12,7 @@
  * const { works, loading, error, fetchWorks, createWork } = useWorkStore();
  */
 
-import { useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   fetchWorks,
@@ -20,107 +20,75 @@ import {
   setPageSize,
   setFilters,
   resetFilters,
-  updateWorkFormField,
-  setWorkFormErrors,
-  resetWorkForm,
+  updateFormField,
+  setFormErrors,
+  resetForm,
 } from '../../../store/slices/workSlice';
 
 /**
- * 프로젝트 페이지 상태 관리 훅
- * 페이지 초기화, 목록 조회, 페이지네이션, 필터링, 상세 조회 등의 기능 제공
+ * 작업 관련 상태와 액션을 관리하는 커스텀 훅
+ * 작업 목록, 상세 정보, 폼 상태 등을 통합 관리
  */
 export const useWorkStore = () => {
   const dispatch = useDispatch();
-  const workState = useSelector((state) => state.work);
-  const uiState = useSelector((state) => state.ui);
-  const { items, pagination, filters, status, error, form } = workState;
 
-  // 페이지 초기화 (컴포넌트 마운트 시 호출)
-  useEffect(() => {
-    // 3. 필터 설정
-    const defaultFilters = {
-      // pjt_status: { $in: [88, 89] }, // 진행중(88), 검수중(89)
-    };
+  // 상태 선택
+  const items = useSelector((state) => state.work.items);
+  const pagination = useSelector((state) => state.work.pagination);
+  const filters = useSelector((state) => state.work.filters);
+  const status = useSelector((state) => state.work.status);
+  const error = useSelector((state) => state.work.error);
+  const form = useSelector((state) => state.work.form);
 
-    // 4. 필터 적용 및 초기 프로젝트 목록 로드
-    dispatch(setFilters(defaultFilters));
-    dispatch(fetchWorks());
-
-    // 컴포넌트 언마운트 시 정리
-    return () => {
-      // 필요한 정리 작업 수행
-      // dispatch(clearSelectedItem());
-    };
-  }, [dispatch]);
-
-  // 프로젝트 목록 새로고침
-  const refreshWorks = useCallback(
-    (params = {}) => {
-      dispatch(fetchWorks(params));
+  // 액션 핸들러
+  const actions = {
+    // 페이지네이션 액션
+    pagination: {
+      setPage: (page) => {
+        dispatch(setPage(page));
+        dispatch(fetchWorks({ pagination: { current: page } }));
+      },
+      setPageSize: (size) => {
+        dispatch(setPageSize(size));
+        dispatch(fetchWorks({ pagination: { current: 1, pageSize: size } }));
+      },
     },
-    [dispatch],
-  );
 
-  // 페이지 변경 핸들러
-  const handlePageChange = useCallback(
-    (page) => {
-      dispatch(setPage(page));
-      dispatch(fetchWorks({ pagination: { current: page } }));
+    // 필터 액션
+    filter: {
+      getFilters: () => filters,
+      setFilters: (filterValues) => {
+        dispatch(setFilters(filterValues));
+        dispatch(fetchWorks({ filters: filterValues }));
+      },
+      resetFilters: () => {
+        dispatch(resetFilters());
+        // dispatch(fetchWorks({ filters: {} }));
+      },
     },
-    [dispatch],
-  );
 
-  // 페이지 크기 변경 핸들러
-  const handlePageSizeChange = useCallback(
-    (size) => {
-      dispatch(setPageSize(size));
-      dispatch(fetchWorks({ pagination: { current: 1, pageSize: size } }));
+    // 폼 액션
+    form: {
+      updateField: (name, value) => dispatch(updateFormField({ name, value })),
+      resetForm: () => dispatch(resetForm()),
+      setErrors: (errors) => dispatch(setFormErrors(errors)),
     },
-    [dispatch],
-  );
 
-  // 필터 설정 핸들러
-  const handleFilterChange = useCallback(
-    (filterValues) => {
-      dispatch(setFilters(filterValues));
-      dispatch(fetchWorks({ filters: filterValues }));
-    },
-    [dispatch],
-  );
-
-  // 필터 초기화 핸들러
-  const handleResetFilters = useCallback(() => {
-    dispatch(resetFilters());
-    dispatch(fetchWorks({ filters: {} }));
-  }, [dispatch]);
-
-  // 폼 관련 함수들
-  const updateFormField = useCallback(
-    ({ target: { name, value } }) => {
-      dispatch(updateWorkFormField({ name, value }));
-    },
-    [dispatch],
-  );
+    // 작업 목록 새로고침
+    refreshList: () => dispatch(fetchWorks()),
+  };
 
   return {
-    // 스토어 상태
+    // 상태
     items,
     pagination,
     filters,
     status,
     error,
-    loading: status === 'loading',
-
-    // 데이터 관련 액션 메서드
-    refreshWorks,
-    handlePageChange,
-    handlePageSizeChange,
-    handleFilterChange,
-    handleResetFilters,
-
-    // 폼 관련 반환값들
     form,
-    updateFormField,
+
+    // 액션
+    actions,
   };
 };
 

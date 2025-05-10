@@ -13,7 +13,7 @@ const ProjectListSection = () => {
     // 상태
     items,
     pagination,
-    loading,
+    status,
     error,
 
     // 액션
@@ -22,15 +22,29 @@ const ProjectListSection = () => {
 
   console.log(`ProjectListSection items: `, items);
 
+  // 페이지 변경 핸들러
+  const handlePageChange = (page) => {
+    actions.pagination.setPage(page);
+    actions.fetchProjects({
+      pagination: { current: page, pageSize: pagination.pageSize },
+    });
+  };
+
+  // 페이지 크기 변경 핸들러
+  const handlePageSizeChange = (pageSize) => {
+    actions.pagination.setPageSize(pageSize);
+    actions.fetchProjects({ pagination: { current: 1, pageSize } });
+  };
+
   return (
-    <div className="mt-6">
+    <div className="space-y-4">
       <ProjectList
         items={items}
         pagination={pagination}
-        loading={loading}
+        loading={status === 'loading'}
         error={error}
-        handlePageChange={actions.pagination.setPage}
-        handlePageSizeChange={actions.pagination.setPageSize}
+        handlePageChange={handlePageChange}
+        handlePageSizeChange={handlePageSizeChange}
         loadProjectDetail={actions.detail.fetchDetail}
       />
     </div>

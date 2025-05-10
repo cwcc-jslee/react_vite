@@ -8,6 +8,16 @@ import { notification } from '@shared/services/notification';
 import { convertKeysToCamelCase } from '@shared/utils/transformUtils';
 import { workApiService } from '../../features/work/services/workApiService';
 
+// 필터 기본값 상수 정의
+const DEFAULT_FILTERS = {};
+
+// 페이지네이션 기본값 상수 정의
+const DEFAULT_PAGINATION = {
+  current: 1,
+  pageSize: 20,
+  total: 0,
+};
+
 // 비동기 액션 생성
 export const fetchWorks = createAsyncThunk(
   'work/fetchWorks',
@@ -71,14 +81,10 @@ const initialState = {
   error: null,
 
   // 페이지네이션 상태
-  pagination: {
-    current: 1,
-    pageSize: 20,
-    total: 0,
-  },
+  pagination: { ...DEFAULT_PAGINATION },
 
   // 필터 상태
-  filters: {},
+  filters: { ...DEFAULT_FILTERS },
 
   // 폼 상태
   form: {
@@ -122,7 +128,7 @@ const workSlice = createSlice({
       state.pagination.current = 1; // 필터 변경 시 첫 페이지로
     },
 
-    // 필터 초기화화
+    // 필터 초기화
     resetFilters: (state) => {
       state.filters = {};
       state.pagination.current = 1; // 필터 변경 시 첫 페이지로

@@ -22,7 +22,6 @@ import {
   resetForm,
   fetchProjects,
   fetchProjectDetail,
-  createProject,
 } from '../../../store/slices/projectSlice';
 import { changePageMenu, changeSubMenu } from '../../../store/slices/uiSlice';
 import { PAGE_MENUS } from '@shared/constants/navigation';
@@ -38,7 +37,7 @@ export const useProjectStore = () => {
   const items = useSelector((state) => state.project.items);
   const pagination = useSelector((state) => state.project.pagination);
   const filters = useSelector((state) => state.project.filters);
-  const loading = useSelector((state) => state.project.loading);
+  const status = useSelector((state) => state.project.status);
   const error = useSelector((state) => state.project.error);
   const selectedItem = useSelector((state) => state.project.selectedItem);
   const form = useSelector((state) => state.project.form);
@@ -47,17 +46,32 @@ export const useProjectStore = () => {
   const actions = {
     // 페이지네이션 액션
     pagination: {
-      setPage: (page) => dispatch(setPage(page)),
-      setPageSize: (pageSize) => dispatch(setPageSize(pageSize)),
+      setPage: (page) => {
+        dispatch(setPage(page));
+      },
+      setPageSize: (size) => {
+        dispatch(setPageSize(size));
+      },
     },
 
     // 필터 액션
     filter: {
-      setFilters: (filters) => dispatch(setFilters(filters)),
-      resetFilters: () => dispatch(resetFilters()),
+      setFilters: (filterValues) => {
+        dispatch(setFilters(filterValues));
+        dispatch(fetchProjects({ filters: filterValues }));
+      },
+      resetFilters: () => {
+        dispatch(resetFilters());
+        dispatch(fetchProjects());
+      },
     },
 
-    // 상세 정보 액션
+    // 프로젝트 목록 조회
+    fetchProjects: (params) => {
+      dispatch(fetchProjects(params));
+    },
+
+    // 상세 정보 조회
     detail: {
       fetchDetail: (id) => {
         dispatch(fetchProjectDetail(id));
@@ -86,32 +100,18 @@ export const useProjectStore = () => {
     refreshList: () => dispatch(fetchProjects()),
   };
 
-  // 선택된 프로젝트 데이터 가져오기
-  const getSelectedProject = () => {
-    return selectedItem || null;
-  };
-
-  // 선택된 프로젝트의 특정 필드 가져오기
-  const getSelectedProjectField = (field) => {
-    return selectedItem ? selectedItem[field] : null;
-  };
-
   return {
     // 상태
     items,
     pagination,
     filters,
-    loading,
+    status,
     error,
     selectedItem,
     form,
 
     // 액션
     actions,
-
-    // 유틸리티 함수
-    getSelectedProject,
-    getSelectedProjectField,
   };
 };
 

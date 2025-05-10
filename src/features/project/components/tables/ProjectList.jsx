@@ -2,7 +2,6 @@
 import React from 'react';
 import { useDispatch } from 'react-redux';
 import { Button } from '../../../../shared/components/ui';
-import { Card } from '../../../../shared/components/ui/card/Card';
 import { Pagination } from '../../../../shared/components/ui/pagination/Pagination';
 import { fetchProjectDetail } from '../../store/projectStoreActions';
 
@@ -149,47 +148,46 @@ const ProjectList = ({
   handlePageSizeChange,
   loadProjectDetail,
 }) => {
+  console.log(`>>> pagination : `, pagination);
   return (
-    <Card>
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-gray-50 border-y border-gray-200">
-              {COLUMNS.map((column) => (
-                <th
-                  key={column.key}
-                  className={`px-3 py-2 text-sm font-semibold text-gray-700 whitespace-nowrap
-                    ${column.align === 'center' && 'text-center'}
-                    ${column.align === 'right' && 'text-right'}
-                  `}
-                >
-                  {column.title}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {loading ? (
-              <TableLoadingIndicator columnsCount={COLUMNS.length} />
-            ) : error ? (
-              <TableErrorState columnsCount={COLUMNS.length} message={error} />
-            ) : !items?.length ? (
-              <TableEmptyState columnsCount={COLUMNS.length} />
-            ) : (
-              items.map((item, index) => (
-                <TableRow
-                  key={item.id}
-                  item={item}
-                  index={index}
-                  pageSize={pagination.pageSize}
-                  currentPage={pagination.current}
-                  loadProjectDetail={loadProjectDetail}
-                />
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead>
+          <tr className="bg-gray-50 border-y border-gray-200">
+            {COLUMNS.map((column) => (
+              <th
+                key={column.key}
+                className={`px-3 py-2 text-sm font-semibold text-gray-700 whitespace-nowrap
+                  ${column.align === 'center' && 'text-center'}
+                  ${column.align === 'right' && 'text-right'}
+                `}
+              >
+                {column.title}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {loading ? (
+            <TableLoadingIndicator columnsCount={COLUMNS.length} />
+          ) : error ? (
+            <TableErrorState columnsCount={COLUMNS.length} message={error} />
+          ) : !items?.length ? (
+            <TableEmptyState columnsCount={COLUMNS.length} />
+          ) : (
+            items.map((item, index) => (
+              <TableRow
+                key={item.id}
+                item={item}
+                index={index}
+                pageSize={pagination.pageSize}
+                currentPage={pagination.current}
+                loadProjectDetail={loadProjectDetail}
+              />
+            ))
+          )}
+        </tbody>
+      </table>
 
       {!loading && !error && items?.length > 0 && (
         <Pagination
@@ -200,7 +198,7 @@ const ProjectList = ({
           onPageSizeChange={handlePageSizeChange}
         />
       )}
-    </Card>
+    </div>
   );
 };
 
