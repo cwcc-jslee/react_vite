@@ -104,7 +104,7 @@ export const useProjectSearch = () => {
 
     // 프로젝트 상태 필터
     if (formData.pjtStatus) {
-      filters.pjt_status = { $eq: formData.pjtStatus };
+      filters.pjt_status = { $eq: parseInt(formData.pjtStatus) };
     }
 
     // 중요도 필터
@@ -119,8 +119,10 @@ export const useProjectSearch = () => {
 
     // 진행률 필터
     if (formData.projectProgress) {
+      const [min, max] = formData.projectProgress.split(',').map(Number);
       filters.project_progress = {
-        $lte: parseInt(formData.projectProgress),
+        $gte: min,
+        $lte: max,
       };
     }
 
@@ -140,7 +142,7 @@ export const useProjectSearch = () => {
    */
   const handleSearch = () => {
     const filters = buildFilters(searchFormData);
-    actions.filter.setFilters(filters);
+    actions.fetchProjects({ filters });
   };
 
   /**
@@ -150,7 +152,7 @@ export const useProjectSearch = () => {
     setSearchFormData({
       ...INIT_FORM_DATA,
     });
-    actions.filter.resetFilters();
+    actions.fetchProjects({ filters: {} });
   };
 
   /**
@@ -168,25 +170,45 @@ export const useProjectSearch = () => {
       pjtStatus: status,
     });
 
-    actions.filter.setFilters(filters);
+    actions.fetchProjects({ filters });
   };
 
   /**
    * 진행률 필터 핸들러
-   * @param {string} progress - 프로젝트 진행률
+   * @param {Object|string} progress - 프로젝트 진행률 정보 또는 빈 문자열
    */
   const handleProgressFilter = (progress) => {
-    setSearchFormData((prev) => ({
-      ...prev,
-      projectProgress: progress,
-    }));
+    if (typeof progress === 'string') {
+      // 필터 초기화
+      setSearchFormData((prev) => ({
+        ...prev,
+        projectProgress: '',
+        pjtStatus: '',
+      }));
 
-    const filters = buildFilters({
-      ...searchFormData,
-      projectProgress: progress,
-    });
+      const filters = buildFilters({
+        ...searchFormData,
+        projectProgress: '',
+        pjtStatus: '',
+      });
 
-    actions.filter.setFilters(filters);
+      actions.fetchProjects({ filters });
+    } else {
+      // 진행률 범위와 상태로 필터링
+      setSearchFormData((prev) => ({
+        ...prev,
+        projectProgress: `${progress.progress.min},${progress.progress.max}`,
+        pjtStatus: progress.status.toString(),
+      }));
+
+      const filters = buildFilters({
+        ...searchFormData,
+        projectProgress: `${progress.progress.min},${progress.progress.max}`,
+        pjtStatus: progress.status.toString(),
+      });
+
+      actions.fetchProjects({ filters });
+    }
   };
 
   return {

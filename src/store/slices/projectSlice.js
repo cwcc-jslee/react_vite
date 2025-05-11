@@ -8,6 +8,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { notification } from '@shared/services/notification';
 import { convertKeysToCamelCase } from '@shared/utils/transformUtils';
 import { projectApiService } from '../../features/project/services/projectApiService';
+import { workApiService } from '../../features/work/services/workApiService';
 
 // 필터 기본값 상수 정의
 const DEFAULT_FILTERS = {
@@ -106,6 +107,52 @@ export const createProject = createAsyncThunk(
   },
 );
 
+// 프로젝트 work 리스트 조회 액션
+export const fetchProjectWorks = createAsyncThunk(
+  'project/fetchProjectWorks',
+  async (params = {}, { getState, rejectWithValue }) => {
+    try {
+      const state = getState();
+      // 프로젝트 슬라이스의 상태 참조
+      const { pagination: storePagination } = state.project.selectedItem.works;
+
+      const pagination = params.pagination ||
+        storePagination || {
+          current: 1,
+          pageSize: 20,
+        };
+
+      // 프로젝트 ID가 params로 전달된 경우 필터에 추가
+      const filters = {
+        project_task: {
+          project: {
+            id: { $eq: params.projectId },
+          },
+        },
+        ...params.filters,
+      };
+
+      // API 호출
+      const response = await workApiService.getWorkList({
+        pagination,
+        filters,
+        ...params.additionalParams,
+      });
+
+      // 응답 데이터의 키를 카멜케이스로 변환하여 반환
+      return {
+        data: convertKeysToCamelCase(response.data),
+        meta: response.meta,
+      };
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error?.message ||
+          '프로젝트 작업 목록을 불러오는 중 오류가 발생했습니다.',
+      );
+    }
+  },
+);
+
 // 초기 상태
 const initialState = {
   items: [],
@@ -113,6 +160,13 @@ const initialState = {
     data: null,
     status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
     error: null,
+    // works 상태 추가
+    works: {
+      items: [],
+      status: 'idle',
+      error: null,
+      pagination: { ...DEFAULT_PAGINATION },
+    },
   },
   status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
   error: null,
@@ -202,6 +256,16 @@ const projectSlice = createSlice({
     setFormIsValid: (state, action) => {
       state.form.isValid = action.payload;
     },
+
+    // works 페이지네이션 변경
+    setWorksPage: (state, action) => {
+      state.selectedItem.works.pagination.current = Number(action.payload);
+    },
+
+    setWorksPageSize: (state, action) => {
+      state.selectedItem.works.pagination.pageSize = Number(action.payload);
+      state.selectedItem.works.pagination.current = 1; // 페이지 크기 변경 시 첫 페이지로
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -270,6 +334,29 @@ const projectSlice = createSlice({
           description:
             action.payload || '프로젝트 생성 중 오류가 발생했습니다.',
         });
+      })
+
+      // 프로젝트 work 리스트 조회
+      .addCase(fetchProjectWorks.pending, (state) => {
+        state.selectedItem.works.status = 'loading';
+        state.selectedItem.works.error = null;
+      })
+      .addCase(fetchProjectWorks.fulfilled, (state, action) => {
+        state.selectedItem.works.status = 'succeeded';
+        state.selectedItem.works.items = action.payload.data;
+        state.selectedItem.works.pagination.total =
+          action.payload.meta.pagination.total;
+        state.selectedItem.works.error = null;
+      })
+      .addCase(fetchProjectWorks.rejected, (state, action) => {
+        state.selectedItem.works.status = 'failed';
+        state.selectedItem.works.items = [];
+        state.selectedItem.works.error = action.payload;
+        notification.error({
+          message: '작업 목록 조회 실패',
+          description:
+            action.payload || '프로젝트 작업 목록을 불러오는데 실패했습니다.',
+        });
       });
   },
 });
@@ -285,6 +372,8 @@ export const {
   setFormSubmitting,
   resetForm,
   setFormIsValid,
+  setWorksPage,
+  setWorksPageSize,
 } = projectSlice.actions;
 
 export default projectSlice.reducer;

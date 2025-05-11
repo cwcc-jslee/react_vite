@@ -3,7 +3,7 @@
 import React from 'react';
 
 // 커스텀 훅
-import useWorkStore from '../../work/hooks/useWorkStore';
+import { useProjectStore } from '../hooks/useProjectStore';
 
 // 컴포넌트트
 import ProjectWorkList from '../components/tables/ProjectWorkList';
@@ -40,15 +40,17 @@ const EmptyState = () => (
  * 프로젝트 작업 목록 섹션 컴포넌트
  * 작업 목록과 페이지네이션을 표시
  *
- * @param {Object} props - 컴포넌트 속성
- * @param {Array} props.items - 프로젝트 목록 데이터
- * @param {Object} props.pagination - 페이지네이션 정보
- * @param {string} props.status - 상태 ('idle' | 'loading' | 'succeeded' | 'failed')
- * @param {string} props.error - 에러 메시지
  * @returns {JSX.Element} 프로젝트 테이블 섹션
  */
 const ProjectWorkListSection = () => {
-  const { items, pagination, status, error, actions } = useWorkStore();
+  const { selectedItem, actions } = useProjectStore();
+  const { works } = selectedItem || {};
+  const { items, status, error, pagination } = works || {};
+
+  // works 관련 액션 구성
+  const worksActions = {
+    pagination: actions.detail.works,
+  };
 
   // 상태에 따른 컴포넌트 렌더링
   const renderContent = () => {
@@ -62,7 +64,7 @@ const ProjectWorkListSection = () => {
           <ProjectWorkList
             items={items}
             pagination={pagination}
-            actions={actions}
+            actions={worksActions}
           />
         ) : (
           <EmptyState />

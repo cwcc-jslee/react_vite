@@ -22,6 +22,9 @@ import {
   resetForm,
   fetchProjects,
   fetchProjectDetail,
+  fetchProjectWorks,
+  setWorksPage,
+  setWorksPageSize,
 } from '../../../store/slices/projectSlice';
 import { changePageMenu, changeSubMenu } from '../../../store/slices/uiSlice';
 import { PAGE_MENUS } from '@shared/constants/navigation';
@@ -57,7 +60,7 @@ export const useProjectStore = () => {
     // 필터 액션
     filter: {
       setFilters: (filterValues) => {
-        dispatch(setFilters(filterValues));
+        // dispatch(setFilters(filterValues));
         dispatch(fetchProjects({ filters: filterValues }));
       },
       resetFilters: () => {
@@ -75,6 +78,7 @@ export const useProjectStore = () => {
     detail: {
       fetchDetail: (id) => {
         dispatch(fetchProjectDetail(id));
+        dispatch(fetchProjectWorks({ projectId: id }));
         dispatch(
           changePageMenu({
             page: 'project',
@@ -86,6 +90,40 @@ export const useProjectStore = () => {
             },
           }),
         );
+      },
+      refreshWorks: (id, params = {}) => {
+        dispatch(fetchProjectWorks({ projectId: id, ...params }));
+      },
+      works: {
+        setPage: (page) => {
+          dispatch(setWorksPage(page));
+          if (selectedItem?.data?.id) {
+            dispatch(
+              fetchProjectWorks({
+                projectId: selectedItem.data.id,
+                pagination: {
+                  ...selectedItem.works.pagination,
+                  current: page,
+                },
+              }),
+            );
+          }
+        },
+        setPageSize: (pageSize) => {
+          dispatch(setWorksPageSize(pageSize));
+          if (selectedItem?.data?.id) {
+            dispatch(
+              fetchProjectWorks({
+                projectId: selectedItem.data.id,
+                pagination: {
+                  ...selectedItem.works.pagination,
+                  pageSize,
+                  current: 1,
+                },
+              }),
+            );
+          }
+        },
       },
       clearDetail: () => dispatch(clearSelectedItem()),
     },

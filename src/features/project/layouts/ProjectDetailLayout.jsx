@@ -17,36 +17,13 @@ import ProjectDetailTaskSection from '../sections/ProjectDetailTaskSection';
  */
 const ProjectDetailLayout = () => {
   // Detail 상태 가져오기
-  const { selectedItem } = useProjectStore();
+  const { selectedItem, actions } = useProjectStore();
   const { data, status, error } = selectedItem || {};
 
-  const {
-    actions: { filter: workFilterActions },
-  } = useWorkStore();
-
-  // work 필터 변경
+  // 컴포넌트 언마운트 selectedItem 초기화
   useEffect(() => {
-    if (data?.id) {
-      const projectTaskFilter = {
-        project_task: {
-          project: {
-            id: { $eq: data.id },
-          },
-        },
-      };
-
-      // 이전 필터와 동일한 경우 중복 호출 방지
-      const currentFilters = workFilterActions.getFilters();
-      if (
-        JSON.stringify(currentFilters) !== JSON.stringify(projectTaskFilter)
-      ) {
-        workFilterActions.setFilters(projectTaskFilter);
-      }
-    }
-
-    // 컴포넌트 언마운트 시 필터 초기화
     return () => {
-      workFilterActions.resetFilters();
+      actions.detail.clearDetail();
     };
   }, []);
 

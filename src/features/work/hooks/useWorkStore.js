@@ -59,7 +59,7 @@ export const useWorkStore = () => {
     filter: {
       getFilters: () => filters,
       setFilters: (filterValues) => {
-        dispatch(setFilters(filterValues));
+        // dispatch(setFilters(filterValues));
         dispatch(fetchWorks({ filters: filterValues }));
       },
       resetFilters: () => {
@@ -82,6 +82,11 @@ export const useWorkStore = () => {
       //   dispatch(resetForm());
       //   dispatch(fetchWorks());
       // },
+    },
+
+    // 작업 목록 조회
+    fetchWorks: (params) => {
+      dispatch(fetchWorks(params));
     },
 
     // 작업 목록 새로고침

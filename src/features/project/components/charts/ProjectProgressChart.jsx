@@ -14,6 +14,16 @@ import {
 import ChartContainer from '../../../../shared/components/charts/ChartContainer';
 import { useProjectSearch } from '../../hooks/useProjectSearch';
 
+// 진행률 범위 정의
+const PROGRESS_RANGES = {
+  ZERO: { min: 0, max: 9, label: '0%' },
+  TEN_PERCENT: { min: 10, max: 24, label: '10%' },
+  QUARTER: { min: 25, max: 49, label: '25%' },
+  HALF: { min: 50, max: 74, label: '50%' },
+  THREE_QUARTERS: { min: 75, max: 99, label: '75%' },
+  COMPLETED: { min: 100, max: 100, label: '100%' },
+};
+
 /**
  * 프로젝트 진행 단계별 수량을 세로 막대 차트로 표시하는 컴포넌트 (리팩토링 버전)
  * @returns {JSX.Element} 프로젝트 진행 상태 차트 컴포넌트
@@ -55,46 +65,46 @@ const ProjectProgressChart = ({ projectProgress = [] }) => {
   // 각 단계별 프로젝트 수 (실제 구현 시 props 또는 API에서 가져올 수 있음)
   const progressData = [
     {
-      name: '0%',
+      name: PROGRESS_RANGES.ZERO.label,
       value: projectProgress['0%'],
       color: '#D13438',
       isProgress: true,
-      progress: 0,
+      range: PROGRESS_RANGES.ZERO,
     },
     {
-      name: '10%',
+      name: PROGRESS_RANGES.TEN_PERCENT.label,
       value: projectProgress['10%'],
       color: '#FF8C00',
       isProgress: true,
-      progress: 10,
+      range: PROGRESS_RANGES.TEN_PERCENT,
     },
     {
-      name: '25%',
+      name: PROGRESS_RANGES.QUARTER.label,
       value: projectProgress['25%'],
       color: '#FF8C00',
       isProgress: true,
-      progress: 25,
+      range: PROGRESS_RANGES.QUARTER,
     },
     {
-      name: '50%',
+      name: PROGRESS_RANGES.HALF.label,
       value: projectProgress['50%'],
       color: '#FFB900',
       isProgress: true,
-      progress: 50,
+      range: PROGRESS_RANGES.HALF,
     },
     {
-      name: '75%',
+      name: PROGRESS_RANGES.THREE_QUARTERS.label,
       value: projectProgress['75%'],
       color: '#107C10',
       isProgress: true,
-      progress: 75,
+      range: PROGRESS_RANGES.THREE_QUARTERS,
     },
     {
-      name: '100%',
+      name: PROGRESS_RANGES.COMPLETED.label,
       value: projectProgress['100%'],
       color: '#0078D4',
       isProgress: true,
-      progress: 100,
+      range: PROGRESS_RANGES.COMPLETED,
     },
     // {
     //   name: '검수',
@@ -137,8 +147,11 @@ const ProjectProgressChart = ({ projectProgress = [] }) => {
       handleProgressFilter('');
     } else {
       // 선택된 진행률로 필터링
-      const selectedProgress = progressData[index].progress;
-      handleProgressFilter(selectedProgress.toString());
+      const selectedRange = progressData[index].range;
+      handleProgressFilter({
+        progress: selectedRange,
+        status: 88, // 진행중인 프로젝트 상태 ID
+      });
     }
   };
 
