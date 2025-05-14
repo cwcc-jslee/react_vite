@@ -17,6 +17,9 @@ export const authApi = {
           team: {
             fields: ['id', 'name', 'code'],
           },
+          user_access_control: {
+            fields: ['code', 'name', 'permissions', 'remarks'],
+          },
         },
       },
       headers: {

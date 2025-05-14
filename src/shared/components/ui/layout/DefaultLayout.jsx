@@ -27,6 +27,7 @@ import {
 } from './components.jsx';
 import BreadcrumbWithMenu from './BreadcrumbWithMenu.jsx';
 import SidebarActionButton from './SidebarActionButton.jsx';
+import { hasMenuPermission } from '../../../utils/permissionUtils';
 
 // 현재 경로에 기반한 브레드크럼 생성 함수
 const getBreadcrumbItems = (path) => {
@@ -172,6 +173,8 @@ const DefaultLayout = ({ children }) => {
         <div className="flex items-center gap-4">
           <span className="text-white font-medium">
             {user?.user?.username || 'Guest'}
+            {user?.user?.user_access_control?.name &&
+              `(${user.user.user_access_control.name})`}
           </span>
           <Button
             variant="outline"
@@ -188,20 +191,27 @@ const DefaultLayout = ({ children }) => {
           {/* 메인 네비게이션 - 첫 번째 자식 */}
           <Navigation>
             <NavList>
-              {SIDEBAR_ITEMS.map((item) => (
-                <NavItem
-                  key={item.id}
-                  active={
-                    location.pathname === item.id ||
-                    location.pathname.startsWith(item.path)
-                  }
-                  onClick={() => navigate(item.id)}
-                  collapsed={sidebarCollapsed}
-                  icon={item.icon}
-                >
-                  {item.label}
-                </NavItem>
-              ))}
+              {SIDEBAR_ITEMS.map((item) => {
+                // 권한 체크
+                if (!hasMenuPermission(user?.user?.user_access_control, item)) {
+                  return null;
+                }
+
+                return (
+                  <NavItem
+                    key={item.id}
+                    active={
+                      location.pathname === item.id ||
+                      location.pathname.startsWith(item.path)
+                    }
+                    onClick={() => navigate(item.id)}
+                    collapsed={sidebarCollapsed}
+                    icon={item.icon}
+                  >
+                    {item.label}
+                  </NavItem>
+                );
+              })}
             </NavList>
           </Navigation>
 
