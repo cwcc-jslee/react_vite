@@ -18,45 +18,33 @@ import { LuListTodo } from 'react-icons/lu';
 // 사이드바 메뉴 항목
 export const SIDEBAR_ITEMS = [
   {
-    id: 'home',
-    path: '/',
-    label: 'HOME',
-    permissions: ['user'],
-    icon: <FaHome className="h-5 w-5" />,
-  },
-  {
     id: 'sfa',
     path: '/sfa',
     label: 'SFA',
-    permissions: ['user'],
     icon: <FaChartLine className="h-5 w-5" />,
   },
   {
     id: 'project',
     path: '/project',
     label: 'PROJECT',
-    permissions: ['user'],
     icon: <FaProjectDiagram className="h-5 w-5" />,
   },
   {
     id: 'todo',
     path: '/todo',
     label: 'ToDo',
-    permissions: ['user'],
     icon: <LuListTodo className="h-5 w-5" />,
   },
   {
     id: 'customer',
     path: '/customer',
     label: 'CUSTOMER',
-    permissions: ['user'],
     icon: <FaUsers className="h-5 w-5" />,
   },
   {
     id: 'contact',
     path: '/contact',
     label: 'CONTACT',
-    permissions: ['user'],
     icon: <FaAddressBook className="h-5 w-5" />,
   },
 

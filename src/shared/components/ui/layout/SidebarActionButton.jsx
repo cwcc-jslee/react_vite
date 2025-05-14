@@ -4,11 +4,34 @@
 
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { changePageMenu } from '../../../../store/slices/uiSlice';
 import { setCurrentPath } from '../../../../store/slices/pageStateSlice';
 import { resetForm } from '../../../../store/slices/pageFormSlice';
 import { ActionButton } from './components';
+
+// 권한 체크 유틸리티 함수
+const checkCreatePermission = (user, pageId) => {
+  if (!user?.user?.user_access_control) return false;
+
+  const { permissions } = user.user.user_access_control;
+  if (!permissions) return false;
+
+  // 기본 권한 확인
+  const defaultPermission = permissions.default?.create;
+
+  // 페이지별 권한 확인
+  const pagePermission = permissions.pages?.[pageId]?.create;
+
+  // 페이지별 권한이 명시적으로 false인 경우 접근 불가
+  if (pagePermission === false) return false;
+
+  // 페이지별 권한이 true인 경우 접근 가능
+  if (pagePermission === true) return true;
+
+  // 페이지별 권한이 설정되지 않은 경우 기본 권한 사용
+  return defaultPermission === true;
+};
 
 const ACTION_CONFIG = {
   sfa: {
@@ -135,6 +158,7 @@ const ACTION_CONFIG = {
 const SidebarActionButton = ({ collapsed }) => {
   const location = useLocation();
   const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
 
   // 현재 경로에서 페이지 식별자 추출
   const getCurrentPageFromPath = (path) => {
@@ -166,6 +190,10 @@ const SidebarActionButton = ({ collapsed }) => {
     const config = ACTION_CONFIG[currentPage];
 
     if (!config) return null;
+
+    // create 권한 체크
+    const hasPermission = checkCreatePermission(user, currentPage);
+    if (!hasPermission) return null;
 
     return (
       <ActionButton
