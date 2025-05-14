@@ -17,6 +17,7 @@ import {
   setFilters,
   resetFilters,
   fetchTasks,
+  resetState,
 } from '../../../store/slices/taskSlice';
 
 /**
@@ -39,11 +40,11 @@ export const useProjectTaskStore = () => {
     pagination: {
       setPage: (page) => {
         dispatch(setPage(page));
-        dispatch(fetchTasks({ pagination: { current: page } }));
+        // dispatch(fetchTasks({ pagination: { current: page } }));
       },
       setPageSize: (size) => {
         dispatch(setPageSize(size));
-        dispatch(fetchTasks({ pagination: { current: 1, pageSize: size } }));
+        // dispatch(fetchTasks({ pagination: { current: 1, pageSize: size } }));
       },
     },
 
@@ -71,6 +72,9 @@ export const useProjectTaskStore = () => {
 
     // 작업 목록 새로고침
     refreshList: () => dispatch(fetchTasks()),
+
+    // 전체 상태 초기화
+    resetState: () => dispatch(resetState()),
   };
 
   return {

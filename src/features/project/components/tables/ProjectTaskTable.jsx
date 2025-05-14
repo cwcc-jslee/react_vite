@@ -1,6 +1,7 @@
-// src/features/project/components/tables/ProjectTaskList.jsx
+// src/features/project/components/tables/ProjectTaskTable.jsx
+// ProjectTaskTable, ProjedtTaskList 와 통합예정 - 프로젝트 > TASK 에서 사용
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useDispatch } from 'react-redux';
 import { setDrawer } from '../../../../store/slices/uiSlice';
 import {
@@ -9,18 +10,19 @@ import {
   Tooltip,
   Progress,
 } from '../../../../shared/components/ui';
+import { Pagination } from '../../../../shared/components/ui/pagination/Pagination';
 import { FiCheckSquare, FiClock, FiCalendar } from 'react-icons/fi';
 
 /**
  * 프로젝트 작업 테이블 컴포넌트
  * 프로젝트의 작업 목록을 테이블 형태로 표시
  */
-const ProjectTaskList = ({
-  allTasks = [], // 인덱스가 포함된 모든 작업 배열 받기
-  loading = false,
+const ProjectTaskTable = ({
+  items = [], // 작업 목록 배열
+  status = 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
   error = null,
-
-  onTaskEdit = () => {},
+  pagination = { current: 1, pageSize: 10, total: 0 },
+  actions = {},
 }) => {
   console.log(`>>>> project task list  실행`);
   const dispatch = useDispatch();
@@ -44,7 +46,7 @@ const ProjectTaskList = ({
   };
 
   // console.log(`==== buckets `, buckets);
-  console.log(`==== allTasks `, allTasks);
+  console.log(`==== items `, items);
 
   // 날짜 포맷팅 함수
   const formatDate = (dateString) => {
@@ -81,8 +83,9 @@ const ProjectTaskList = ({
   const columns = [
     { key: 'index', title: '순번', align: 'center', width: '60px' },
     { key: 'completed', title: '완료', align: 'center', width: '60px' },
+    { key: 'project', title: '프로젝트', align: 'center', width: '100px' },
     { key: 'name', title: '작업명', align: 'left' },
-    { key: 'bucket', title: '버킷', align: 'center' },
+    // { key: 'bucket', title: '버킷', align: 'center' },
     { key: 'taskScheduleType', title: '일정구분', align: 'center' },
     { key: 'checklistProgress', title: '체크리스트', align: 'center' },
     { key: 'assignee', title: '할당대상', align: 'center' },
@@ -182,14 +185,14 @@ const ProjectTaskList = ({
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {loading ? (
+          {status === 'loading' ? (
             <LoadingState />
-          ) : error ? (
+          ) : status === 'failed' ? (
             <ErrorState message={error} />
-          ) : !allTasks?.length ? (
+          ) : !items?.length ? (
             <EmptyState />
           ) : (
-            allTasks.map((task, index) => (
+            items.map((task, index) => (
               <tr
                 key={task.id || index}
                 className={`hover:bg-gray-50 ${
@@ -207,24 +210,33 @@ const ProjectTaskList = ({
                   />
                 </td>
 
+                {/* 프로젝트 */}
+                <td className="px-3 py-2 text-center text-sm">
+                  {task.project?.name}
+                </td>
+
                 {/* 작업명 */}
                 <td className="px-3 py-2 text-sm">
                   <div
                     className={`${
                       task.completed ? 'line-through text-gray-400' : ''
                     }`}
-                    onClick={() => onTaskEdit(task.id)}
                   >
                     {task.name}
+                    {task.project?.name && (
+                      <span className="ml-2 text-xs text-gray-500">
+                        ({task.projectTaskBucket?.name})
+                      </span>
+                    )}
                   </div>
                 </td>
 
                 {/* 버킷 */}
-                <td className="px-3 py-2 text-center text-sm">
+                {/* <td className="px-3 py-2 text-center text-sm">
                   <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-md text-xs">
-                    {task.bucket}
+                    {task.projectTaskBucket?.name}
                   </span>
-                </td>
+                </td> */}
 
                 {/* 스케줄 타입 */}
                 <td className="px-3 py-2 text-center text-sm">
@@ -389,9 +401,19 @@ const ProjectTaskList = ({
           )}
         </tbody>
       </table>
+
+      <div className="mt-4">
+        <Pagination
+          current={pagination.current}
+          pageSize={pagination.pageSize}
+          total={pagination.total}
+          onPageChange={(page) => actions.pagination?.setPage(page)}
+          onPageSizeChange={(size) => actions.pagination?.setPageSize(size)}
+        />
+      </div>
     </div>
     // </Card>
   );
 };
 
-export default ProjectTaskList;
+export default ProjectTaskTable;

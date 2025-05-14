@@ -142,7 +142,7 @@ export const PAGE_MENUS = {
     defaultMenu: 'list',
     items: {
       list: {
-        label: '현황',
+        label: '프로젝트',
         permissions: ['user'],
         visible: true,
         config: {
@@ -210,8 +210,31 @@ export const PAGE_MENUS = {
           },
         },
       },
+      task: {
+        label: 'TASK',
+        permissions: ['user'],
+        visible: true,
+        config: {
+          layout: 'task',
+          sections: {
+            projectCharts: true,
+            projectListTable: true,
+            projectAddForm: false,
+            projectDetailTable: false,
+            projectTaskBoard: false,
+          },
+          components: {
+            projectChart: true,
+            projectTable: true,
+            projectAddSection: false,
+          },
+          drawer: {
+            visible: false, // 드로어 표시 여부
+          },
+        },
+      },
       work: {
-        label: 'work',
+        label: 'WORK',
         permissions: ['user'],
         visible: true,
         config: {

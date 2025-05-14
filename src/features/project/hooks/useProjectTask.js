@@ -27,7 +27,7 @@ import {
   toggleTaskCompletion,
   toggleCompletedSection,
   resetKanban,
-} from '../store/projectTaskSlice';
+} from '../../../store/slices/projectBucketSlice';
 
 /**
  * 프로젝트 태스크 데이터를 칸반 보드 형식으로 변환하는 유틸리티 함수

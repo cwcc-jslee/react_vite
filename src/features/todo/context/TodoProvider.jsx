@@ -103,10 +103,16 @@ export const TodoProvider = ({ children }) => {
   useEffect(() => {
     // 초기 필터 설정 및 작업 목록 조회
     const initialFilters = getTaskFilters();
-    taskActions.filter.initializeFilters(initialFilters);
+    taskActions.filter.setFilters(initialFilters);
+    taskActions.fetchTasks({ filters: initialFilters });
 
     // 작업 데이터 로드
-    fetchWorkData();
+    // fetchWorkData();
+
+    // cleanup 함수: 컴포넌트 언마운트 시 taskSlice 초기화
+    return () => {
+      taskActions.resetState();
+    };
   }, [currentUser?.id]); // currentUser.id가 변경될 때마다 필터 재설정
 
   // 컨텍스트 값 정의

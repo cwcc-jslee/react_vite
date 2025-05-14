@@ -1,14 +1,17 @@
 /**
- * 프로젝트 작업(할일) 데이터 상태 관리 슬라이스
- * - 작업 목록, 페이지네이션, 필터링 관리
+ * 프로젝트 태스크 데이터 상태 관리 슬라이스
+ * - 프로젝트 태스크 목록, 페이지네이션, 필터링 관리
  */
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { notification } from '@shared/services/notification';
 import { convertKeysToCamelCase } from '@shared/utils/transformUtils';
-import { workApiService } from '../../features/work/services/workApiService';
+import { projectTaskApiService } from '../../features/project/services/projectTaskApiService';
 
 // 필터 기본값 상수 정의
-const DEFAULT_FILTERS = {};
+const DEFAULT_FILTERS = {
+  project_id: null,
+  status: null,
+};
 
 // 페이지네이션 기본값 상수 정의
 const DEFAULT_PAGINATION = {
@@ -18,13 +21,14 @@ const DEFAULT_PAGINATION = {
 };
 
 // 비동기 액션 생성
-export const fetchTasks = createAsyncThunk(
-  'task/fetchTasks',
+export const fetchProjectTasks = createAsyncThunk(
+  'projectTask/fetchProjectTasks',
   async (params = {}, { getState, rejectWithValue }) => {
     try {
       const state = getState();
-      // 태스크 슬라이스의 상태 참조
-      const { pagination: storePagination, filters: storeFilters } = state.task;
+      // 프로젝트 태스크 슬라이스의 상태 참조
+      const { pagination: storePagination, filters: storeFilters } =
+        state.projectTask;
 
       const pagination = params.pagination ||
         storePagination || {
@@ -33,8 +37,8 @@ export const fetchTasks = createAsyncThunk(
         };
       const filters = params.filters || storeFilters || {};
 
-      // API 호출 코드 (workApiService 사용)
-      const response = await workApiService.getTaskList({
+      // API 호출 코드 (projectTaskApiService 사용)
+      const response = await projectTaskApiService.getProjectTaskList({
         pagination,
         filters,
         ...params.additionalParams,
@@ -48,7 +52,7 @@ export const fetchTasks = createAsyncThunk(
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.error?.message ||
-          '작업 목록을 불러오는 중 오류가 발생했습니다.',
+          '프로젝트 태스크 목록을 불러오는 중 오류가 발생했습니다.',
       );
     }
   },
@@ -67,8 +71,8 @@ const initialState = {
   filters: { ...DEFAULT_FILTERS },
 };
 
-const taskSlice = createSlice({
-  name: 'task',
+const projectTaskSlice = createSlice({
+  name: 'projectTask',
   initialState,
   reducers: {
     // 페이지네이션 변경
@@ -95,37 +99,33 @@ const taskSlice = createSlice({
       state.filters = { ...DEFAULT_FILTERS };
       state.pagination = { ...DEFAULT_PAGINATION };
     },
-
-    // 전체 상태 초기화
-    resetState: (state) => {
-      return { ...initialState };
-    },
   },
   extraReducers: (builder) => {
     builder
-      // 작업 목록 조회
-      .addCase(fetchTasks.pending, (state) => {
+      // 프로젝트 태스크 목록 조회
+      .addCase(fetchProjectTasks.pending, (state) => {
         state.status = 'loading';
         state.error = null;
       })
-      .addCase(fetchTasks.fulfilled, (state, action) => {
+      .addCase(fetchProjectTasks.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.items = action.payload.data;
         state.pagination.total = action.payload.meta.pagination.total;
         state.error = null;
       })
-      .addCase(fetchTasks.rejected, (state, action) => {
+      .addCase(fetchProjectTasks.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
         notification.error({
           message: '데이터 조회 실패',
-          description: action.payload || '작업 목록을 불러오는데 실패했습니다.',
+          description:
+            action.payload || '프로젝트 태스크 목록을 불러오는데 실패했습니다.',
         });
       });
   },
 });
 
-export const { setPage, setPageSize, setFilters, resetFilters, resetState } =
-  taskSlice.actions;
+export const { setPage, setPageSize, setFilters, resetFilters } =
+  projectTaskSlice.actions;
 
-export default taskSlice.reducer;
+export default projectTaskSlice.reducer;

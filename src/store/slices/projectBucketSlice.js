@@ -1,4 +1,4 @@
-// src/features/project/store/projectTaskSlice.js
+// src/features/project/store/projectBucketSlice.js
 /**
  * 프로젝트 태스크 상태 관리를 위한 Redux 슬라이스
  * 프로젝트의 작업 데이터와 UI 상태를 관리합니다.
@@ -22,8 +22,8 @@ const initialState = {
 };
 
 // 슬라이스 생성
-const projectTaskSlice = createSlice({
-  name: 'projectTask',
+const projectBucketSlice = createSlice({
+  name: 'projectBucket',
   initialState,
   reducers: {
     // 작업 버킷 설정 (전체 데이터 교체)
@@ -251,28 +251,6 @@ const projectTaskSlice = createSlice({
         ...initialState,
       };
     },
-    // resetKanban: (state) => {
-    //   return {
-    //     ...initialState,
-    //     buckets: [
-    //       {
-    //         bucket: '할 일',
-    //         tasks: [],
-    //         position: 0,
-    //       },
-    //       {
-    //         bucket: '진행 중',
-    //         tasks: [],
-    //         position: 1,
-    //       },
-    //       {
-    //         bucket: '완료',
-    //         tasks: [],
-    //         position: 2,
-    //       },
-    //     ],
-    //   };
-    // },
   },
   extraReducers: (builder) => {
     builder;
@@ -297,15 +275,15 @@ export const {
   toggleTaskCompletion,
   toggleCompletedSection,
   resetKanban,
-} = projectTaskSlice.actions;
+} = projectBucketSlice.actions;
 
 // 셀렉터 함수들
-export const selectBuckets = (state) => state.projectTask.buckets;
-export const selectEditState = (state) => state.projectTask.editState;
+export const selectBuckets = (state) => state.projectBucket.buckets;
+export const selectEditState = (state) => state.projectBucket.editState;
 export const selectCompletedExpanded = (state) =>
-  state.projectTask.completedExpanded;
-export const selectKanbanStatus = (state) => state.projectTask.status;
-export const selectKanbanError = (state) => state.projectTask.error;
+  state.projectBucket.completedExpanded;
+export const selectKanbanStatus = (state) => state.projectBucket.status;
+export const selectKanbanError = (state) => state.projectBucket.error;
 
 // 리듀서 내보내기
-export default projectTaskSlice.reducer;
+export default projectBucketSlice.reducer;

@@ -20,7 +20,8 @@ import taskReducer from './slices/taskSlice';
 
 // 변경 삭제 예정
 // import projectReducer from '../features/project/store/projectSlice';
-import projectTaskReducer from '../features/project/store/projectTaskSlice';
+// import projectTaskReducer from '../features/project/store/projectTaskSlice';
+import projectBucketReducer from './slices/projectBucketSlice';
 // import sfaReducer from './slices/sfaSlice';
 // import customerReducer from './slices/customerSlice';
 
@@ -43,12 +44,12 @@ export const store = configureStore({
 
     // work 상태 관리 리듀서(다른 페이지에서 사용 필요하여 별도 구성)
     project: projectReducer,
-    work: workReducer,
+    projectBucket: projectBucketReducer,
     task: taskReducer,
+    work: workReducer,
 
     // 삭제, 이동 예정
     // project: projectReducer, // 삭제 예정..
-    projectTask: projectTaskReducer,
     // sfa: sfaReducer, // 아직 구현되지 않은 경우 주석 처리
     // customer: customerReducer, // 아직 구현되지 않은 경우 주석 처리
   },

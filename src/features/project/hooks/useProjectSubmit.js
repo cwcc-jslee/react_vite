@@ -31,7 +31,7 @@ import { projectApiService } from '../services/projectApiService';
 export const useProjectSubmit = () => {
   const dispatch = useDispatch();
   const { data: formData } = useSelector((state) => state.pageForm);
-  const buckets = useSelector((state) => state.projectTask.buckets);
+  const buckets = useSelector((state) => state.projectBucket.buckets);
   const [progress, setProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentBucketIndex, setCurrentBucketIndex] = useState(0);

@@ -15,7 +15,7 @@ import ProjectSearchLayout from '../layouts/ProjectSearchLayout';
 import ProjectWorkLayout from '../layouts/ProjectWorkLayout';
 import ProjectAddLayout from '../layouts/ProjectAddLayout';
 import ProjectDetailLayout from '../layouts/ProjectDetailLayout';
-
+import ProjectTaskLayout from '../layouts/ProjectTaskLayout';
 // Components
 import ProjectDrawer from '../components/drawer/ProjectDrawer';
 
@@ -75,6 +75,7 @@ const ProjectContainer = () => {
         {layout === 'detail' && <ProjectDetailLayout />}
         {layout === 'search' && <ProjectSearchLayout {...listLayoutProps} />}
         {layout === 'work' && <ProjectWorkLayout />}
+        {layout === 'task' && <ProjectTaskLayout />}
         {layout === 'add' && <ProjectAddLayout />}
       </Section>
 

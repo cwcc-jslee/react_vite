@@ -32,7 +32,7 @@ const TodoCard = ({
   const dispatch = useDispatch();
 
   if (!task) return null;
-  console.log('>>>task', task);
+  // console.log('>>>task', task);
 
   // 날짜 포맷 헬퍼 함수 (dayjs 사용)
   const formatDate = (dateString) => {

@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 import { useDispatch } from 'react-redux';
-import { setBuckets } from '../store/projectTaskSlice';
+import { setBuckets } from '../../../store/slices/projectBucketSlice';
 
 /**
  * 프로젝트 태스크와 버킷 데이터를 칸반 형식으로 변환하는 커스텀 훅
