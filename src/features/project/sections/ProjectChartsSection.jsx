@@ -6,21 +6,23 @@ import ProjectStatusDonutCharts from '../components/charts/ProjectStatusDonutCha
 import ProjectProgressChart from '../components/charts/ProjectProgressChart';
 import ProjectTreeMap from '../components/charts/ProjectTreeMap';
 import { useProjectSearch } from '../hooks/useProjectSearch';
+import { useProjectStore } from '../hooks/useProjectStore';
 
 /**
  * 프로젝트 차트 섹션 컴포넌트
  * 프로젝트 상태, 진행률, 작업시간 시각화를 담당
  *
- * @param {Object} props - 컴포넌트 속성
- * @param {Object} props.projectStatus - 프로젝트 상태별 데이터
- * @param {Object} props.projectProgress - 프로젝트 진행률별 데이터
  * @returns {JSX.Element} 프로젝트 차트 섹션
  */
-const ProjectChartsSection = ({ projectStatus, projectProgress }) => {
+const ProjectChartsSection = () => {
   const { searchFormData } = useProjectSearch();
+  const { dashboardData } = useProjectStore();
   const isFiltered = searchFormData.pjtStatus !== '';
 
+  const { projectStatus, projectProgress, scheduleStatus } = dashboardData;
+
   console.log(`>>>> projectStatus`, projectStatus);
+  console.log(`>>>> scheduleStatus`, scheduleStatus);
 
   return (
     <Row gutter={[16, 16]}>
@@ -29,6 +31,7 @@ const ProjectChartsSection = ({ projectStatus, projectProgress }) => {
         <div className="h-[420px]">
           <ProjectStatusDonutCharts
             projectStatus={projectStatus}
+            scheduleStatus={scheduleStatus}
             isFiltered={isFiltered}
           />
         </div>

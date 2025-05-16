@@ -71,6 +71,14 @@ export const buildProjectListQuery = (params) => {
       importance_level: {
         fields: ['name'],
       },
+      project_tasks: {
+        fields: ['plan_end_date'],
+        populate: {
+          task_progress: {
+            fields: ['name', 'code'],
+          },
+        },
+      },
     },
     pagination: {
       start: (pagination.current - 1) * pagination.pageSize,
@@ -160,6 +168,43 @@ export const buildProjectDetailQuery = (id) => {
       encodeValuesOnly: true,
     },
   );
+};
+
+// 프로젝트 시간상태 업데이트용 쿼리
+export const buildProjectScheduleStatusQuery = (params) => {
+  const { pagination = { current: 1, pageSize: 50 }, filters = {} } = params;
+
+  // 기본 필터 정의 (삭제되지 않은 항목만 조회)
+  const baseFilter = { is_deleted: { $eq: false } };
+
+  // 필터 결합
+  const combinedFilters = combineFilters(baseFilter, filters);
+
+  // 쿼리 구성
+  const query = {
+    filters: combinedFilters,
+    fields: ['plan_end_date', 'end_date', 'project_progress', 'is_completed'],
+    populate: {
+      pjt_status: {
+        fields: ['name'],
+      },
+      project_tasks: {
+        fields: ['plan_end_date'],
+        populate: {
+          task_progress: {
+            fields: ['name', 'code'],
+          },
+        },
+      },
+    },
+    pagination: {
+      start: (pagination.current - 1) * pagination.pageSize,
+      limit: pagination.pageSize,
+    },
+    sort: ['id:desc'],
+  };
+
+  return qs.stringify(query, { encodeValuesOnly: true });
 };
 
 export const buildProjectTaskListQuery = (params) => {

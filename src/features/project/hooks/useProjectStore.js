@@ -6,6 +6,7 @@
  * 1. 프로젝트 목록 조회 및 페이지네이션
  * 2. 프로젝트 상세 정보 관리
  * 3. 폼 상태 및 유효성 검사
+ * 4. 대시보드 상태 관리
  *
  * @author [작성자명]
  * @since [버전]
@@ -25,13 +26,15 @@ import {
   fetchProjectWorks,
   setWorksPage,
   setWorksPageSize,
+  fetchProjectStatus,
+  fetchProjectScheduleStatus,
 } from '../../../store/slices/projectSlice';
 import { changePageMenu, changeSubMenu } from '../../../store/slices/uiSlice';
 import { PAGE_MENUS } from '@shared/constants/navigation';
 
 /**
  * 프로젝트 관련 상태와 액션을 관리하는 커스텀 훅
- * 프로젝트 목록, 상세 정보, 폼 상태 등을 통합 관리
+ * 프로젝트 목록, 상세 정보, 폼 상태, 대시보드 등을 통합 관리
  */
 export const useProjectStore = () => {
   const dispatch = useDispatch();
@@ -44,6 +47,17 @@ export const useProjectStore = () => {
   const error = useSelector((state) => state.project.error);
   const selectedItem = useSelector((state) => state.project.selectedItem);
   const form = useSelector((state) => state.project.form);
+
+  // 대시보드 상태 선택
+  const dashboard = useSelector((state) => state.project.dashboard);
+
+  // 대시보드 데이터만 선택적으로 추출
+  const dashboardData = {
+    projectStatus: dashboard.projectStatus?.data || null,
+    projectProgress: dashboard.projectProgress?.data || null,
+    scheduleStatus: dashboard.scheduleStatus?.data || null,
+    monthlyStats: dashboard.monthlyStats?.data || null,
+  };
 
   // 액션 핸들러
   const actions = {
@@ -60,7 +74,6 @@ export const useProjectStore = () => {
     // 필터 액션
     filter: {
       setFilters: (filterValues) => {
-        // dispatch(setFilters(filterValues));
         dispatch(fetchProjects({ filters: filterValues }));
       },
       resetFilters: () => {
@@ -70,8 +83,13 @@ export const useProjectStore = () => {
     },
 
     // 프로젝트 목록 조회
-    fetchProjects: (params) => {
+    getProjectList: (params) => {
       dispatch(fetchProjects(params));
+    },
+
+    // 프로젝트 시간상태 업데이트
+    getProjectsWithSchedule: () => {
+      dispatch(fetchProjectScheduleStatus());
     },
 
     // 상세 정보 조회
@@ -134,8 +152,22 @@ export const useProjectStore = () => {
       resetForm: () => dispatch(resetForm()),
     },
 
-    // 프로젝트 목록 새로고침
-    refreshList: () => dispatch(fetchProjects()),
+    // 대시보드 액션
+    dashboard: {
+      // 프로젝트 상태 조회
+      fetchStatus: () => {
+        dispatch(fetchProjectStatus());
+      },
+      // 프로젝트 시간 상태 조회
+      fetchScheduleStatus: () => {
+        dispatch(fetchProjectScheduleStatus());
+      },
+      // 대시보드 데이터 새로고침
+      refresh: () => {
+        dispatch(fetchProjectStatus());
+        dispatch(fetchProjectScheduleStatus());
+      },
+    },
   };
 
   return {
@@ -147,6 +179,8 @@ export const useProjectStore = () => {
     error,
     selectedItem,
     form,
+    dashboard,
+    dashboardData, // 추가: 데이터만 추출한 대시보드 상태
 
     // 액션
     actions,

@@ -13,6 +13,7 @@ import {
   buildProjectListQuery,
   buildProjectDetailQuery,
   buildProjectTaskListQuery,
+  buildProjectScheduleStatusQuery,
 } from '../api/queries';
 import { normalizeResponse } from '../../../shared/api/normalize';
 import qs from 'qs';
@@ -35,7 +36,22 @@ export const projectApiService = {
   },
 
   /**
-   * 프로젝트 상세세 조회
+   * 프로젝트 시간상태 조회
+   */
+  getProjectScheduleStatus: async (params) => {
+    try {
+      // 쿼리 생성 및 API 호출
+      const query = buildProjectScheduleStatusQuery(params);
+      const response = await apiService.get(`/projects?${query}`);
+
+      return normalizeResponse(response);
+    } catch (error) {
+      handleApiError(error, '프로젝트 목록을 불러오는 중 오류가 발생했습니다.');
+    }
+  },
+
+  /**
+   * 프로젝트 상세 조회
    * @param {Object} id - 검색 파라미터
    */
   getProjectDetail: async (projectId) => {
@@ -43,7 +59,6 @@ export const projectApiService = {
     try {
       // 쿼리 생성 및 API 호출
       const query = buildProjectDetailQuery(projectId);
-      console.log(`>>>> buildProjectDetailQuery : `, query);
       const response = await apiService.get(`/projects?${query}`);
 
       return normalizeResponse(response);

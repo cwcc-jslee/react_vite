@@ -9,19 +9,14 @@ import { notification } from '@shared/services/notification';
 import { convertKeysToCamelCase } from '@shared/utils/transformUtils';
 import { projectApiService } from '../../features/project/services/projectApiService';
 import { workApiService } from '../../features/work/services/workApiService';
-
-// 필터 기본값 상수 정의
-const DEFAULT_FILTERS = {
-  pjt_status: { $in: [88, 89] }, // 진행중(88), 검수중(89)
-  work_type: 'project', // 작업 유형이 'project'인 값
-};
-
-// 페이지네이션 기본값 상수 정의
-const DEFAULT_PAGINATION = {
-  current: 1,
-  pageSize: 10,
-  total: 0,
-};
+import {
+  DEFAULT_FILTERS,
+  DEFAULT_PAGINATION,
+  DASHBOARD_INITIAL_STATE,
+  FORM_INITIAL_STATE,
+  SELECTED_ITEM_INITIAL_STATE,
+} from '../../features/project/constants/initialState';
+import { getScheduleStatus } from '../../features/project/utils/scheduleStatusUtils';
 
 // 프로젝트 목록 조회 액션
 export const fetchProjects = createAsyncThunk(
@@ -153,43 +148,164 @@ export const fetchProjectWorks = createAsyncThunk(
   },
 );
 
+// 프로젝트 상태 조회 액션 수정
+export const fetchProjectStatus = createAsyncThunk(
+  'project/fetchStatus',
+  async (_, { rejectWithValue }) => {
+    try {
+      // 상태와 진행률 데이터를 병렬로 가져오기
+      const [statusResponse, progressResponse] = await Promise.all([
+        projectApiService.get('/project-api/status'),
+        projectApiService.get('/project-api/progress'),
+      ]);
+
+      // 각 응답의 에러 체크
+      if (!statusResponse.data || !statusResponse.data.data) {
+        throw new Error('프로젝트 상태 데이터를 가져오는데 실패했습니다.');
+      }
+
+      if (!progressResponse.data || !progressResponse.data.data) {
+        throw new Error('프로젝트 진행률 데이터를 가져오는데 실패했습니다.');
+      }
+
+      const statusData = statusResponse.data.data;
+      const progressData = progressResponse.data.data;
+
+      return {
+        projectStatus: {
+          notStarted: statusData.notStarted || 0,
+          pending: statusData.pending || 0,
+          waiting: statusData.waiting || 0,
+          inProgress: statusData.inProgress || 0,
+          review: statusData.review || 0,
+          completed: statusData.recentlyCompleted || 0,
+          total: statusData.total || 0,
+        },
+        projectProgress: {
+          distribution: progressData.progressDistribution || {},
+        },
+        monthlyStats: [],
+        monthsPeriod: statusData.monthsPeriod || 0,
+      };
+    } catch (error) {
+      // 각 API 호출의 에러를 구분하여 처리
+      if (error.message.includes('상태 데이터')) {
+        return rejectWithValue({
+          type: 'status',
+          message: error.message,
+        });
+      } else if (error.message.includes('진행률 데이터')) {
+        return rejectWithValue({
+          type: 'progress',
+          message: error.message,
+        });
+      }
+      return rejectWithValue({
+        type: 'both',
+        message: error.message,
+      });
+    }
+  },
+);
+
+// 프로젝트 시간상태 조회 액션
+export const fetchProjectScheduleStatus = createAsyncThunk(
+  'project/fetchScheduleStatus',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState();
+      const { filters: storeFilters } = state.project;
+      const filters = storeFilters || {};
+
+      const pageSize = 20; // 고정 페이지 크기
+
+      // 첫 페이지를 조회하여 전체 데이터 수 확인
+      const firstPageResponse =
+        await projectApiService.getProjectScheduleStatus({
+          pagination: {
+            pageSize: pageSize,
+            current: 1,
+          },
+          filters,
+        });
+
+      if (!firstPageResponse.meta || !firstPageResponse.meta.pagination) {
+        throw new Error('페이지네이션 정보를 가져올 수 없습니다.');
+      }
+
+      const totalItems = firstPageResponse.meta.pagination.total;
+      const totalPages = Math.ceil(totalItems / pageSize);
+
+      // 모든 페이지의 데이터를 가져오기
+      const allProjects = [];
+
+      // 첫 페이지 데이터 추가 (카멜케이스로 변환)
+      if (firstPageResponse.data) {
+        allProjects.push(...convertKeysToCamelCase(firstPageResponse.data));
+      }
+
+      // 나머지 페이지 데이터 가져오기 (2페이지부터)
+      for (let page = 2; page <= totalPages; page++) {
+        const response = await projectApiService.getProjectScheduleStatus({
+          pagination: {
+            pageSize,
+            current: page,
+          },
+          filters,
+        });
+
+        if (response.data) {
+          allProjects.push(...convertKeysToCamelCase(response.data));
+        }
+      }
+
+      // 시간 상태 계산
+      const scheduleStatus = {
+        normal: 0,
+        delayed: 0,
+        imminent: 0,
+        total: allProjects.length,
+      };
+
+      allProjects.forEach((project) => {
+        const status = getScheduleStatus(project);
+
+        if (status) {
+          scheduleStatus[status]++;
+        }
+      });
+
+      return scheduleStatus;
+    } catch (error) {
+      return rejectWithValue(
+        error.message || '프로젝트 시간 상태를 가져오는데 실패했습니다.',
+      );
+    }
+  },
+);
+
 // 초기 상태
 const initialState = {
   items: [],
-  selectedItem: {
-    data: null,
-    status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
-    error: null,
-    // works 상태 추가
-    works: {
-      items: [],
-      status: 'idle',
-      error: null,
-      pagination: { ...DEFAULT_PAGINATION },
-    },
-  },
+  selectedItem: SELECTED_ITEM_INITIAL_STATE,
   status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
   error: null,
   filters: { ...DEFAULT_FILTERS },
   pagination: { ...DEFAULT_PAGINATION },
-
-  // 폼 상태
-  form: {
-    data: {
-      title: '',
-      description: '',
-      start_date: '',
-      end_date: '',
-      status: '',
-      priority: '',
-      manager: '',
-      members: [],
-      attachments: [],
+  dashboard: {
+    ...DASHBOARD_INITIAL_STATE,
+    scheduleStatus: {
+      status: 'idle',
+      error: null,
+      data: {
+        normal: 0,
+        delayed: 0,
+        imminent: 0,
+        total: 0,
+      },
     },
-    errors: {},
-    isSubmitting: false,
-    isValid: true,
   },
+  form: FORM_INITIAL_STATE,
 };
 
 const projectSlice = createSlice({
@@ -356,6 +472,61 @@ const projectSlice = createSlice({
           message: '작업 목록 조회 실패',
           description:
             action.payload || '프로젝트 작업 목록을 불러오는데 실패했습니다.',
+        });
+      })
+
+      // 프로젝트 상태 조회
+      .addCase(fetchProjectStatus.pending, (state) => {
+        state.dashboard.projectStatus.status = 'loading';
+        state.dashboard.projectProgress.status = 'loading';
+        state.dashboard.projectStatus.error = null;
+        state.dashboard.projectProgress.error = null;
+      })
+      .addCase(fetchProjectStatus.fulfilled, (state, action) => {
+        state.dashboard.projectStatus.status = 'succeeded';
+        state.dashboard.projectProgress.status = 'succeeded';
+        state.dashboard.projectStatus.data = action.payload.projectStatus;
+        state.dashboard.projectProgress.data = action.payload.projectProgress;
+        state.dashboard.monthlyStats.data = action.payload.monthlyStats;
+      })
+      .addCase(fetchProjectStatus.rejected, (state, action) => {
+        const error = action.payload;
+
+        // 에러 타입에 따라 각각 처리
+        if (error.type === 'status' || error.type === 'both') {
+          state.dashboard.projectStatus.status = 'failed';
+          state.dashboard.projectStatus.error = error.message;
+        }
+
+        if (error.type === 'progress' || error.type === 'both') {
+          state.dashboard.projectProgress.status = 'failed';
+          state.dashboard.projectProgress.error = error.message;
+        }
+
+        // 에러 알림
+        notification.error({
+          message: '데이터 조회 실패',
+          description: error.message,
+        });
+      })
+
+      // 프로젝트 시간상태 조회
+      .addCase(fetchProjectScheduleStatus.pending, (state) => {
+        state.dashboard.scheduleStatus.status = 'loading';
+        state.dashboard.scheduleStatus.error = null;
+      })
+      .addCase(fetchProjectScheduleStatus.fulfilled, (state, action) => {
+        state.dashboard.scheduleStatus.status = 'succeeded';
+        state.dashboard.scheduleStatus.data = action.payload;
+        state.dashboard.scheduleStatus.error = null;
+      })
+      .addCase(fetchProjectScheduleStatus.rejected, (state, action) => {
+        state.dashboard.scheduleStatus.status = 'failed';
+        state.dashboard.scheduleStatus.error = action.payload;
+        notification.error({
+          message: '시간 상태 조회 실패',
+          description:
+            action.payload || '프로젝트 시간 상태를 가져오는데 실패했습니다.',
         });
       });
   },

@@ -4,16 +4,17 @@ import { useDispatch } from 'react-redux';
 import { Button } from '../../../../shared/components/ui';
 import { Pagination } from '../../../../shared/components/ui/pagination/Pagination';
 import { fetchProjectDetail } from '../../store/projectStoreActions';
+import Badge from '../../../../shared/components/ui/badge/Badge';
 
 // 컴포넌트
 
 const COLUMNS = [
   { key: 'id', title: 'ID', align: 'left' },
+  { key: 'scheduleStatus', title: '일정상태', align: 'center' },
   { key: 'customer', title: '고객사', align: 'left' },
   { key: 'name', title: '프로젝트명', align: 'left' },
-  // { key: 'risk', title: '위험도', align: 'left' },
+  { key: 'progressStatus', title: '진행상태', align: 'center' },
   { key: 'importanceLevel', title: '중요도', align: 'center' },
-  { key: 'pjtStatus', title: '상태', align: 'center' },
   { key: 'projectProgress', title: '진행률', align: 'center' },
   { key: 'service', title: '서비스', align: 'center' },
   // { key: 'tag', title: '시작일', align: 'center' },
@@ -113,13 +114,63 @@ const TableRow = ({
     <tr className="hover:bg-gray-50">
       <td className="px-3 py-2 text-center text-sm">{item.id}</td>
       <td className="px-3 py-2 text-center text-sm">
+        {item?.scheduleStatus ? (
+          <Badge
+            label={item.scheduleStatus}
+            color={
+              item.scheduleStatus === 'normal'
+                ? 'success'
+                : item.scheduleStatus === 'imminent'
+                ? 'warning'
+                : item.scheduleStatus === 'delyed'
+                ? 'error'
+                : 'default'
+            }
+          />
+        ) : (
+          '-'
+        )}
+      </td>
+      <td className="px-3 py-2 text-center text-sm">
         {item?.sfa?.customer?.name || item?.customer?.name || '-'}
       </td>
       <td className="px-3 py-2 text-sm">{item.name || '-'}</td>
       <td className="px-3 py-2 text-center text-sm">
-        {item?.importanceLevel?.name}
+        {item?.pjtStatus?.name ? (
+          <Badge
+            label={item.pjtStatus.name}
+            color={
+              item.pjtStatus.name === '진행중'
+                ? 'success'
+                : item.pjtStatus.name === '보류'
+                ? 'warning'
+                : item.pjtStatus.name === '대기'
+                ? 'info'
+                : item.pjtStatus.name === '완료'
+                ? 'primary'
+                : 'default'
+            }
+          />
+        ) : (
+          '-'
+        )}
       </td>
-      <td className="px-3 py-2 text-center text-sm">{item?.pjtStatus?.name}</td>
+      <td className="px-3 py-2 text-center text-sm">
+        {item?.importanceLevel?.name ? (
+          <Badge
+            label={item.importanceLevel.name}
+            color={
+              item.importanceLevel.name === '상'
+                ? 'success'
+                : item.importanceLevel.name === '중'
+                ? 'warning'
+                : 'default'
+            }
+          />
+        ) : (
+          '-'
+        )}
+      </td>
       <td className="px-3 py-2 text-center text-sm">
         {item?.projectProgress ? `${item.projectProgress}%` : '-'}
       </td>
@@ -156,7 +207,7 @@ const ProjectList = ({
   handlePageSizeChange,
   loadProjectDetail,
 }) => {
-  console.log(`>>> pagination : `, pagination);
+  console.log(`>>> items : `, items);
   return (
     <div className="overflow-x-auto">
       <table className="w-full">

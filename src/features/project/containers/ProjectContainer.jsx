@@ -34,26 +34,16 @@ const ProjectContainer = () => {
   const { layout, components } = useSelector((state) => state.ui.pageLayout);
   const drawer = useSelector((state) => state.ui.drawer);
 
-  // 프로젝트 상태 데이터 가져오기
-  const { state } = useProject();
-  const {
-    projectStatus,
-    projectProgress,
-    monthlyStats,
-    loading: stateLoading,
-    error: stateError,
-  } = state;
-
-  // 차트 데이터 객체
-  const chartsData = {
-    projectStatus,
-    projectProgress,
-    monthlyStats,
-  };
+  // 대시보드 데이터 가져오기
+  const { projectStatus, projectProgress } = useSelector(
+    (state) => state.project.dashboard,
+  );
 
   // 컴포넌트 마운트 시 프로젝트 목록 조회
   useEffect(() => {
-    actions.refreshList();
+    actions.getProjectList();
+    actions.getProjectsWithSchedule();
+    // actions.dashboard.fetchStatus(); // 상태와 진행률 데이터를 한 번에 가져옴
 
     // 컴포넌트 언마운트 시 정리
     return () => {
@@ -61,19 +51,13 @@ const ProjectContainer = () => {
     };
   }, []); // 빈 의존성 배열로 마운트 시 1회만 실행
 
-  // 목록 레이아웃에 사용할 props
-  const listLayoutProps = {
-    components,
-    chartsData,
-  };
-
   return (
     <>
       <Section>
         {/* 레이아웃 타입에 따라 직접 조건부 렌더링 */}
-        {layout === 'list' && <ProjectListLayout {...listLayoutProps} />}
+        {layout === 'list' && <ProjectListLayout />}
         {layout === 'detail' && <ProjectDetailLayout />}
-        {layout === 'search' && <ProjectSearchLayout {...listLayoutProps} />}
+        {layout === 'search' && <ProjectSearchLayout />}
         {layout === 'work' && <ProjectWorkLayout />}
         {layout === 'task' && <ProjectTaskLayout />}
         {layout === 'add' && <ProjectAddLayout />}

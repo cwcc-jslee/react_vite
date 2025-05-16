@@ -10,17 +10,7 @@ import ProjectListSection from '../sections/ProjectListSection';
  * 상단에 차트 섹션과 하단에 테이블 섹션으로 구성
  *
  */
-const ProjectListLayout = ({
-  chartsData,
-  items,
-  pagination,
-  loading,
-  error,
-  handlePageChange,
-  handlePageSizeChange,
-  loadProjectDetail,
-  uiComponents,
-}) => {
+const ProjectListLayout = ({ projectStatus, projectProgress }) => {
   const sections = useSelector((state) => state.ui.pageLayout.sections);
 
   return (
@@ -28,21 +18,13 @@ const ProjectListLayout = ({
       {/* 차트 섹션 (상태, 진행률, 트리맵) */}
       {sections.projectCharts && (
         <ProjectChartsSection
-          projectStatus={chartsData?.projectStatus}
-          projectProgress={chartsData?.projectProgress}
+          projectStatus={projectStatus}
+          projectProgress={projectProgress}
         />
       )}
 
       {/* 테이블 섹션 */}
-      <ProjectListSection
-        items={items}
-        pagination={pagination}
-        loading={loading}
-        error={error}
-        handlePageChange={handlePageChange}
-        handlePageSizeChange={handlePageSizeChange}
-        loadProjectDetail={loadProjectDetail}
-      />
+      <ProjectListSection />
     </>
   );
 };

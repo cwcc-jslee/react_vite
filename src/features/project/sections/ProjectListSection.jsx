@@ -3,6 +3,7 @@
 import React from 'react';
 import { useProjectStore } from '../hooks/useProjectStore';
 import ProjectList from '../components/tables/ProjectList';
+import { getScheduleStatus } from '../utils/scheduleStatusUtils';
 
 /**
  * 프로젝트 목록 테이블 섹션 컴포넌트
@@ -19,6 +20,12 @@ const ProjectListSection = () => {
     // 액션
     actions,
   } = useProjectStore();
+
+  // 일정상태 계산된 items 생성
+  const itemsWithScheduleStatus = items.map((item) => ({
+    ...item,
+    scheduleStatus: getScheduleStatus(item),
+  }));
 
   console.log(`ProjectListSection items: `, items);
 
@@ -39,7 +46,7 @@ const ProjectListSection = () => {
   return (
     <div className="space-y-4">
       <ProjectList
-        items={items}
+        items={itemsWithScheduleStatus}
         pagination={pagination}
         loading={status === 'loading'}
         error={error}
