@@ -343,12 +343,12 @@ export const PAGE_MENUS = {
           },
         },
       },
-      assignedTasks: {
-        label: '나에게 할당',
+      searchTasks: {
+        label: '작업 검색',
         permissions: ['user'],
         visible: true,
         config: {
-          layout: 'assignedTasks',
+          layout: 'todayTasks',
           sections: {
             contactHeader: true,
             contactSearch: true,

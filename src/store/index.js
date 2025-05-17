@@ -17,6 +17,7 @@ import pageFormReducer from './slices/pageFormSlice';
 import projectReducer from './slices/projectSlice';
 import workReducer from './slices/workSlice';
 import taskReducer from './slices/taskSlice';
+import todoReducer from './slices/todoSlice';
 
 // 변경 삭제 예정
 // import projectReducer from '../features/project/store/projectSlice';
@@ -37,16 +38,15 @@ export const store = configureStore({
 
     // 새로 추가된 리듀서
     ui: uiReducer,
-
-    // 새로운 페이지 상태 관리 리듀서 (project, customer, sfa 등 통합)
-    pageState: pageStateReducer,
-    pageForm: pageFormReducer,
+    project: projectReducer,
+    todo: todoReducer,
 
     // work 상태 관리 리듀서(다른 페이지에서 사용 필요하여 별도 구성)
-    project: projectReducer,
     projectBucket: projectBucketReducer,
     task: taskReducer,
     work: workReducer,
+    pageState: pageStateReducer,
+    pageForm: pageFormReducer,
 
     // 삭제, 이동 예정
     // project: projectReducer, // 삭제 예정..

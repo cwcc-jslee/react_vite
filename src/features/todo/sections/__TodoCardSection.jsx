@@ -8,7 +8,7 @@ import dayjs from 'dayjs';
  * ToDo 카드 목록 섹션 컴포넌트
  * ToDo 목록 표시 및 필터링 담당
  */
-const TodoCardSection = ({ onTaskAction, selectedTaskId }) => {
+const TodoSection = ({ onTaskAction, selectedTaskId }) => {
   // 필터 상태 관리
   const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(true);
   const [taskDateFilter, setTaskDateFilter] = useState('started');
@@ -148,4 +148,4 @@ const TodoCardSection = ({ onTaskAction, selectedTaskId }) => {
   );
 };
 
-export default TodoCardSection;
+export default TodoSection;

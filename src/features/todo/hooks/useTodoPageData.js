@@ -57,127 +57,12 @@ const useTodoPageData = ({
   // 현재 로그인한 사용자 정보 조회
   const currentUser = useSelector((state) => state.auth.user?.user || null);
 
-  // 필터 설정 (API 호출에 사용할 형식으로 구성)
-  // const getTaskFilters = useMemo(() => {
-  //   // 기본 필터 구조 설정
-  //   const filters = {
-  //     $and: [],
-  //   };
-
-  //   // 필터 조건이 있는 경우 $and 조건 추가
-  //   const additionalConditions = {};
-
-  //   // 진행중인 프로젝트 작업만 조회 (project.pjt_status.id = 88인 프로젝트)
-  //   additionalConditions.project = {
-  //     pjt_status: {
-  //       id: {
-  //         $eq: 88,
-  //       },
-  //     },
-  //   };
-
-  //   // 로그인한 사용자의 작업만 조회 (users.id = 현재 사용자 ID)
-  //   if (currentUser) {
-  //     additionalConditions.users = {
-  //       id: {
-  //         $eq: currentUser.id,
-  //       },
-  //     };
-  //   }
-
-  //   // 추가 필터 조건이 있는 경우 $and 배열에 추가
-  //   if (Object.keys(additionalConditions).length > 0) {
-  //     filters.$and.push(additionalConditions);
-  //   }
-
-  //   // 사용자 지정 필터가 있으면 병합
-  //   if (Object.keys(taskFilters).length > 0) {
-  //     filters.$and.push(taskFilters);
-  //   }
-
-  //   return filters;
-  // }, [taskFilters, currentUser]);
-
-  // Redux 에러 상태 변경 감지
-  // useEffect(() => {
-  //   if (tasksError || worksError) {
-  //     hasError.current = true;
-  //     setCustomError(tasksError || worksError);
-  //   } else if (!isManualLoading) {
-  //     hasError.current = false;
-  //     setCustomError(null);
-  //   }
-  // }, [tasksError, worksError, isManualLoading]);
-
-  // 데이터 로드 함수
-  // const loadData = useCallback(
-  //   async (isManual = false) => {
-  //     // 에러가 있고 수동 요청이 아니면 로드하지 않음
-  //     if (hasError.current && !isManual) {
-  //       return;
-  //     }
-
-  //     try {
-  //       if (isManual) {
-  //         setIsManualLoading(true);
-  //         setCustomError(null);
-  //       }
-
-  //       await Promise.all([
-  //         dispatch(fetchTasks({ filters: getTaskFilters })),
-  //         dispatch(fetchWorks({ filters: workFilters })),
-  //       ]);
-
-  //       if (isManual) {
-  //         setIsManualLoading(false);
-  //       }
-  //     } catch (error) {
-  //       setCustomError(error.message || '데이터 로드 중 오류가 발생했습니다');
-  //       if (isManual) {
-  //         setIsManualLoading(false);
-  //       }
-  //     }
-  //   },
-  //   [dispatch, getTaskFilters, workFilters],
-  // );
-
-  // 컴포넌트 마운트 시 최초 1회만 데이터 로드
-  // useEffect(() => {
-  //   if (loadOnMount && !initialLoadDone.current) {
-  //     initialLoadDone.current = true;
-  //     loadData(false);
-  //   }
-  // }, [loadOnMount]); // 빈 배열로 처리하여 최초 1회만 실행
-
-  // // 필터 변경 시 데이터 재로드
-  // useEffect(() => {
-  //   // 초기 로드가 완료되었고, 에러가 없는 경우에만 필터 변경 시 데이터 재로드
-  //   if (initialLoadDone.current && !hasError.current) {
-  //     loadData(false);
-  //   }
-  // }, [filterKey]); // filterKey가 변경될 때만 실행
-
-  // 수동 데이터 새로고침 함수 (사용자가 명시적으로 호출할 때만 실행)
-  // const refreshData = useCallback(() => {
-  //   // 에러 상태 리셋
-  //   hasError.current = false;
-  //   // 수동 로드 실행
-  //   loadData(true);
-  // }, [loadData]);
-
   // 로딩 상태 통합
   const isLoading =
     tasksStatus === 'loading' || worksStatus === 'loading' || isManualLoading;
 
   // 에러 상태 통합
   const error = customError || tasksError || worksError;
-
-  // 디버깅용 로그
-  // useEffect(() => {
-  //   if (process.env.NODE_ENV !== 'production') {
-  //     console.log('Task filters:', getTaskFilters);
-  //   }
-  // }, [getTaskFilters]);
 
   return {
     // 원본 데이터

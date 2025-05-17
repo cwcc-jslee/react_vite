@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 /**
  * Todo 패널 기능을 관리하는 훅
  * 선택된 작업과 활성 패널 상태를 관리하고 관련 기능 제공
+ * ==== 수정 예정 ====
  *
  * @returns {Object} 패널 관련 상태와 함수들
  */

@@ -16,22 +16,20 @@ import { useCodebook } from '@shared/hooks/useCodebook';
 import { useWorkStore } from '../../hooks/useWorkStore';
 import { useWorkSubmit } from '../../hooks/useWorkSubmit';
 import { closeDrawer } from '../../../../store/slices/uiSlice';
+import { useUiStore } from '@shared/hooks/useUiStore';
 
 const WorkAddForm = ({ taskId }) => {
   const dispatch = useDispatch();
+  const { drawer, actions: uiActions } = useUiStore();
   const { form, actions, validateForm, processSubmit } = useWorkStore();
   const { isSubmitting, handleFormSubmit } = useWorkSubmit();
 
   // task 상태 가져오기
-  const taskState = useSelector((state) => state.task);
-  const { items: tasks } = taskState;
+  const currentTask = drawer.data;
 
   // auth 상태 가져오기
   const authState = useSelector((state) => state.auth);
   const { user } = authState;
-
-  // taskId에 해당하는 작업 정보 찾기
-  const currentTask = tasks.find((task) => task.id === taskId);
 
   const { data: codebooks, isLoading: isLoadingCodebook } = useCodebook([
     'taskProgress', // TASK 진행률
@@ -245,11 +243,22 @@ const WorkAddForm = ({ taskId }) => {
             required
           >
             <option value="">진행율 선택</option>
-            {codebooks.taskProgress?.map((status) => (
-              <option key={status.id} value={status.id}>
-                {status.name}
-              </option>
-            ))}
+            {codebooks.taskProgress
+              ?.filter((status) => {
+                // 현재 진행률 값 추출 (숫자만)
+                const currentProgress = parseInt(
+                  form.data.taskProgress?.name?.replace('%', '') || '0',
+                );
+                // 비교할 진행률 값 추출 (숫자만)
+                const statusProgress = parseInt(status.name.replace('%', ''));
+                // 현재 진행률보다 크거나 같은 값만 필터링
+                return statusProgress >= currentProgress;
+              })
+              .map((status) => (
+                <option key={status.id} value={status.id}>
+                  {status.name}
+                </option>
+              ))}
           </Select>
         </FormItem>
 

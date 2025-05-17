@@ -90,6 +90,32 @@ export const buildProjectListQuery = (params) => {
   return qs.stringify(query, { encodeValuesOnly: true });
 };
 
+/**
+ * CUSTOMER 목록 조회를 위한 쿼리 파라미터 생성
+ */
+export const buildProjectListNameQuery = (params) => {
+  const { pagination = { current: 1, pageSize: 25 }, filters = {} } = params;
+
+  // 기본 필터 정의 (삭제되지 않은 항목만 조회)
+  const baseFilter = { is_deleted: { $eq: false } };
+
+  // 필터 결합
+  const combinedFilters = combineFilters(baseFilter, filters);
+
+  // 쿼리 구성
+  const query = {
+    filters: combinedFilters,
+    fields: ['name'],
+    pagination: {
+      start: (pagination.current - 1) * pagination.pageSize,
+      limit: pagination.pageSize,
+    },
+    sort: ['id:desc'],
+  };
+
+  return qs.stringify(query, { encodeValuesOnly: true });
+};
+
 export const buildProjectDetailQuery = (id) => {
   return qs.stringify(
     {

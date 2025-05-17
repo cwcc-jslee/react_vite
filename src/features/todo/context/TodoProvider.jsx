@@ -10,6 +10,8 @@ import { apiService } from '@shared/api/apiService';
 import { fetchWorks } from '../../../store/slices/workSlice';
 import { useProjectTaskStore } from '../../project/hooks/useProjectTaskStore';
 import dayjs from 'dayjs';
+import { useTodoStore } from '../hooks/useTodoStore';
+import { useTodoFilterAction } from '../hooks/useTodoFilterAction';
 
 const TodoContext = createContext(null);
 const todoReducer = (state, action) => {
@@ -35,6 +37,8 @@ export const TodoProvider = ({ children }) => {
   // 현재 로그인한 사용자 정보 조회
   const currentUser = useSelector((state) => state.auth.user?.user || null);
   const { actions: taskActions } = useProjectTaskStore();
+  const { actions } = useTodoStore();
+  const { actions: filterActions } = useTodoFilterAction();
 
   // 데이터 상태
   const [state, dispatchTodo] = useReducer(todoReducer, {
@@ -102,9 +106,13 @@ export const TodoProvider = ({ children }) => {
   // Provider 마운트시 자동으로 데이터 로드
   useEffect(() => {
     // 초기 필터 설정 및 작업 목록 조회
-    const initialFilters = getTaskFilters();
-    taskActions.filter.setFilters(initialFilters);
-    taskActions.fetchTasks({ filters: initialFilters });
+    filterActions.user.set(currentUser?.id, true);
+    // const initialFilters = getTaskFilters();
+    // actions.filter.setFilters(initialFilters);
+    // actions.getTodos({ filters: initialFilters });
+    //
+    // taskActions.filter.setFilters(initialFilters);
+    // taskActions.fetchTasks({ filters: initialFilters });
 
     // 작업 데이터 로드
     // fetchWorkData();

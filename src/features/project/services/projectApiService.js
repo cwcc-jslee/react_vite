@@ -11,6 +11,7 @@ import { apiClient } from '../../../shared/api/apiClient';
 import { handleApiError } from '../../../shared/api/errorHandlers';
 import {
   buildProjectListQuery,
+  buildProjectListNameQuery,
   buildProjectDetailQuery,
   buildProjectTaskListQuery,
   buildProjectScheduleStatusQuery,
@@ -32,6 +33,23 @@ export const projectApiService = {
       return normalizeResponse(response);
     } catch (error) {
       handleApiError(error, '프로젝트 목록을 불러오는 중 오류가 발생했습니다.');
+    }
+  },
+
+  /**
+   * 프로젝트트 목록 조회
+   * @param {Object} params - 검색 파라미터
+   * 프로젝트 이름 조회
+   */
+  getProjectListName: async (params) => {
+    try {
+      // 쿼리 생성 및 API 호출
+      const query = buildProjectListNameQuery(params);
+      const response = await apiService.get(`/projects?${query}`);
+
+      return normalizeResponse(response);
+    } catch (error) {
+      handleApiError(error, '프로젝트 이름을 불러오는 중 오류가 발생했습니다.');
     }
   },
 

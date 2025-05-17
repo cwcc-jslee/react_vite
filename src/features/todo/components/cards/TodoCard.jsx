@@ -3,8 +3,6 @@
 // 작업 일정 상태(정상, 지연)를 시각적으로 표시하고 남은 일수/경과 일수를 계산하여 보여줌
 
 import React, { useMemo } from 'react';
-import { useDispatch } from 'react-redux';
-import { setDrawer } from '../../../../store/slices/uiSlice';
 import {
   Checkbox,
   Badge,
@@ -26,13 +24,10 @@ import dayjs from 'dayjs';
 
 const TodoCard = ({
   task = null, // 작업 데이터 객체
-  onAction = () => {}, // 작업 액션 핸들러 (상세보기, 수정 등)
+  onCardMenuClick = () => {}, // 작업 메뉴 클릭 핸들러
   isSelected = false, // 현재 선택된 작업인지 여부
 }) => {
-  const dispatch = useDispatch();
-
   if (!task) return null;
-  // console.log('>>>task', task);
 
   // 날짜 포맷 헬퍼 함수 (dayjs 사용)
   const formatDate = (dateString) => {
@@ -151,25 +146,6 @@ const TodoCard = ({
         return 'border-gray-200';
     }
   }, [isOngoing, getScheduleStatus, isSelected]);
-
-  // 메뉴 클릭 핸들러
-  const handleMenuItemClick = (item) => {
-    if (item.key === 'add') {
-      // 작업등록 클릭 시 Drawer 열기
-      dispatch(
-        setDrawer({
-          visible: true,
-          mode: 'add',
-          options: {
-            taskId: task.id,
-          },
-        }),
-      );
-    } else {
-      // 다른 메뉴 항목 클릭 시 기존 동작 유지
-      onAction(task, item.key);
-    }
-  };
 
   // 원형 진행률 컴포넌트
   const CircularProgress = ({ progress, revisionNumber }) => {
@@ -295,7 +271,7 @@ const TodoCard = ({
                     label: '작업등록',
                   },
                 ],
-                onClick: handleMenuItemClick,
+                onClick: (item) => onCardMenuClick(item, task),
               }}
               trigger={['click']}
             >
