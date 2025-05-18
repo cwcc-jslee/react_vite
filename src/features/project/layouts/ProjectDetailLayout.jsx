@@ -7,6 +7,7 @@ import React, { useEffect } from 'react';
 // 커스텀 훅
 import { useProjectStore } from '../hooks/useProjectStore';
 import useWorkStore from '../../work/hooks/useWorkStore';
+import { useProjectBucketStore } from '../hooks/useProjectBucketStore';
 
 // 컴포넌트
 import ProjectDetailTableSection from '../sections/ProjectDetailTableSection';
@@ -19,13 +20,30 @@ const ProjectDetailLayout = () => {
   // Detail 상태 가져오기
   const { selectedItem, actions } = useProjectStore();
   const { data, status, error } = selectedItem || {};
+  const { actions: bucketActions } = useProjectBucketStore();
 
   // 컴포넌트 언마운트 selectedItem 초기화
   useEffect(() => {
     return () => {
       actions.detail.clearDetail();
+      bucketActions.bucket.resetKanbanBoard();
     };
   }, []);
+
+  // 프로젝트 태스크 데이터를 칸반 보드에 동기화
+  useEffect(() => {
+    // 데이터 로딩이 완료되고 데이터가 있는 경우에만 동기화 실행
+    if (
+      status === 'succeeded' &&
+      data?.projectTaskBuckets?.length > 0 &&
+      data?.projectTasks?.length > 0
+    ) {
+      bucketActions.bucket.syncProjectTasksToKanban(
+        data.projectTaskBuckets,
+        data.projectTasks,
+      );
+    }
+  }, [status, data?.projectTaskBuckets, data?.projectTasks]);
 
   // 로딩 상태 처리
   if (status === 'loading') {
@@ -65,7 +83,8 @@ const ProjectDetailLayout = () => {
       />
       {/* 프로젝트 테스크 섹션 */}
       <ProjectDetailTaskSection
-        projectTaskBuckets={projectTaskBuckets}
+        // data={data}
+        // projectTaskBuckets={projectTaskBuckets}
         projectTasks={projectTasks}
       />
     </div>

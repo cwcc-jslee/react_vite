@@ -15,13 +15,7 @@ import { FiCheckSquare, FiClock, FiCalendar } from 'react-icons/fi';
  * 프로젝트 작업 테이블 컴포넌트
  * 프로젝트의 작업 목록을 테이블 형태로 표시
  */
-const ProjectTaskList = ({
-  allTasks = [], // 인덱스가 포함된 모든 작업 배열 받기
-  loading = false,
-  error = null,
-
-  onTaskEdit = () => {},
-}) => {
+const ProjectTaskList = ({ projectTasks = [] }) => {
   console.log(`>>>> project task list  실행`);
   const dispatch = useDispatch();
 
@@ -43,8 +37,7 @@ const ProjectTaskList = ({
     }
   };
 
-  // console.log(`==== buckets `, buckets);
-  console.log(`==== allTasks `, allTasks);
+  console.log(`==== projectTasks `, projectTasks);
 
   // 날짜 포맷팅 함수
   const formatDate = (dateString) => {
@@ -99,39 +92,12 @@ const ProjectTaskList = ({
     { key: 'priority', title: '우선순위', align: 'center' },
   ];
 
-  // 로딩 상태 표시 컴포넌트
-  const LoadingState = () => (
-    <tr>
-      <td colSpan={columns.length} className="py-8">
-        <div className="flex items-center justify-center gap-3">
-          <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm text-gray-500">
-            데이터를 불러오는 중입니다...
-          </span>
-        </div>
-      </td>
-    </tr>
-  );
-
   // 빈 데이터 상태 표시 컴포넌트
   const EmptyState = () => (
     <tr>
       <td colSpan={columns.length} className="py-8">
         <div className="flex flex-col items-center justify-center gap-2">
           <span className="text-sm text-gray-500">등록된 작업이 없습니다</span>
-        </div>
-      </td>
-    </tr>
-  );
-
-  // 에러 상태 표시 컴포넌트
-  const ErrorState = ({ message }) => (
-    <tr>
-      <td colSpan={columns.length} className="py-8">
-        <div className="flex flex-col items-center justify-center gap-2">
-          <span className="text-sm text-red-500">
-            {message || '데이터를 불러오는 중 오류가 발생했습니다'}
-          </span>
         </div>
       </td>
     </tr>
@@ -145,8 +111,6 @@ const ProjectTaskList = ({
       setDrawer({
         visible: true,
         mode: 'view',
-        // type: 'task',
-        // data: task,
         options: {
           taskId: task.id,
           bucketIndex: task._bucketIndex,
@@ -156,13 +120,7 @@ const ProjectTaskList = ({
     );
   };
 
-  // 체크박스 클릭 시 이벤트 전파 중지
-  const handleCheckboxClick = (e) => {
-    e.stopPropagation();
-  };
-
   return (
-    // <Card>
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
@@ -182,28 +140,23 @@ const ProjectTaskList = ({
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {loading ? (
-            <LoadingState />
-          ) : error ? (
-            <ErrorState message={error} />
-          ) : !allTasks?.length ? (
+          {!projectTasks?.length ? (
             <EmptyState />
           ) : (
-            allTasks.map((task, index) => (
+            projectTasks.map((task, index) => (
               <tr
                 key={task.id || index}
                 className={`hover:bg-gray-50 ${
-                  task.completed ? 'bg-gray-50' : ''
+                  task.taskProgress?.name === '100%' ? 'bg-gray-50' : ''
                 } cursor-pointer`}
-                onClick={() => handleRowClick(task)}
               >
                 {/* 순번 */}
                 <td className="px-3 py-2 text-center text-sm">{index + 1}</td>
                 {/* 완료 체크박스 */}
                 <td className="px-3 py-2 text-center">
                   <Checkbox
-                    checked={task.completed}
-                    // onChange={(e) => onTaskComplete(task.id, e.target.checked)}
+                    checked={task.taskProgress?.name === '100%'}
+                    disabled={true}
                   />
                 </td>
 
@@ -211,9 +164,10 @@ const ProjectTaskList = ({
                 <td className="px-3 py-2 text-sm">
                   <div
                     className={`${
-                      task.completed ? 'line-through text-gray-400' : ''
+                      task.taskProgress?.name === '100%'
+                        ? 'line-through text-gray-400'
+                        : ''
                     }`}
-                    onClick={() => onTaskEdit(task.id)}
                   >
                     {task.name}
                   </div>
@@ -222,7 +176,7 @@ const ProjectTaskList = ({
                 {/* 버킷 */}
                 <td className="px-3 py-2 text-center text-sm">
                   <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-md text-xs">
-                    {task.bucket}
+                    {task?.projectTaskBucket?.name}
                   </span>
                 </td>
 
@@ -363,7 +317,7 @@ const ProjectTaskList = ({
                   <Progress
                     percent={
                       typeof task.taskProgress?.name === 'string'
-                        ? parseInt(task.taskProgress.name, 10) // 10은 10진법
+                        ? parseInt(task.taskProgress.name, 10)
                         : task.taskProgress?.name || 0
                     }
                     size="sm"
@@ -390,7 +344,6 @@ const ProjectTaskList = ({
         </tbody>
       </table>
     </div>
-    // </Card>
   );
 };
 

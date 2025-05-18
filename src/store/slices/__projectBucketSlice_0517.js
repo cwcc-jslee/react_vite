@@ -2,17 +2,12 @@
 /**
  * 프로젝트 태스크 상태 관리를 위한 Redux 슬라이스
  * 프로젝트의 작업 데이터와 UI 상태를 관리합니다.
- *
- * 주요 기능:
- * 1. 버킷(컬럼) 및 태스크 CRUD 관리
- * 2. 편집 상태 관리
- * 3. 에러 및 로딩 상태 관리
  */
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-// 초기 상태 상수 정의
-export const BUCKET_INITIAL_STATE = {
+// 초기 상태
+const initialState = {
   buckets: [],
   editState: {
     isEditing: false,
@@ -29,7 +24,7 @@ export const BUCKET_INITIAL_STATE = {
 // 슬라이스 생성
 const projectBucketSlice = createSlice({
   name: 'projectBucket',
-  initialState: BUCKET_INITIAL_STATE,
+  initialState,
   reducers: {
     // 작업 버킷 설정 (전체 데이터 교체)
     setBuckets: (state, action) => {
@@ -253,7 +248,7 @@ const projectBucketSlice = createSlice({
     // 초기화
     resetKanban: (state) => {
       return {
-        ...BUCKET_INITIAL_STATE,
+        ...initialState,
       };
     },
   },

@@ -38,6 +38,11 @@ const TodoSection = ({ tasks, activeMenu }) => {
   const filteredTasks = useCallback(() => {
     if (!tasks) return [];
 
+    // activeMenu가 'todayTasks'가 아닌 경우 원본 tasks 반환
+    if (activeMenu !== 'todayTasks') {
+      return tasks;
+    }
+
     const today = dayjs().startOf('day');
 
     return tasks.filter((task) => {
@@ -49,7 +54,7 @@ const TodoSection = ({ tasks, activeMenu }) => {
         return planStartDate.isAfter(today);
       }
     });
-  }, [tasks, taskDateFilter]);
+  }, [tasks, taskDateFilter, activeMenu]);
 
   // 패널 관련 함수
   // 패널 헤더에 추가할 액션 버튼 - 패널 타입에 따라 다르게 설정

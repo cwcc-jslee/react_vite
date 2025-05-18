@@ -46,7 +46,10 @@ const TodoSearchForm = ({ onSearchResult }) => {
         const filters = {
           $and: [
             {
-              customer: { id: { $eq: customer?.id } },
+              $or: [
+                { customer: { id: { $eq: customer?.id } } },
+                { sfa: { customer: { id: { $eq: customer?.id } } } },
+              ],
             },
             {
               pjt_status: { $in: [87, 88, 89] }, // 대기,진행중,검수
