@@ -86,6 +86,7 @@ const ProjectDetailLayout = () => {
         // data={data}
         // projectTaskBuckets={projectTaskBuckets}
         projectTasks={projectTasks}
+        bucketActions={bucketActions}
       />
     </div>
   );

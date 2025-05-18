@@ -8,7 +8,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { notification } from '@shared/services/notification';
 import { convertKeysToCamelCase } from '@shared/utils/transformUtils';
 import { projectApiService } from '../../features/project/services/projectApiService';
-import { workApiService } from '../../features/work/services/workApiService';
+import { todoApiService } from '../../features/todo/services/todoApiService';
 import {
   DEFAULT_FILTERS,
   DEFAULT_PAGINATION,
@@ -128,7 +128,7 @@ export const fetchProjectWorks = createAsyncThunk(
       };
 
       // API 호출
-      const response = await workApiService.getWorkList({
+      const response = await todoApiService.getWorkList({
         pagination,
         filters,
         ...params.additionalParams,

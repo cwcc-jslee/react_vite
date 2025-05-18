@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux';
 import { setDrawer, closeDrawer } from '../../../../store/slices/uiSlice';
 import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer';
 import ActionMenuBar from '../../../../shared/components/ui/button/ActionMenuBar';
-import WorkAddForm from '../../../work/components/forms/WorkAddForm';
+import WorkAddForm from '../forms/WorkAddForm';
 
 const TodoDrawer = ({ drawer }) => {
   const dispatch = useDispatch();

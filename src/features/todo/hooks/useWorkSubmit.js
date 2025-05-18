@@ -14,18 +14,18 @@
 import { useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { notification } from '@shared/services/notification';
-import { useWorkStore } from './useWorkStore';
+import { useTodoStore } from './useTodoStore';
 import {
   prepareFormData,
   convertKeysToSnakeCase,
 } from '@shared/utils/transformUtils';
-import { workApiService } from '../services/workApiService';
-import { setWorkFormSubmitting } from '../../../store/slices/workSlice';
+import { todoApiService } from '../services/todoApiService';
+import { setFormSubmitting } from '../../../store/slices/todoSlice';
 import { validateWorkForm } from '../utils/validateWorkForm';
 
 export const useWorkSubmit = () => {
   const dispatch = useDispatch();
-  const { form, updateFormField } = useWorkStore();
+  const { form, updateFormField } = useTodoStore();
 
   /**
    * 폼 제출 처리
@@ -34,7 +34,7 @@ export const useWorkSubmit = () => {
   const handleFormSubmit = useCallback(
     async (formData) => {
       try {
-        dispatch(setWorkFormSubmitting(true));
+        dispatch(setFormSubmitting(true));
 
         // 1. 유효성 검사
         const { isValid, errors: validationErrors } =
@@ -62,7 +62,7 @@ export const useWorkSubmit = () => {
 
         // 3. API 제출
         console.log(`>>>>> api 제출 : `, snakeCaseData);
-        const response = await workApiService.createWork(snakeCaseData);
+        const response = await todoApiService.createWork(snakeCaseData);
 
         notification.success({
           message: '작업 등록 성공',
@@ -78,7 +78,7 @@ export const useWorkSubmit = () => {
         });
         return false;
       } finally {
-        dispatch(setWorkFormSubmitting(false));
+        dispatch(setFormSubmitting(false));
       }
     },
     [dispatch],

@@ -6,7 +6,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { notification } from '@shared/services/notification';
 import { convertKeysToCamelCase } from '@shared/utils/transformUtils';
-import { workApiService } from '../../features/work/services/workApiService';
 import { todoApiService } from '../../features/todo/services/todoApiService';
 import {
   DEFAULT_PAGINATION,
@@ -58,7 +57,8 @@ export const fetchWorks = createAsyncThunk(
     try {
       const state = getState();
       // 워크슬라이스의 상태 참조
-      const { pagination: storePagination, filters: storeFilters } = state.work;
+      const { pagination: storePagination, filters: storeFilters } =
+        state.todo.work;
 
       // 페이지네이션만 파라미터 우선, 필터는 항상 스토어 사용
       const pagination =
@@ -66,6 +66,7 @@ export const fetchWorks = createAsyncThunk(
 
       // 항상 스토어의 필터 사용
       const filters = storeFilters || {};
+      console.log('>>>>>>>>filters', filters);
 
       // API 호출 코드 (workApiService 사용)
       const response = await todoApiService.getWorkList({
@@ -250,16 +251,16 @@ const todoSlice = createSlice({
 
     // WORK 필터 초기화
     resetWorkFilters: (state) => {
-      state.work.filters = {};
+      state.work.filters = { $and: [] };
       state.work.pagination = { ...DEFAULT_PAGINATION };
     },
 
     // 폼 필드 업데이트
     updateFormField: (state, action) => {
       const { name, value } = action.payload;
-      state.form[name] = value;
+      state.form.data[name] = value;
 
-      // uc5d0ub7ec ucd08uae30ud654
+      // 에러 초기화
       if (state.form.errors[name]) {
         state.form.errors[name] = null;
       }
@@ -268,6 +269,15 @@ const todoSlice = createSlice({
     // 폼 초기화
     resetForm: (state) => {
       state.form = { ...FORM_INITIAL_STATE };
+    },
+
+    // 폼 데이터 일괄 업데이트
+    initializeFormData: (state, action) => {
+      state.form.data = {
+        ...state.form.data,
+        ...action.payload,
+      };
+      state.form.errors = {};
     },
 
     // 폼 오류 상태 설정
@@ -343,6 +353,7 @@ export const {
   setFormErrors,
   setFormSubmitting,
   resetForm,
+  initializeFormData,
   setFormIsValid,
   updateNestedFilter,
   updateFilterArray,

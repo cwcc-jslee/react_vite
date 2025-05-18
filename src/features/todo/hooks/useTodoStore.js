@@ -22,6 +22,7 @@ import {
   resetWorkFilters,
   updateFormField,
   resetForm,
+  initializeFormData,
   setFormErrors,
   setFormSubmitting,
   setFormIsValid,
@@ -146,11 +147,19 @@ export const useTodoStore = () => {
     // 폼 액션
     form: {
       updateField: (name, value) => dispatch(updateFormField({ name, value })),
+      initializeForm: (formData) => {
+        dispatch(resetForm());
+        dispatch(initializeFormData(formData));
+      },
       setErrors: (errors) => dispatch(setFormErrors(errors)),
       setSubmitting: (isSubmitting) =>
         dispatch(setFormSubmitting(isSubmitting)),
       setValid: (isValid) => dispatch(setFormIsValid(isValid)),
       resetForm: () => dispatch(resetForm()),
+      getFormData: () => form.data,
+      getFormErrors: () => form.errors,
+      isSubmitting: () => form.isSubmitting,
+      isValid: () => form.isValid,
     },
   };
 

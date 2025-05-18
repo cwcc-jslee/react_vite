@@ -12,16 +12,19 @@ import {
   TextArea,
 } from '../../../../shared/components/ui';
 import { notification } from '@shared/services/notification';
+
+// hooks
 import { useCodebook } from '@shared/hooks/useCodebook';
-import { useWorkStore } from '../../hooks/useWorkStore';
+import { useTodoStore } from '@features/todo/hooks/useTodoStore';
 import { useWorkSubmit } from '../../hooks/useWorkSubmit';
 import { closeDrawer } from '../../../../store/slices/uiSlice';
 import { useUiStore } from '@shared/hooks/useUiStore';
 
-const WorkAddForm = ({ taskId }) => {
+const WorkAddForm = () => {
   const dispatch = useDispatch();
   const { drawer, actions: uiActions } = useUiStore();
-  const { form, actions, validateForm, processSubmit } = useWorkStore();
+  // const { form, actions, validateForm, processSubmit } = useWorkStore();
+  const { form, actions } = useTodoStore();
   const { isSubmitting, handleFormSubmit } = useWorkSubmit();
 
   // task 상태 가져오기
@@ -141,7 +144,7 @@ const WorkAddForm = ({ taskId }) => {
     try {
       await handleFormSubmit(form.data);
       // 폼 제출 완료 후 처리
-
+      actions.getTodos();
       // drawer 닫기
       dispatch(closeDrawer());
     } catch (error) {
@@ -196,7 +199,9 @@ const WorkAddForm = ({ taskId }) => {
           <Input
             type="date"
             name="workDate"
-            onChange={actions.form.updateField}
+            onChange={(e) =>
+              actions.form.updateField('workDate', e.target.value)
+            }
             value={form.data.workDate}
             disabled={isSubmitting}
             required

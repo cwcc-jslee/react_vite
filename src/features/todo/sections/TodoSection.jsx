@@ -3,7 +3,7 @@ import TodoCard from '../components/cards/TodoCard';
 import useTodoPanel from '../hooks/useTodoPanel';
 import { Button, Switch, Alert, Card } from '@shared/components/ui';
 import dayjs from 'dayjs';
-import WorkAddForm from '../../work/components/forms/WorkAddForm';
+// import WorkAddForm from '../components/forms/WorkAddForm';
 import TodoDetailPanel from '../components/panels/TodoDetailPanel';
 import { useUiStore } from '@shared/hooks/useUiStore';
 /**
@@ -102,8 +102,9 @@ const TodoSection = ({ tasks, activeMenu }) => {
     switch (activePanel) {
       case 'view':
         return <TodoDetailPanel task={selectedTask} />;
-      case 'add':
-        return <WorkAddForm />;
+      // case 'add':
+      // return <WorkAddForm />;
+      // TodoDrawer 컴포넌트 사용
       default:
         return <div className="p-4">컨텐츠가 정의되지 않았습니다.</div>;
     }

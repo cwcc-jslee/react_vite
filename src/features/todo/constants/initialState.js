@@ -27,13 +27,18 @@ export const DEFAULT_FILTERS = {
 };
 
 export const FORM_INITIAL_STATE = {
-  title: '',
-  description: '',
-  status: 'todo',
-  priority: 'medium',
-  assignee: null,
-  dueDate: null,
-  errors: {},
+  data: {
+    // projectTask: '',
+    // taskProgress: '',
+    // workDate: '',
+    // workHours: '',
+    // nonBillableHours: '',
+    // revisionNumber: '',
+    // user: '',
+    // team: '',
+    // notes: '',
+  },
+  errors: null,
   isSubmitting: false,
-  isValid: false,
+  isValid: true,
 };

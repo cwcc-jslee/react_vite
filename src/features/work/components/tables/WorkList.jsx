@@ -21,22 +21,6 @@ const COLUMNS = [
   { key: 'action', title: 'Action', align: 'center' },
 ];
 
-// 테이블 로딩 상태 컴포넌트
-const TableLoadingIndicator = ({ columnsCount }) => {
-  return (
-    <tr>
-      <td colSpan={columnsCount} className="py-8">
-        <div className="flex items-center justify-center gap-3">
-          <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm text-gray-500">
-            데이터를 불러오는 중입니다...
-          </span>
-        </div>
-      </td>
-    </tr>
-  );
-};
-
 // 테이블 빈 상태 컴포넌트
 const TableEmptyState = ({ columnsCount }) => {
   return (
@@ -50,34 +34,8 @@ const TableEmptyState = ({ columnsCount }) => {
   );
 };
 
-// 테이블 에러 상태 컴포넌트
-const TableErrorState = ({ columnsCount, message }) => {
-  return (
-    <tr>
-      <td colSpan={columnsCount} className="py-8">
-        <div className="flex flex-col items-center justify-center gap-2">
-          <span className="text-sm text-red-500">
-            {message || '데이터를 불러오는 중 오류가 발생했습니다'}
-          </span>
-        </div>
-      </td>
-    </tr>
-  );
-};
-
 // 테이블 행 컴포넌트
-const TableRow = ({
-  item,
-  index,
-  pageSize,
-  currentPage,
-  loadProjectDetail,
-}) => {
-  // 프로젝트 상세정보 조회 핸들러
-  const handleViewDetail = () => {
-    loadProjectDetail(item.id);
-  };
-
+const TableRow = ({ item, index, pageSize, currentPage }) => {
   return (
     <tr className="hover:bg-gray-50">
       <td className="px-3 py-2 text-center text-sm">{index + 1}</td>
@@ -85,22 +43,34 @@ const TableRow = ({
       <td className="px-3 py-2 text-center text-sm">
         {item?.projectTask?.name || '-'}
       </td>
-      <td className="px-3 py-2 text-sm">{item?.taskProgress?.name || '-'}</td>
-      <td className="px-3 py-2 text-center text-sm">
-        {item.user.username || '-'}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">{item?.workDate}</td>
-      <td className="px-3 py-2 text-center text-sm">{item?.workHours}</td>
-      <td className="px-3 py-2 text-center text-sm">
-        {item?.nonBillableHours}
+      <td className="px-3 py-2 text-sm">
+        {typeof item?.taskProgress === 'object'
+          ? item?.taskProgress?.name || '-'
+          : item?.taskProgress || '-'}
       </td>
       <td className="px-3 py-2 text-center text-sm">
-        {item?.revisionNumber || '-'}
+        {typeof item?.user === 'object'
+          ? item?.user?.username || '-'
+          : item?.user || '-'}
       </td>
-      <td className="px-3 py-2 text-center text-sm">{item?.team || '-'}</td>
+      <td className="px-3 py-2 text-center text-sm">{item?.workDate || '-'}</td>
+      <td className="px-3 py-2 text-center text-sm">
+        {item?.workHours || '-'}
+      </td>
+      <td className="px-3 py-2 text-center text-sm">
+        {item?.nonBillableHours || '-'}
+      </td>
+      <td className="px-3 py-2 text-center text-sm">
+        {item?.revisionNumber ?? '-'}
+      </td>
+      <td className="px-3 py-2 text-center text-sm">
+        {typeof item?.team === 'object'
+          ? item?.team?.name || '-'
+          : item?.team || '-'}
+      </td>
       <td className="px-3 py-2 text-center text-sm">{item?.notes || '-'}</td>
       <td className="px-3 py-2 text-center">
-        <Button variant="outline" size="sm" onClick={handleViewDetail}>
+        <Button variant="outline" size="sm">
           View
         </Button>
       </td>
@@ -111,14 +81,11 @@ const TableRow = ({
 const WorkList = ({
   items,
   pagination,
-  filters,
-  loading,
+  status,
   error,
   handlePageChange,
   handlePageSizeChange,
-  loadProjectDetail,
 }) => {
-  console.log(`################### `, items);
   return (
     <Card>
       <div className="overflow-x-auto">
@@ -139,11 +106,7 @@ const WorkList = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {loading ? (
-              <TableLoadingIndicator columnsCount={COLUMNS.length} />
-            ) : error ? (
-              <TableErrorState columnsCount={COLUMNS.length} message={error} />
-            ) : !items?.length ? (
+            {!items?.length ? (
               <TableEmptyState columnsCount={COLUMNS.length} />
             ) : (
               items.map((item, index) => (
@@ -153,7 +116,6 @@ const WorkList = ({
                   index={index}
                   pageSize={pagination.pageSize}
                   currentPage={pagination.current}
-                  loadProjectDetail={loadProjectDetail}
                 />
               ))
             )}
@@ -161,7 +123,7 @@ const WorkList = ({
         </table>
       </div>
 
-      {!loading && !error && items?.length > 0 && (
+      {items?.length > 0 && (
         <Pagination
           current={pagination.current}
           pageSize={pagination.pageSize}
