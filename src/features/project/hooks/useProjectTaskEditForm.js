@@ -16,11 +16,27 @@ const useProjectTaskEditForm = (
   isNewProject = true,
 ) => {
   // 작업 데이터 상태
-  const [taskFormData, setTaskFormData] = useState({});
+  const [formData, setFormData] = useState({
+    name: '',
+    taskScheduleType: 'scheduled',
+    taskProgress: {
+      id: 91,
+      code: '0',
+      name: '0%',
+    },
+    priorityLevel: {
+      id: 116,
+      code: 'medium',
+      name: '중간',
+    },
+    planStartDate: '',
+    planEndDate: '',
+    planningTimeData: {},
+    users: [],
+  });
+
   // 체크리스트 상태
   const [checklists, setChecklists] = useState([]);
-  // 할당된 사용자 상태
-  const [assignedUsers, setAssignedUsers] = useState([]);
 
   // 체크리스트 확장/축소 상태
   const [isChecklistExpanded, setIsChecklistExpanded] = useState(true);
@@ -37,8 +53,8 @@ const useProjectTaskEditForm = (
 
   // 상태 변경 감지 및 콘솔 출력
   useEffect(() => {
-    console.log('>>>> taskFormData 상태 변경:', taskFormData);
-  }, [taskFormData]);
+    console.log('>>>> formData 상태 변경:', formData);
+  }, [formData]);
 
   useEffect(() => {
     console.log('>>>> checklists 상태 변경:', checklists);
@@ -47,11 +63,9 @@ const useProjectTaskEditForm = (
   // 초기 데이터로 상태 초기화
   useEffect(() => {
     if (initialTask) {
-      setTaskFormData({
+      setFormData({
         name: initialTask.name || '',
-        taskScheduleType: initialTask?.taskScheduleType || 'scheduled', // 기본값은 'scheduled'
-        // days: initialTask.days || '',
-        // dueDate: initialTask.dueDate || '',
+        taskScheduleType: initialTask?.taskScheduleType || 'scheduled',
         taskProgress: initialTask?.taskProgress || {
           id: 91,
           code: '0',
@@ -65,7 +79,7 @@ const useProjectTaskEditForm = (
         planStartDate: initialTask?.planStartDate || '',
         planEndDate: initialTask?.planEndDate || '',
         planningTimeData: initialTask?.planningTimeData || {},
-        // 기타 필요한 필드 추가
+        users: initialTask?.users || [],
       });
 
       // 체크리스트 초기화 시 index 재설정
@@ -83,8 +97,6 @@ const useProjectTaskEditForm = (
       } else {
         setChecklists([]);
       }
-
-      setAssignedUsers(initialTask?.users || []);
     }
   }, [initialTask]);
 
@@ -102,13 +114,13 @@ const useProjectTaskEditForm = (
 
   // 필드 변경 핸들러
   const handleChange = (name, value) => {
-    setTaskFormData((prev) => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
 
     // 개발 중 디버깅용 로깅 (실제 코드에서는 제거)
-    console.log(`taskFormData 변경: ${name} = ${value}`);
+    console.log(`formData 변경: ${name} = ${value}`);
   };
 
   // 필드 변경 핸들러 함수 (일반 필드와 중첩 객체 필드 모두 처리)
@@ -120,7 +132,7 @@ const useProjectTaskEditForm = (
       // 예: planningTimeData.personnelCount
       const [objectName, fieldName] = name.split('.');
 
-      setTaskFormData((prev) => ({
+      setFormData((prev) => ({
         ...prev,
         [objectName]: {
           ...(prev[objectName] || {}),
@@ -138,7 +150,7 @@ const useProjectTaskEditForm = (
       // 별도의 속성명 처리 (예: planningTimeData.personnelCount)
       const fieldName = name.replace('planningTimeData.', '');
 
-      setTaskFormData((prev) => ({
+      setFormData((prev) => ({
         ...prev,
         planningTimeData: {
           ...(prev.planningTimeData || {}),
@@ -154,7 +166,7 @@ const useProjectTaskEditForm = (
       }));
     } else {
       // 일반 필드 처리 (기존 로직)
-      setTaskFormData((prev) => ({
+      setFormData((prev) => ({
         ...prev,
         [name]:
           type === 'number'
@@ -170,7 +182,7 @@ const useProjectTaskEditForm = (
 
   // 특정 필드용 핸들러
   const handleSwitchChange = () => {
-    setTaskFormData((prev) => ({
+    setFormData((prev) => ({
       ...prev,
       taskScheduleType:
         prev.taskScheduleType === 'scheduled' ? 'ongoing' : 'scheduled',
@@ -298,66 +310,48 @@ const useProjectTaskEditForm = (
   };
 
   // 사용자 할당 관련 함수들
-  const assignUser = (user) => {
+  const handleAssignUser = (user) => {
     try {
-      console.log('useTaskEditor: 할당 시도하는 사용자:', user);
-
-      if (!user || typeof user !== 'object') {
-        alert('유효하지 않은 사용자 객체');
-        console.error('useTaskEditor: 사용자 객체가 유효하지 않습니다:', user);
+      if (!user?.id) {
+        alert('유효하지 않은 사용자입니다');
         return false;
       }
 
-      // 필수 필드가 있는지 확인
-      if (user.id === undefined) {
-        alert('사용자 ID가 없습니다');
-        console.error('useTaskEditor: 사용자 ID가 없습니다:', user);
-        return false;
-      }
-
-      // 이미 할당된 사용자인지 확인
-      const isAlreadyAssigned = assignedUsers.some((u) => u.id === user.id);
-      console.log('useTaskEditor: 이미 할당됨?', isAlreadyAssigned);
-
-      if (isAlreadyAssigned) {
+      if (formData.users.some((u) => u.id === user.id)) {
         alert('이미 할당된 사용자입니다');
         return false;
       }
 
-      // 필요한 필드만 추출하여 통일된 구조로 저장
       const newUser = {
         id: user.id,
         username: user.username || user.name || String(user.id),
       };
 
-      console.log('useTaskEditor: 추가할 사용자:', newUser);
-
-      // 강제로 상태 업데이트 - 직접 배열에 추가
-      setAssignedUsers([...assignedUsers, newUser]);
-
-      // 성공 메시지
-      alert(`사용자 "${newUser.username}"가 할당되었습니다`);
-      console.log('useTaskEditor: 사용자 할당 성공');
+      setFormData((prev) => ({
+        ...prev,
+        users: [...prev.users, newUser],
+      }));
 
       return true;
     } catch (error) {
       alert('사용자 할당 중 오류가 발생했습니다');
-      console.error('useTaskEditor: 사용자 할당 중 오류:', error);
       return false;
     }
   };
 
-  const removeAssignedUser = (userId) => {
-    setAssignedUsers((prev) => prev.filter((user) => user.id !== userId));
+  const handleRemoveUser = (userId) => {
+    setFormData((prev) => ({
+      ...prev,
+      users: prev.users.filter((user) => user.id !== userId),
+    }));
   };
 
   // 현재 편집 중인 작업 데이터 가져오기
   const getEditedTask = () => {
     return {
-      ...initialTask,
-      ...taskFormData,
+      ...formData,
       projectTaskChecklists: checklists,
-      users: assignedUsers,
+      isModified: true,
     };
   };
 
@@ -389,7 +383,7 @@ const useProjectTaskEditForm = (
   const validateTask = () => {
     const newErrors = {};
 
-    if (!taskFormData.name) {
+    if (!formData.name) {
       newErrors.name = '작업명은 필수입니다';
     }
 
@@ -401,8 +395,8 @@ const useProjectTaskEditForm = (
 
   return {
     // 작업 데이터 관련
-    taskFormData,
-    setTaskFormData,
+    formData,
+    setFormData,
     handleChange,
     handleInputChange,
     handleSwitchChange,
@@ -425,9 +419,9 @@ const useProjectTaskEditForm = (
     setChecklistAddingMode,
 
     // 사용자 할당 관련
-    assignedUsers,
-    assignUser,
-    removeAssignedUser,
+    users: formData.users,
+    handleAssignUser,
+    handleRemoveUser,
 
     // 기타 상태 및 기능
     errors,

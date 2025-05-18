@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import TodoCard from '../components/cards/TodoCard';
 import useTodoPageData from '../hooks/useTodoPageData';
 import { Button, Switch, Alert } from '@shared/components/ui';
-import WorkList from '../../work/components/tables/WorkList';
+import WorkList from '../components/tables/WorkList';
 import useTodoStore from '../hooks/useTodoStore';
 
 /**

@@ -344,7 +344,7 @@ export const PAGE_MENUS = {
         },
       },
       searchTasks: {
-        label: '작업 검색',
+        label: '할일검색',
         permissions: ['user'],
         visible: true,
         config: {

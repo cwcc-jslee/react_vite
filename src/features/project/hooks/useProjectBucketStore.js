@@ -71,7 +71,33 @@ export const useProjectBucketStore = () => {
           ...bucket,
           tasks: projectTasks
             .filter((task) => task.projectTaskBucket?.id === bucket.id)
-            .sort((a, b) => a.position - b.position),
+            .sort((a, b) => a.position - b.position)
+            .map((task) => {
+              // 기본 필드
+              const baseFields = {
+                isModified: false,
+                id: task.id,
+                documentId: task.documentId,
+                name: task.name,
+                position: task.position,
+                taskScheduleType: task.taskScheduleType,
+                taskProgress: task.taskProgress,
+                priorityLevel: task.priorityLevel,
+                users: task.users,
+              };
+
+              // taskScheduleType이 "scheduled"인 경우에만 추가 필드 포함
+              if (task.taskScheduleType === 'scheduled') {
+                return {
+                  ...baseFields,
+                  planStartDate: task.planStartDate,
+                  planEndDate: task.planEndDate,
+                  planningTimeData: task.planningTimeData,
+                };
+              }
+
+              return baseFields;
+            }),
         }));
 
         // 변환된 데이터를 스토어에 저장

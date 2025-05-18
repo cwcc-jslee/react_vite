@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { FiPlus } from 'react-icons/fi';
 import { apiCommon } from '@shared/api/apiCommon';
 import ModalRenderer from '../../../shared/components/ui/modal/ModalRenderer';
+import { Button } from '@shared/components/ui';
 
 // 커스텀 훅
 import useWorkStore from '../../work/hooks/useWorkStore';
@@ -12,10 +13,11 @@ import { useProjectBucketStore } from '../hooks/useProjectBucketStore';
 import useModal from '../../../shared/hooks/useModal';
 import { useCodebook } from '@shared/hooks/useCodebook';
 import useSelectData from '../../../shared/hooks/useSelectData';
+import { useProjectTaskSubmit } from '../hooks/useProjectTaskSubmit';
 
 // 컴포넌트
 import ProjectTaskList from '../components/tables/ProjectTaskList';
-import ProjectBucket from '../components/card/ProjectBucket';
+import ProjectTaskBoard from '../components/card/ProjectTaskBoard';
 import ProjectWorkListSection from './ProjectWorkListSection';
 import ProjectTaskEditForm from '../components/forms/ProjectTaskEditForm';
 
@@ -63,6 +65,11 @@ const ProjectDetailTaskSection = ({
 
   const { handleFilterChange, handleResetFilters } = useWorkStore();
 
+  // 태스크 수정 여부 상태
+  const [isTaskModified, setIsTaskModified] = useState(false);
+
+  const { isSubmitting, progress, handleTaskUpdate } = useProjectTaskSubmit();
+
   // 유효한 데이터가 있는지 확인 (projectTaskBuckets이 있어야 함)
   // const hasValidData = projectTaskBuckets.length > 0 && projectTasks.length > 0;
 
@@ -79,6 +86,7 @@ const ProjectDetailTaskSection = ({
         usersData={usersData}
         onSave={(updatedTask) => {
           bucketActions.task.updateTask(bucketIndex, taskIndex, updatedTask);
+          setIsTaskModified(true);
           closeModal();
         }}
         onCancel={closeModal}
@@ -124,6 +132,21 @@ const ProjectDetailTaskSection = ({
       <div className="flex flex-wrap items-center justify-between mb-2 gap-3">
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-medium text-gray-800">프로젝트 TASK</h2>
+          {activeMenu === 'board' && (
+            <Button
+              variant="primary"
+              size="sm"
+              disabled={!isTaskModified || isSubmitting}
+              onClick={async () => {
+                const result = await handleTaskUpdate(buckets);
+                if (result.success) {
+                  setIsTaskModified(false);
+                }
+              }}
+            >
+              {isSubmitting ? `업데이트 중... ${progress}%` : 'TASK 업데이트'}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -139,7 +162,7 @@ const ProjectDetailTaskSection = ({
             style={{ height: 'calc(100vh - 250px)' }}
           >
             {buckets.map((bucket, index) => (
-              <ProjectBucket
+              <ProjectTaskBoard
                 key={index}
                 bucket={bucket}
                 bucketIndex={index}
@@ -163,9 +186,9 @@ const ProjectDetailTaskSection = ({
             {/* 버킷 추가 버튼 */}
             <div className="flex-shrink-0 w-72 h-full flex items-start p-2">
               <button
-                className="w-full h-10 bg-indigo-600 text-white border-2 border-indigo-600 rounded-sm flex items-center justify-center text-sm"
+                className="w-full h-10 bg-gray-300 text-gray-500 border-2 border-gray-300 rounded-sm flex items-center justify-center text-sm cursor-not-allowed"
                 disabled={true}
-                onClick={handleAddColumnClick}
+                // onClick={handleAddColumnClick}
               >
                 <FiPlus className="mr-2" size={18} />
                 <span>버킷 추가</span>
