@@ -17,26 +17,15 @@ import { useCodebook } from '@shared/hooks/useCodebook';
  * @returns {JSX.Element} 프로젝트 상태 차트 컴포넌트
  */
 const ProjectStatusDonutCharts = ({
-  projectStatus = {
-    notStarted: 5,
-    pending: 8,
-    waiting: 12,
-    inProgress: 25,
-    review: 7,
-    completed: 15,
-    total: 72,
-  },
-  projectProgress = {
-    normal: 45,
-    delayed: 15,
-    imminent: 12,
-    total: 72,
-  },
+  projectStatus = {},
+  scheduleStatus = {},
 }) => {
   const { handleStatusFilter, handleProgressFilter } = useProjectSearch();
   const [activeStatusIndex, setActiveStatusIndex] = useState(null);
-  const [activeProgressIndex, setActiveProgressIndex] = useState(null);
-  const { data: codebooks } = useCodebook(['pjtStatus', 'pjtProgress']);
+  const [activeScheduleIndex, setActiveScheduleIndex] = useState(null);
+  const { data: codebooks } = useCodebook(['pjtStatus']);
+
+  console.log('>>> scheduleStatus', scheduleStatus);
 
   const createCustomTooltip = (renderContent) => {
     return ({ active, payload }) => {
@@ -61,46 +50,51 @@ const ProjectStatusDonutCharts = ({
     completed: '#14b8a6', // 틸 그린 - 완료 상태
   };
 
-  // 진행 상태별 색상 정의
-  const progressColors = {
+  // 일정 상태별 색상 정의
+  const scheduleColors = {
     normal: '#10b981', // 에메랄드 그린 - 정상
     delayed: '#ef4444', // 레드 - 지연
     imminent: '#f59e0b', // 앰버 옐로우 - 임박
   };
 
+  // 일정 상태별 표시 이름
+  const scheduleNames = {
+    normal: '정상',
+    delayed: '지연',
+    imminent: '임박',
+  };
+
   // Recharts 데이터 형식으로 변환 (상태)
-  const statusChartData = Object.entries(projectStatus)
+  const statusChartData = codebooks?.pjtStatus
+    ? codebooks.pjtStatus
+        .filter((status) => status.id && status.code && status.name)
+        .map((status) => {
+          const value = projectStatus?.[status.code] || 0;
+          return {
+            name: status.name,
+            value: value,
+            status: status.code,
+            id: status.id,
+            code: status.code,
+          };
+        })
+        .filter((item) => item.value > 0)
+    : [];
+
+  // Recharts 데이터 형식으로 변환 (일정 상태)
+  const scheduleChartData = Object.entries(scheduleStatus || {})
     .filter(([key]) => key !== 'total')
-    .map(([key, value]) => {
-      const statusInfo = codebooks?.pjtStatus?.find(
-        (status) => status.code === key,
-      );
+    .map(([key, value]) => ({
+      name: scheduleNames[key] || key,
+      value: value,
+      schedule: key,
+      code: key,
+    }))
+    .filter((item) => item.value > 0);
 
-      return {
-        name: statusInfo?.name || key,
-        value: value,
-        status: key,
-        id: statusInfo?.id,
-        code: statusInfo?.code,
-      };
-    });
-
-  // Recharts 데이터 형식으로 변환 (진행)
-  const progressChartData = Object.entries(projectProgress)
-    .filter(([key]) => key !== 'total')
-    .map(([key, value]) => {
-      const progressInfo = codebooks?.pjtProgress?.find(
-        (progress) => progress.code === key,
-      );
-
-      return {
-        name: progressInfo?.name || key,
-        value: value,
-        progress: key,
-        id: progressInfo?.id,
-        code: progressInfo?.code,
-      };
-    });
+  console.log('Codebooks:', codebooks);
+  console.log('Status Chart Data:', statusChartData);
+  console.log('Schedule Chart Data:', scheduleChartData);
 
   // 범례 데이터 생성
   const statusLegendItems = statusChartData.map((item) => ({
@@ -109,10 +103,10 @@ const ProjectStatusDonutCharts = ({
     color: statusColors[item.code] || statusColors[item.status],
   }));
 
-  const progressLegendItems = progressChartData.map((item) => ({
+  const scheduleLegendItems = scheduleChartData.map((item) => ({
     name: item.name,
     value: item.value,
-    color: progressColors[item.code] || progressColors[item.progress],
+    color: scheduleColors[item.code] || scheduleColors[item.schedule],
   }));
 
   // 커스텀 툴팁 컴포넌트
@@ -120,7 +114,7 @@ const ProjectStatusDonutCharts = ({
     <p className="text-sm font-medium">{`${data.name}: ${data.value}건`}</p>
   ));
 
-  const ProgressTooltip = createCustomTooltip((data) => (
+  const ScheduleTooltip = createCustomTooltip((data) => (
     <p className="text-sm font-medium">{`${data.name}: ${data.value}건`}</p>
   ));
 
@@ -136,15 +130,15 @@ const ProjectStatusDonutCharts = ({
     }
   };
 
-  // 섹션 클릭 핸들러 (진행)
-  const onProgressPieClick = (_, index) => {
-    setActiveProgressIndex(activeProgressIndex === index ? null : index);
+  // 섹션 클릭 핸들러 (일정)
+  const onSchedulePieClick = (_, index) => {
+    setActiveScheduleIndex(activeScheduleIndex === index ? null : index);
 
-    if (activeProgressIndex === index) {
+    if (activeScheduleIndex === index) {
       handleProgressFilter('');
     } else {
-      const selectedProgress = progressChartData[index].id;
-      handleProgressFilter(selectedProgress);
+      const selectedSchedule = scheduleChartData[index].code;
+      handleProgressFilter(selectedSchedule);
     }
   };
 
@@ -171,35 +165,35 @@ const ProjectStatusDonutCharts = ({
       : { status: '데이터 없음', count: 0 };
   };
 
-  // 가운데 표시할 텍스트 계산 (진행)
-  const getProgressCenterText = () => {
+  // 가운데 표시할 텍스트 계산 (일정)
+  const getScheduleCenterText = () => {
     if (
-      activeProgressIndex !== null &&
-      progressChartData[activeProgressIndex]
+      activeScheduleIndex !== null &&
+      scheduleChartData[activeScheduleIndex]
     ) {
-      const data = progressChartData[activeProgressIndex];
+      const data = scheduleChartData[activeScheduleIndex];
       return {
         status: data.name,
         count: data.value,
       };
     }
     // 지연 건수 표시
-    const delayedData = progressChartData.find(
-      (item) => item.progress === 'delayed',
+    const delayedData = scheduleChartData.find(
+      (item) => item.schedule === 'delayed',
     );
     if (delayedData) {
       return {
-        status: '지연',
+        status: delayedData.name,
         count: delayedData.value,
       };
     }
-    return progressChartData.length > 0
-      ? { status: progressChartData[0].name, count: progressChartData[0].value }
+    return scheduleChartData.length > 0
+      ? { status: scheduleChartData[0].name, count: scheduleChartData[0].value }
       : { status: '데이터 없음', count: 0 };
   };
 
   const statusCenterText = getStatusCenterText();
-  const progressCenterText = getProgressCenterText();
+  const scheduleCenterText = getScheduleCenterText();
 
   // 공통 Pie 컴포넌트 렌더링 함수
   const renderPie = (
@@ -249,7 +243,7 @@ const ProjectStatusDonutCharts = ({
       {data.map((entry, index) => (
         <Cell
           key={`cell-${index}`}
-          fill={colors[entry.code] || colors[entry.status || entry.progress]}
+          fill={colors[entry.code] || colors[entry.status || entry.schedule]}
           stroke="#ffffff"
           strokeWidth={1}
           opacity={activeIndex === null || activeIndex === index ? 1 : 0.3}
@@ -322,20 +316,20 @@ const ProjectStatusDonutCharts = ({
           {renderCustomLegend(statusLegendItems)}
         </div>
 
-        {/* 프로젝트 진행 차트 */}
+        {/* 프로젝트 일정 상태 차트 */}
         <div className="flex flex-col items-center justify-between h-full">
           <div className="w-full" style={{ flex: 1 }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 {renderPie(
-                  progressChartData,
-                  progressColors,
-                  activeProgressIndex,
-                  onProgressPieClick,
-                  progressCenterText,
-                  progressLegendItems,
+                  scheduleChartData,
+                  scheduleColors,
+                  activeScheduleIndex,
+                  onSchedulePieClick,
+                  scheduleCenterText,
+                  scheduleLegendItems,
                 )}
-                <Tooltip content={<ProgressTooltip />} />
+                <Tooltip content={<ScheduleTooltip />} />
                 <text
                   x="50%"
                   y="50%"
@@ -344,7 +338,7 @@ const ProjectStatusDonutCharts = ({
                   className="font-medium"
                   fill="#333"
                 >
-                  {progressCenterText.status}
+                  {scheduleCenterText.status}
                 </text>
                 <text
                   x="50%"
@@ -355,13 +349,13 @@ const ProjectStatusDonutCharts = ({
                   className="font-bold"
                   fill="#333"
                 >
-                  {progressCenterText.count}건
+                  {scheduleCenterText.count}건
                 </text>
               </PieChart>
             </ResponsiveContainer>
           </div>
           {/* 커스텀 범례 */}
-          {renderCustomLegend(progressLegendItems)}
+          {renderCustomLegend(scheduleLegendItems)}
         </div>
       </div>
     </ChartContainer>

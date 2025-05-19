@@ -1,6 +1,6 @@
 // src/features/project/sections/ProjectChartsSection.jsx
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Row, Col } from '../../../shared/components/ui';
 import ProjectStatusDonutCharts from '../components/charts/ProjectStatusDonutCharts';
 import ProjectProgressChart from '../components/charts/ProjectProgressChart';
@@ -16,13 +16,15 @@ import { useProjectStore } from '../hooks/useProjectStore';
  */
 const ProjectChartsSection = () => {
   const { searchFormData } = useProjectSearch();
-  const { dashboardData } = useProjectStore();
+  const { dashboardData, actions } = useProjectStore();
+  const { projectStatus, projectProgress, scheduleStatus } = dashboardData;
   const isFiltered = searchFormData.pjtStatus !== '';
 
-  const { projectStatus, projectProgress, scheduleStatus } = dashboardData;
-
-  console.log(`>>>> projectStatus`, projectStatus);
-  console.log(`>>>> scheduleStatus`, scheduleStatus);
+  // 컴포넌트 마운트 시 대시보드 데이터 조회
+  useEffect(() => {
+    // actions.dashboard.fetchStatus();
+    // actions.dashboard.fetchScheduleStatus();
+  }, []);
 
   return (
     <Row gutter={[16, 16]}>
@@ -30,8 +32,8 @@ const ProjectChartsSection = () => {
       <Col span={8}>
         <div className="h-[420px]">
           <ProjectStatusDonutCharts
-            projectStatus={projectStatus}
-            scheduleStatus={scheduleStatus}
+            projectStatus={projectStatus || {}}
+            scheduleStatus={scheduleStatus || {}}
             isFiltered={isFiltered}
           />
         </div>

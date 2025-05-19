@@ -16,6 +16,7 @@ const COLUMNS = [
   { key: 'progressStatus', title: '진행상태', align: 'center' },
   { key: 'importanceLevel', title: '중요도', align: 'center' },
   { key: 'projectProgress', title: '진행률', align: 'center' },
+  { key: 'taskCount', title: 'TASK', align: 'center' },
   { key: 'service', title: '서비스', align: 'center' },
   // { key: 'tag', title: '시작일', align: 'center' },
   { key: 'planEndDate', title: '완료(예정)일', align: 'center' },
@@ -69,19 +70,13 @@ const TableErrorState = ({ columnsCount, message }) => {
 };
 
 // 테이블 행 컴포넌트
-const TableRow = ({
-  item,
-  index,
-  pageSize,
-  currentPage,
-  loadProjectDetail,
-}) => {
+const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
   const dispatch = useDispatch();
   const actualIndex = (currentPage - 1) * pageSize + index + 1;
 
   // 프로젝트 상세정보 조회 핸들러
   const handleViewDetail = () => {
-    loadProjectDetail(item.id);
+    actions.detail.fetchDetail(item.id);
   };
 
   // business_type 표시를 위한 헬퍼 함수
@@ -122,7 +117,7 @@ const TableRow = ({
                 ? 'success'
                 : item.scheduleStatus === 'imminent'
                 ? 'warning'
-                : item.scheduleStatus === 'delyed'
+                : item.scheduleStatus === 'delayed'
                 ? 'error'
                 : 'default'
             }
@@ -174,6 +169,13 @@ const TableRow = ({
       <td className="px-3 py-2 text-center text-sm">
         {item?.projectProgress ? `${item.projectProgress}%` : '-'}
       </td>
+      <td className="px-3 py-2 text-center text-sm">
+        {item?.projectTasks?.length
+          ? `${
+              item.projectTasks.filter((task) => task.name === '100%').length
+            }/${item.projectTasks.length}`
+          : '-'}
+      </td>
       <td className="px-3 py-2 text-center text-sm">{item?.service?.name}</td>
       <td className="px-3 py-2 text-center text-sm">
         {item?.planEndDate || '-'}
@@ -203,9 +205,7 @@ const ProjectList = ({
   filters,
   loading,
   error,
-  handlePageChange,
-  handlePageSizeChange,
-  loadProjectDetail,
+  actions,
 }) => {
   console.log(`>>> items : `, items);
   return (
@@ -241,7 +241,7 @@ const ProjectList = ({
                 index={index}
                 pageSize={pagination.pageSize}
                 currentPage={pagination.current}
-                loadProjectDetail={loadProjectDetail}
+                actions={actions}
               />
             ))
           )}
@@ -253,8 +253,8 @@ const ProjectList = ({
           current={pagination.current}
           pageSize={pagination.pageSize}
           total={pagination.total}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
+          onPageChange={actions.pagination.setPage}
+          onPageSizeChange={actions.pagination.setPageSize}
         />
       )}
     </div>

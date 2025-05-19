@@ -156,21 +156,21 @@ export const useProjectSearch = () => {
   };
 
   /**
-   * 상태 필터 핸들러
+   * 도넛 차트 상태 필터 핸들러
    * @param {string} status - 프로젝트 상태
    */
   const handleStatusFilter = (status) => {
-    setSearchFormData((prev) => ({
-      ...prev,
-      pjtStatus: status,
-    }));
-
-    const filters = buildFilters({
-      ...searchFormData,
-      pjtStatus: status,
-    });
-
-    actions.fetchProjects({ filters });
+    if (status !== '') {
+      const filters = {
+        pjt_status: { $eq: parseInt(status) },
+        work_type: { $eq: 'project' },
+      };
+      actions.filter.replaceFilters(filters);
+      actions.getProjectList();
+    } else {
+      actions.filter.resetFilters();
+      actions.getProjectList();
+    }
   };
 
   /**

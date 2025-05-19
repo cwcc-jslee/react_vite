@@ -56,7 +56,6 @@ export const useProjectStore = () => {
     projectStatus: dashboard.projectStatus?.data || null,
     projectProgress: dashboard.projectProgress?.data || null,
     scheduleStatus: dashboard.scheduleStatus?.data || null,
-    monthlyStats: dashboard.monthlyStats?.data || null,
   };
 
   // 액션 핸들러
@@ -65,20 +64,54 @@ export const useProjectStore = () => {
     pagination: {
       setPage: (page) => {
         dispatch(setPage(page));
+        dispatch(
+          fetchProjects({
+            pagination: {
+              current: page,
+              pageSize: pagination.pageSize,
+            },
+          }),
+        );
       },
-      setPageSize: (size) => {
-        dispatch(setPageSize(size));
+      setPageSize: (pageSize) => {
+        dispatch(setPageSize(pageSize));
+        dispatch(
+          fetchProjects({
+            pagination: {
+              current: 1,
+              pageSize,
+            },
+          }),
+        );
       },
     },
 
     // 필터 액션
     filter: {
+      // 기존 필터에 추가
       setFilters: (filterValues) => {
-        dispatch(fetchProjects({ filters: filterValues }));
+        dispatch(setFilters(filterValues));
       },
+      // 필터 초기상태
       resetFilters: () => {
         dispatch(resetFilters());
-        dispatch(fetchProjects());
+      },
+      // 기존 필터를 무시하고 새 필터로 완전히 대체
+      replaceFilters: (newFilters) => {
+        dispatch({
+          type: 'project/setFilters',
+          payload: newFilters,
+          meta: { replace: true },
+        });
+      },
+      setWorkType: (workType) => {
+        dispatch(
+          setFilters({
+            ...filters,
+            pjt_status: { $in: [87, 88, 89] },
+            work_type: workType,
+          }),
+        );
       },
     },
 
@@ -88,7 +121,7 @@ export const useProjectStore = () => {
     },
 
     // 프로젝트 시간상태 업데이트
-    getProjectsWithSchedule: () => {
+    fetchProjectScheduleStatus: () => {
       dispatch(fetchProjectScheduleStatus());
     },
 

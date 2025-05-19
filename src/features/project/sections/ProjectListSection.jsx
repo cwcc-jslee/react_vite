@@ -1,6 +1,7 @@
 // src/features/project/sections/ProjectListSection.jsx
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useUiStore } from '../../../shared/hooks/useUiStore';
 import { useProjectStore } from '../hooks/useProjectStore';
 import ProjectList from '../components/tables/ProjectList';
 import { getScheduleStatus } from '../utils/scheduleStatusUtils';
@@ -21,6 +22,25 @@ const ProjectListSection = () => {
     actions,
   } = useProjectStore();
 
+  const { pageLayout } = useUiStore();
+  const { menu } = pageLayout;
+
+  // 컴포넌트 마운트 시 프로젝트 목록 조회
+  useEffect(() => {
+    // menu가 'singletask' 또는 'list'일 때만 실행
+    if (menu === 'singletask' || menu === 'list') {
+      // menu가 'singletask'일 경우 'single', 'list'일 경우 'project'로 설정
+      const workType = menu === 'singletask' ? 'single' : 'project';
+      actions.filter.setWorkType(workType);
+      actions.getProjectList();
+    }
+
+    // 컴포넌트 언마운트 시 정리
+    return () => {
+      actions.filter.resetFilters();
+    };
+  }, [menu]);
+
   // 일정상태 계산된 items 생성
   const itemsWithScheduleStatus = items.map((item) => ({
     ...item,
@@ -29,20 +49,6 @@ const ProjectListSection = () => {
 
   console.log(`ProjectListSection items: `, items);
 
-  // 페이지 변경 핸들러
-  const handlePageChange = (page) => {
-    actions.pagination.setPage(page);
-    actions.fetchProjects({
-      pagination: { current: page, pageSize: pagination.pageSize },
-    });
-  };
-
-  // 페이지 크기 변경 핸들러
-  const handlePageSizeChange = (pageSize) => {
-    actions.pagination.setPageSize(pageSize);
-    actions.fetchProjects({ pagination: { current: 1, pageSize } });
-  };
-
   return (
     <div className="space-y-4">
       <ProjectList
@@ -50,9 +56,7 @@ const ProjectListSection = () => {
         pagination={pagination}
         loading={status === 'loading'}
         error={error}
-        handlePageChange={handlePageChange}
-        handlePageSizeChange={handlePageSizeChange}
-        loadProjectDetail={actions.detail.fetchDetail}
+        actions={actions}
       />
     </div>
   );

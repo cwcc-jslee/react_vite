@@ -8,6 +8,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { notification } from '@shared/services/notification';
 import { convertKeysToCamelCase } from '@shared/utils/transformUtils';
 import { projectApiService } from '../../features/project/services/projectApiService';
+import { apiService } from '@shared/api/apiService';
 import { todoApiService } from '../../features/todo/services/todoApiService';
 import {
   DEFAULT_FILTERS,
@@ -155,8 +156,8 @@ export const fetchProjectStatus = createAsyncThunk(
     try {
       // 상태와 진행률 데이터를 병렬로 가져오기
       const [statusResponse, progressResponse] = await Promise.all([
-        projectApiService.get('/project-api/status'),
-        projectApiService.get('/project-api/progress'),
+        apiService.get('/project-api/status'),
+        apiService.get('/project-api/progress'),
       ]);
 
       // 각 응답의 에러 체크
@@ -171,39 +172,17 @@ export const fetchProjectStatus = createAsyncThunk(
       const statusData = statusResponse.data.data;
       const progressData = progressResponse.data.data;
 
+      console.log('====== statusData', statusData);
+      console.log('====== progressData', progressData.progressDistribution);
+
       return {
-        projectStatus: {
-          notStarted: statusData.notStarted || 0,
-          pending: statusData.pending || 0,
-          waiting: statusData.waiting || 0,
-          inProgress: statusData.inProgress || 0,
-          review: statusData.review || 0,
-          completed: statusData.recentlyCompleted || 0,
-          total: statusData.total || 0,
-        },
-        projectProgress: {
-          distribution: progressData.progressDistribution || {},
-        },
-        monthlyStats: [],
-        monthsPeriod: statusData.monthsPeriod || 0,
+        projectStatus: statusData,
+        projectProgress: progressData.progressDistribution,
       };
     } catch (error) {
-      // 각 API 호출의 에러를 구분하여 처리
-      if (error.message.includes('상태 데이터')) {
-        return rejectWithValue({
-          type: 'status',
-          message: error.message,
-        });
-      } else if (error.message.includes('진행률 데이터')) {
-        return rejectWithValue({
-          type: 'progress',
-          message: error.message,
-        });
-      }
-      return rejectWithValue({
-        type: 'both',
-        message: error.message,
-      });
+      return rejectWithValue(
+        error.message || '프로젝트 상태 데이터를 가져오는데 실패했습니다',
+      );
     }
   },
 );
@@ -324,10 +303,23 @@ const projectSlice = createSlice({
 
     // 필터 변경
     setFilters: (state, action) => {
-      state.filters = {
-        ...state.filters,
-        ...action.payload,
-      };
+      // action.payload가 객체인지 확인
+      const payload = typeof action.payload === 'object' ? action.payload : {};
+
+      // 두 번째 인자가 true이면 기존 필터 대체, 아니면 병합
+      const replaceMode = action.meta?.replace === true;
+
+      if (replaceMode) {
+        // 기존 필터 완전히 대체
+        state.filters = { ...payload };
+      } else {
+        // 기존 필터에 새 필터 병합 (기존 동작)
+        state.filters = {
+          ...state.filters,
+          ...payload,
+        };
+      }
+
       state.pagination.current = 1; // 필터 변경 시 첫 페이지로
     },
 
@@ -487,26 +479,18 @@ const projectSlice = createSlice({
         state.dashboard.projectProgress.status = 'succeeded';
         state.dashboard.projectStatus.data = action.payload.projectStatus;
         state.dashboard.projectProgress.data = action.payload.projectProgress;
-        state.dashboard.monthlyStats.data = action.payload.monthlyStats;
       })
       .addCase(fetchProjectStatus.rejected, (state, action) => {
-        const error = action.payload;
-
-        // 에러 타입에 따라 각각 처리
-        if (error.type === 'status' || error.type === 'both') {
-          state.dashboard.projectStatus.status = 'failed';
-          state.dashboard.projectStatus.error = error.message;
-        }
-
-        if (error.type === 'progress' || error.type === 'both') {
-          state.dashboard.projectProgress.status = 'failed';
-          state.dashboard.projectProgress.error = error.message;
-        }
+        state.dashboard.projectStatus.status = 'failed';
+        state.dashboard.projectProgress.status = 'failed';
+        state.dashboard.projectStatus.error = action.payload;
+        state.dashboard.projectProgress.error = action.payload;
 
         // 에러 알림
         notification.error({
           message: '데이터 조회 실패',
-          description: error.message,
+          description:
+            action.payload || '프로젝트 상태 데이터를 가져오는데 실패했습니다',
         });
       })
 

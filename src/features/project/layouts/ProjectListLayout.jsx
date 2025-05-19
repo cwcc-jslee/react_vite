@@ -16,12 +16,7 @@ const ProjectListLayout = ({ projectStatus, projectProgress }) => {
   return (
     <>
       {/* 차트 섹션 (상태, 진행률, 트리맵) */}
-      {sections.projectCharts && (
-        <ProjectChartsSection
-          projectStatus={projectStatus}
-          projectProgress={projectProgress}
-        />
-      )}
+      {sections.projectCharts && <ProjectChartsSection />}
 
       {/* 테이블 섹션 */}
       <ProjectListSection />

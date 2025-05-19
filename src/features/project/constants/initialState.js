@@ -46,13 +46,6 @@ export const PROJECT_PROGRESS_INITIAL_STATE = {
   error: null,
 };
 
-// 월별 통계 초기값
-export const MONTHLY_STATS_INITIAL_STATE = {
-  data: [],
-  status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
-  error: null,
-};
-
 // 로딩 상태 초기값
 export const LOADING_STATE_INITIAL_STATE = {
   loading: false,
@@ -79,7 +72,6 @@ export const SCHEDULE_STATUS_INITIAL_STATE = {
 export const DASHBOARD_INITIAL_STATE = {
   projectStatus: PROJECT_STATUS_INITIAL_STATE,
   projectProgress: PROJECT_PROGRESS_INITIAL_STATE,
-  monthlyStats: MONTHLY_STATS_INITIAL_STATE,
   scheduleStatus: SCHEDULE_STATUS_INITIAL_STATE,
 };
 

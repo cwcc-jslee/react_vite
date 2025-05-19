@@ -1,12 +1,8 @@
 // src/features/project/containers/ProjectContainer.jsx
 
 import React, { useEffect, useRef } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
 import { Section } from '../../../shared/components/ui/layout/components';
-import { PAGE_MENUS } from '@shared/constants/navigation';
-
-// 커스텀 훅 사용
-import { useProject } from '../context/ProjectProvider';
+import { useUiStore } from '@shared/hooks/useUiStore';
 import { useProjectStore } from '../hooks/useProjectStore';
 
 // Layout
@@ -31,19 +27,15 @@ const ProjectContainer = () => {
   const { actions } = useProjectStore();
 
   // 레이아웃 관련 상태 가져오기
-  const { layout, components } = useSelector((state) => state.ui.pageLayout);
-  const drawer = useSelector((state) => state.ui.drawer);
-
-  // 대시보드 데이터 가져오기
-  const { projectStatus, projectProgress } = useSelector(
-    (state) => state.project.dashboard,
-  );
+  const { pageLayout, drawer } = useUiStore();
+  const { layout } = pageLayout;
 
   // 컴포넌트 마운트 시 프로젝트 목록 조회
   useEffect(() => {
-    actions.getProjectList();
-    actions.getProjectsWithSchedule();
-    // actions.dashboard.fetchStatus(); // 상태와 진행률 데이터를 한 번에 가져옴
+    // actions.getProjectList();
+    // actions.getProjectsWithSchedule();
+    actions.dashboard.fetchStatus(); // 상태와 진행률 데이터를 한 번에 가져옴
+    actions.dashboard.fetchScheduleStatus();
 
     // 컴포넌트 언마운트 시 정리
     return () => {
