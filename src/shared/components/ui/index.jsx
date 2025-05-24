@@ -5,6 +5,7 @@ import { Row, Col } from './grid/Grid';
 export { default as Tooltip } from './tooltip/Tooltip';
 export { default as Progress } from './progress/Progress';
 export { default as Tag } from './tag/Tag';
+export { default as StatusProgressIndicator } from './StatusProgressIndicator';
 // Badge 컴포넌트는 아래에서 직접 정의하므로 여기서 import하지 않습니다
 // export { default as Badge } from './badge/Badge';
 

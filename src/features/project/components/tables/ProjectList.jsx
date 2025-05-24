@@ -172,7 +172,9 @@ const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
       <td className="px-3 py-2 text-center text-sm">
         {item?.projectTasks?.length
           ? `${
-              item.projectTasks.filter((task) => task.name === '100%').length
+              item.projectTasks.filter(
+                (task) => task?.taskProgress?.name === '100%',
+              ).length
             }/${item.projectTasks.length}`
           : '-'}
       </td>

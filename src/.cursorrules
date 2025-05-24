@@ -12,12 +12,18 @@
  - (함수명) 기본 동작은 2단계로 간단하게, 구체적인 구분이 필요한 경우만 3단계 사용
  - (함수명) : 2단계(동사+대상), 3단계(동사+대상+행위/상태)
 
- ## UI 컴포넌트 위치
+## UI 컴포넌트 위치
   - /src/shared/components/ui/
+
+## 스토어 액션/상태
+  - /src/shared/store/
+### UI 상태/액션
+  - /src/shared/hooks/useUiStore.js
 
 ## 프로젝트 구조
 ### 데이터 흐름
  - ProjectPage (라우팅) → ProjectContainer (상태관리) → 레이아웃 → 섹션 → 컴포넌트
+
 
 ### 파일 구조
  - 프로젝트 페이지 구조 예시

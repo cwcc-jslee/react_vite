@@ -8,6 +8,8 @@ import {
   DescriptionRow,
   DescriptionItem,
   Progress,
+  Badge,
+  StatusProgressIndicator,
 } from '@shared/components/ui/index';
 
 /**
@@ -32,9 +34,15 @@ const StatusBadge = ({ isCompleted }) => {
  * @param {Object} props
  * @param {Object} props.data - 프로젝트 상세 데이터
  * @param {Array} props.projectTasks - 프로젝트 태스크 목록
+ * @param {Function} props.onStatusClick - 상태 클릭 시 호출될 함수
  */
-const ProjectDetailTable = ({ data = {}, projectTasks = [] }) => {
+const ProjectDetailTable = ({
+  data = {},
+  projectTasks = [],
+  onStatusClick,
+}) => {
   if (!data) return null;
+  console.log('>>>>>data', data);
 
   // 완료된 태스크 수 계산
   const completedTasksCount = projectTasks.filter(
@@ -57,6 +65,9 @@ const ProjectDetailTable = ({ data = {}, projectTasks = [] }) => {
     return 'normal';
   };
 
+  // 프로젝트 상태 단계 정의
+  const projectStatuses = ['시작전', '진행중', '검수', '완료'];
+
   return (
     <Description>
       {/* 기본 4칸 구조 - 너비 지정 */}
@@ -64,7 +75,14 @@ const ProjectDetailTable = ({ data = {}, projectTasks = [] }) => {
         <DescriptionItem label width="w-[140px]">
           진행상태
         </DescriptionItem>
-        <DescriptionItem>{'(시작)-(진행중)-(검수)-(종료)'}</DescriptionItem>
+        <DescriptionItem>
+          <div className="w-full h-full cursor-pointer" onClick={onStatusClick}>
+            <StatusProgressIndicator
+              statuses={projectStatuses}
+              currentStatus={data.pjtStatus?.name || '시작전'}
+            />
+          </div>
+        </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
           TASK
         </DescriptionItem>
@@ -120,10 +138,6 @@ const ProjectDetailTable = ({ data = {}, projectTasks = [] }) => {
           {data.statusChangeCount ? `총 ${data.statusChangeCount}건` : '-'}
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
-          이슈사항
-        </DescriptionItem>
-        <DescriptionItem>{data.issueCount || '-'}</DescriptionItem>
-        <DescriptionItem label width="w-[140px]">
           사업부/서비스
         </DescriptionItem>
         <DescriptionItem>
@@ -144,16 +158,17 @@ const ProjectDetailTable = ({ data = {}, projectTasks = [] }) => {
         <DescriptionItem label width="w-[140px]">
           사업년도
         </DescriptionItem>
-        <DescriptionItem width="w-[140px]">
-          {data.fy?.name || '-'}
-        </DescriptionItem>
-
+        <DescriptionItem>{data.fy?.name || '-'}</DescriptionItem>
         <DescriptionItem label width="w-[140px]">
           SFA
         </DescriptionItem>
         <DescriptionItem className="flex-1">
           {data.sfa?.name || '-'}
         </DescriptionItem>
+        <DescriptionItem label width="w-[140px]">
+          이슈사항
+        </DescriptionItem>
+        <DescriptionItem>{data.issueCount || '-'}</DescriptionItem>
         <DescriptionItem label width="w-[140px]">
           비고
         </DescriptionItem>

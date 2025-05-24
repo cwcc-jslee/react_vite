@@ -142,4 +142,19 @@ export const projectApiService = {
       handleApiError(error, '프로젝트 생성 중 오류가 발생했습니다.');
     }
   },
+
+  /**
+   * 프로젝트 수정
+   * @param {Object} id - 수정할 프로젝트 ID
+   * @param {Object} projectData - 수정할 프로젝트 데이터
+   * @returns {Promise} API 응답 Promise
+   */
+  updateProject: async (id, formData) => {
+    try {
+      const response = await apiService.put(`/projects/${id}`, formData);
+      return response.data;
+    } catch (error) {
+      handleApiError(error, '프로젝트 수정 중 오류가 발생했습니다.');
+    }
+  },
 };

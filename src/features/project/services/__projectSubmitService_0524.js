@@ -10,7 +10,6 @@ import {
 } from '../../../shared/services/baseSubmitService';
 import { notification } from '../../../shared/services/notification';
 
-// 아래 코드 수정
 // Project 서비스 인스턴스 생성 (변환 함수 제거)
 const projectService = baseSubmitService('/projects');
 

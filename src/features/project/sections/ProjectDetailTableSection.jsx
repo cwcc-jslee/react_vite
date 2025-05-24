@@ -1,6 +1,7 @@
 // src/features/project/sections/ProjectDetailTableSection.jsx
 
 import React from 'react';
+import { useUiStore } from '../../../shared/hooks/useUiStore';
 import ProjectDetailTable from '../components/tables/ProjectDetailTable';
 
 /**
@@ -9,6 +10,23 @@ import ProjectDetailTable from '../components/tables/ProjectDetailTable';
 
  */
 const ProjectDetailTableSection = ({ data, projectTasks }) => {
+  const { actions } = useUiStore();
+  // 상태 섹션 클릭 핸들러
+  const handleStatusSectionClick = (e) => {
+    // 이벤트 디버깅 로그
+    console.log('이벤트 발생', e.type);
+    console.log('진행상태 섹션 클릭:', data);
+    actions.drawer.open({
+      mode: 'edit',
+      data: {
+        id: data.id,
+        documentId: data.documentId,
+        pjtStatus: data.pjtStatus,
+      },
+      width: '600px',
+    });
+  };
+
   return (
     <div className="bg-white rounded-md shadow">
       {/* 상단 툴바 - 검색, 필터, 뷰 전환 버튼 */}
@@ -19,7 +37,11 @@ const ProjectDetailTableSection = ({ data, projectTasks }) => {
           </h2>
         </div>
       </div>
-      <ProjectDetailTable data={data} projectTasks={projectTasks} />
+      <ProjectDetailTable
+        data={data}
+        projectTasks={projectTasks}
+        onStatusClick={handleStatusSectionClick}
+      />
     </div>
   );
 };

@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { useDispatch } from 'react-redux';
-import { setDrawer } from '../../../../store/slices/uiSlice';
+import { useUiStore } from '../../../../shared/hooks/useUiStore';
 import {
   Checkbox,
   Badge,
@@ -18,6 +18,7 @@ import { FiCheckSquare, FiClock, FiCalendar } from 'react-icons/fi';
 const ProjectTaskList = ({ projectTasks = [] }) => {
   console.log(`>>>> project task list  실행`);
   const dispatch = useDispatch();
+  const { actions } = useUiStore();
 
   // 우선순위에 따른 배지 색상 결정
   const getPriorityColor = (priority) => {
@@ -104,20 +105,13 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
   );
 
   // 행 클릭 핸들러
-  const handleRowClick = (task) => {
-    console.log(`===== handleRowClick `, task);
+  const handleTaskRowClick = (task) => {
     // Redux drawer 상태 변경
-    dispatch(
-      setDrawer({
-        visible: true,
-        mode: 'view',
-        options: {
-          taskId: task.id,
-          bucketIndex: task._bucketIndex,
-          taskIndex: task._taskIndex,
-        },
-      }),
-    );
+    actions.drawer.open({
+      mode: 'view',
+      data: task,
+      width: '900px',
+    });
   };
 
   return (
@@ -149,6 +143,7 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
                 className={`hover:bg-gray-50 ${
                   task.taskProgress?.name === '100%' ? 'bg-gray-50' : ''
                 } cursor-pointer`}
+                onClick={() => handleTaskRowClick(task)}
               >
                 {/* 순번 */}
                 <td className="px-3 py-2 text-center text-sm">{index + 1}</td>
