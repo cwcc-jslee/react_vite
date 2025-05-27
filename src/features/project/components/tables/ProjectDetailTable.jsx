@@ -66,7 +66,7 @@ const ProjectDetailTable = ({
   };
 
   // 프로젝트 상태 단계 정의
-  const projectStatuses = ['시작전', '진행중', '검수', '완료'];
+  const projectStatuses = ['시작전', '진행중', '검수', '종료'];
 
   return (
     <Description>
@@ -132,11 +132,9 @@ const ProjectDetailTable = ({
       {/* 3행: */}
       <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
-          상태변경
+          고객사
         </DescriptionItem>
-        <DescriptionItem>
-          {data.statusChangeCount ? `총 ${data.statusChangeCount}건` : '-'}
-        </DescriptionItem>
+        <DescriptionItem>{data?.sfa?.customer?.name || '-'}</DescriptionItem>
         <DescriptionItem label width="w-[140px]">
           사업부/서비스
         </DescriptionItem>

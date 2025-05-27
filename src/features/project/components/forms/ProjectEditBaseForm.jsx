@@ -15,10 +15,13 @@ import {
 import { useProjectUpdate } from '../../hooks/useProjectUpdate';
 import { notification } from '../../../../shared/services/notification';
 import useUiStore from '../../../../shared/hooks/useUiStore';
+import { useProjectStore } from '../../hooks/useProjectStore';
 
 // 프로젝트 정보 입력 폼 컴포넌트
 const ProjectEditBaseForm = ({ data }) => {
-  const { actions } = useUiStore();
+  const { actions: uiActions } = useUiStore();
+  const { actions } = useProjectStore();
+
   const {
     formData,
     isSubmitting,
@@ -47,8 +50,11 @@ const ProjectEditBaseForm = ({ data }) => {
           message: '프로젝트 상태 변경 성공',
           description: `${prevStatusName} → ${nextStatusName} 상태로 변경되었습니다.`,
         });
+        // 프로젝트 상페 페이지 리로드
+        actions.detail.fetchDetail(data.id);
+
         // drawer 닫기
-        actions.drawer.close();
+        uiActions.drawer.close();
       } else {
         notification.error({
           message: '프로젝트 상태 변경 실패',
@@ -128,7 +134,7 @@ const ProjectEditBaseForm = ({ data }) => {
             </Button>
           </div>
         </div>
-        {error && <div className="text-red-500">{error}</div>}
+        {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
       </Stack>
     </Card>
   );

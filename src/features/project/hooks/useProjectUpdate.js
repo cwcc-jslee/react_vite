@@ -16,9 +16,11 @@ import { projectApiService } from '../services/projectApiService';
 import { useCodebook } from '../../../shared/hooks/useCodebook';
 import { processRelationFields } from '../../../shared/utils/relationFieldUtils';
 import { convertKeysToSnakeCase } from '../../../shared/utils/transformUtils';
+import { useProjectStore } from './useProjectStore';
 
 export const useProjectUpdate = (initialData) => {
   const { data: codebooks } = useCodebook(['pjtStatus']);
+  const { selectedItem } = useProjectStore();
 
   const [formData, setFormData] = useState(initialData);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,17 +54,16 @@ export const useProjectUpdate = (initialData) => {
 
     switch (currentStatus) {
       case '진행중':
-        return getAvailableStatuses(['실패', '보류', '대기', '검수', '완료']);
+        return getAvailableStatuses(['보류', '대기', '검수', '종료']);
       case '시작전':
         return getAvailableStatuses(['진행중', '대기', '보류']);
       case '검수':
-        return getAvailableStatuses(['진행중', '완료']);
-      case '완료':
-      case '실패':
+        return getAvailableStatuses(['진행중', '종료']);
+      case '종료':
         return [allStatuses.find((status) => status.name === currentStatus)];
       case '보류':
       case '대기':
-        return getAvailableStatuses(['진행중', '실패']);
+        return getAvailableStatuses(['진행중']);
       default:
         return [];
     }
@@ -85,6 +86,24 @@ export const useProjectUpdate = (initialData) => {
     return restData;
   };
 
+  const validateProjectTasks = useCallback(
+    (nextStatus) => {
+      if (nextStatus === '검수' || nextStatus === '종료') {
+        const projectTasks = selectedItem?.data?.projectTasks || [];
+        const hasIncompleteTasks = projectTasks.some(
+          (task) => task.taskProgress?.name !== '100%',
+        );
+
+        if (hasIncompleteTasks) {
+          throw new Error(
+            '모든 테스트가 100% 완료되어야 상태를 변경할 수 있습니다.',
+          );
+        }
+      }
+    },
+    [selectedItem?.data?.projectTasks],
+  );
+
   const handleSubmit = useCallback(
     async (e) => {
       if (e) {
@@ -97,6 +116,9 @@ export const useProjectUpdate = (initialData) => {
       try {
         setIsSubmitting(true);
         setError(null);
+
+        // 상태 변경 시 테스트 완료 여부 검증
+        validateProjectTasks(formData.pjtStatus.name);
 
         // 불필요 필드 제거
         const cleanedData = cleanFormData(formData);
@@ -129,7 +151,7 @@ export const useProjectUpdate = (initialData) => {
         setIsSubmitting(false);
       }
     },
-    [formData],
+    [formData, validateProjectTasks],
   );
 
   const handleCancel = useCallback(() => {
