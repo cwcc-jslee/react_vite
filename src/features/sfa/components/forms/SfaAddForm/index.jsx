@@ -46,6 +46,7 @@ const SfaAddForm = ({ codebooks }) => {
   } = useSfaForm();
   const [hasPartner, setHasPartner] = useState(false);
   const [isProject, setIsProject] = useState(false);
+  const [isSameRevenueSource, setIsSameRevenueSource] = useState(true);
   const [showAmountConfirm, setShowAmountConfirm] = useState(false);
 
   // useModal 훅 사용
@@ -117,7 +118,17 @@ const SfaAddForm = ({ codebooks }) => {
           </FormItem>
 
           <FormItem className="flex-1">
-            <Label></Label>
+            <Label>매출/고객</Label>
+            <Group direction="horizontal" className="items-center">
+              <Switch
+                checked={isSameRevenueSource}
+                onChange={() => setIsSameRevenueSource(!isSameRevenueSource)}
+                disabled={isSubmitting}
+              />
+              <span className="text-sm text-gray-600 ml-2">
+                {isSameRevenueSource ? '매출/고객 동일' : '매출/고객 다름'}
+              </span>
+            </Group>
           </FormItem>
         </Group>
         {/* <Form onSubmit={handleFormSubmit} className="space-y-6"> */}
@@ -163,8 +174,23 @@ const SfaAddForm = ({ codebooks }) => {
 
         {/* Customer and Partner */}
         <Group direction="horizontal" className="gap-6">
+          {!isSameRevenueSource && (
+            <FormItem className="flex-1">
+              <Label required>매출처</Label>
+              <CustomerSearchInput
+                onSelect={handleCustomerSelect}
+                value={formData.customer}
+                error={errors.customer}
+                disabled={isSubmitting}
+                size="small"
+              />
+            </FormItem>
+          )}
+
           <FormItem className="flex-1">
-            <Label required>고객사</Label>
+            <Label required>
+              {isSameRevenueSource ? '매출처/고객사' : '고객사'}
+            </Label>
             <CustomerSearchInput
               onSelect={handleCustomerSelect}
               value={formData.customer}
@@ -173,34 +199,7 @@ const SfaAddForm = ({ codebooks }) => {
               size="small"
             />
           </FormItem>
-
-          <FormItem className="flex-1">
-            <Label>매출파트너</Label>
-            <Group direction="horizontal">
-              <Checkbox
-                id="hasPartner"
-                checked={hasPartner}
-                onChange={(e) => setHasPartner(e.target.checked)}
-                disabled={isSubmitting}
-              />
-              {hasPartner && (
-                <CustomerSearchInput
-                  name="sellingPartner"
-                  onSelect={(partner) =>
-                    updateFormField({
-                      target: {
-                        name: 'sellingPartner',
-                        value: partner.id,
-                      },
-                    })
-                  }
-                  value={formData.SellingPrtner}
-                  disabled={isSubmitting}
-                  size="small"
-                />
-              )}
-            </Group>
-          </FormItem>
+          {isSameRevenueSource && <FormItem className="flex-1"> </FormItem>}
         </Group>
 
         {/* Project Name and Toggle */}

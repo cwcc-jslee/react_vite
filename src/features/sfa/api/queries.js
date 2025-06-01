@@ -13,16 +13,26 @@ export const buildSfaListQuery = (params) => {
   } = params;
 
   // 기본 필터 구성
-  const baseFilters = [
-    { is_deleted: { $eq: false } },
-    // 날짜 범위 필터
-    {
-      recognition_date: {
-        $gte: dateRange.startDate,
-        $lte: dateRange.endDate,
-      },
-    },
-  ];
+  const baseFilters = [{ is_deleted: { $eq: false } }];
+
+  // 날짜 범위 필터 처리
+  if (dateRange) {
+    const dateFilter = {};
+
+    if (dateRange.startDate) {
+      dateFilter.$gte = dateRange.startDate;
+    }
+
+    if (dateRange.endDate) {
+      dateFilter.$lte = dateRange.endDate;
+    }
+
+    if (Object.keys(dateFilter).length > 0) {
+      baseFilters.push({
+        recognition_date: dateFilter,
+      });
+    }
+  }
 
   // 확률 필터 추가
   if (probability) {
@@ -35,7 +45,6 @@ export const buildSfaListQuery = (params) => {
       });
     }
   }
-  console.log(`>> basefilter : `, baseFilters);
 
   // SFA 관련 필터 처리
   const sfaFilters = {};
@@ -48,7 +57,7 @@ export const buildSfaListQuery = (params) => {
   if (filters.name) {
     sfaFilters.name = { $contains: filters.name };
   }
-  // 결제 유형형
+  // 결제 유형
   if (filters.billingType) {
     baseFilters.push({ billing_type: { $eq: filters.billingType } });
   }
@@ -62,6 +71,12 @@ export const buildSfaListQuery = (params) => {
   if (filters.sfaSalesType) {
     sfaFilters.sfa_sales_type = {
       id: { $eq: filters.sfaSalesType },
+    };
+  }
+  // FY
+  if (filters.fy) {
+    sfaFilters.fy = {
+      id: { $eq: filters.fy },
     };
   }
   // 매출 품목 / 사업부
@@ -85,6 +100,7 @@ export const buildSfaListQuery = (params) => {
   if (Object.keys(sfaFilters).length > 0) {
     baseFilters.push({ sfa: sfaFilters });
   }
+  console.log(`>> basefilter : `, baseFilters);
 
   // 쿼리 구성
   const query = {
@@ -113,6 +129,14 @@ export const buildSfaListQuery = (params) => {
           },
           sfa_classification: {
             fields: ['name'],
+          },
+          sfa_customers: {
+            fields: ['is_revenue_source', 'is_end_customer'],
+            populate: {
+              customer: {
+                fields: ['name'],
+              },
+            },
           },
         },
       },

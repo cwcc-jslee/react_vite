@@ -157,4 +157,18 @@ export const projectApiService = {
       handleApiError(error, '프로젝트 수정 중 오류가 발생했습니다.');
     }
   },
+
+  /**
+   * 프로젝트 종료 정보 생성
+   * @param {Object} closureData - 종료 정보 데이터 (project, closureType)
+   * @returns {Promise} API 응답 Promise
+   */
+  createProjectClosure: async (closureData) => {
+    try {
+      const response = await apiService.post('/project-closures', closureData);
+      return response.data;
+    } catch (error) {
+      handleApiError(error, '프로젝트 종료 정보 생성 중 오류가 발생했습니다.');
+    }
+  },
 };

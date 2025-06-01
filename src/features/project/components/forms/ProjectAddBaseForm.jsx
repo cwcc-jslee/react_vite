@@ -58,7 +58,9 @@ const ProjectAddBaseForm = ({
     { value: '', label: '선택하세요' },
     ...(sfaData?.data || []).map((sfa) => ({
       value: sfa?.id?.toString() || '',
-      label: sfa?.name || '이름 없음',
+      label: sfa?.fy?.name
+        ? `(${sfa.fy.name})${sfa?.name || '이름 없음'}`
+        : sfa?.name || '이름 없음',
     })),
   ];
 

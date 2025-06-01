@@ -31,6 +31,7 @@ const SfaSearchForm = () => {
     'sfaPercentage',
     'sfaSalesType',
     'sfaClassification',
+    'fy',
   ]);
   console.log(`>> SFA useCodebook : `, codebooks);
 
@@ -38,20 +39,19 @@ const SfaSearchForm = () => {
     name: '',
     customer: '',
     sfaSalesType: '',
+    fy: '',
     sfaClassification: '',
     salesItem: '',
     team: '',
     billingType: '',
     probability: '',
+    dateRange: {
+      startDate: '',
+      endDate: '',
+    },
   };
 
-  const [searchFormData, setSearchFormData] = useState({
-    dateRange: {
-      startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
-      endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
-    },
-    ...INITFORMDATA,
-  });
+  const [searchFormData, setSearchFormData] = useState(INITFORMDATA);
 
   const { data: teams, isLoading: teamLoading } = useTeam();
   const { data: items, refetch } = useSfaItem();
@@ -102,18 +102,12 @@ const SfaSearchForm = () => {
     e.preventDefault();
     // console.log(`search form : `, searchFormData);
     // executeSearch(searchFormData);
+    console.log(`>> handleSubmit : `, searchFormData);
     updateDetailFilter(searchFormData);
   };
 
   const handleReset = () => {
-    setSearchFormData({
-      dateRange: {
-        startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
-        endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
-      },
-      ...INITFORMDATA,
-    });
-    // resetSearch();
+    setSearchFormData(INITFORMDATA);
   };
 
   return (
@@ -122,22 +116,63 @@ const SfaSearchForm = () => {
         {/* Stack 컴포넌트를 사용하여 3개의 항목을 한 줄에 표시 */}
         <Stack direction="horizontal" spacing="lg">
           <FormItem>
-            <Label>기준일자</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                type="date"
-                name="startDate"
-                value={searchFormData.dateRange.startDate}
-                onChange={handleInputChange}
-              />
-              <span className="text-gray-500">~</span>
-              <Input
-                type="date"
-                name="endDate"
-                value={searchFormData.dateRange.endDate}
-                onChange={handleInputChange}
-              />
-            </div>
+            <Label>매출처</Label>
+            <CustomerSearchInput
+              value={searchFormData.customer}
+              onSelect={handleCustomerSelect}
+              // error={errors.customer}
+              // disabled={isSubmitting}
+              size="small"
+            />
+          </FormItem>
+
+          <FormItem>
+            <Label>건명</Label>
+            <Input
+              type="text"
+              name="name"
+              value={searchFormData.name}
+              onChange={handleInputChange}
+              placeholder="건명 입력"
+            />
+          </FormItem>
+
+          <FormItem>
+            <Label>기준일(시작)</Label>
+            <Input
+              type="date"
+              name="startDate"
+              value={searchFormData.dateRange.startDate}
+              onChange={handleInputChange}
+            />
+          </FormItem>
+          <FormItem>
+            <Label>기준일(종료)</Label>
+            <Input
+              type="date"
+              name="endDate"
+              value={searchFormData.dateRange.endDate}
+              onChange={handleInputChange}
+            />
+          </FormItem>
+        </Stack>
+
+        {/* 두 번째 줄도 Stack으로 변경 */}
+        <Stack direction="horizontal" spacing="lg">
+          <FormItem>
+            <Label>매출유형</Label>
+            <Select
+              name="sfaSalesType"
+              value={searchFormData.sfaSalesType}
+              onChange={handleInputChange}
+            >
+              <option value="">선택하세요</option>
+              {codebooks?.sfaSalesType?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
           </FormItem>
 
           <FormItem>
@@ -157,36 +192,6 @@ const SfaSearchForm = () => {
           </FormItem>
 
           <FormItem>
-            <Label>매출유형</Label>
-            <Select
-              name="sfaSalesType"
-              value={searchFormData.sfaSalesType}
-              onChange={handleInputChange}
-            >
-              <option value="">선택하세요</option>
-              {codebooks?.sfaSalesType?.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </FormItem>
-        </Stack>
-
-        {/* 두 번째 줄도 Stack으로 변경 */}
-        <Stack direction="horizontal" spacing="lg">
-          <FormItem>
-            <Label>매출처</Label>
-            <CustomerSearchInput
-              value={searchFormData.customer}
-              onSelect={handleCustomerSelect}
-              // error={errors.customer}
-              // disabled={isSubmitting}
-              size="small"
-            />
-          </FormItem>
-
-          <FormItem>
             <Label>매출품목</Label>
             <Select
               name="salesItem"
@@ -203,19 +208,18 @@ const SfaSearchForm = () => {
           </FormItem>
 
           <FormItem>
-            <Label>확률</Label>
+            <Label>프로젝트 여부</Label>
             <Select
-              name="probability"
-              value={searchFormData.probability}
+              name="salesItem"
+              value={searchFormData.salesItem}
               onChange={handleInputChange}
             >
-              <option value="">선택하세요</option>
-              <option value="confirmed">확정</option>
-              {codebooks.sfaPercentage?.map((item) => (
+              {/* <option value="">선택하세요</option>
+              {items?.data?.map((item) => (
                 <option key={item.id} value={item.name}>
                   {item.name}
                 </option>
-              ))}
+              ))} */}
             </Select>
           </FormItem>
         </Stack>
@@ -223,16 +227,20 @@ const SfaSearchForm = () => {
         {/* 세 번째 줄도 Stack으로 변경 */}
         <Stack direction="horizontal" spacing="lg">
           <FormItem>
-            <Label>건명</Label>
-            <Input
-              type="text"
-              name="name"
-              value={searchFormData.name}
+            <Label>FY</Label>
+            <Select
+              name="fy"
+              value={searchFormData.fy}
               onChange={handleInputChange}
-              placeholder="건명 입력"
-            />
+            >
+              <option value="">선택하세요</option>
+              {codebooks.fy?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
           </FormItem>
-
           <FormItem>
             <Label>사업부</Label>
             <Select
@@ -258,6 +266,22 @@ const SfaSearchForm = () => {
             >
               <option value="">선택하세요</option>
               {codebooks.rePaymentMethod?.map((item) => (
+                <option key={item.id} value={item.name}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </FormItem>
+          <FormItem>
+            <Label>확률</Label>
+            <Select
+              name="probability"
+              value={searchFormData.probability}
+              onChange={handleInputChange}
+            >
+              <option value="">선택하세요</option>
+              <option value="confirmed">확정</option>
+              {codebooks.sfaPercentage?.map((item) => (
                 <option key={item.id} value={item.name}>
                   {item.name}
                 </option>

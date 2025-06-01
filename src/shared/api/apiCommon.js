@@ -90,6 +90,15 @@ export const apiCommon = {
               $eq: customerId,
             },
           },
+          is_project: {
+            $eq: true,
+          },
+        },
+        fields: ['name'],
+        populate: {
+          fy: {
+            fields: ['code', 'name'],
+          },
         },
         sort: ['id:asc'],
       },

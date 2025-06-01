@@ -19,7 +19,7 @@ import { convertKeysToSnakeCase } from '../../../shared/utils/transformUtils';
 import { useProjectStore } from './useProjectStore';
 
 export const useProjectUpdate = (initialData) => {
-  const { data: codebooks } = useCodebook(['pjtStatus']);
+  const { data: codebooks } = useCodebook(['pjtStatus', 'pjtClosureType']);
   const { selectedItem } = useProjectStore();
 
   const [formData, setFormData] = useState(initialData);
@@ -27,10 +27,19 @@ export const useProjectUpdate = (initialData) => {
   const [error, setError] = useState(null);
 
   const updateField = useCallback((fieldName, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [fieldName]: value,
-    }));
+    setFormData((prev) => {
+      const newData = {
+        ...prev,
+        [fieldName]: value,
+      };
+
+      // 상태가 '종료'가 아닐 때는 종료타입을 초기화
+      if (fieldName === 'pjtStatus' && value?.name !== '종료') {
+        newData.pjtClosureType = null;
+      }
+
+      return newData;
+    });
   }, []);
 
   console.log(`>>>> initialData`, initialData);
@@ -69,26 +78,20 @@ export const useProjectUpdate = (initialData) => {
     }
   }, [codebooks?.pjtStatus, initialData.pjtStatus]);
 
-  /**
-   * 폼 데이터 정리 함수
-   * 불필요한 필드(id, documentId) 제거
-   *
-   * @param {Object} formData - 정리할 폼 데이터
-   * @returns {Object} 정리된 폼 데이터
-   */
-  const cleanFormData = (formData) => {
-    // 깊은 복사로 원본 데이터 유지
-    const cleanedData = JSON.parse(JSON.stringify(formData));
+  // 종료 상태 여부 확인
+  const isClosureStatus = useMemo(() => {
+    return formData.pjtStatus?.name === '종료';
+  }, [formData.pjtStatus]);
 
-    // id와 documentId 필드 제거
-    const { id, documentId, ...restData } = cleanedData;
-
-    return restData;
-  };
+  // 종료타입 목록
+  const availableClosureTypes = useMemo(() => {
+    return codebooks?.pjtClosureType || [];
+  }, [codebooks?.pjtClosureType]);
 
   const validateProjectTasks = useCallback(
-    (nextStatus) => {
-      if (nextStatus === '검수' || nextStatus === '종료') {
+    (nextStatus, closureType) => {
+      // 검수 상태일 때는 모든 task가 100% 완료되어야 함
+      if (nextStatus === '검수') {
         const projectTasks = selectedItem?.data?.projectTasks || [];
         const hasIncompleteTasks = projectTasks.some(
           (task) => task.taskProgress?.name !== '100%',
@@ -97,6 +100,20 @@ export const useProjectUpdate = (initialData) => {
         if (hasIncompleteTasks) {
           throw new Error(
             '모든 테스트가 100% 완료되어야 상태를 변경할 수 있습니다.',
+          );
+        }
+      }
+
+      // 종료 상태일 때는 pjtClosureType이 '완료'인 경우에만 task 체크
+      if (nextStatus === '종료' && closureType?.name === '완료') {
+        const projectTasks = selectedItem?.data?.projectTasks || [];
+        const hasIncompleteTasks = projectTasks.some(
+          (task) => task.taskProgress?.name !== '100%',
+        );
+
+        if (hasIncompleteTasks) {
+          throw new Error(
+            '완료로 종료할 경우 모든 테스트가 100% 완료되어야 합니다.',
           );
         }
       }
@@ -110,28 +127,66 @@ export const useProjectUpdate = (initialData) => {
         e.preventDefault();
       }
 
-      const id = initialData.documentId;
-      console.log(`>>>> formData id: ${id}`, formData);
+      // const id = initialData.documentId;
+      console.log(`>>>> formData id`, formData);
 
       try {
         setIsSubmitting(true);
         setError(null);
 
         // 상태 변경 시 테스트 완료 여부 검증
-        validateProjectTasks(formData.pjtStatus.name);
+        validateProjectTasks(formData.pjtStatus.name, formData.pjtClosureType);
 
-        // 불필요 필드 제거
-        const cleanedData = cleanFormData(formData);
+        // 종료 상태일 때 종료타입 필수 검증
+        if (formData.pjtStatus?.name === '종료' && !formData.pjtClosureType) {
+          throw new Error(
+            '종료 상태로 변경할 때는 종료타입을 선택해야 합니다.',
+          );
+        }
 
+        // 불필요 필드 제거 및 데이터 정리
+        const { id, documentId, pjtClosureType, ...restData } = formData;
+        console.log(`>>>> restData`, restData);
         // 관계 필드 처리
-        const processedData = processRelationFields(cleanedData);
+        const processedData = processRelationFields(restData);
 
         // 키 정보 스네이크케이스로 변환
         const snakeCaseData = convertKeysToSnakeCase(processedData);
 
+        // 종료 상태일 경우 is_completed를 true로 설정
+        if (formData.pjtStatus?.name === '종료') {
+          snakeCaseData.is_completed = true;
+        }
+
         console.log(`>>>> snakeCaseData`, snakeCaseData);
 
-        const result = await projectApiService.updateProject(id, snakeCaseData);
+        // 프로젝트 업데이트
+        const result = await projectApiService.updateProject(
+          documentId,
+          snakeCaseData,
+        );
+
+        // 프로젝트 상태가 '종료'인 경우에만 project-closures 테이블에 데이터 추가
+        if (formData.pjtStatus?.name === '종료') {
+          try {
+            const closureData = {
+              project: id,
+              closure_type: pjtClosureType.id,
+            };
+            await projectApiService.createProjectClosure(closureData);
+          } catch (closureError) {
+            // 종료 정보 생성 실패 시 프로젝트 상태 롤백
+            const rollbackData = {
+              ...snakeCaseData,
+              pjt_status: initialData.pjtStatus.id,
+              pjt_closure_type: null,
+            };
+            await projectApiService.updateProject(id, rollbackData);
+            throw new Error(
+              '프로젝트 종료 정보 생성 중 오류가 발생했습니다. 프로젝트 상태가 이전 상태로 복원되었습니다.',
+            );
+          }
+        }
 
         return {
           success: true,
@@ -151,7 +206,7 @@ export const useProjectUpdate = (initialData) => {
         setIsSubmitting(false);
       }
     },
-    [formData, validateProjectTasks],
+    [formData, validateProjectTasks, initialData],
   );
 
   const handleCancel = useCallback(() => {
@@ -168,5 +223,7 @@ export const useProjectUpdate = (initialData) => {
     handleSubmit,
     handleCancel,
     availableStatuses,
+    isClosureStatus,
+    availableClosureTypes,
   };
 };

@@ -5,12 +5,14 @@ import { Button } from '../../../../shared/components/ui';
 import { Card } from '../../../../shared/components/ui/card/Card';
 import { StateDisplay } from '../../../../shared/components/ui/state/StateDisplay';
 import { Pagination } from '../../../../shared/components/ui/pagination/Pagination';
+import { formatCustomerDisplay } from '../../utils/displayUtils';
+import { truncateText } from '../../../../shared/utils/textUtils';
 
 const COLUMNS = [
   { key: 'no', title: 'No', align: 'center' },
   { key: 'confirmed', title: '확정여부', align: 'center' },
   { key: 'percentage', title: '확률', align: 'center' },
-  { key: 'customer', title: '고객사/매출처', align: 'left' },
+  { key: 'customer', title: '매출처', align: 'left' },
   { key: 'name', title: '건명', align: 'left' },
   { key: 'payment', title: '결제방법', align: 'center' },
   { key: 'classification', title: '매출구분', align: 'center' },
@@ -36,8 +38,19 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
       <td className="px-3 py-2 text-center text-sm">
         {item.probability || '-'}
       </td>
-      <td className="px-3 py-2 text-sm">{item.sfa?.customer?.name || '-'}</td>
-      <td className="px-3 py-2 text-sm">{item.sfa?.name}</td>
+      <td className="px-3 py-2 text-sm">
+        {formatCustomerDisplay(item.sfa?.sfa_customers)}
+      </td>
+      <td className="px-3 py-2 text-sm">
+        <div className="group relative">
+          <span>{truncateText(item.sfa?.name)}</span>
+          {item.sfa?.name && item.sfa.name.length > 25 && (
+            <div className="invisible group-hover:visible absolute z-10 p-2 bg-gray-800 text-white text-sm rounded shadow-lg whitespace-normal max-w-xs">
+              {item.sfa.name}
+            </div>
+          )}
+        </div>
+      </td>
       <td className="px-3 py-2 text-center text-sm">
         {item.billing_type || '-'}
       </td>
