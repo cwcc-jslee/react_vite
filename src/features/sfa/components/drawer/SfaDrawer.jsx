@@ -16,7 +16,7 @@ import { useSfa } from '../../context/SfaProvider.jsx';
 import { useSfaForm } from '../../hooks/useSfaForm.js';
 import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer.jsx';
 import ActionMenuBar from '../../../../shared/components/ui/button/ActionMenuBar.jsx';
-import SfaAddForm from '../forms/SfaAddForm/index.jsx';
+import SfaAddForm from '../forms/SfaAddForm.jsx';
 import SfaDetailTable from '../tables/SfaDetailTable.jsx';
 // import SfaDetailPaymentTable from '../tables/SfaDetailPaymentTable.jsx';
 import EditableSfaDetail from '../tables/EditableSfaDetail.jsx';
@@ -73,6 +73,15 @@ const SfaDrawer = ({ drawer }) => {
             active: featureMode === 'editBase',
             onClick: () => {
               dispatch(setDrawer({ featureMode: 'editBase' }));
+              resetPaymentForm();
+            },
+          },
+          {
+            key: 'editCustomer',
+            label: '매출처/고객사 수정',
+            active: featureMode === 'editCustomer',
+            onClick: () => {
+              dispatch(setDrawer({ featureMode: 'editCustomer' }));
               resetPaymentForm();
             },
           },

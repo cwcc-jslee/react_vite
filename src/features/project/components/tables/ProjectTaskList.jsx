@@ -85,8 +85,8 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
     { key: 'duration', title: '기간', align: 'center', width: '70px' },
     {
       key: 'totalWorkHours',
-      title: '작업시간',
-      align: 'center',
+      title: '작업/계획',
+      align: 'left',
       width: '80px',
     },
     { key: 'progress', title: '완료%', align: 'center', width: '80px' },
@@ -297,10 +297,30 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
 
                 {/* 작업시간 */}
                 <td className="px-3 py-2 text-center text-sm">
-                  {task.totalWorkHours ? (
-                    <div className="flex items-center justify-center gap-1">
-                      <FiClock className="text-gray-500" size={14} />
-                      <span>{task.totalWorkHours}h</span>
+                  {task.totalWorkHours ||
+                  task.planningTimeData?.totalPlannedHours ? (
+                    <div className="flex flex-col items-center gap-0.5">
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-500">작업</span>
+                        <span
+                          className={`font-medium ${
+                            task.totalWorkHours >
+                            (task.planningTimeData?.totalPlannedHours || 0)
+                              ? 'text-red-500'
+                              : 'text-gray-700'
+                          }`}
+                        >
+                          {task.totalWorkHours
+                            ? `${task.totalWorkHours}h`
+                            : '0h'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-500">계획</span>
+                        <span className="text-gray-700">
+                          {task.planningTimeData?.totalPlannedHours || 0}h
+                        </span>
+                      </div>
                     </div>
                   ) : (
                     '-'

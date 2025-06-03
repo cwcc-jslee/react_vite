@@ -1,5 +1,6 @@
 // src/features/sfa/hooks/useFormValidation.js
 // 구조개선(25.01.23)
+// formValidation.js 로 이전 예정
 import { useState } from 'react';
 import {
   ERROR_GROUPS,

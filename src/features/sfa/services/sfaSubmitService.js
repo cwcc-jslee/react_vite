@@ -173,6 +173,47 @@ export const sfaSubmitService = {
       );
     }
   },
+
+  /**
+   * SFA 고객사 정보 생성
+   * @param {string|number} sfaId - 생성된 SFA ID
+   * @param {Array} customers - 고객사 정보 배열
+   * @returns {Promise<Array>} 생성된 고객사 정보 배열
+   */
+  async addSfaCustomers(sfaId, customers) {
+    console.log('[SFA] Creating customers:', {
+      sfaId,
+      customers,
+    });
+
+    try {
+      // 각 customer 데이터를 변환하고 API 요청을 생성
+      const promises = customers.map(async (customer) => {
+        const customerData = {
+          sfa: sfaId,
+          customer: customer.customer,
+          is_revenue_source: customer.isRevenueSource,
+          is_end_customer: customer.isEndCustomer,
+        };
+
+        console.log('[SFA] Sending customer data:', customerData);
+        // 새로운 엔드포인트 사용
+        const response = await apiService.post('/sfa-customers', customerData);
+        return response.data;
+      });
+
+      // 모든 customer 요청을 병렬로 처리
+      const results = await Promise.all(promises);
+      console.log('[SFA] All customers created:', results);
+      return results;
+    } catch (error) {
+      console.error('[SFA] Customer creation error:', error);
+      throw new Error(
+        error.response?.data?.error?.message ||
+          '고객사 정보 저장 중 오류가 발생했습니다.',
+      );
+    }
+  },
 };
 
 /**
@@ -190,8 +231,18 @@ export const createSfaWithPayment = async (formData) => {
       throw new Error('SFA 기본 정보 생성 실패');
     }
 
-    // 2. 결제 매출 정보 생성
+    // 2. 고객사 정보 생성
     const sfaId = sfaResponse.data.id;
+    const customersResponse = await sfaSubmitService.addSfaCustomers(
+      sfaId,
+      formData.sfaCustomers,
+    );
+
+    if (!customersResponse) {
+      throw new Error('고객사 정보 생성 실패');
+    }
+
+    // 3. 결제 매출 정보 생성
     const paymentsResponse = await sfaSubmitService.addSfaPayment(
       sfaId,
       formData.salesByPayments,
@@ -202,6 +253,7 @@ export const createSfaWithPayment = async (formData) => {
       success: true,
       data: {
         ...sfaResponse.data,
+        customers: customersResponse,
         payments: paymentsResponse,
       },
     };

@@ -1,13 +1,16 @@
 // src/features/sfa/hooks/useSfaForm.js
-import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useFormData } from './useFormData';
-import { useFormValidation } from './useFormValidation';
 import { createSfaWithPayment } from '../services/sfaSubmitService';
 import { notification } from '../../../shared/services/notification';
 import { sfaApi } from '../api/sfaApi';
 import { sfaSubmitService } from '../services/sfaSubmitService';
 import { useUiStore } from '../../../shared/hooks/useUiStore';
+import {
+  validateForm,
+  validatePaymentForm,
+  checkAmounts,
+} from '../utils/formValidation';
 
 /**
  * SFA Form 관련 로직을 관리하는 Custom Hook
@@ -17,7 +20,6 @@ export const useSfaForm = () => {
   const { drawer, actions } = useUiStore();
   const formState = useFormData(drawer);
   const { formData, setIsSubmitting, setErrors } = formState;
-  const { validateForm, checkAmounts } = useFormValidation(formData);
 
   // 폼 제출 처리
   const processSubmit = async (hasPartner, isProject) => {
@@ -116,8 +118,9 @@ export const useSfaForm = () => {
 
   return {
     ...formState,
-    validateForm,
-    checkAmounts,
+    validateForm: (hasPartner) => validateForm(formData, hasPartner).isValid,
+    validatePaymentForm: () => validatePaymentForm(formData.salesByPayments),
+    checkAmounts: () => checkAmounts(formData),
     processSubmit,
     processPaymentSubmit,
   };

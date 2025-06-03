@@ -42,8 +42,16 @@ const SfaDetail = ({ data }) => {
           고객사/매출처
         </DescriptionItem>
         <DescriptionItem>
-          {data.customer?.name}
-          {data.selling_partner && `/${data.selling_partner.name}`}
+          {!data.sfa_customers || data.sfa_customers.length === 0 ? (
+            '-'
+          ) : data.sfa_customers.length === 1 ? (
+            data.sfa_customers[0].customer?.name || '-'
+          ) : (
+            <>
+              {data.sfa_customers[0].customer?.name || '-'} /{' '}
+              {data.sfa_customers[1].customer?.name || '-'}
+            </>
+          )}
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
           매출유형

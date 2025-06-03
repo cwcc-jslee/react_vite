@@ -1,12 +1,12 @@
 // src/features/sfa/components/forms/SfaAddForm/index.jsx
 import React, { useState } from 'react';
-import { CustomerSearchInput } from '../../../../../shared/components/customer/CustomerSearchInput';
-import { formatDisplayNumber } from '../../../../../shared/utils/format/number';
-import SalesByItem from '../../elements/SalesByItem.jsx';
-import SalesByPayment from '../../elements/SalesByPayment.jsx';
-import { useSfaForm } from '../../../hooks/useSfaForm.js';
-import useModal from '../../../../../shared/hooks/useModal.js';
-import ModalRenderer from '../../../../../shared/components/ui/modal/ModalRenderer.jsx';
+import { CustomerSearchInput } from '@shared/components/customer/CustomerSearchInput';
+import { formatDisplayNumber } from '@shared/utils/format/number';
+import SalesByItem from '../elements/SalesByItem.jsx';
+import SalesByPayment from '../elements/SalesByPayment.jsx';
+import { useSfaForm } from '../../hooks/useSfaForm.js';
+import useModal from '@shared/hooks/useModal.js';
+import ModalRenderer from '@shared/components/ui/modal/ModalRenderer.jsx';
 import {
   Form,
   FormItem,
@@ -20,7 +20,8 @@ import {
   Checkbox,
   Switch,
   Message,
-} from '../../../../../shared/components/ui';
+} from '@shared/components/ui';
+import { validateForm, checkAmounts } from '../../utils/formValidation';
 
 const SfaAddForm = ({ codebooks }) => {
   const {
@@ -40,14 +41,10 @@ const SfaAddForm = ({ codebooks }) => {
     paymentData,
     percentageData,
     isPaymentDataLoading,
-    validateForm,
-    checkAmounts,
     processSubmit,
+    toggleIsProject,
+    toggleIsSameRevenueSource,
   } = useSfaForm();
-  const [hasPartner, setHasPartner] = useState(false);
-  const [isProject, setIsProject] = useState(false);
-  const [isSameRevenueSource, setIsSameRevenueSource] = useState(true);
-  const [showAmountConfirm, setShowAmountConfirm] = useState(false);
 
   // useModal 훅 사용
   const { modalState, openModal, closeModal, handleConfirm } = useModal();
@@ -55,16 +52,15 @@ const SfaAddForm = ({ codebooks }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     // 유효성 검사 수행
-    const isValid = validateForm(hasPartner);
+    const { isValid } = validateForm(formData);
     if (!isValid) return;
 
     // 금액 일치 여부 확인
-    if (!checkAmounts()) {
-      // setShowAmountConfirm(true);
+    if (!checkAmounts(formData)) {
       // 금액 불일치 모달 열기
       openAmountConfirmModal();
     } else {
-      await processSubmit(hasPartner, isProject);
+      await processSubmit(formData.isProject);
     }
   };
 
@@ -87,9 +83,9 @@ const SfaAddForm = ({ codebooks }) => {
       'confirm',
       '금액 불일치 확인',
       message,
-      { hasPartner, isProject },
+      { isProject: formData.isProject },
       async (data) => {
-        await processSubmit(data.hasPartner, data.isProject);
+        await processSubmit(data.isProject);
       },
     );
   };
@@ -121,12 +117,14 @@ const SfaAddForm = ({ codebooks }) => {
             <Label>매출/고객</Label>
             <Group direction="horizontal" className="items-center">
               <Switch
-                checked={isSameRevenueSource}
-                onChange={() => setIsSameRevenueSource(!isSameRevenueSource)}
+                checked={formData.isSameRevenueSource}
+                onChange={toggleIsSameRevenueSource}
                 disabled={isSubmitting}
               />
               <span className="text-sm text-gray-600 ml-2">
-                {isSameRevenueSource ? '매출/고객 동일' : '매출/고객 다름'}
+                {formData.isSameRevenueSource
+                  ? '매출/고객 동일'
+                  : '매출/고객 다름'}
               </span>
             </Group>
           </FormItem>
@@ -174,12 +172,14 @@ const SfaAddForm = ({ codebooks }) => {
 
         {/* Customer and Partner */}
         <Group direction="horizontal" className="gap-6">
-          {!isSameRevenueSource && (
+          {!formData.isSameRevenueSource && (
             <FormItem className="flex-1">
               <Label required>매출처</Label>
               <CustomerSearchInput
-                onSelect={handleCustomerSelect}
-                value={formData.customer}
+                onSelect={(customer) =>
+                  handleCustomerSelect(customer, 'revenue')
+                }
+                value={formData.sfaCustomers?.[0]?.customer}
                 error={errors.customer}
                 disabled={isSubmitting}
                 size="small"
@@ -189,17 +189,25 @@ const SfaAddForm = ({ codebooks }) => {
 
           <FormItem className="flex-1">
             <Label required>
-              {isSameRevenueSource ? '매출처/고객사' : '고객사'}
+              {formData.isSameRevenueSource ? '매출처/고객사' : '고객사'}
             </Label>
             <CustomerSearchInput
-              onSelect={handleCustomerSelect}
-              value={formData.customer}
+              onSelect={(customer) =>
+                handleCustomerSelect(
+                  customer,
+                  formData.isSameRevenueSource ? 'both' : 'customer',
+                )
+              }
+              value={
+                formData.isSameRevenueSource
+                  ? formData.sfaCustomers?.[0]?.customer
+                  : formData.sfaCustomers?.[1]?.customer
+              }
               error={errors.customer}
               disabled={isSubmitting}
               size="small"
             />
           </FormItem>
-          {isSameRevenueSource && <FormItem className="flex-1"> </FormItem>}
         </Group>
 
         {/* Project Name and Toggle */}
@@ -220,8 +228,8 @@ const SfaAddForm = ({ codebooks }) => {
           <FormItem className="flex-1">
             <Label>프로젝트</Label>
             <Switch
-              checked={isProject}
-              onChange={() => setIsProject(!isProject)}
+              checked={formData.isProject}
+              onChange={toggleIsProject}
               disabled={isSubmitting}
             />
           </FormItem>

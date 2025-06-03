@@ -65,12 +65,22 @@ const EditableSfaDetail = ({
       getDisplayValue: (data) => data?.sfa_classification?.name || '-',
       editable: true,
     },
-    customer: {
+    revenue_source: {
+      type: 'customer',
+      label: '매출처',
+      value: data?.sfa_customers?.[0]?.customer?.id || '',
+      getValue: (data) => data?.sfa_customers?.[0]?.customer?.id || '',
+      getDisplayValue: (data) =>
+        data?.sfa_customers?.[0]?.customer?.name || '-',
+      editable: true,
+    },
+    end_customer: {
       type: 'customer',
       label: '고객사',
-      value: data?.customer?.id,
-      getValue: (data) => data?.customer?.id || '',
-      getDisplayValue: (data) => data?.customer?.name || '-',
+      value: data?.sfa_customers?.[1]?.customer?.id || '',
+      getValue: (data) => data?.sfa_customers?.[1]?.customer?.id || '',
+      getDisplayValue: (data) =>
+        data?.sfa_customers?.[1]?.customer?.name || '-',
       editable: true,
     },
     is_project: {
@@ -316,23 +326,28 @@ const EditableSfaDetail = ({
 
       <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
+          매출처
+        </DescriptionItem>
+        <DescriptionItem className="px-0.5">
+          {data?.sfa_customers?.[0]?.customer?.name || '-'}
+          {/* {featureMode !== 'editBase'
+            ? data?.sfa_customers?.[0]?.customer?.name || '-'
+            : renderEditableField(
+                'revenue_source',
+                editableFields.revenue_source.getDisplayValue(data),
+              )} */}
+        </DescriptionItem>
+        <DescriptionItem label width="w-[140px]">
           고객사
         </DescriptionItem>
         <DescriptionItem className="px-0.5">
-          {featureMode !== 'editBase'
-            ? data.customer?.name
+          {data?.sfa_customers?.[1]?.customer?.name || '-'}
+          {/* {featureMode !== 'editBase'
+            ? data?.sfa_customers?.[1]?.customer?.name || '-'
             : renderEditableField(
-                'customer',
-                editableFields.customer.getDisplayValue(data),
-              )}
-        </DescriptionItem>
-        <DescriptionItem label width="w-[140px]">
-          매출파트너
-        </DescriptionItem>
-        <DescriptionItem className="px-0.5">
-          {featureMode !== 'editBase'
-            ? data.selling_partner?.name || '-'
-            : renderEditableField('selling_partner', null)}
+                'end_customer',
+                editableFields.end_customer.getDisplayValue(data),
+              )} */}
         </DescriptionItem>
       </DescriptionRow>
 

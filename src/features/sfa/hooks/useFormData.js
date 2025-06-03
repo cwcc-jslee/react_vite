@@ -129,7 +129,6 @@ export const useFormData = (drawerState) => {
     // SFA 분류 변경 시 관련 매출품목 조회
     if (name === 'sfaClassification' && value) {
       loadItems(value);
-      // fetchItems(value);
       // 매출품목 변경 시 관련 항목 초기화
       setFormData((prev) => ({
         ...prev,
@@ -146,15 +145,59 @@ export const useFormData = (drawerState) => {
     }
   };
 
+  // isProject 상태 변경 함수 추가
+  const toggleIsProject = () => {
+    setFormData((prev) => ({
+      ...prev,
+      isProject: !prev.isProject,
+    }));
+  };
+
+  // isSameRevenueSource 상태 변경 함수 추가
+  const toggleIsSameRevenueSource = () => {
+    setFormData((prev) => ({
+      ...prev,
+      isSameRevenueSource: !prev.isSameRevenueSource,
+      sfaCustomers: [], // sfaCustomers 초기화
+    }));
+  };
+
   /**
    * 고객사 선택 핸들러
    * @param {Object} customer - 선택된 고객사 정보
    */
-  const handleCustomerSelect = (customer) => {
-    setFormData((prev) => ({
-      ...prev,
-      customer: customer.id,
-    }));
+  const handleCustomerSelect = (customer, type = 'both') => {
+    setFormData((prev) => {
+      const newSfaCustomers = [...(prev.sfaCustomers || [])];
+
+      if (type === 'both') {
+        // 매출처/고객사 동일한 경우
+        newSfaCustomers[0] = {
+          customer: customer.id,
+          isEndCustomer: true,
+          isRevenueSource: true,
+        };
+      } else if (type === 'revenue') {
+        // 매출처만 선택
+        newSfaCustomers[0] = {
+          customer: customer.id,
+          isEndCustomer: false,
+          isRevenueSource: true,
+        };
+      } else if (type === 'customer') {
+        // 고객사만 선택
+        newSfaCustomers[1] = {
+          customer: customer.id,
+          isEndCustomer: true,
+          isRevenueSource: false,
+        };
+      }
+
+      return {
+        ...prev,
+        sfaCustomers: newSfaCustomers,
+      };
+    });
 
     // 에러 상태 초기화
     if (errors.customer) {
@@ -469,5 +512,8 @@ export const useFormData = (drawerState) => {
     togglePaymentSelection,
     resetPaymentForm,
     handleEditPayment,
+    // isProject 관련 함수
+    toggleIsProject,
+    toggleIsSameRevenueSource,
   };
 };

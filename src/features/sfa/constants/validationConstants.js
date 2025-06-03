@@ -30,7 +30,7 @@ export const SECTION_TITLES = {
 export const REQUIRED_FIELDS = {
   sfaSalesType: '매출유형',
   sfaClassification: '매출구분',
-  customer: '고객사',
+  // customer: '고객사',
   name: '건명',
 };
 

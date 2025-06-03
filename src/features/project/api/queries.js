@@ -125,7 +125,7 @@ export const buildProjectDetailQuery = (id) => {
       fields: ['*'],
       populate: {
         sfa: {
-          fields: ['name'],
+          fields: ['name', 'total_price'],
           populate: {
             customer: {
               fields: ['name'],

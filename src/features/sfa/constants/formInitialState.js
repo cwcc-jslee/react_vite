@@ -29,13 +29,16 @@ export const initialFormState = {
   name: '',
   sfaSalesType: '',
   sfaClassification: '',
-  customer: '',
-  sellingPartner: '',
+  // customer: '',
+  // sellingPartner: '',
   itemAmount: '',
   paymentAmount: '',
   description: '',
   salesByItems: [],
   salesByPayments: [],
+  sfaCustomers: [],
+  isProject: false,
+  isSameRevenueSource: true,
 };
 
 export const INITIAL_PAYMENT_ID_STATE = {
