@@ -4,6 +4,8 @@ import { CustomerSearchInput } from '@shared/components/customer/CustomerSearchI
 import { formatDisplayNumber } from '@shared/utils/format/number';
 import SalesByItem from '../elements/SalesByItem.jsx';
 import SalesByPayment from '../elements/SalesByPayment.jsx';
+import SalesAddByPayment from '../elements/SalesAddByPayment.jsx';
+import RevenueSource from '../elements/RevenueSource.jsx';
 import { useSfaForm } from '../../hooks/useSfaForm.js';
 import useModal from '@shared/hooks/useModal.js';
 import ModalRenderer from '@shared/components/ui/modal/ModalRenderer.jsx';
@@ -20,8 +22,19 @@ import {
   Checkbox,
   Switch,
   Message,
+  Col,
 } from '@shared/components/ui';
 import { validateForm, checkAmounts } from '../../utils/formValidation';
+import { FORM_LIMITS } from '../../constants/formInitialState';
+import {
+  X,
+  Plus,
+  Trash2,
+  Building2,
+  Users,
+  CheckCircle,
+  Briefcase,
+} from 'lucide-react';
 
 const SfaAddForm = ({ codebooks }) => {
   const {
@@ -42,8 +55,10 @@ const SfaAddForm = ({ codebooks }) => {
     percentageData,
     isPaymentDataLoading,
     processSubmit,
-    toggleIsProject,
+    handleProjectToggle,
     toggleIsSameRevenueSource,
+    resetForm,
+    handleCustomerTypeChange,
   } = useSfaForm();
 
   // useModal 훅 사용
@@ -90,6 +105,49 @@ const SfaAddForm = ({ codebooks }) => {
     );
   };
 
+  const handleAddRevenueSource = () => {
+    const newRevenue = {
+      customer: '',
+      isEndCustomer: false,
+      isRevenueSource: true,
+    };
+    updateFormField({
+      target: {
+        name: 'sfaCustomers',
+        value: [...(formData.sfaCustomers || []), newRevenue],
+      },
+    });
+  };
+
+  const handleRemoveRevenueSource = (index) => {
+    const newRevenues = [...formData.sfaCustomers];
+    newRevenues.splice(index, 1);
+    updateFormField({
+      target: {
+        name: 'sfaCustomers',
+        value: newRevenues,
+      },
+    });
+  };
+
+  const handleRevenueSourceChange = (index, field, value) => {
+    const newRevenues = [...formData.sfaCustomers];
+    newRevenues[index] = {
+      ...newRevenues[index],
+      [field]: value,
+    };
+    updateFormField({
+      target: {
+        name: 'sfaCustomers',
+        value: newRevenues,
+      },
+    });
+  };
+
+  const handleAddSalesCustomer = () => {
+    // Implementation of handleAddSalesCustomer
+  };
+
   return (
     <>
       <Form
@@ -99,141 +157,199 @@ const SfaAddForm = ({ codebooks }) => {
         method="POST"
         action="#"
       >
-        <Group direction="horizontal" className="gap-6">
-          <FormItem className="flex-1">
-            {/* flex-1 추가로 균등한 너비 */}
-            <Label>거래유형</Label>
-            <Select
-              name=""
-              // value={formData.sfaSalesType}
-              // onChange={updateFormField}
-              disabled={true}
-            >
-              <option value="">계약/투자</option>
-            </Select>
-          </FormItem>
+        <div className="rounded-lg border border-gray-200 p-4">
+          <h3 className="mb-4 font-medium text-gray-900">기본 정보</h3>
+          <div className="space-y-4">
+            <Group direction="horizontal" className="gap-6">
+              <FormItem className="flex-1">
+                <Label>거래유형</Label>
+                <Select name="" disabled={true}>
+                  <option value="">계약/투자</option>
+                </Select>
+              </FormItem>
 
-          <FormItem className="flex-1">
-            <Label>매출/고객</Label>
-            <Group direction="horizontal" className="items-center">
-              <Switch
-                checked={formData.isSameRevenueSource}
-                onChange={toggleIsSameRevenueSource}
-                disabled={isSubmitting}
-              />
-              <span className="text-sm text-gray-600 ml-2">
-                {formData.isSameRevenueSource
-                  ? '매출/고객 동일'
-                  : '매출/고객 다름'}
-              </span>
+              <FormItem className="flex-1"></FormItem>
             </Group>
-          </FormItem>
-        </Group>
-        {/* <Form onSubmit={handleFormSubmit} className="space-y-6"> */}
-        {/* Sales Type and Classification */}
-        <Group direction="horizontal" className="gap-6">
-          <FormItem className="flex-1">
-            {/* flex-1 추가로 균등한 너비 */}
-            <Label required>매출유형</Label>
-            <Select
-              name="sfaSalesType"
-              value={formData.sfaSalesType}
-              onChange={updateFormField}
-              disabled={isSubmitting}
-              error={errors.sfaSalesType}
-            >
-              <option value="">선택하세요</option>
-              {codebooks.sfaSalesType?.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </FormItem>
 
-          <FormItem className="flex-1">
-            <Label required>품목유형</Label>
-            <Select
-              name="sfaClassification"
-              value={formData.sfaClassification}
-              onChange={updateFormField}
-              disabled={isSubmitting}
-              error={errors.sfaClassification}
-            >
-              <option value="">선택하세요</option>
-              {codebooks.sfaClassification?.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </FormItem>
-        </Group>
+            <Group direction="horizontal" className="gap-6">
+              <FormItem className="flex-1">
+                <Label required>매출유형</Label>
+                <Select
+                  name="sfaSalesType"
+                  value={formData.sfaSalesType}
+                  onChange={updateFormField}
+                  disabled={isSubmitting}
+                  error={errors.sfaSalesType}
+                >
+                  <option value="">선택하세요</option>
+                  {codebooks.sfaSalesType?.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </Select>
+              </FormItem>
 
-        {/* Customer and Partner */}
-        <Group direction="horizontal" className="gap-6">
-          {!formData.isSameRevenueSource && (
+              <FormItem className="flex-1">
+                <Label required>품목유형</Label>
+                <Select
+                  name="sfaClassification"
+                  value={formData.sfaClassification}
+                  onChange={updateFormField}
+                  disabled={isSubmitting}
+                  error={errors.sfaClassification}
+                >
+                  <option value="">선택하세요</option>
+                  {codebooks.sfaClassification?.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </Select>
+              </FormItem>
+            </Group>
+
+            <Group direction="horizontal" className="gap-6">
+              <Col>
+                <FormItem className="flex-1">
+                  <Label required>건명</Label>
+                  <Input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={updateFormField}
+                    placeholder="건명을 입력하세요"
+                    disabled={isSubmitting}
+                  />
+                </FormItem>
+              </Col>
+              <Col>
+                <div>
+                  <input
+                    type="checkbox"
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    checked={formData.isProject}
+                    onChange={handleProjectToggle}
+                  />
+                  <span className="ml-2 text-sm text-gray-700">
+                    프로젝트와 연동
+                  </span>
+                </div>
+              </Col>
+            </Group>
+          </div>
+        </div>
+        <div className="rounded-lg border border-gray-200 p-4">
+          <h3 className="mb-2 font-medium text-gray-900">고객 정보</h3>
+          {/* Customer and Partner */}
+          <Group direction="horizontal" className="gap-6">
             <FormItem className="flex-1">
-              <Label required>매출처</Label>
+              <Label required>고객사</Label>
               <CustomerSearchInput
-                onSelect={(customer) =>
-                  handleCustomerSelect(customer, 'revenue')
-                }
-                value={formData.sfaCustomers?.[0]?.customer}
-                error={errors.customer}
+                onSelect={handleCustomerSelect}
                 disabled={isSubmitting}
-                size="small"
+                error={errors.customer}
               />
             </FormItem>
+            <FormItem className="flex-1">
+              <Label></Label>
+              <div className="flex space-x-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="customerType"
+                    className="text-blue-600 focus:ring-blue-500"
+                    checked={formData.isSameRevenueSource}
+                    onChange={() => handleCustomerTypeChange(true)}
+                  />
+                  <CheckCircle className="ml-2 h-4 w-4 text-green-500" />
+                  <span className="ml-1 text-sm text-gray-700">
+                    고객사와 동일
+                  </span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="customerType"
+                    className="text-blue-600 focus:ring-blue-500"
+                    checked={!formData.isSameRevenueSource}
+                    onChange={() => handleCustomerTypeChange(false)}
+                  />
+                  <Building2 className="ml-2 h-4 w-4 text-blue-500" />
+                  <span className="ml-1 text-sm text-gray-700">
+                    별도 매출처
+                  </span>
+                </label>
+              </div>
+            </FormItem>
+          </Group>
+        </div>
+
+        {/* 매출처 관리 */}
+        <div className="rounded-lg border border-gray-200 p-4">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-medium text-gray-900">매출 정보</h3>
+            <button
+              type="button"
+              onClick={handleAddPayment}
+              className="flex items-center rounded-lg bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              disabled={formData.sfaCustomers.length === 0 || isSubmitting}
+            >
+              <Plus className="mr-1 h-4 w-4" />
+              {formData.isSameRevenueSource ? '결제매출 추가' : '매출처 추가'}
+            </button>
+          </div>
+
+          {formData.sfaCustomers.length === 0 && (
+            <div className="rounded-lg bg-gray-50 p-4 text-center">
+              <Users className="mx-auto mb-2 h-8 w-8 text-gray-400" />
+              <p className="text-sm text-gray-600">
+                {formData.sfaCustomers.length > 0
+                  ? formData.isSameRevenueSource
+                    ? '결제매출을 추가해주세요'
+                    : '매출처를 추가해주세요'
+                  : '먼저 고객사를 선택해주세요'}
+              </p>
+            </div>
           )}
 
-          <FormItem className="flex-1">
-            <Label required>
-              {formData.isSameRevenueSource ? '매출처/고객사' : '고객사'}
-            </Label>
-            <CustomerSearchInput
-              onSelect={(customer) =>
-                handleCustomerSelect(
-                  customer,
-                  formData.isSameRevenueSource ? 'both' : 'customer',
-                )
-              }
-              value={
-                formData.isSameRevenueSource
-                  ? formData.sfaCustomers?.[0]?.customer
-                  : formData.sfaCustomers?.[1]?.customer
-              }
-              error={errors.customer}
-              disabled={isSubmitting}
-              size="small"
+          {/* 결제매출 또는 매출처 목록 */}
+          {formData.sfaCustomers.length > 0 && (
+            <SalesAddByPayment
+              payments={formData.salesByPayments}
+              onChange={handlePaymentChange}
+              onRemove={handleRemovePayment}
+              isSubmitting={isSubmitting}
+              paymentData={paymentData}
+              percentageData={percentageData}
+              isPaymentDataLoading={isPaymentDataLoading}
             />
-          </FormItem>
-        </Group>
+          )}
 
-        {/* Project Name and Toggle */}
-        <Group direction="horizontal" className="gap-6">
-          <FormItem className="flex-1">
-            <Label required>건명</Label>
-            <Input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={updateFormField}
-              placeholder="건명을 입력하세요"
-              disabled={isSubmitting}
-            />
-            {/* {errors.name && <Message type="error">{errors.name}</Message>} */}
-          </FormItem>
-
-          <FormItem className="flex-1">
-            <Label>프로젝트</Label>
-            <Switch
-              checked={formData.isProject}
-              onChange={toggleIsProject}
-              disabled={isSubmitting}
-            />
-          </FormItem>
-        </Group>
+          {formData.salesByPayments.length > 0 && (
+            <div className="mt-3 rounded-lg bg-blue-50 p-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-blue-700">
+                  {`총 결제구분 : ${formData.salesByPayments.length}건`}
+                </span>
+                {formData.salesByPayments && (
+                  <span className="text-blue-700">
+                    총 금액:{' '}
+                    {formData.salesByPayments
+                      .reduce((sum, customer) => {
+                        const amount = parseFloat(
+                          customer.amount?.replace(/,/g, '') || 0,
+                        );
+                        return sum + amount;
+                      }, 0)
+                      .toLocaleString()}
+                    원
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Sales Registration Buttons */}
         <Group direction="horizontal" className="gap-6">
@@ -244,10 +360,15 @@ const SfaAddForm = ({ codebooks }) => {
                 type="button"
                 variant="primary"
                 onClick={handleAddSalesItem}
-                disabled={isSubmitting || formData.salesByItems.length >= 3}
+                disabled={
+                  isSubmitting ||
+                  (formData.isSameRevenueSource &&
+                    formData.salesByItems.length >= 3)
+                }
                 className={`w-full ${
+                  formData.isSameRevenueSource &&
                   formData.salesByItems.length >= 3
-                    ? 'bg-gray-200 hover:bg-gray-200 text-gray-500 border-gray-200'
+                    ? 'bg-blue-100 hover:bg-blue-100 text-blue-600 border-blue-100'
                     : ''
                 }`}
               >
@@ -272,11 +393,11 @@ const SfaAddForm = ({ codebooks }) => {
               <Button
                 type="button"
                 variant="primary"
-                onClick={handleAddPayment}
+                // onClick={handleAddPayment}
                 disabled={isSubmitting || formData.salesByPayments.length >= 3}
                 className={`w-full ${
                   formData.salesByPayments.length >= 3
-                    ? 'bg-gray-200 hover:bg-gray-200 text-gray-500 border-gray-200'
+                    ? 'bg-blue-100 hover:bg-blue-100 text-blue-600 border-blue-100'
                     : ''
                 }`}
               >
@@ -313,21 +434,8 @@ const SfaAddForm = ({ codebooks }) => {
         {/* Divider */}
         <div className="w-full h-px bg-gray-200 my-6" />
 
-        {/* Sales Payments List */}
-        <SalesByPayment
-          payments={formData.salesByPayments}
-          onChange={handlePaymentChange}
-          // onAdd={handleAddPayment}
-          onRemove={handleRemovePayment}
-          isSubmitting={isSubmitting}
-          // errors={errors}
-          paymentData={paymentData}
-          percentageData={percentageData}
-          isPaymentDataLoading={isPaymentDataLoading}
-        />
-
         {/* Description */}
-        <Group>
+        <div className="rounded-lg border border-gray-200 p-4">
           <FormItem fullWidth>
             <Label>비고</Label>
             <TextArea
@@ -338,7 +446,7 @@ const SfaAddForm = ({ codebooks }) => {
               disabled={isSubmitting}
             />
           </FormItem>
-        </Group>
+        </div>
 
         {/* Error Message */}
         {/* {errors.submit && (
@@ -349,19 +457,31 @@ const SfaAddForm = ({ codebooks }) => {
 
         {/* Submit Button */}
         <Group>
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={isSubmitting}
-            className="w-full"
-            onClick={(e) => {
-              // 버튼 클릭 시에도 이벤트 전파 방지
-              e.preventDefault();
-              handleSubmit(e);
-            }}
-          >
-            {isSubmitting ? '처리중...' : '저장'}
-          </Button>
+          <div className="flex justify-end space-x-3">
+            <Button
+              type="button"
+              variant="secondary"
+              // onClick={() => {
+
+              // }}
+              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              취소
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={isSubmitting}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              onClick={(e) => {
+                // 버튼 클릭 시에도 이벤트 전파 방지
+                e.preventDefault();
+                handleSubmit(e);
+              }}
+            >
+              {isSubmitting ? '처리중...' : '등록'}
+            </Button>
+          </div>
         </Group>
       </Form>
 

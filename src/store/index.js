@@ -3,28 +3,22 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { enableMapSet } from 'immer';
 
-// 기존 리듀서
+// 인증, UI, 코드북 리듀서
 import authReducer from '../features/auth/store/authSlice';
 import codebookReducer from './slices/codebookSlice';
-// import codebookReducer from '../features/codebook/store/codebookSlice';
-
-// 새로 추가된 리듀서
 import uiReducer from './slices/uiSlice';
 
-// 페이지 상태 관리 리듀서 (새로 추가)
-import pageStateReducer from './slices/pageStateSlice';
-import pageFormReducer from './slices/pageFormSlice';
+// 페이지 관련 리듀서
+import sfaReducer from './slices/sfaSlice';
 import projectReducer from './slices/projectSlice';
-import workReducer from './slices/workSlice';
-import taskReducer from './slices/taskSlice';
 import todoReducer from './slices/todoSlice';
 
-// 변경 삭제 예정
-// import projectReducer from '../features/project/store/projectSlice';
-// import projectTaskReducer from '../features/project/store/projectTaskSlice';
+// 변경예정
+import pageStateReducer from './slices/pageStateSlice';
+import pageFormReducer from './slices/pageFormSlice';
+import workReducer from './slices/workSlice';
+import taskReducer from './slices/taskSlice';
 import projectBucketReducer from './slices/projectBucketSlice';
-// import sfaReducer from './slices/sfaSlice';
-// import customerReducer from './slices/customerSlice';
 
 // Immer MapSet 플러그인 활성화
 enableMapSet();
@@ -38,6 +32,7 @@ export const store = configureStore({
 
     // 새로 추가된 리듀서
     ui: uiReducer,
+    sfa: sfaReducer,
     project: projectReducer,
     todo: todoReducer,
 
@@ -50,7 +45,6 @@ export const store = configureStore({
 
     // 삭제, 이동 예정
     // project: projectReducer, // 삭제 예정..
-    // sfa: sfaReducer, // 아직 구현되지 않은 경우 주석 처리
     // customer: customerReducer, // 아직 구현되지 않은 경우 주석 처리
   },
   middleware: (getDefaultMiddleware) =>

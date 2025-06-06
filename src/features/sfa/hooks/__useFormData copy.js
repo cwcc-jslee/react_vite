@@ -146,36 +146,10 @@ export const useFormData = (drawerState) => {
   };
 
   // isProject 상태 변경 함수 추가
-  const handleProjectToggle = () => {
+  const toggleIsProject = () => {
     setFormData((prev) => ({
       ...prev,
       isProject: !prev.isProject,
-    }));
-  };
-
-  // 고객사 타입 변경 함수 추가
-  const handleCustomerTypeChange = (isSame) => {
-    setFormData((prev) => ({
-      ...prev,
-      isSameRevenueSource: isSame,
-      sfaCustomers: [], // sfaCustomers 초기화
-    }));
-  };
-
-  // 매출처 추가 함수
-  const handleAddSalesCustomer = () => {
-    if (!formData.customerCompany) return;
-
-    setFormData((prev) => ({
-      ...prev,
-      sfaCustomers: [
-        ...prev.sfaCustomers,
-        {
-          customer: '',
-          isEndCustomer: false,
-          isRevenueSource: true,
-        },
-      ],
     }));
   };
 
@@ -192,20 +166,35 @@ export const useFormData = (drawerState) => {
    * 고객사 선택 핸들러
    * @param {Object} customer - 선택된 고객사 정보
    */
-  const handleCustomerSelect = (customer) => {
+  const handleCustomerSelect = (customer, type = 'both') => {
     setFormData((prev) => {
       const newSfaCustomers = [...(prev.sfaCustomers || [])];
 
-      // isSameRevenueSource 값에 따라 isEndCustomer와 isRevenueSource 설정
-      newSfaCustomers.push({
-        customer: customer.id,
-        isEndCustomer: true,
-        isRevenueSource: prev.isSameRevenueSource,
-      });
+      if (type === 'both') {
+        // 매출처/고객사 동일한 경우
+        newSfaCustomers.push({
+          customer: customer.id,
+          isEndCustomer: true,
+          isRevenueSource: true,
+        });
+      } else if (type === 'revenueSource') {
+        // 매출처만 선택
+        newSfaCustomers.push({
+          customer: customer.id,
+          isEndCustomer: false,
+          isRevenueSource: true,
+        });
+      } else if (type === 'customer') {
+        // 고객사만 선택
+        newSfaCustomers.push({
+          customer: customer.id,
+          isEndCustomer: true,
+          isRevenueSource: false,
+        });
+      }
 
       return {
         ...prev,
-        customerCompany: customer.id, // 고객사 ID 설정
         sfaCustomers: newSfaCustomers,
       };
     });
@@ -524,9 +513,7 @@ export const useFormData = (drawerState) => {
     resetPaymentForm,
     handleEditPayment,
     // isProject 관련 함수
-    handleProjectToggle,
+    toggleIsProject,
     toggleIsSameRevenueSource,
-    handleCustomerTypeChange,
-    handleAddSalesCustomer,
   };
 };

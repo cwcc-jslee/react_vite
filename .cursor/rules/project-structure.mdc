@@ -1,0 +1,59 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 프로젝트 구조 가이드
+
+## 주요 디렉토리 구조
+
+### 소스 코드 (`src/`)
+- `app/`: 애플리케이션의 핵심 로직과 설정
+- `store/`: 상태 관리 관련 코드
+- `features/`: 기능별 모듈
+- `shared/`: 공유 유틸리티 및 상수
+
+
+### 주요 파일
+- [src/index.jsx](mdc:src/index.jsx): 애플리케이션의 진입점
+- [src/App.js](mdc:src/App.js): 메인 애플리케이션 컴포넌트
+- [vite.config.js](mdc:vite.config.js): Vite 설정 파일
+- [tailwind.config.js](mdc:tailwind.config.js): Tailwind CSS 설정
+
+## 개발 규칙
+1. 상태 관리 로직은 `store/` 디렉토리에 위치
+2. 기능별 모듈은 `features/` 디렉토리에 위치
+3. 공통 유틸리티는 `shared/` 디렉토리에 위치
+
+### Features 디렉토리 구조
+```
+각 feature 하위 구조:
+├── api/           # API 호출 함수
+├── components/    # 컴포넌트
+├── constants/     # 상수
+├── containers/    # 컨테이너 컴포넌트
+├── context/       # Context API
+├── hooks/         # 커스텀 훅
+├── layouts/       # 레이아웃
+├── sections/      # 섹션 컴포넌트
+├── pages/         # 페이지 컴포넌트
+├── services/      # 서비스 로직
+└── utils/         # 유틸리티
+```
+
+### Shared 디렉토리 구조
+```
+src/shared/
+├── components/ui/ # 공통 UI 컴포넌트
+├── hooks/         # 공통 훅 (useUiStore.js)
+├── store/         # Redux 스토어
+│   ├── index.js
+│   └── slices/
+│       ├── uiSlice.js
+│       ├── projectSlice.js
+│       └── todoSlice.js
+├── utils/
+├── constants/
+└── services/
+```
+

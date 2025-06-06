@@ -2,6 +2,7 @@
 export const FORM_LIMITS = {
   MAX_SALES_ITEMS: 3,
   MAX_SALES_PAYMENTS: 3,
+  MAX_SALES_REVENUES: 10,
 };
 
 export const initialSalesByItem = {
@@ -29,8 +30,6 @@ export const initialFormState = {
   name: '',
   sfaSalesType: '',
   sfaClassification: '',
-  // customer: '',
-  // sellingPartner: '',
   itemAmount: '',
   paymentAmount: '',
   description: '',
