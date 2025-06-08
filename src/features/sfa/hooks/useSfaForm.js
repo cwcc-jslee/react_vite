@@ -22,7 +22,7 @@ export const useSfaForm = () => {
   const { formData, setIsSubmitting, setErrors } = formState;
 
   // 폼 제출 처리
-  const processSubmit = async (hasPartner, isProject) => {
+  const processSubmit = async () => {
     const enrichedFormData = {
       ...formData,
       hasPartner,

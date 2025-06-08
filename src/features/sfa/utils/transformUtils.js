@@ -93,6 +93,7 @@ export const transformToDBFields = {
     });
 
     const transformed = {
+      revenue_source: payment.revenueSource.id,
       billing_type: payment.billingType,
       is_confirmed: payment.isConfirmed,
       probability: parseNumber(payment.probability),
@@ -132,7 +133,8 @@ export const transformToDBFields = {
 
     const transformed = {
       name: formData.name,
-      // customer: formData.customer,
+      customer: formData.customer.id,
+      is_same_billing: formData.isSameBilling,
       // has_partner: formData.hasPartner,
       // selling_partner: formData.hasPartner ? formData.sellingPartner : null,
       sfa_sales_type: parseNumber(formData.sfaSalesType),
@@ -249,4 +251,27 @@ export const transformToDBFields = {
 
     return transformedFilters;
   },
+};
+
+/**
+ * 매출처 데이터 중복 제거 및 정렬
+ * @param {Array} salesByPayments - 결제 매출 배열
+ * @returns {Array} - 중복 제거되고 정렬된 매출처 배열
+ */
+export const getUniqueRevenueSources = (salesByPayments) => {
+  // salesByPayments에서 revenueSource 추출
+  const paymentSources = salesByPayments
+    .map((payment) => payment.revenueSource)
+    .filter((source) => source?.id && source?.name);
+
+  // 중복 제거 및 이름 순 정렬
+  return paymentSources
+    .reduce((acc, current) => {
+      const exists = acc.find((item) => item.id === current.id);
+      if (!exists) {
+        acc.push(current);
+      }
+      return acc;
+    }, [])
+    .sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 };

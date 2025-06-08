@@ -1,18 +1,22 @@
 /**
  * 고객사 정보를 표시 형식으로 변환
- * @param {Array} sfaCustomers - SFA 고객사 배열
+ * @param {Object} revenueSource - 매출처 객체
+ * @param {Object} sfaCustomer - SFA 고객사 객체
  * @returns {string} 포맷팅된 고객사 정보
  */
-export const formatCustomerDisplay = (sfaCustomers) => {
-  if (!sfaCustomers || sfaCustomers.length === 0) return '-';
-  if (sfaCustomers.length === 1) return sfaCustomers[0].customer.name;
+export const formatCustomerDisplay = (revenueSource, sfaCustomer) => {
+  // null, undefined 체크
+  if (!revenueSource) return '-';
 
-  // 매출처(is_revenue_source)가 있는 경우 해당 항목을 앞으로 정렬
-  const sortedCustomers = [...sfaCustomers].sort((a, b) => {
-    if (a.is_revenue_source && !b.is_revenue_source) return -1;
-    if (!a.is_revenue_source && b.is_revenue_source) return 1;
-    return 0;
-  });
+  // revenueSource의 name 속성 존재 여부 체크
+  if (!revenueSource?.name) return '-';
 
-  return sortedCustomers.map((c) => c.customer.name).join(' / ');
+  // sfaCustomer가 없거나 name이 없는 경우 revenueSource만 반환
+  if (!sfaCustomer?.name) return revenueSource.name;
+
+  // revenueSource와 sfaCustomer의 name이 같은 경우 revenueSource만 반환
+  if (revenueSource.name === sfaCustomer.name) return revenueSource.name;
+
+  // 다른 경우 두 이름을 조합하여 반환
+  return `${revenueSource.name} / ${sfaCustomer.name}`;
 };

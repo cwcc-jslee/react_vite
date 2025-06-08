@@ -233,14 +233,14 @@ export const createSfaWithPayment = async (formData) => {
 
     // 2. 고객사 정보 생성
     const sfaId = sfaResponse.data.id;
-    const customersResponse = await sfaSubmitService.addSfaCustomers(
-      sfaId,
-      formData.sfaCustomers,
-    );
+    // const customersResponse = await sfaSubmitService.addSfaCustomers(
+    //   sfaId,
+    //   formData.sfaCustomers,
+    // );
 
-    if (!customersResponse) {
-      throw new Error('고객사 정보 생성 실패');
-    }
+    // if (!customersResponse) {
+    //   throw new Error('고객사 정보 생성 실패');
+    // }
 
     // 3. 결제 매출 정보 생성
     const paymentsResponse = await sfaSubmitService.addSfaPayment(
@@ -253,7 +253,6 @@ export const createSfaWithPayment = async (formData) => {
       success: true,
       data: {
         ...sfaResponse.data,
-        customers: customersResponse,
         payments: paymentsResponse,
       },
     };

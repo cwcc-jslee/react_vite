@@ -39,7 +39,24 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
         {item.probability || '-'}
       </td>
       <td className="px-3 py-2 text-sm">
-        {formatCustomerDisplay(item.sfa?.sfa_customers)}
+        {item?.revenue_source?.name ? (
+          item?.revenue_source?.name === item?.sfa?.customer?.name ? (
+            <span title={item.revenue_source.name}>
+              {truncateText(item.revenue_source.name, 10)}
+            </span>
+          ) : (
+            <span
+              title={`${item.revenue_source.name} / ${item.sfa.customer.name}`}
+            >
+              {truncateText(
+                `${item.revenue_source.name} / ${item.sfa.customer.name}`,
+                10,
+              )}
+            </span>
+          )
+        ) : (
+          '-'
+        )}
       </td>
       <td className="px-3 py-2 text-sm">
         <div className="group relative">

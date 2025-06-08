@@ -40,44 +40,18 @@ const validateBasicInfo = (formData) => {
     }
   });
 
-  // 고객사 검증
-  const { isSameBilling, sfaCustomers } = formData;
+  const { isSameBilling, customer } = formData;
 
-  if (isSameBilling) {
-    // 매출/고객 동일인 경우
-    if (!sfaCustomers || sfaCustomers.length !== 1) {
-      errors.push('매출처/고객사 정보가 올바르지 않습니다.');
-      return errors;
-    }
+  // isSameBilling 필수 체크
+  if (isSameBilling === undefined || isSameBilling === null) {
+    errors.push('매출처/고객사 동일 여부를 선택해주세요.');
+    return errors;
+  }
 
-    const customer = sfaCustomers[0];
-    if (!customer.customer) {
-      errors.push('매출처/고객사 정보가 없습니다.');
-    }
-    if (!customer.isEndCustomer || !customer.isRevenueSource) {
-      errors.push('매출처/고객사 정보가 올바르지 않습니다.');
-    }
-  } else {
-    // 매출/고객 다른 경우
-    if (!sfaCustomers || sfaCustomers.length < 2) {
-      errors.push('매출처와 고객사 정보가 모두 필요합니다.');
-      return errors;
-    }
-
-    // 각 고객 정보 검증
-    const hasEndCustomer = sfaCustomers.some((c) => c.isEndCustomer);
-    const hasRevenueSource = sfaCustomers.some((c) => c.isRevenueSource);
-    const allHaveCustomer = sfaCustomers.every((c) => c.customer);
-
-    if (!allHaveCustomer) {
-      errors.push('모든 고객 정보가 필요합니다.');
-    }
-    if (!hasEndCustomer) {
-      errors.push('최소 1개 이상의 고객사 정보가 필요합니다.');
-    }
-    if (!hasRevenueSource) {
-      errors.push('최소 1개 이상의 매출처 정보가 필요합니다.');
-    }
+  // customer 필드 유효성 검사
+  if (!customer || !customer.id || !customer.name) {
+    errors.push('고객사 정보가 올바르지 않습니다.');
+    return errors;
   }
 
   return errors;
@@ -124,30 +98,76 @@ const validatePaymentMargin = (payment, index, errors) => {
   }
 };
 
-const validatePayments = (payments) => {
+const validatePayments = (salesByPayments) => {
   const errors = [];
 
-  if (payments.length === 0) {
-    errors.push(ERROR_MESSAGES.MIN_PAYMENTS);
+  if (!salesByPayments || salesByPayments.length === 0) {
+    errors.push('결제 매출 정보가 필요합니다.');
     return errors;
   }
 
-  payments.forEach((payment, index) => {
-    const paymentErrors = [];
-
-    Object.entries(PAYMENT_REQUIRED_FIELDS).forEach(([field, label]) => {
-      if (!payment[field]) paymentErrors.push(label);
-    });
-
-    if (paymentErrors.length > 0) {
-      errors.push(ERROR_MESSAGES.ITEM_FIELDS(index + 1, paymentErrors));
+  salesByPayments.forEach((payment, index) => {
+    // revenueSource 필드 검증
+    if (
+      !payment.revenueSource ||
+      !payment.revenueSource.id ||
+      !payment.revenueSource.name
+    ) {
+      errors.push(
+        `${index + 1}번째 결제 매출의 매출처 정보가 올바르지 않습니다.`,
+      );
     }
 
-    if (payment.amount && !Number.isInteger(Number(payment.amount))) {
-      errors.push(`${index + 1}번 항목: ${ERROR_MESSAGES.INTEGER_ONLY}`);
+    // 결제구분 검증
+    if (!payment.billingType) {
+      errors.push(`${index + 1}번째 결제 매출의 결제구분을 선택해주세요.`);
     }
 
-    validatePaymentMargin(payment, index, errors);
+    // 매출액 검증
+    if (!payment.amount || payment.amount === '0') {
+      errors.push(`${index + 1}번째 결제 매출의 매출액을 입력해주세요.`);
+    }
+
+    // 매출인식일자 검증
+    if (!payment.recognitionDate) {
+      errors.push(`${index + 1}번째 결제 매출의 매출인식일자를 선택해주세요.`);
+    }
+
+    // 결제일자 검증
+    if (!payment.scheduledDate) {
+      errors.push(`${index + 1}번째 결제 매출의 결제일자를 선택해주세요.`);
+    }
+
+    // 매출확률 검증
+    if (!payment.probability) {
+      errors.push(`${index + 1}번째 결제 매출의 매출확률을 선택해주세요.`);
+    }
+
+    // 이익/마진 값 검증
+    if (!payment.marginProfitValue) {
+      errors.push(`${index + 1}번째 결제 매출의 이익/마진 값을 입력해주세요.`);
+    } else {
+      const marginValue = Number(payment.marginProfitValue);
+      const amount = Number(payment.amount);
+
+      if (payment.isProfit) {
+        // 이익인 경우: 매출액보다 작거나 같아야 함
+        if (marginValue > amount) {
+          errors.push(
+            `${index + 1}번째 결제 매출의 이익은 매출액보다 클 수 없습니다.`,
+          );
+        }
+      } else {
+        // 마진인 경우: 0~100 사이의 값이어야 함
+        if (marginValue < 0 || marginValue > 100) {
+          errors.push(
+            `${
+              index + 1
+            }번째 결제 매출의 마진율은 0~100 사이의 값이어야 합니다.`,
+          );
+        }
+      }
+    }
   });
 
   return errors;
@@ -157,8 +177,8 @@ const validatePayments = (payments) => {
 export const validateForm = (formData) => {
   const errors = {
     [ERROR_GROUPS.BASIC_INFO]: validateBasicInfo(formData),
-    [ERROR_GROUPS.SALES_ITEMS]: validateSalesItems(formData),
     [ERROR_GROUPS.PAYMENTS]: validatePayments(formData.salesByPayments),
+    [ERROR_GROUPS.SALES_ITEMS]: validateSalesItems(formData),
   };
 
   const hasErrors = Object.values(errors).some((group) => group.length > 0);

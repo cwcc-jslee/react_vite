@@ -35,6 +35,8 @@ import {
   CheckCircle,
   Briefcase,
 } from 'lucide-react';
+import { useCodebook } from '../../../../shared/hooks/useCodebook';
+import { getUniqueRevenueSources } from '../../utils/transformUtils';
 
 const SfaAddForm = ({ codebooks }) => {
   const {
@@ -64,6 +66,19 @@ const SfaAddForm = ({ codebooks }) => {
 
   // useModal 훅 사용
   const { modalState, openModal, closeModal, handleConfirm } = useModal();
+
+  // 결제구분, 매출확률 codebook
+  const {
+    data: paymentCodebooks,
+    isLoading: isLoadingCodebook,
+    error: codebookError,
+  } = useCodebook(['rePaymentMethod', 'sfaPercentage']);
+
+  // revenueSource 데이터 중복 제거 및 정렬
+  const uniqueRevenueSources = React.useMemo(
+    () => getUniqueRevenueSources(formData.salesByPayments),
+    [formData.salesByPayments],
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -101,48 +116,9 @@ const SfaAddForm = ({ codebooks }) => {
       message,
       { isProject: formData.isProject },
       async (data) => {
-        await processSubmit(data.isProject);
+        await processSubmit();
       },
     );
-  };
-
-  const handleAddRevenueSource = () => {
-    const newRevenue = {
-      customer: '',
-      isEndCustomer: false,
-      isRevenueSource: true,
-    };
-    updateFormField({
-      target: {
-        name: 'sfaCustomers',
-        value: [...(formData.sfaCustomers || []), newRevenue],
-      },
-    });
-  };
-
-  const handleRemoveRevenueSource = (index) => {
-    const newRevenues = [...formData.sfaCustomers];
-    newRevenues.splice(index, 1);
-    updateFormField({
-      target: {
-        name: 'sfaCustomers',
-        value: newRevenues,
-      },
-    });
-  };
-
-  const handleRevenueSourceChange = (index, field, value) => {
-    const newRevenues = [...formData.sfaCustomers];
-    newRevenues[index] = {
-      ...newRevenues[index],
-      [field]: value,
-    };
-    updateFormField({
-      target: {
-        name: 'sfaCustomers',
-        value: newRevenues,
-      },
-    });
   };
 
   return (
@@ -314,14 +290,23 @@ const SfaAddForm = ({ codebooks }) => {
               </p>
             </div>
           ) : (
-            <SalesAddByPayment
-              formData={formData}
-              onChange={handlePaymentChange}
-              onRemove={handleRemovePayment}
-              isSubmitting={isSubmitting}
-              errors={errors}
-              handleRevenueSourceSelect={handleRevenueSourceSelect}
-            />
+            <div className="flex flex-col gap-2">
+              {formData.salesByPayments.map((payment, index) => (
+                <SalesAddByPayment
+                  key={`payment-${payment.id || index}`}
+                  payment={payment}
+                  index={index}
+                  formData={formData}
+                  onChange={handlePaymentChange}
+                  onRemove={handleRemovePayment}
+                  isSubmitting={isSubmitting}
+                  handleRevenueSourceSelect={handleRevenueSourceSelect}
+                  savedRevenueSources={uniqueRevenueSources}
+                  codebooks={paymentCodebooks}
+                  isLoadingCodebook={isLoadingCodebook}
+                />
+              ))}
+            </div>
           )}
 
           {formData.salesByPayments.length > 0 && (
@@ -349,86 +334,66 @@ const SfaAddForm = ({ codebooks }) => {
           )}
         </div>
 
-        {/* Sales Registration Buttons */}
-        <Group direction="horizontal" className="gap-6">
-          <FormItem className="flex-1">
-            <Label>사업부 매출</Label>
-            <Stack>
-              <Button
-                type="button"
-                variant="primary"
-                onClick={handleAddSalesItem}
-                disabled={
-                  isSubmitting ||
-                  (formData.isSameBilling && formData.salesByItems.length >= 3)
-                }
-                className={`w-full ${
-                  formData.isSameBilling && formData.salesByItems.length >= 3
-                    ? 'bg-blue-100 hover:bg-blue-100 text-blue-600 border-blue-100'
-                    : ''
-                }`}
-              >
-                사업부매출등록
-              </Button>
-              <Input
-                type="text"
-                name="itemAmount"
-                value={formatDisplayNumber(formData.itemAmount)}
-                disabled={true}
-                className="text-right"
+        {/* {사업부 매출} */}
+        <div className="rounded-lg border border-gray-200 p-4">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="font-medium text-gray-900">사업부 매출 정보</h3>
+            <button
+              type="button"
+              onClick={handleAddSalesItem}
+              className="flex items-center rounded-lg bg-green-600 px-3 py-1.5 text-sm text-white hover:bg-green-700"
+            >
+              <Plus className="mr-1 h-4 w-4" />
+              사업부매출 추가
+            </button>
+          </div>
+
+          {!formData?.salesByItems?.length ? (
+            <div className="rounded-lg bg-gray-50 p-4 text-center">
+              <Briefcase className="mx-auto mb-2 h-8 w-8 text-gray-400" />
+              <p className="text-sm text-gray-600">
+                사업부 매출을 추가해주세요
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <SalesByItem
+                items={formData.salesByItems}
+                onChange={handleSalesItemChange}
+                onRemove={handleRemoveSalesItem}
+                isSubmitting={isSubmitting}
+                errors={errors}
+                itemsData={itemsData}
+                isItemsLoading={isItemsLoading}
               />
-            </Stack>
-            {errors.itemAmount && (
-              <Message type="error">{errors.itemAmount}</Message>
-            )}
-          </FormItem>
+            </div>
+          )}
 
-          <FormItem className="flex-1">
-            <Label>결제 매출</Label>
-            <Stack>
-              <Button
-                type="button"
-                variant="primary"
-                // onClick={handleAddPayment}
-                disabled={isSubmitting || formData.salesByPayments.length >= 3}
-                className={`w-full ${
-                  formData.salesByPayments.length >= 3
-                    ? 'bg-blue-100 hover:bg-blue-100 text-blue-600 border-blue-100'
-                    : ''
-                }`}
-              >
-                결제매출등록
-              </Button>
-              <Input
-                type="text"
-                name="paymentAmount"
-                value={formatDisplayNumber(formData.paymentAmount)}
-                disabled={true}
-                className="text-right"
-              />
-            </Stack>
-            {errors.paymentAmount && (
-              <Message type="error">{errors.paymentAmount}</Message>
-            )}
-          </FormItem>
-        </Group>
-
-        {/* Divider */}
-        <div className="w-full h-px bg-gray-200 my-6" />
-
-        {/* Sales Items List */}
-        <SalesByItem
-          items={formData.salesByItems}
-          onChange={handleSalesItemChange}
-          onRemove={handleRemoveSalesItem}
-          isSubmitting={isSubmitting}
-          errors={errors}
-          itemsData={itemsData}
-          isItemsLoading={isItemsLoading}
-        />
-
-        {/* Divider */}
-        <div className="w-full h-px bg-gray-200 my-6" />
+          {/* 사업부 매출 요약 */}
+          {formData.salesByItems.length > 0 && (
+            <div className="mt-3 rounded-lg bg-blue-50 p-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-green-700">
+                  {`총 사업부매출 : ${formData.salesByItems.length}건`}
+                </span>
+                {formData.salesByItems && (
+                  <span className="text-blue-700">
+                    총 금액:{' '}
+                    {formData.salesByItems
+                      .reduce((sum, customer) => {
+                        const amount = parseFloat(
+                          customer.amount?.replace(/,/g, '') || 0,
+                        );
+                        return sum + amount;
+                      }, 0)
+                      .toLocaleString()}
+                    원
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Description */}
         <div className="rounded-lg border border-gray-200 p-4">
@@ -445,11 +410,11 @@ const SfaAddForm = ({ codebooks }) => {
         </div>
 
         {/* Error Message */}
-        {/* {errors.submit && (
-        <Message type="error" className="text-center mb-4">
-          {errors.submit}
-        </Message>
-      )} */}
+        {errors.submit && (
+          <Message type="error" className="text-center mb-4">
+            {errors.submit}
+          </Message>
+        )}
 
         {/* Submit Button */}
         <Group>

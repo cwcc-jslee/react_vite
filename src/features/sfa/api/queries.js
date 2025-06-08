@@ -118,27 +118,30 @@ export const buildSfaListQuery = (params) => {
       'scheduled_date',
     ],
     populate: {
+      revenue_source: {
+        fields: ['name'],
+      },
       sfa: {
-        fields: ['name', 'sfa_by_items', 'has_partner', 'is_project'],
+        fields: ['name', 'sfa_by_items', 'is_same_billing', 'is_project'],
         populate: {
-          // customer: {
-          //   fields: ['name'],
-          // },
+          customer: {
+            fields: ['name'],
+          },
           selling_partner: {
             fields: ['name'],
           },
           sfa_classification: {
             fields: ['name'],
           },
-          sfa_customers: {
-            fields: ['is_revenue_source', 'is_end_customer'],
-            populate: {
-              customer: {
-                fields: ['name'],
-              },
-            },
-            sort: ['is_revenue_source:desc'],
-          },
+          // sfa_customers: {
+          //   fields: ['is_revenue_source', 'is_end_customer'],
+          //   populate: {
+          //     customer: {
+          //       fields: ['name'],
+          //     },
+          //   },
+          //   sort: ['is_revenue_source:desc'],
+          // },
         },
       },
     },
