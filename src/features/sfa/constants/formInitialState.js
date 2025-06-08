@@ -14,6 +14,7 @@ export const initialSalesByItem = {
 };
 
 export const initialSalesByPayment = {
+  revenueSource: {},
   billingType: '',
   isConfirmed: false,
   probability: '',
@@ -28,6 +29,7 @@ export const initialSalesByPayment = {
 
 export const initialFormState = {
   name: '',
+  customer: {},
   sfaSalesType: '',
   sfaClassification: '',
   itemAmount: '',
@@ -35,9 +37,8 @@ export const initialFormState = {
   description: '',
   salesByItems: [],
   salesByPayments: [],
-  sfaCustomers: [],
   isProject: false,
-  isSameRevenueSource: true,
+  isSameBilling: true,
 };
 
 export const INITIAL_PAYMENT_ID_STATE = {

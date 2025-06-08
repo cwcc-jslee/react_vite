@@ -5,6 +5,7 @@
  */
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useCodebook } from '../../../../shared/hooks/useCodebook';
+import { CustomerSearchInput } from '@shared/components/customer/CustomerSearchInput';
 import {
   Trash2,
   Calendar,
@@ -12,6 +13,7 @@ import {
   Percent,
   CheckCircle2,
   XCircle,
+  CheckCircle,
 } from 'lucide-react';
 import {
   Group,
@@ -24,12 +26,15 @@ import {
   formatDisplayNumber,
   ensureNumericAmount,
 } from '../../../../shared/utils/format/number';
+import { truncateText } from '../../../../shared/utils/textUtils';
 
 const SalesAddByPayment = ({
-  payments = [],
+  formData,
+  // payments = [],
   onChange,
   onRemove,
   isSubmitting,
+  handleRevenueSourceSelect,
 }) => {
   // 매출액 임시 입력 상태 관리를 위한 state 추가
   const [displayValues, setDisplayValues] = useState({});
@@ -37,6 +42,9 @@ const SalesAddByPayment = ({
   // 입력 중인 금액을 관리하는 상태
   const [inputAmounts, setInputAmounts] = useState({});
   const inputRefs = useRef([]);
+  // revenueSource 정보를 저장하는 ref
+  const savedRevenueSourcesRef = useRef([]);
+
   // 결제구분, 매출확률 codebook
   const {
     data: codebooks,
@@ -44,10 +52,37 @@ const SalesAddByPayment = ({
     error,
   } = useCodebook(['rePaymentMethod', 'sfaPercentage']);
 
+  const { salesByPayments = [] } = formData;
+
+  console.log(`formData: `, formData);
+  console.log(`salesByPayments: `, salesByPayments);
+
+  // salesByPayments의 revenueSource 정보를 수집하고 중복 제거
+  useEffect(() => {
+    const currentRevenueSources = salesByPayments
+      .map((payment) => payment.revenueSource)
+      .filter((source) => source?.id && source?.name);
+
+    // 기존 저장된 데이터와 현재 데이터를 합치고 중복 제거
+    const allSources = [
+      ...savedRevenueSourcesRef.current,
+      ...currentRevenueSources,
+    ];
+    const uniqueSources = allSources.reduce((acc, current) => {
+      const exists = acc.find((item) => item.id === current.id);
+      if (!exists) {
+        acc.push({ id: current.id, name: current.name });
+      }
+      return acc;
+    }, []);
+
+    savedRevenueSourcesRef.current = uniqueSources;
+  }, [salesByPayments]);
+
   // 이익/마진 금액 자동 계산 useEffect 수정
   useEffect(() => {
     if (!isFormatting.current) {
-      payments.forEach((entry, index) => {
+      salesByPayments.forEach((entry, index) => {
         const amount = Number(entry.amount) || 0;
         const marginProfitValue = Number(entry.marginProfitValue) || 0;
         const calculatedProfitAmount = entry.isProfit
@@ -55,35 +90,38 @@ const SalesAddByPayment = ({
           : (amount * marginProfitValue) / 100;
 
         if (calculatedProfitAmount !== Number(entry.profitAmount)) {
-          onChange(index, 'profitAmount', calculatedProfitAmount.toString());
+          // setTimeout을 사용하여 렌더링 사이클 이후에 상태 업데이트
+          setTimeout(() => {
+            onChange(index, 'profitAmount', calculatedProfitAmount.toString());
+          }, 0);
         }
       });
     }
-  }, [payments, onChange]);
+  }, [salesByPayments, onChange]);
 
   // useEffect를 사용하여 payments가 변경될 때마다 displayValues를 업데이트합니다.
   // useEffect(() => {
   //   const initialDisplayValues = {};
-  //   payments.forEach((payment, index) => {
+  //   salesByPayments.forEach((payment, index) => {
   //     initialDisplayValues[index] = formatDisplayNumber(payment.amount || '');
   //   });
   //   setDisplayValues(initialDisplayValues);
-  // }, [payments]);
+  // }, [salesByPayments]);
 
   // useEffect(() => {
   //   if (inputRefs.current[index]) {
   //     inputRefs.current[index].focus();
   //   }
-  // }, [payments]);
+  // }, [salesByPayments]);
 
   // useEffect(() => {
   //   console.log('SalesByPayment rendered:', {
-  //     payments,
+  //     salesByPayments,
   //     isSubmitting,
   //     // paymentData,
   //     // percentageData,
   //   });
-  // }, [payments, isSubmitting]);
+  // }, [salesByPayments, isSubmitting]);
 
   // 금액 입력 처리
   const handleAmountChange = (index, value) => {
@@ -96,7 +134,7 @@ const SalesAddByPayment = ({
 
     // 실제 값 업데이트는 쉼표를 제거한 숫자만
     const numericValue = sanitizedValue.replace(/,/g, '');
-    if (numericValue !== payments[index].amount) {
+    if (numericValue !== salesByPayments[index].amount) {
       isFormatting.current = true;
       onChange(index, 'amount', numericValue);
       setTimeout(() => {
@@ -110,13 +148,13 @@ const SalesAddByPayment = ({
     // 포커스 시 쉼표가 제거된 원래 숫자 값 표시
     setDisplayValues((prev) => ({
       ...prev,
-      [index]: payments[index].amount,
+      [index]: salesByPayments[index].amount,
     }));
   };
 
   // 금액 입력 필드 블러 처리
   const handleAmountBlur = (index) => {
-    const numericValue = payments[index].amount;
+    const numericValue = salesByPayments[index].amount;
     const formattedValue = formatDisplayNumber(numericValue);
     setDisplayValues((prev) => ({
       ...prev,
@@ -127,7 +165,7 @@ const SalesAddByPayment = ({
   // 이익/마진 값 변경 처리
   const handleEntryChange = (index, field, value) => {
     if (['amount', 'marginProfitValue', 'isProfit'].includes(field)) {
-      const payment = payments[index];
+      const payment = salesByPayments[index];
       const amount = Number(field === 'amount' ? value : payment.amount) || 0;
       const marginProfitValue =
         Number(
@@ -164,13 +202,13 @@ const SalesAddByPayment = ({
     }, 0);
   };
 
-  if (!payments?.length) return null;
+  if (!salesByPayments?.length) return null;
 
   return (
     <div className="flex flex-col gap-2">
-      {payments.map((payment, index) => (
+      {salesByPayments.map((payment, index) => (
         <div
-          key={payment.id}
+          key={`payment-${payment.id || index}`}
           className="flex flex-col gap-3 p-4 bg-gray-50 rounded-md"
         >
           <div className="grid grid-cols-[1.2fr,0.8fr,0.4fr,0.7fr,1fr,0.4fr,1fr] gap-3 items-center">
@@ -179,17 +217,52 @@ const SalesAddByPayment = ({
                 매출처
               </span>
               <div className="relative h-9">
-                <Select
-                  value={payment.billingType}
-                  onChange={(e) =>
-                    onChange(index, 'billingType', e.target.value)
-                  }
-                  disabled={isSubmitting || isLoadingCodebook}
-                  required
-                  className="h-9"
-                >
-                  <option value="">매출처 입력</option>
-                </Select>
+                {formData.isSameBilling && payment?.revenueSource?.id ? (
+                  <div className="flex items-center rounded-lg bg-green-50 px-3 py-2">
+                    <span className="text-sm text-green-700">
+                      {truncateText(payment?.revenueSource?.name, 8)}
+                    </span>
+                  </div>
+                ) : !formData.isSameBilling &&
+                  savedRevenueSourcesRef?.current.length > 0 ? (
+                  <Select
+                    value={payment.revenueSource.name}
+                    onChange={(e) => {
+                      if (e.target.value === 'search') {
+                        console.log('>>>> 선택 : ', e.target);
+                        // 매출처 검색 선택 시 revenueSource 초기화
+                        onChange(index, 'revenueSource', {});
+                      } else {
+                        // 저장된 매출처 선택 시
+                        const selectedSource =
+                          savedRevenueSourcesRef.current.find(
+                            (source) => source.name === e.target.value,
+                          );
+                        if (selectedSource) {
+                          onChange(index, 'revenueSource', selectedSource);
+                        }
+                      }
+                    }}
+                    disabled={isSubmitting}
+                    className="h-9"
+                  >
+                    <option>-------</option>
+                    <option value="search">매출처 검색</option>
+                    {savedRevenueSourcesRef.current.map((source) => (
+                      <option key={source.id} value={source.name}>
+                        {truncateText(source.name, 15)}
+                      </option>
+                    ))}
+                  </Select>
+                ) : (
+                  <CustomerSearchInput
+                    onSelect={(customer) =>
+                      handleRevenueSourceSelect(customer, index)
+                    }
+                    disabled={isSubmitting}
+                    // error={}
+                  />
+                )}
               </div>
             </div>
 

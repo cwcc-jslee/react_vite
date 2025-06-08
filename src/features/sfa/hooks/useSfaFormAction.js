@@ -153,12 +153,12 @@ export const useSfaFormAction = (drawerState) => {
     }));
   };
 
-  // isSameRevenueSource 상태 변경 함수 추가
-  const toggleIsSameRevenueSource = () => {
+  // isSameBilling 상태 변경 함수 추가
+  const toggleIsSameBilling = () => {
     setFormData((prev) => ({
       ...prev,
-      isSameRevenueSource: !prev.isSameRevenueSource,
-      sfaCustomers: [], // sfaCustomers 초기화
+      isSameBilling: !prev.isSameBilling,
+      salesByPayments: [], // salesByPayments 초기화
     }));
   };
 
@@ -514,6 +514,6 @@ export const useSfaFormAction = (drawerState) => {
     handleEditPayment,
     // isProject 관련 함수
     toggleIsProject,
-    toggleIsSameRevenueSource,
+    toggleIsSameBilling,
   };
 };

@@ -56,9 +56,10 @@ const SfaAddForm = ({ codebooks }) => {
     isPaymentDataLoading,
     processSubmit,
     handleProjectToggle,
-    toggleIsSameRevenueSource,
+    toggleIsSameBilling,
     resetForm,
     handleCustomerTypeChange,
+    handleRevenueSourceSelect,
   } = useSfaForm();
 
   // useModal 훅 사용
@@ -142,10 +143,6 @@ const SfaAddForm = ({ codebooks }) => {
         value: newRevenues,
       },
     });
-  };
-
-  const handleAddSalesCustomer = () => {
-    // Implementation of handleAddSalesCustomer
   };
 
   return (
@@ -259,7 +256,7 @@ const SfaAddForm = ({ codebooks }) => {
                     type="radio"
                     name="customerType"
                     className="text-blue-600 focus:ring-blue-500"
-                    checked={formData.isSameRevenueSource}
+                    checked={formData.isSameBilling}
                     onChange={() => handleCustomerTypeChange(true)}
                   />
                   <CheckCircle className="ml-2 h-4 w-4 text-green-500" />
@@ -272,7 +269,7 @@ const SfaAddForm = ({ codebooks }) => {
                     type="radio"
                     name="customerType"
                     className="text-blue-600 focus:ring-blue-500"
-                    checked={!formData.isSameRevenueSource}
+                    checked={!formData.isSameBilling}
                     onChange={() => handleCustomerTypeChange(false)}
                   />
                   <Building2 className="ml-2 h-4 w-4 text-blue-500" />
@@ -293,36 +290,37 @@ const SfaAddForm = ({ codebooks }) => {
               type="button"
               onClick={handleAddPayment}
               className="flex items-center rounded-lg bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-              disabled={formData.sfaCustomers.length === 0 || isSubmitting}
+              disabled={!formData?.customer?.id || isSubmitting}
             >
               <Plus className="mr-1 h-4 w-4" />
-              {formData.isSameRevenueSource ? '결제매출 추가' : '매출처 추가'}
+              {formData.isSameBilling ? '결제매출 추가' : '매출처 추가'}
             </button>
           </div>
 
-          {formData.sfaCustomers.length === 0 && (
+          {!formData.customer?.id ? (
             <div className="rounded-lg bg-gray-50 p-4 text-center">
               <Users className="mx-auto mb-2 h-8 w-8 text-gray-400" />
               <p className="text-sm text-gray-600">
-                {formData.sfaCustomers.length > 0
-                  ? formData.isSameRevenueSource
-                    ? '결제매출을 추가해주세요'
-                    : '매출처를 추가해주세요'
-                  : '먼저 고객사를 선택해주세요'}
+                먼저 고객사를 선택해주세요
               </p>
             </div>
-          )}
-
-          {/* 결제매출 또는 매출처 목록 */}
-          {formData.sfaCustomers.length > 0 && (
+          ) : formData.salesByPayments.length < 1 ? (
+            <div className="rounded-lg bg-gray-50 p-4 text-center">
+              <Users className="mx-auto mb-2 h-8 w-8 text-gray-400" />
+              <p className="text-sm text-gray-600">
+                {formData.isSameBilling
+                  ? '결제매출을 추가해주세요'
+                  : '매출처를 추가해주세요'}
+              </p>
+            </div>
+          ) : (
             <SalesAddByPayment
-              payments={formData.salesByPayments}
+              formData={formData}
               onChange={handlePaymentChange}
               onRemove={handleRemovePayment}
               isSubmitting={isSubmitting}
-              paymentData={paymentData}
-              percentageData={percentageData}
-              isPaymentDataLoading={isPaymentDataLoading}
+              errors={errors}
+              handleRevenueSourceSelect={handleRevenueSourceSelect}
             />
           )}
 
@@ -362,12 +360,10 @@ const SfaAddForm = ({ codebooks }) => {
                 onClick={handleAddSalesItem}
                 disabled={
                   isSubmitting ||
-                  (formData.isSameRevenueSource &&
-                    formData.salesByItems.length >= 3)
+                  (formData.isSameBilling && formData.salesByItems.length >= 3)
                 }
                 className={`w-full ${
-                  formData.isSameRevenueSource &&
-                  formData.salesByItems.length >= 3
+                  formData.isSameBilling && formData.salesByItems.length >= 3
                     ? 'bg-blue-100 hover:bg-blue-100 text-blue-600 border-blue-100'
                     : ''
                 }`}

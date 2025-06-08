@@ -28,12 +28,12 @@ export const useFormData = (drawerState) => {
   const [percentageData, setPercentageData] = useState({ data: [] });
   // API 데이터 로딩 상태 관리
   const [isItemsLoading, setIsItemsLoading] = useState(false);
-  const [isPaymentDataLoading, setIsPaymentDataLoading] = useState(false);
+  // const [isPaymentDataLoading, setIsPaymentDataLoading] = useState(false);
   // 선택된 결제매출 ID 상태 관리
   const [selectedPaymentIds, setSelectedPaymentIds] = useState(
     INITIAL_PAYMENT_ID_STATE,
   );
-  const [selectedPaymentData, setSelectedPaymentData] = useState([]);
+  // const [selectedPaymentData, setSelectedPaymentData] = useState([]);
 
   useEffect(() => {
     console.log('Form Data Changed:', {
@@ -95,24 +95,24 @@ export const useFormData = (drawerState) => {
     }
   }, []);
 
-  const loadPayments = async () => {
-    setIsPaymentDataLoading(true);
-    try {
-      const [paymentMethods, percentages] = await Promise.all([
-        apiCommon.getCodebook('re_payment_method'),
-        apiCommon.getCodebook('sfa_percentage'),
-      ]);
+  // const loadPayments = async () => {
+  //   setIsPaymentDataLoading(true);
+  //   try {
+  //     const [paymentMethods, percentages] = await Promise.all([
+  //       apiCommon.getCodebook('re_payment_method'),
+  //       apiCommon.getCodebook('sfa_percentage'),
+  //     ]);
 
-      setPaymentData(paymentMethods.data);
-      setPercentageData(percentages.data);
-    } catch (error) {
-      console.error('Failed to fetch payment data:', error);
-      setPaymentData({ data: [] });
-      setPercentageData({ data: [] });
-    } finally {
-      setIsPaymentDataLoading(false);
-    }
-  };
+  //     setPaymentData(paymentMethods.data);
+  //     setPercentageData(percentages.data);
+  //   } catch (error) {
+  //     console.error('Failed to fetch payment data:', error);
+  //     setPaymentData({ data: [] });
+  //     setPercentageData({ data: [] });
+  //   } finally {
+  //     setIsPaymentDataLoading(false);
+  //   }
+  // };
 
   /**
    * 입력값 변경 핸들러
@@ -157,34 +157,34 @@ export const useFormData = (drawerState) => {
   const handleCustomerTypeChange = (isSame) => {
     setFormData((prev) => ({
       ...prev,
-      isSameRevenueSource: isSame,
-      sfaCustomers: [], // sfaCustomers 초기화
+      isSameBilling: isSame,
+      salesByPayments: [], // salesByPayments 초기화
     }));
   };
 
   // 매출처 추가 함수
-  const handleAddSalesCustomer = () => {
-    if (!formData.customerCompany) return;
+  // const handleAddSalesCustomer = () => {
+  //   if (!formData.customerCompany) return;
 
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     sfaCustomers: [
+  //       ...prev.sfaCustomers,
+  //       {
+  //         customer: '',
+  //         isEndCustomer: false,
+  //         isRevenueSource: true,
+  //       },
+  //     ],
+  //   }));
+  // };
+
+  // isSameBilling 상태 변경 함수 추가
+  const toggleIsSameBilling = () => {
     setFormData((prev) => ({
       ...prev,
-      sfaCustomers: [
-        ...prev.sfaCustomers,
-        {
-          customer: '',
-          isEndCustomer: false,
-          isRevenueSource: true,
-        },
-      ],
-    }));
-  };
-
-  // isSameRevenueSource 상태 변경 함수 추가
-  const toggleIsSameRevenueSource = () => {
-    setFormData((prev) => ({
-      ...prev,
-      isSameRevenueSource: !prev.isSameRevenueSource,
-      sfaCustomers: [], // sfaCustomers 초기화
+      isSameBilling: !prev.isSameBilling,
+      salesByPayments: [], // salesByPayments 초기화
     }));
   };
 
@@ -194,19 +194,9 @@ export const useFormData = (drawerState) => {
    */
   const handleCustomerSelect = (customer) => {
     setFormData((prev) => {
-      const newSfaCustomers = [...(prev.sfaCustomers || [])];
-
-      // isSameRevenueSource 값에 따라 isEndCustomer와 isRevenueSource 설정
-      newSfaCustomers.push({
-        customer: customer.id,
-        isEndCustomer: true,
-        isRevenueSource: prev.isSameRevenueSource,
-      });
-
       return {
         ...prev,
-        customerCompany: customer.id, // 고객사 ID 설정
-        sfaCustomers: newSfaCustomers,
+        customer: { id: customer.id, name: customer.name },
       };
     });
 
@@ -303,17 +293,25 @@ export const useFormData = (drawerState) => {
     if (formData.salesByPayments.length >= 3) return;
 
     try {
-      if (!isPaymentDataLoading && !paymentData.data.length) {
-        await loadPayments();
-      }
+      // 결제 방법 데이터가 없는 경우 먼저 조회
+      // if (!paymentData.data.length) {
+      //   await loadPayments();
+      // }
 
-      setFormData((prev) => ({
-        ...prev,
-        salesByPayments: [
-          ...prev.salesByPayments,
-          { ...initialSalesByPayment },
-        ],
-      }));
+      // 현재 formData 상태를 보존하면서 새로운 결제매출 추가
+      setFormData((prev) => {
+        const newPayment = { ...initialSalesByPayment };
+
+        // isSameBilling이 true이고 고객 정보가 있는 경우에만 revenueSource 설정
+        if (prev.isSameBilling && prev.customer?.id) {
+          newPayment.revenueSource = prev.customer;
+        }
+
+        return {
+          ...prev,
+          salesByPayments: [...prev.salesByPayments, newPayment],
+        };
+      });
     } catch (error) {
       console.error('Failed to add sales payment:', error);
     }
@@ -425,7 +423,7 @@ export const useFormData = (drawerState) => {
     if (formData.salesByPayments.length >= 3) return;
 
     try {
-      if (!isPaymentDataLoading && !paymentData.data.length) {
+      if (!paymentData.data.length) {
         await loadPayments();
       }
     } catch (error) {
@@ -486,6 +484,20 @@ export const useFormData = (drawerState) => {
     }
   };
 
+  const handleRevenueSourceSelect = (customer, paymentIndex) => {
+    setFormData((prev) => {
+      const updatedPayments = [...prev.salesByPayments];
+      updatedPayments[paymentIndex] = {
+        ...updatedPayments[paymentIndex],
+        revenueSource: { id: customer.id, name: customer.name },
+      };
+      return {
+        ...prev,
+        salesByPayments: updatedPayments,
+      };
+    });
+  };
+
   return {
     // 폼 상태관리
     formData,
@@ -502,11 +514,12 @@ export const useFormData = (drawerState) => {
     removeItem,
     itemsData,
     isItemsLoading,
-    paymentData,
-    percentageData,
-    isPaymentDataLoading,
+    // paymentData,
+    // percentageData,
+    // isPaymentDataLoading,
     //
     handleCustomerSelect,
+    handleRevenueSourceSelect,
     resetForm,
     setFieldValue,
     setFieldValues,
@@ -525,8 +538,8 @@ export const useFormData = (drawerState) => {
     handleEditPayment,
     // isProject 관련 함수
     handleProjectToggle,
-    toggleIsSameRevenueSource,
+    toggleIsSameBilling,
     handleCustomerTypeChange,
-    handleAddSalesCustomer,
+    // handleAddSalesCustomer,
   };
 };

@@ -41,9 +41,9 @@ const validateBasicInfo = (formData) => {
   });
 
   // 고객사 검증
-  const { isSameRevenueSource, sfaCustomers } = formData;
+  const { isSameBilling, sfaCustomers } = formData;
 
-  if (isSameRevenueSource) {
+  if (isSameBilling) {
     // 매출/고객 동일인 경우
     if (!sfaCustomers || sfaCustomers.length !== 1) {
       errors.push('매출처/고객사 정보가 올바르지 않습니다.');
