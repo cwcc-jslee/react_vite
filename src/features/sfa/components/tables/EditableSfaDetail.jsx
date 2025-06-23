@@ -326,10 +326,10 @@ const EditableSfaDetail = ({
 
       <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
-          매출처
+          고객사
         </DescriptionItem>
         <DescriptionItem className="px-0.5">
-          {data?.sfa_customers?.[0]?.customer?.name || '-'}
+          {data?.customer?.name || '-'}
           {/* {featureMode !== 'editBase'
             ? data?.sfa_customers?.[0]?.customer?.name || '-'
             : renderEditableField(
@@ -338,10 +338,10 @@ const EditableSfaDetail = ({
               )} */}
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
-          고객사
+          ---
         </DescriptionItem>
         <DescriptionItem className="px-0.5">
-          {data?.sfa_customers?.[1]?.customer?.name || '-'}
+          {'-'}
           {/* {featureMode !== 'editBase'
             ? data?.sfa_customers?.[1]?.customer?.name || '-'
             : renderEditableField(

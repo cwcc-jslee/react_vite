@@ -47,6 +47,16 @@ export const PAYMENT_REQUIRED_FIELDS = {
   recognitionDate: '매출인식일자',
 };
 
+// 결제 매출 수정 필수 필드_임시_삭제 예정
+export const PAYMENT_REQUIRED_FIELDS_EDIT = {
+  // revenueSource: '매출처',
+  billingType: '결제구분',
+  probability: '매출확률',
+  amount: '매출액',
+  marginProfitValue: '이익률/이익금',
+  recognitionDate: '매출인식일자',
+};
+
 // 검증 규칙
 export const VALIDATION_RULES = {
   MAX_SALES_ITEMS: 3,

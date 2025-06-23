@@ -334,8 +334,8 @@ const ProjectAddBaseForm = ({
           <FormItem className="flex-1">
             <Label className="text-left">비고</Label>
             <Input
-              name="remark"
-              value={formData.remark || ''}
+              name="remarks"
+              value={formData.remarks || ''}
               onChange={updateField}
             />
           </FormItem>

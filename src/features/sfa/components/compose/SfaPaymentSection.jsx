@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import SfaDetailPaymentTable from '../tables/SfaDetailPaymentTable';
 import SfaEditPaymentForm from '../forms/SfaEditPaymentForm';
 import { useSfaForm } from '../../hooks/useSfaForm';
-import { useFormValidation } from '../../hooks/useFormValidation';
+import { useFormValidationEdit } from '../../hooks/useFormValidationEdit';
 import SalesByPayment from '../elements/SalesByPayment';
 import { Form, Group, Button } from '../../../../shared/components/ui';
 import ModalRenderer from '../../../../shared/components/ui/modal/ModalRenderer';
@@ -46,7 +46,7 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
     handleConfirm,
   } = useModal();
 
-  const { validatePaymentForm } = useFormValidation(formData);
+  const { validatePaymentForm } = useFormValidationEdit(formData);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

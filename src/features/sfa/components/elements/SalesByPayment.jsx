@@ -37,6 +37,8 @@ const SalesByPayment = ({
     error,
   } = useCodebook(['rePaymentMethod', 'sfaPercentage']);
 
+  console.log('>>salesbyPayment  : ', payments);
+
   // 이익/마진 금액 자동 계산 useEffect 수정
   useEffect(() => {
     if (!isFormatting.current) {

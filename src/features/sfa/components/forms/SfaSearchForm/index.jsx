@@ -116,7 +116,7 @@ const SfaSearchForm = () => {
         {/* Stack 컴포넌트를 사용하여 3개의 항목을 한 줄에 표시 */}
         <Stack direction="horizontal" spacing="lg">
           <FormItem>
-            <Label>매출처</Label>
+            <Label>고객사/매출처</Label>
             <CustomerSearchInput
               value={searchFormData.customer}
               onSelect={handleCustomerSelect}

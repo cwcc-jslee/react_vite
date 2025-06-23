@@ -49,9 +49,14 @@ export const buildSfaListQuery = (params) => {
   // SFA 관련 필터 처리
   const sfaFilters = {};
 
-  // 매출처 필터
+  // 고객사/매출처 필터
   if (filters.customer) {
-    sfaFilters.customer = { id: { $eq: filters.customer } };
+    baseFilters.push({
+      $or: [
+        { sfa: { customer: { id: { $eq: filters.customer } } } },
+        { revenue_source: { $eq: filters.customer } },
+      ],
+    });
   }
   // 건명 필터
   if (filters.name) {
@@ -173,21 +178,21 @@ export const buildSfaDetailQuery = (id) => {
         'description',
       ],
       populate: {
-        // customer: {
-        //   fields: ['name'],
-        // },
-        sfa_customers: {
-          fields: ['is_revenue_source', 'is_end_customer'],
-          populate: {
-            customer: {
-              fields: ['name'],
-            },
-          },
-          sort: ['is_revenue_source:desc'],
-        },
-        selling_partner: {
+        customer: {
           fields: ['name'],
         },
+        // sfa_customers: {
+        //   fields: ['is_revenue_source', 'is_end_customer'],
+        //   populate: {
+        //     customer: {
+        //       fields: ['name'],
+        //     },
+        //   },
+        //   sort: ['is_revenue_source:desc'],
+        // },
+        // selling_partner: {
+        //   fields: ['name'],
+        // },
         sfa_classification: {
           fields: ['name'],
         },
@@ -214,6 +219,9 @@ export const buildSfaDetailQuery = (id) => {
           ],
           // populate: '*',
           populate: {
+            revenue_source: {
+              fields: ['name'],
+            },
             sfa_by_payment_histories: {
               fields: [
                 'is_confirmed',

@@ -39,20 +39,9 @@ const SfaDetail = ({ data }) => {
       {/* 2행: 고객사/매출처, 매출확정여부 */}
       <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
-          고객사/매출처
+          고객사
         </DescriptionItem>
-        <DescriptionItem>
-          {!data.sfa_customers || data.sfa_customers.length === 0 ? (
-            '-'
-          ) : data.sfa_customers.length === 1 ? (
-            data.sfa_customers[0].customer?.name || '-'
-          ) : (
-            <>
-              {data.sfa_customers[0].customer?.name || '-'} /{' '}
-              {data.sfa_customers[1].customer?.name || '-'}
-            </>
-          )}
-        </DescriptionItem>
+        <DescriptionItem>{data.customer?.name || '-'}</DescriptionItem>
         <DescriptionItem label width="w-[140px]">
           매출유형
         </DescriptionItem>

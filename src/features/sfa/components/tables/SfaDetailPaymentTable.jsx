@@ -70,6 +70,7 @@ const SfaDetailPaymentTable = ({
             <Table.Row>
               <Table.Th>ID</Table.Th>
               <Table.Th>구분</Table.Th>
+              <Table.Th>매출처</Table.Th>
               <Table.Th>확정여부</Table.Th>
               <Table.Th>확률</Table.Th>
               <Table.Th>매출액</Table.Th>
@@ -98,6 +99,7 @@ const SfaDetailPaymentTable = ({
           <Table.Row>
             <Table.Th>ID</Table.Th>
             <Table.Th>매출구분</Table.Th>
+            <Table.Th>매출처</Table.Th>
             <Table.Th>확정여부</Table.Th>
             <Table.Th>확률</Table.Th>
             <Table.Th>매출액</Table.Th>
@@ -111,6 +113,9 @@ const SfaDetailPaymentTable = ({
             <Table.Row key={item.id || index}>
               <Table.Td align="center">{item.id || '-'}</Table.Td>
               <Table.Td align="center">{item.billing_type || '-'}</Table.Td>
+              <Table.Td align="center">
+                {item?.revenue_source?.name || '-'}
+              </Table.Td>
               <Table.Td align="center">
                 {item.is_confirmed ? 'YES' : 'NO'}
               </Table.Td>

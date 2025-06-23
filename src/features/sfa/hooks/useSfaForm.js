@@ -25,8 +25,8 @@ export const useSfaForm = () => {
   const processSubmit = async () => {
     const enrichedFormData = {
       ...formData,
-      hasPartner,
-      isProject,
+      // hasPartner,
+      // isProject,
     };
 
     try {

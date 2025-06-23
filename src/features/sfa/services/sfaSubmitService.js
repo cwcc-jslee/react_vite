@@ -92,7 +92,8 @@ export const sfaSubmitService = {
     });
 
     try {
-      const dbData = transformToDBFields.transformSalesByPayments(paymentData);
+      const dbData =
+        transformToDBFields.transformSalesByPaymentsEdit(paymentData);
 
       const response = await apiService.put(
         `/sfa-by-payment-withhistory/${paymentId}`,

@@ -82,7 +82,7 @@ export const transformToDBFields = {
   },
 
   /**
-   * 결제 매출 항목목 변환
+   * 결제 매출 항목 변환
    */
   transformSalesByPayments: (payment) => {
     // 입력값 로깅
@@ -94,6 +94,48 @@ export const transformToDBFields = {
 
     const transformed = {
       revenue_source: payment.revenueSource.id,
+      billing_type: payment.billingType,
+      is_confirmed: payment.isConfirmed,
+      probability: parseNumber(payment.probability),
+      amount: parseNumber(payment.amount),
+      profit_config: (() => {
+        const config = {
+          is_profit: payment.isProfit,
+          margin_profit_value: parseNumber(payment.marginProfitValue),
+        };
+        return JSON.stringify(config);
+      })(),
+      profit_amount: Math.floor(parseNumber(payment.profitAmount)),
+      scheduled_date: payment.scheduledDate || null,
+      recognition_date: payment.recognitionDate,
+      memo: payment.memo,
+      // 추가 필드가 있다면 여기에 작성
+    };
+
+    // 출력값 로깅
+    console.log('Output:', {
+      type: typeof transformed,
+      value: transformed,
+      isArray: Array.isArray(transformed),
+    });
+    console.groupEnd();
+
+    return transformed;
+  },
+
+  /**
+   * 결제 매출 항목 변환_수정_임시_삭제 예정
+   */
+  transformSalesByPaymentsEdit: (payment) => {
+    // 입력값 로깅
+    console.group('Sales Payments Transform');
+    console.log('Input:', {
+      type: typeof payment,
+      value: payment,
+    });
+
+    const transformed = {
+      // revenue_source: payment.revenueSource.id,
       billing_type: payment.billingType,
       is_confirmed: payment.isConfirmed,
       probability: parseNumber(payment.probability),

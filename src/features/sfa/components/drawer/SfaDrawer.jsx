@@ -77,15 +77,6 @@ const SfaDrawer = ({ drawer }) => {
             },
           },
           {
-            key: 'editCustomer',
-            label: '매출처/고객사 수정',
-            active: featureMode === 'editCustomer',
-            onClick: () => {
-              dispatch(setDrawer({ featureMode: 'editCustomer' }));
-              resetPaymentForm();
-            },
-          },
-          {
             key: 'addPayment',
             label: '결제매출등록',
             active: featureMode === 'addPayment',
