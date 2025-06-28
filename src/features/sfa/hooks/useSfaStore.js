@@ -12,6 +12,7 @@
  */
 
 import { useSelector, useDispatch } from 'react-redux';
+import dayjs from 'dayjs';
 import {
   updateFormField,
   resetForm,
@@ -25,6 +26,8 @@ import {
   // 페이지네이션 액션 추가
   setPage,
   setPageSize,
+  // SFA 목록 조회 액션 추가
+  fetchSfas,
 } from '../../../store/slices/sfaSlice';
 
 /**
@@ -44,17 +47,26 @@ export const useSfaStore = () => {
 
   // 액션 핸들러
   const actions = {
+    // 데이터 조회 액션
+    data: {
+      fetchSfas: (params) => dispatch(fetchSfas(params)),
+    },
+
     // 페이지네이션 액션
     pagination: {
       setPage: (page) => {
         dispatch(setPage(page));
+        // 페이지 변경 시 데이터 재조회
+        dispatch(fetchSfas());
       },
       setPageSize: (pageSize) => {
         dispatch(setPageSize(pageSize));
+        // 페이지 사이즈 변경 시 데이터 재조회
+        dispatch(fetchSfas());
       },
     },
 
-    // 필터 액션 (기본 액션만 제공)
+    // 필터 액션
     filter: {
       // 단일 필터 필드 업데이트
       updateField: (name, value) =>
@@ -64,11 +76,75 @@ export const useSfaStore = () => {
       updateFields: (fieldsObject) =>
         dispatch(updateFilterFields(fieldsObject)),
 
-      // 필터 초기화
-      resetFilters: () => dispatch(resetFilters()),
+      // 날짜 범위 업데이트 (dateRange 객체로 저장)
+      updateDateRange: (startDate, endDate) => {
+        dispatch(
+          updateFilterFields({
+            dateRange: { startDate, endDate },
+          }),
+        );
+        // 날짜 범위 변경 시 데이터 재조회
+        dispatch(fetchSfas());
+      },
 
-      // 특화된 액션들 (updateDateRange, updateProbability)은
-      // useSfaStoreFilter에서 기본 액션들을 조합해서 구현
+      // 시작일만 업데이트
+      updateStartDate: (startDate) => {
+        const currentFilters = filters;
+        const currentEndDate =
+          currentFilters.dateRange?.endDate ||
+          dayjs().endOf('month').format('YYYY-MM-DD');
+        dispatch(
+          updateFilterFields({
+            dateRange: { startDate, endDate: currentEndDate },
+          }),
+        );
+        dispatch(fetchSfas());
+      },
+
+      // 종료일만 업데이트
+      updateEndDate: (endDate) => {
+        const currentFilters = filters;
+        const currentStartDate =
+          currentFilters.dateRange?.startDate ||
+          dayjs().startOf('month').format('YYYY-MM-DD');
+        dispatch(
+          updateFilterFields({
+            dateRange: { startDate: currentStartDate, endDate },
+          }),
+        );
+        dispatch(fetchSfas());
+      },
+
+      // 확률 업데이트
+      updateProbability: (probability) => {
+        dispatch(
+          updateFilterField({ name: 'probability', value: probability }),
+        );
+        // 확률 변경 시 데이터 재조회
+        dispatch(fetchSfas());
+      },
+
+      // 월별 필터 업데이트 (yearMonth: "YYYY-MM" 형태)
+      updateMonthlyFilter: (yearMonth, probability) => {
+        const date = dayjs(yearMonth, 'YYYY-MM');
+        const startDate = date.startOf('month').format('YYYY-MM-DD');
+        const endDate = date.endOf('month').format('YYYY-MM-DD');
+
+        const filterUpdates = {
+          dateRange: { startDate, endDate },
+          probability: probability, // null도 포함하여 처리
+        };
+
+        dispatch(updateFilterFields(filterUpdates));
+        dispatch(fetchSfas());
+      },
+
+      // 필터 초기화
+      resetFilters: () => {
+        dispatch(resetFilters());
+        // 필터 초기화 시 데이터 재조회
+        dispatch(fetchSfas());
+      },
     },
 
     // 폼 액션

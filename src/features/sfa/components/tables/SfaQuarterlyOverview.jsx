@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { sfaApi } from '../../api/sfaApi';
 // import { useSfa } from '../../context/SfaProvider';
-import { useSfaSearchFilter } from '../../hooks/useSfaSearchFilter';
+import { useSfaStore } from '../../hooks/useSfaStore';
 import { StateDisplay } from '../../../../shared/components/ui/state/StateDisplay';
 import dayjs from 'dayjs';
 
@@ -46,7 +46,7 @@ const SfaQuarterlyOverview = () => {
   });
 
   // const { updateMonthlyFilter } = useSfa();
-  const { updateMonthlyFilter } = useSfaSearchFilter();
+  const { actions } = useSfaStore();
 
   // 월 계산 함수
   const calculateMonths = () => {
@@ -84,7 +84,7 @@ const SfaQuarterlyOverview = () => {
 
   // 셀 클릭 이벤트 핸들러
   const handleCellClick = (monthObj, probability) => {
-    const yearMonth = `${monthObj.year}-${monthObj.month}`;
+    const yearMonth = `${monthObj.year}-${monthObj.month.padStart(2, '0')}`;
     if (
       lastClick.yearMonth === yearMonth &&
       lastClick.probability === probability
@@ -92,17 +92,17 @@ const SfaQuarterlyOverview = () => {
       return;
     }
     setLastClick({ yearMonth, probability });
-    updateMonthlyFilter(yearMonth, probability);
+    actions.filter.updateMonthlyFilter(yearMonth, probability);
   };
 
   // 헤더 클릭 이벤트 핸들러
   const handleHeaderClick = (monthObj) => {
-    const yearMonth = `${monthObj.year}-${monthObj.month}`;
+    const yearMonth = `${monthObj.year}-${monthObj.month.padStart(2, '0')}`;
     if (lastClick.yearMonth === yearMonth && lastClick.probability === null) {
       return;
     }
     setLastClick({ yearMonth, probability: null });
-    updateMonthlyFilter(yearMonth, null);
+    actions.filter.updateMonthlyFilter(yearMonth, null);
   };
 
   useEffect(() => {

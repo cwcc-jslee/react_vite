@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { useSfaSearchFilter } from '../../../hooks/useSfaSearchFilter';
 import { useSfaStoreFilter } from '../../../hooks/useSfaStoreFilter';
+import { useSfaStore } from '../../../hooks/useSfaStore';
 import { CustomerSearchInput } from '../../../../../shared/components/customer/CustomerSearchInput';
 import { useCodebook } from '../../../../../shared/hooks/useCodebook';
 import { useTeam } from '../../../../../shared/hooks/useTeam';
@@ -27,6 +28,9 @@ const SfaSearchForm = () => {
   const { filters, handlers, resetAllFilters, getSearchParams, validation } =
     useSfaStoreFilter();
 
+  // useSfaStore도 추가로 사용 (초기화 목적)
+  const { actions } = useSfaStore();
+
   const {
     data: codebooks,
     isLoading,
@@ -46,26 +50,37 @@ const SfaSearchForm = () => {
   const { data: teams, isLoading: teamLoading } = useTeam();
   const { data: items, refetch } = useSfaItem();
 
+  // 컴포넌트 마운트 시 검색 폼 필터 초기화 (1회만 실행)
+  // 무한루핑 방지를 위해 주석 처리
+  useEffect(() => {
+    console.log('SfaSearchForm - 필터 초기화 실행');
+    actions.filter.resetFilters();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // 매출구분 변경 시 매출품목 자동 업데이트
   useEffect(() => {
-    if (filters.sfaClassification) {
+    if (filters.sfaClassification && filters.sfaClassification !== '') {
+      // 매출구분이 선택된 경우 해당 매출품목 조회
       refetch(filters.sfaClassification);
+    } else {
+      // sfaClassification이 null, undefined, 또는 빈 문자열일 때 매출품목을 빈 배열로 초기화
+      refetch(null);
     }
-  }, [filters.sfaClassification, refetch]);
+  }, [filters.sfaClassification]); // refetch dependency 제거
 
   // 기존 핸들러들을 Redux 스토어 핸들러로 대체
   // Redux 스토어에서 제공하는 핸들러 사용하므로 별도 구현 불필요
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Redux 스토어에서 현재 필터 상태 가져와서 검색 실행
-    const searchParams = getSearchParams();
-    console.log(`>> handleSubmit (Redux Store) : `, searchParams);
-    updateDetailFilter(searchParams);
+    console.log('SfaSearchForm - handleSubmit 실행');
+    // useSfaStore Redux 액션으로 직접 데이터 조회 (현재 필터 상태 기반)
+    actions.data.fetchSfas();
   };
 
   const handleReset = () => {
-    resetAllFilters(); // Redux 스토어 필터 초기화
+    console.log('SfaSearchForm - handleReset 실행');
+    actions.filter.resetFilters(); // useSfaStore Redux 액션으로 필터 초기화
   };
 
   return (
@@ -138,7 +153,14 @@ const SfaSearchForm = () => {
             <Select
               name="sfaClassification"
               value={filters.sfaClassification || ''}
-              onChange={handlers.handleClassificationChange}
+              onChange={(e) => {
+                const value = e.target.value;
+                // 매출구분 변경 시 매출품목도 함께 초기화
+                actions.filter.updateFields({
+                  sfaClassification: value || null,
+                  salesItem: null, // 매출품목 초기화
+                });
+              }}
             >
               <option value="">선택하세요</option>
               {codebooks?.sfaClassification?.map((item) => (
@@ -155,8 +177,17 @@ const SfaSearchForm = () => {
               name="salesItem"
               value={filters.salesItem || ''}
               onChange={handlers.handleFieldChange('salesItem')}
+              disabled={
+                !filters.sfaClassification ||
+                filters.sfaClassification === '' ||
+                !items?.data?.length
+              }
             >
-              <option value="">선택하세요</option>
+              <option value="">
+                {!filters.sfaClassification || filters.sfaClassification === ''
+                  ? '매출구분 선택'
+                  : '선택하세요'}
+              </option>
               {items?.data?.map((item) => (
                 <option key={item.id} value={item.name}>
                   {item.name}

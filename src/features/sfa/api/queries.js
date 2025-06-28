@@ -5,26 +5,21 @@ import qs from 'qs';
  * SFA 목록 조회를 위한 쿼리 파라미터 생성
  */
 export const buildSfaListQuery = (params) => {
-  const {
-    pagination = { start: 0, limit: 25 },
-    filters = {},
-    dateRange,
-    probability = null,
-  } = params;
+  const { pagination = { start: 0, limit: 25 }, filters = {} } = params;
 
   // 기본 필터 구성
   const baseFilters = [{ is_deleted: { $eq: false } }];
 
-  // 날짜 범위 필터 처리
-  if (dateRange) {
+  // 날짜 범위 필터 처리 (filters.dateRange에서 가져옴)
+  if (filters.dateRange) {
     const dateFilter = {};
 
-    if (dateRange.startDate) {
-      dateFilter.$gte = dateRange.startDate;
+    if (filters.dateRange.startDate) {
+      dateFilter.$gte = filters.dateRange.startDate;
     }
 
-    if (dateRange.endDate) {
-      dateFilter.$lte = dateRange.endDate;
+    if (filters.dateRange.endDate) {
+      dateFilter.$lte = filters.dateRange.endDate;
     }
 
     if (Object.keys(dateFilter).length > 0) {
@@ -34,14 +29,14 @@ export const buildSfaListQuery = (params) => {
     }
   }
 
-  // 확률 필터 추가
-  if (probability) {
-    if (probability === 'confirmed') {
+  // 확률 필터 추가 (filters.probability에서 가져옴)
+  if (filters.probability) {
+    if (filters.probability === 'confirmed') {
       baseFilters.push({ is_confirmed: { $eq: true } });
     } else {
       baseFilters.push({
         is_confirmed: { $eq: false },
-        probability: { $eq: probability },
+        probability: { $eq: filters.probability },
       });
     }
   }

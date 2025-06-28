@@ -1,6 +1,6 @@
 // src/features/sfa/components/table/SfaTable.jsx
 import React from 'react';
-import { useSfa } from '../../context/SfaProvider';
+import { useSfaStore } from '../../hooks/useSfaStore';
 import { Button } from '../../../../shared/components/ui';
 import { Card } from '../../../../shared/components/ui/card/Card';
 import { StateDisplay } from '../../../../shared/components/ui/state/StateDisplay';
@@ -27,29 +27,29 @@ const COLUMNS = [
 const TableRow = ({ item, index, pageSize, currentPage }) => {
   const actualIndex = (currentPage - 1) * pageSize + index + 1;
   const sfaItemPrice = item.sfa?.sfa_item_price || [];
-  const { fetchSfaDetail } = useSfa();
+  // TODO: fetchSfaDetail을 useSfaStore에 추가 필요
 
   return (
     <tr className="hover:bg-gray-50">
       <td className="px-3 py-2 text-center text-sm">{actualIndex}</td>
       <td className="px-3 py-2 text-center text-sm">
-        {item.is_confirmed ? 'YES' : 'NO'}
+        {item.isConfirmed ? 'YES' : 'NO'}
       </td>
       <td className="px-3 py-2 text-center text-sm">
         {item.probability || '-'}
       </td>
       <td className="px-3 py-2 text-sm">
-        {item?.revenue_source?.name ? (
-          item?.revenue_source?.name === item?.sfa?.customer?.name ? (
-            <span title={item.revenue_source.name}>
-              {truncateText(item.revenue_source.name, 10)}
+        {item?.revenueSource?.name ? (
+          item?.revenueSource?.name === item?.sfa?.customer?.name ? (
+            <span title={item.revenueSource.name}>
+              {truncateText(item.revenueSource.name, 10)}
             </span>
           ) : (
             <span
-              title={`${item.revenue_source.name} / ${item.sfa.customer.name}`}
+              title={`${item.revenueSource.name} / ${item.sfa.customer.name}`}
             >
               {truncateText(
-                `${item.revenue_source.name} / ${item.sfa.customer.name}`,
+                `${item.revenueSource.name} / ${item.sfa.customer.name}`,
                 10,
               )}
             </span>
@@ -69,29 +69,32 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
         </div>
       </td>
       <td className="px-3 py-2 text-center text-sm">
-        {item.billing_type || '-'}
+        {item.billingType || '-'}
       </td>
       <td className="px-3 py-2 text-center text-sm">
-        {item.sfa?.sfa_classification?.name || '-'}
+        {item.sfa?.sfaClassification?.name || '-'}
       </td>
       <td className="px-3 py-2 text-center text-sm">
-        {sfaItemPrice.map((item) => item.sfa_item_name).join(', ') || '-'}
+        {sfaItemPrice.map((item) => item.sfaItemName).join(', ') || '-'}
       </td>
       <td className="px-3 py-2 text-center text-sm">
-        {sfaItemPrice.map((item) => item.team_name).join(', ') || '-'}
+        {sfaItemPrice.map((item) => item.teamName).join(', ') || '-'}
       </td>
       <td className="px-3 py-2 text-right text-sm font-mono">
         {new Intl.NumberFormat('ko-KR').format(item.amount)}
       </td>
       <td className="px-3 py-2 text-right text-sm font-mono">
-        {new Intl.NumberFormat('ko-KR').format(item.profit_amount)}
+        {new Intl.NumberFormat('ko-KR').format(item.profitAmount)}
       </td>
-      <td className="px-3 py-2 text-center text-sm">{item.recognition_date}</td>
+      <td className="px-3 py-2 text-center text-sm">{item.recognitionDate}</td>
       <td className="px-3 py-2 text-center">
         <Button
           variant="outline"
           size="sm"
-          onClick={() => fetchSfaDetail(item.sfa.id)}
+          onClick={() => {
+            // TODO: fetchSfaDetail 구현 필요
+            console.log('SFA 상세 조회:', item.sfa.id);
+          }}
         >
           View
         </Button>
@@ -102,14 +105,15 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
 
 const SfaTable = () => {
   // SFA 데이터 관련 상태와 함수
-  const { sfaData, loading, error, pagination, setPage, setPageSize } =
-    useSfa();
+  const { items, status, error, pagination, actions } = useSfaStore();
 
   // console.log(`======== SfaTable pagination : `, pagination);
 
+  const loading = status === 'loading';
+
   if (loading) return <StateDisplay type="loading" />;
   if (error) return <StateDisplay type="error" message={error} />;
-  if (!sfaData?.length) return <StateDisplay type="empty" />;
+  if (!items?.length) return <StateDisplay type="empty" />;
 
   return (
     <Card>
@@ -131,7 +135,7 @@ const SfaTable = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {sfaData.map((item, index) => (
+            {items.map((item, index) => (
               <TableRow
                 key={item.id}
                 item={item}
@@ -148,8 +152,8 @@ const SfaTable = () => {
         current={pagination.current}
         pageSize={pagination.pageSize}
         total={pagination.total}
-        onPageChange={setPage}
-        onPageSizeChange={setPageSize}
+        onPageChange={actions.pagination.setPage}
+        onPageSizeChange={actions.pagination.setPageSize}
       />
     </Card>
   );

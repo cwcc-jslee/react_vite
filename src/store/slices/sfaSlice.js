@@ -1,16 +1,73 @@
 /**
  * SFA 페이지 데이터 관리
  * - 폼 상태 관리
+ * - SFA 목록 조회 및 상태 관리
  */
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { notification } from '@shared/services/notification';
+import { convertKeysToCamelCase } from '@shared/utils/transformUtils';
+import { sfaService } from '../../features/sfa/services/sfaService';
+import dayjs from 'dayjs';
 import {
   DEFAULT_PAGINATION,
   DEFAULT_FILTERS,
   FORM_INITIAL_STATE,
 } from '../../features/sfa/constants/initialState';
 
+// SFA 목록 조회 액션
+export const fetchSfas = createAsyncThunk(
+  'sfa/fetchSfas',
+  async (params = {}, { getState, rejectWithValue }) => {
+    try {
+      const state = getState();
+      const { pagination: storePagination, filters: storeFilters } = state.sfa;
+
+      const pagination = params.pagination ||
+        storePagination || {
+          current: 1,
+          pageSize: 20,
+        };
+
+      const filters = params.filters || storeFilters || {};
+
+      const queryParams = {
+        // dateRange: {
+        //   startDate:
+        //     filters.dateRange?.startDate ||
+        //     dayjs().startOf('month').format('YYYY-MM-DD'),
+        //   endDate:
+        //     filters.dateRange?.endDate ||
+        //     dayjs().endOf('month').format('YYYY-MM-DD'),
+        // },
+        // probability: filters.probability || null,
+        filters: { ...filters },
+        pagination: {
+          current: pagination.current,
+          pageSize: pagination.pageSize,
+        },
+      };
+
+      const response = await sfaService.getSfaList(queryParams);
+
+      return {
+        data: convertKeysToCamelCase(response.data),
+        meta: response.meta,
+      };
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.error?.message ||
+          'SFA 목록을 불러오는 중 오류가 발생했습니다.',
+      );
+    }
+  },
+);
+
 // SFA 초기 상태
 const initialState = {
+  // 목록 데이터
+  items: [],
+  status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+  error: null,
   // 폼 상태
   form: { ...FORM_INITIAL_STATE },
   // 페이지네이션
@@ -114,6 +171,28 @@ const sfaSlice = createSlice({
     setFormIsValid: (state, action) => {
       state.form.isValid = action.payload;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      // SFA 목록 조회
+      .addCase(fetchSfas.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchSfas.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.items = action.payload.data;
+        state.pagination.total = action.payload.meta.pagination.total;
+        state.error = null;
+      })
+      .addCase(fetchSfas.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+        notification.error({
+          message: '데이터 조회 실패',
+          description: action.payload || 'SFA 목록을 불러오는데 실패했습니다.',
+        });
+      });
   },
 });
 

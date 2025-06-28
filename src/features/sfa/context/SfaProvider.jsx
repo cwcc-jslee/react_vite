@@ -242,10 +242,10 @@ export const SfaProvider = ({ children }) => {
   );
 
   // 초기 데이터 로드
-  React.useEffect(() => {
-    console.log('Initial data loading');
-    fetchSfaList();
-  }, [fetchSfaList]);
+  // React.useEffect(() => {
+  //   console.log('Initial data loading');
+  //   fetchSfaList();
+  // }, [fetchSfaList]);
 
   /**
    * SFA 상세 조회

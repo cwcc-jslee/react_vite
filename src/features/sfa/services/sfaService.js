@@ -52,10 +52,10 @@ export const sfaService = {
   getSfaList: async (params) => {
     try {
       // 기본 날짜 범위 설정
-      const defaultDateRange = {
-        startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
-        endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
-      };
+      // const defaultDateRange = {
+      //   startDate: dayjs().startOf('month').format('YYYY-MM-DD'),
+      //   endDate: dayjs().endOf('month').format('YYYY-MM-DD'),
+      // };
 
       // filters 객체 변환
       // const transformedFilters = transformToDBFields.transformToStrapiFilter(
@@ -66,9 +66,11 @@ export const sfaService = {
       const queryParams = {
         pagination: params.pagination,
         filters: params.filters,
-        dateRange: params.dateRange || defaultDateRange,
-        probability: params.probability,
+        // dateRange: params.dateRange || defaultDateRange,
+        // probability: params.probability,
       };
+
+      console.log('queryParams', queryParams);
 
       // 쿼리 생성 및 API 호출
       const query = buildSfaListQuery(queryParams);
