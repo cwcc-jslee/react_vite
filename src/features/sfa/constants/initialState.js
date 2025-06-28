@@ -9,9 +9,7 @@ export const DEFAULT_PAGINATION = {
   total: 0,
 };
 
-export const DEFAULT_FILTERS = {
-  $and: [],
-};
+export const DEFAULT_FILTERS = {};
 
 export const FORM_INITIAL_STATE = {
   data: {

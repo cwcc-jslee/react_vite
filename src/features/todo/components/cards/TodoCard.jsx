@@ -235,6 +235,14 @@ const TodoCard = ({
               </Badge>
             </div>
           )}
+          {/* 고객사 정보 추가 */}
+          {task.project.sfa?.customer && (
+            <Tag color="orange" className="mr-2">
+              {typeof task.project.sfa.customer === 'object'
+                ? task.project.sfa.customer.name || '고객사 없음'
+                : String(task.sfa.customer)}
+            </Tag>
+          )}
           {task.taskScheduleType && (
             <Tag color="purple" className="mr-2">
               {task.project.workType}

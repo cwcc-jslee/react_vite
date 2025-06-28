@@ -18,6 +18,13 @@ import {
   setFormErrors,
   setFormSubmitting,
   setFormIsValid,
+  // 필터 관련 기본 액션만 (특화된 액션 제거)
+  updateFilterField,
+  updateFilterFields,
+  resetFilters,
+  // 페이지네이션 액션 추가
+  setPage,
+  setPageSize,
 } from '../../../store/slices/sfaSlice';
 
 /**
@@ -47,8 +54,22 @@ export const useSfaStore = () => {
       },
     },
 
-    // 필터 액션
-    filter: {},
+    // 필터 액션 (기본 액션만 제공)
+    filter: {
+      // 단일 필터 필드 업데이트
+      updateField: (name, value) =>
+        dispatch(updateFilterField({ name, value })),
+
+      // 여러 필터 필드 동시 업데이트
+      updateFields: (fieldsObject) =>
+        dispatch(updateFilterFields(fieldsObject)),
+
+      // 필터 초기화
+      resetFilters: () => dispatch(resetFilters()),
+
+      // 특화된 액션들 (updateDateRange, updateProbability)은
+      // useSfaStoreFilter에서 기본 액션들을 조합해서 구현
+    },
 
     // 폼 액션
     form: {

@@ -23,6 +23,58 @@ const sfaSlice = createSlice({
   name: 'sfa',
   initialState,
   reducers: {
+    // 페이지네이션 변경
+    setPage: (state, action) => {
+      state.pagination.current = Number(action.payload);
+    },
+
+    setPageSize: (state, action) => {
+      state.pagination.pageSize = Number(action.payload);
+      state.pagination.current = 1; // 페이지 크기 변경 시 첫 페이지로
+    },
+
+    // 필터 변경
+    setFilters: (state, action) => {
+      // action.payload가 객체인지 확인
+      const payload = typeof action.payload === 'object' ? action.payload : {};
+
+      // 두 번째 인자가 true이면 기존 필터 대체, 아니면 병합
+      const replaceMode = action.meta?.replace === true;
+
+      if (replaceMode) {
+        // 기존 필터 완전히 대체
+        state.filters = { ...payload };
+      } else {
+        // 기존 필터에 새 필터 병합 (기존 동작)
+        state.filters = {
+          ...state.filters,
+          ...payload,
+        };
+      }
+
+      state.pagination.current = 1; // 필터 변경 시 첫 페이지로
+    },
+    // 필터 초기화 (기본값으로 리셋)
+    resetFilters: (state) => {
+      state.filters = { ...DEFAULT_FILTERS };
+      state.pagination = { ...DEFAULT_PAGINATION };
+    },
+
+    // 필터 단일 필드 업데이트
+    updateFilterField: (state, action) => {
+      const { name, value } = action.payload;
+      state.filters[name] = value;
+      state.pagination.current = 1; // 필터 변경 시 첫 페이지로
+    },
+
+    // 필터 여러 필드 동시 업데이트
+    updateFilterFields: (state, action) => {
+      Object.entries(action.payload).forEach(([key, value]) => {
+        state.filters[key] = value;
+      });
+      state.pagination.current = 1;
+    },
+
     // 폼 필드 업데이트
     updateFormField: (state, action) => {
       const { name, value } = action.payload;
@@ -66,6 +118,12 @@ const sfaSlice = createSlice({
 });
 
 export const {
+  setPage,
+  setPageSize,
+  setFilters,
+  resetFilters,
+  updateFilterField,
+  updateFilterFields,
   updateFormField,
   setFormErrors,
   setFormSubmitting,
