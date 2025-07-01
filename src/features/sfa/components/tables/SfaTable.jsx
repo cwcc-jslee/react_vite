@@ -1,6 +1,8 @@
 // src/features/sfa/components/table/SfaTable.jsx
 import React from 'react';
 import { useSfaStore } from '../../hooks/useSfaStore';
+import { useUiStore } from '../../../../shared/hooks/useUiStore';
+import { fetchSfaDetail } from '../../../../store/slices/sfaSlice';
 import { Button } from '../../../../shared/components/ui';
 import { Card } from '../../../../shared/components/ui/card/Card';
 import { StateDisplay } from '../../../../shared/components/ui/state/StateDisplay';
@@ -24,10 +26,33 @@ const COLUMNS = [
   { key: 'action', title: 'Action', align: 'center' },
 ];
 
-const TableRow = ({ item, index, pageSize, currentPage }) => {
+const TableRow = ({
+  item,
+  index,
+  pageSize,
+  currentPage,
+  actions,
+  uiActions,
+}) => {
   const actualIndex = (currentPage - 1) * pageSize + index + 1;
   const sfaItemPrice = item.sfa?.sfa_item_price || [];
-  // TODO: fetchSfaDetail을 useSfaStore에 추가 필요
+
+  const handleViewClick = async () => {
+    try {
+      // fetchSfaDetail 실행
+      const resultAction = await actions.data.fetchSfaDetail(item.sfa.id);
+
+      // fetchSfaDetail 성공 시 drawer 열기
+      if (fetchSfaDetail.fulfilled.match(resultAction)) {
+        uiActions.drawer.open({
+          mode: 'view',
+          data: resultAction.payload,
+        });
+      }
+    } catch (error) {
+      console.error('SFA 상세 조회 실패:', error);
+    }
+  };
 
   return (
     <tr className="hover:bg-gray-50">
@@ -88,14 +113,7 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
       </td>
       <td className="px-3 py-2 text-center text-sm">{item.recognitionDate}</td>
       <td className="px-3 py-2 text-center">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            // TODO: fetchSfaDetail 구현 필요
-            console.log('SFA 상세 조회:', item.sfa.id);
-          }}
-        >
+        <Button variant="outline" size="sm" onClick={handleViewClick}>
           View
         </Button>
       </td>
@@ -106,6 +124,7 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
 const SfaTable = () => {
   // SFA 데이터 관련 상태와 함수
   const { items, status, error, pagination, actions } = useSfaStore();
+  const { actions: uiActions } = useUiStore();
 
   // console.log(`======== SfaTable pagination : `, pagination);
 
@@ -142,6 +161,8 @@ const SfaTable = () => {
                 index={index}
                 pageSize={pagination.pageSize}
                 currentPage={pagination.current}
+                actions={actions}
+                uiActions={uiActions}
               />
             ))}
           </tbody>

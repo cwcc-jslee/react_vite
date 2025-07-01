@@ -112,12 +112,12 @@ const SfaDetailPaymentTable = ({
           {data.map((item, index) => (
             <Table.Row key={item.id || index}>
               <Table.Td align="center">{item.id || '-'}</Table.Td>
-              <Table.Td align="center">{item.billing_type || '-'}</Table.Td>
+              <Table.Td align="center">{item.billingType || '-'}</Table.Td>
               <Table.Td align="center">
-                {item?.revenue_source?.name || '-'}
+                {item?.revenueSource?.name || '-'}
               </Table.Td>
               <Table.Td align="center">
-                {item.is_confirmed ? 'YES' : 'NO'}
+                {item.isConfirmed ? 'YES' : 'NO'}
               </Table.Td>
               <Table.Td align="center">{item.probability || '-'}</Table.Td>
               <Table.Td align="right">
@@ -126,11 +126,11 @@ const SfaDetailPaymentTable = ({
                   : '-'}
               </Table.Td>
               <Table.Td align="right">
-                {typeof item.profit_amount === 'number'
-                  ? item.profit_amount.toLocaleString()
+                {typeof item.profitAmount === 'number'
+                  ? item.profitAmount.toLocaleString()
                   : '-'}
               </Table.Td>
-              <Table.Td align="center">{item.recognition_date || '-'}</Table.Td>
+              <Table.Td align="center">{item.recognitionDate || '-'}</Table.Td>
               {renderLastCell(item.documentId, item.id)}
             </Table.Row>
           ))}

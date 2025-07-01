@@ -214,7 +214,7 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
       <div className="space-y-6">
         {/* 매출 내역 테이블 */}
         <SfaDetailPaymentTable
-          data={data.sfa_by_payments || []}
+          data={data.sfaByPayments || []}
           controlMode={controlMode}
           featureMode={featureMode}
           onView={handleViewAction}

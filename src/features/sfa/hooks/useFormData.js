@@ -436,7 +436,7 @@ export const useFormData = (drawerState) => {
     console.log('>>togglePaymentSelection>> [paymentId] : ', item);
 
     // formData 업데이트
-    const payment = drawerState.data.sfa_by_payments.find(
+    const payment = drawerState.data.sfaByPayments.find(
       (p) => p.documentId === item.documentId,
     );
     console.log('>>togglePaymentSelection>> [payment] : ', payment);
@@ -452,16 +452,16 @@ export const useFormData = (drawerState) => {
             // 선택시 추가
             id: payment.id,
             documentId: payment.documentId,
-            billingType: payment.billing_type || '',
-            isConfirmed: payment.is_confirmed || false,
+            billingType: payment.billingType || '',
+            isConfirmed: payment.isConfirmed || false,
             probability: payment.probability?.toString() || '',
             amount: payment.amount?.toString() || '',
-            profitAmount: payment.profit_amount?.toString() || '',
-            isProfit: payment.profit_config?.is_profit || false,
+            profitAmount: payment.profitAmount?.toString() || '',
+            isProfit: payment.profitConfig?.isProfit || false,
             marginProfitValue:
-              payment.profit_config?.margin_profit_value?.toString() || '',
-            recognitionDate: payment.recognition_date || '',
-            scheduledDate: payment.scheduled_date || '',
+              payment.profitConfig?.marginProfitValue?.toString() || '',
+            recognitionDate: payment.recognitionDate || '',
+            scheduledDate: payment.scheduledDate || '',
             memo: payment.memo || '',
             sfa: payment.sfa || null,
           },

@@ -2,8 +2,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { sfaSubmitService } from '../services/sfaSubmitService';
 import { getCurrentValue } from '../utils/fieldUtils';
-import { sfaApi } from '../api/sfaApi';
 import { useSfa } from '../context/SfaProvider';
+import { useSfaStore } from './useSfaStore';
+import { useUiStore } from '../../../shared/hooks/useUiStore';
+import { convertKeysToSnakeCase } from '../../../shared/utils/transformUtils';
 
 /**
  * 편집 가능한 필드의 상태와 동작을 관리하는 커스텀 훅
@@ -11,6 +13,8 @@ import { useSfa } from '../context/SfaProvider';
  * @returns {Object} 편집 관련 상태와 메서드들
  */
 export const useEditableField = (initialData) => {
+  const { actions } = useSfaStore();
+  const { actions: uiActions } = useUiStore();
   const { setDrawer } = useSfa();
   // 편집 상태 관리
   const [editState, setEditState] = useState({
@@ -25,8 +29,31 @@ export const useEditableField = (initialData) => {
   });
 
   // 편집 시작
-  const startEditing = (fieldName) => {
-    const currentValue = getCurrentValue(fieldName, initialData);
+  const startEditing = (fieldName, editableFields = null) => {
+    let currentValue;
+
+    // editableFields가 제공되고 해당 필드가 존재하면 getValue 함수 사용
+    if (
+      editableFields &&
+      editableFields[fieldName] &&
+      editableFields[fieldName].getValue
+    ) {
+      currentValue = editableFields[fieldName].getValue(initialData);
+      console.log('=== 편집 모드 시작 (editableFields 사용) ===');
+      console.log('편집 필드:', fieldName);
+      console.log('editableFields 정의:', editableFields[fieldName]);
+    } else {
+      // 기존 방식 사용 (fallback)
+      currentValue = getCurrentValue(fieldName, initialData);
+      console.log('=== 편집 모드 시작 (getCurrentValue 사용) ===');
+      console.log('편집 필드:', fieldName);
+    }
+
+    console.log('초기 값:', currentValue);
+    console.log('초기 값 타입:', typeof currentValue);
+    console.log('initialData:', initialData);
+    console.log('==================');
+
     setEditState({
       editField: fieldName,
       currentValue,
@@ -35,13 +62,26 @@ export const useEditableField = (initialData) => {
   };
 
   useEffect(() => {
-    console.log('editState Changed:', {
-      value: editState.newValue,
-    });
+    if (editState.editField) {
+      console.log('=== editState 변경 감지 ===');
+      console.log('편집 필드:', editState.editField);
+      console.log('현재 값:', editState.currentValue);
+      console.log('새로운 값:', editState.newValue);
+      console.log(
+        '값 변경 여부:',
+        editState.currentValue !== editState.newValue,
+      );
+      console.log('========================');
+    }
   }, [editState]);
 
   // 편집 취소
   const cancelEditing = () => {
+    console.log('=== 편집 취소 ===');
+    console.log('취소된 필드:', editState.editField);
+    console.log('취소된 값:', editState.newValue);
+    console.log('===============');
+
     setEditState({
       editField: null,
       currentValue: null,
@@ -89,54 +129,93 @@ export const useEditableField = (initialData) => {
     const { editField, currentValue, newValue } = editState;
     if (!editField) return;
     if (newValue === null || newValue === '') {
-      console.log(`>>> newValue...null or 값 없음`);
+      console.log('=== 저장 취소 (값 없음) ===');
+      console.log('편집 필드:', editField);
+      console.log('새로운 값:', newValue);
+      console.log('값 타입:', typeof newValue);
+      console.log('========================');
       return;
     }
     const sfaId = initialData.documentId;
     const formData = { [editField]: newValue };
 
     try {
-      console.log('[SFA Edit]', {
-        field: editField,
-        before: currentValue,
-        after: newValue,
-      });
+      console.log('=== SFA 편집 저장 시작 ===');
+      console.log('SFA ID:', sfaId);
+      console.log('편집 필드:', editField);
+      console.log('이전 값:', currentValue, '(타입:', typeof currentValue, ')');
+      console.log('새로운 값:', newValue, '(타입:', typeof newValue, ')');
+      console.log('폼 데이터:', formData);
+      console.log('===========================');
 
-      if (editField === 'selling_partner') {
-        await processParterUpdate(sfaId, formData);
-
-        // 모달 업데이트 성공..
-
-        // 변경내용 가져오기 & DrawerState 업데이트
-        setEditState({ editField: null, currentValue: null, newValue: null });
-        const updateData = await sfaApi.getSfaDetail(initialData.id);
-        setDrawer({ controlMode: 'view', data: updateData.data[0] });
+      // 일반 필드 처리
+      // 유효성 검증
+      // 키 정보 스네이크케이스로 변환
+      const snakeCaseFormData = convertKeysToSnakeCase(formData);
+      // 값이 같으면 업데이트 하지 않음
+      if (currentValue !== newValue) {
+        await sfaSubmitService.updateSfaBase(sfaId, snakeCaseFormData);
       } else {
-        // 일반 필드 처리
-        // 유효성 검증
-        // 값이 같으면 업데이트 하지 않음
-        if (currentValue !== newValue) {
-          await sfaSubmitService.updateSfaBase(sfaId, formData);
-        } else {
-          // 에러 표시 값 동일
-          console.log(`>>> 기존 - 현재 값 동일`);
-          return;
-        }
+        // 에러 표시 값 동일
+        console.log('=== 값 동일로 업데이트 생략 ===');
+        console.log('기존 값:', currentValue);
+        console.log('새로운 값:', newValue);
+        console.log('=============================');
+        return;
+      }
 
-        // 변경내용 가져오기 & DrawerState 업데이트
-        setEditState({ editField: null, currentValue: null, newValue: null });
-        const updateData = await sfaApi.getSfaDetail(initialData.id);
-        setDrawer({ controlMode: 'view', data: updateData.data[0] });
+      // 변경내용 가져오기 & DrawerState 업데이트
+      setEditState({ editField: null, currentValue: null, newValue: null });
+
+      // fetchSfaDetail로 최신 데이터 조회
+      const updateAction = await actions.data.fetchSfaDetail(initialData.id);
+
+      if (updateAction.meta.requestStatus === 'fulfilled') {
+        const updatedData = updateAction.payload;
+
+        // useUiStore를 통한 drawer 상태 업데이트
+        uiActions.drawer.update({
+          mode: 'view',
+          featureMode: null,
+          data: updatedData,
+        });
+
+        console.log('=== 일반 필드 저장 성공 ===');
+        console.log('업데이트된 데이터:', updatedData);
+        console.log('=========================');
       }
     } catch (error) {
-      console.error('[SFA Edit] Save Error:', error);
+      console.log('=== SFA 편집 저장 실패 ===');
+      console.error('에러 내용:', error);
+      console.error('에러 메시지:', error.message);
+      console.log('========================');
       throw error;
     }
-  }, [editState, partnerState]);
+  }, [editState, partnerState, actions, uiActions]);
 
   // 값 변경 핸들러
   const handleValueChange = (e) => {
-    console.log(`>>> handleValueChange >>> : ${e.target.value}`);
+    const fieldName = editState.editField;
+    const oldValue = editState.newValue;
+
+    console.log('=== 값 변경 시작 ===');
+    console.log('필드명:', fieldName);
+    console.log('이전 값:', oldValue);
+
+    // 만약 e가 직접 boolean 값이라면 (Switch에서 직접 호출된 경우)
+    if (typeof e === 'boolean') {
+      console.log('boolean 값 전달됨:', e);
+      setEditState((prev) => ({
+        ...prev,
+        newValue: e,
+      }));
+      return;
+    }
+
+    const rawValue = e.target?.value;
+    console.log('입력 값:', rawValue);
+    console.log('입력 타입:', e.target?.type);
+
     const value =
       e.target?.type === 'select-one'
         ? e.target.value === ''
@@ -144,6 +223,8 @@ export const useEditableField = (initialData) => {
           : Number(e.target.value)
         : e.target?.type === 'customer-search' //CustomerSearchInput
         ? e.target.value
+        : e.target?.type === 'boolean'
+        ? e.target.value // 이미 boolean 값이므로 그대로 사용
         : e.target.value;
 
     //단어 앞 공백 제거
@@ -154,9 +235,13 @@ export const useEditableField = (initialData) => {
         ? value.replace(/^\s+/, '')
         : value;
 
+    console.log('처리된 값:', trimmedValue);
+    console.log('값 타입:', typeof trimmedValue);
+    console.log('=== 값 변경 완료 ===');
+
     setEditState((prev) => ({
       ...prev,
-      newValue: value,
+      newValue: trimmedValue,
     }));
   };
 
@@ -164,8 +249,13 @@ export const useEditableField = (initialData) => {
   const handlePartnerStateChange = (e) => {
     const value = e.target.checked;
 
+    console.log('=== 파트너 상태 변경 ===');
+    console.log('이전 상태:', partnerState.pendingState);
+    console.log('새로운 상태:', value);
+    console.log('현재 활성화 여부:', partnerState.isEnabled);
+    console.log('=====================');
+
     setPartnerState((prev) => ({ ...prev, pendingState: value }));
-    console.log(`>>> handlepartnerStateChange >>> : ${value}`);
   };
 
   return {

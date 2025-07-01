@@ -28,6 +28,9 @@ import {
   setPageSize,
   // SFA 목록 조회 액션 추가
   fetchSfas,
+  // SFA 상세 조회 및 선택 항목 관리 액션 추가
+  fetchSfaDetail,
+  clearSelectedItem,
 } from '../../../store/slices/sfaSlice';
 
 /**
@@ -44,12 +47,15 @@ export const useSfaStore = () => {
   const status = useSelector((state) => state.sfa.status);
   const error = useSelector((state) => state.sfa.error);
   const form = useSelector((state) => state.sfa.form);
+  const selectedItem = useSelector((state) => state.sfa.selectedItem);
 
   // 액션 핸들러
   const actions = {
     // 데이터 조회 액션
     data: {
       fetchSfas: (params) => dispatch(fetchSfas(params)),
+      fetchSfaDetail: (sfaId) => dispatch(fetchSfaDetail(sfaId)),
+      clearSelectedItem: () => dispatch(clearSelectedItem()),
     },
 
     // 페이지네이션 액션
@@ -171,6 +177,7 @@ export const useSfaStore = () => {
     status,
     error,
     form,
+    selectedItem,
 
     // 액션
     actions,

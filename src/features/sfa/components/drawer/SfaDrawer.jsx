@@ -14,6 +14,9 @@ import { selectCodebookByType } from '../../../../store/slices/codebookSlice.js'
 import { useSfaDrawer } from '../../hooks/useSfaDrawer.js';
 import { useSfa } from '../../context/SfaProvider.jsx';
 import { useSfaForm } from '../../hooks/useSfaForm.js';
+import { useSfaStore } from '../../hooks/useSfaStore.js';
+import { useUiStore } from '../../../../shared/hooks/useUiStore.js';
+import { sfaSubmitService } from '../../services/sfaSubmitService.js';
 import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer.jsx';
 import ActionMenuBar from '../../../../shared/components/ui/button/ActionMenuBar.jsx';
 import SfaAddForm from '../forms/SfaAddForm.jsx';
@@ -25,22 +28,71 @@ import SfaPaymentSection from '../compose/SfaPaymentSection.jsx';
 
 const SfaDrawer = ({ drawer }) => {
   const dispatch = useDispatch();
+  const { actions } = useSfaStore();
+  const { actions: uiActions } = useUiStore();
+
   // Codebook 데이터 조회
   const {
     data: codebooks,
     isLoading,
     error,
   } = useCodebook(['sfaSalesType', 'sfaClassification']);
-  // const sfaSalesTypeData = useSelector(selectCodebookByType('sfa_sales_type'));
-  // const sfaClassificationData = useSelector(
-  //   selectCodebookByType('sfa_classification'),
-  // );
+
   const { togglePaymentSelection, resetPaymentForm } = useSfaForm(); // Custom hook을 통한 form 관련 로직 분리
 
   // const { drawerState, setDrawer } = useSfa();
   const { visible, mode, featureMode, data } = drawer;
   const { setDrawerClose, handleSetDrawer } = useSfaDrawer();
   console.log(`>>Sfa Drawer : `, drawer);
+
+  // SFA 삭제 함수
+  const handleDelete = async () => {
+    try {
+      console.log('=== SFA 삭제 시작 ===');
+      console.log('삭제 대상 데이터:', data);
+      console.log('매출정보:', data?.sfaByPayments);
+
+      // sfaByPayments 배열 존재 확인
+      if (data?.sfaByPayments && data.sfaByPayments.length > 0) {
+        alert('모든 매출정보를 삭제한 후 실행해주세요.');
+        console.log('=== 삭제 취소: 매출정보 존재 ===');
+        return;
+      }
+
+      // 삭제 확인 메시지
+      if (!window.confirm('정말로 삭제하시겠습니까?')) {
+        console.log('=== 삭제 취소: 사용자 취소 ===');
+        return;
+      }
+
+      const sfaId = data.documentId;
+      const formData = { is_deleted: true };
+
+      console.log('삭제 요청 - ID:', sfaId);
+      console.log('삭제 요청 - 데이터:', formData);
+
+      // is_deleted를 true로 업데이트
+      await sfaSubmitService.updateSfaBase(sfaId, formData);
+
+      // 삭제 성공 후 최신 데이터 조회
+      const updateAction = await actions.data.fetchSfaDetail(data.id);
+
+      if (updateAction.meta.requestStatus === 'fulfilled') {
+        const updatedData = updateAction.payload;
+
+        // drawer 상태 업데이트 또는 닫기 (삭제된 데이터는 보통 drawer를 닫음)
+        uiActions.drawer.close();
+
+        console.log('=== SFA 삭제 성공 ===');
+        console.log('업데이트된 데이터:', updatedData);
+        alert('삭제가 완료되었습니다.');
+      }
+    } catch (error) {
+      console.error('=== SFA 삭제 실패 ===');
+      console.error('에러 내용:', error);
+      alert('삭제 중 오류가 발생했습니다.');
+    }
+  };
 
   const controlMenus = [
     {
@@ -93,6 +145,11 @@ const SfaDrawer = ({ drawer }) => {
               dispatch(setDrawer({ featureMode: 'editPayment' }));
               resetPaymentForm();
             },
+          },
+          {
+            key: 'delete',
+            label: 'SFA삭제',
+            onClick: handleDelete,
           },
         ]
       : [];

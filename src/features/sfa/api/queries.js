@@ -169,7 +169,7 @@ export const buildSfaDetailQuery = (id) => {
         'is_project',
         'total_price',
         'sfa_by_items',
-        'has_partner',
+        'is_same_billing',
         'description',
       ],
       populate: {

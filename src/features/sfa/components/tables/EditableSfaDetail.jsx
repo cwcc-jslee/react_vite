@@ -1,6 +1,7 @@
 // src/features/sfa/components/tables/EditableSfaDetail.jsx
 import React from 'react';
 import * as Icons from 'lucide-react';
+import { CheckCircle, Building2 } from 'lucide-react';
 import { CustomerSearchInput } from '../../../../shared/components/customer/CustomerSearchInput';
 import {
   Description,
@@ -9,10 +10,13 @@ import {
   Input,
   Select,
   Switch,
-  Stack,
-  Checkbox,
+  Badge,
 } from '../../../../shared/components/ui';
 import { useEditableField } from '../../hooks/useEditableField';
+import {
+  calculatePaymentTotals,
+  formatSfaByItems,
+} from '../../utils/displayUtils';
 
 /**
  * 수정 가능한 SFA 상세 정보 컴포넌트
@@ -20,25 +24,50 @@ import { useEditableField } from '../../hooks/useEditableField';
  * @param {Object} props.data - SFA 상세 데이터
  * @param {Object} props.sfaSalesTypeData - 매출유형 데이터
  */
-const EditableSfaDetail = ({
-  data,
-  featureMode,
-  sfaSalesTypeData,
-  sfaClassificationData,
-}) => {
+const EditableSfaDetail = ({ data, featureMode, codebooks }) => {
   const {
     editState,
-    partnerState,
     startEditing,
     saveEditing,
     cancelEditing,
     handleValueChange,
-    handlePartnerStateChange,
   } = useEditableField(data);
+
+  const {
+    sfaSalesType: sfaSalesTypeData,
+    sfaClassification: sfaClassificationData,
+  } = codebooks;
 
   const { editField } = editState;
 
   console.log(`**** EditableSfaDetail's Data : ${data.documentId}`);
+  console.log('=== EditableSfaDetail 데이터 구조 ===');
+  console.log('전체 data:', data);
+  console.log('sfaSalesTypeData:', sfaSalesTypeData);
+  console.log('==================================');
+
+  // 결제 매출/이익 합계 계산
+  const paymentTotals = calculatePaymentTotals(data.sfaByPayments);
+
+  // 사업부 매출 데이터를 Badge로 렌더링
+  const renderSfaByItems = (itemsData) => {
+    const formattedItems = formatSfaByItems(itemsData);
+
+    if (!formattedItems) return '-';
+
+    return (
+      <div className="flex flex-wrap gap-2">
+        {formattedItems.map((item) => (
+          <Badge
+            key={item.key}
+            className="mr-1 mb-1 bg-blue-100 text-blue-800 px-2 py-1 text-xs"
+          >
+            {item.text}
+          </Badge>
+        ))}
+      </div>
+    );
+  };
 
   // 편집 가능한 필드 정의
   const editableFields = {
@@ -46,58 +75,118 @@ const EditableSfaDetail = ({
       type: 'text',
       label: '건명',
       value: data?.name,
-      getValue: (data) => data?.name || '',
+      getValue: (data) => {
+        const value = data?.name || '';
+        console.log('name getValue:', value);
+        return value;
+      },
       editable: true,
     },
-    sfa_sales_type: {
+    sfaSalesType: {
       type: 'select',
       label: '매출유형',
-      value: data?.sfa_sales_type?.id,
-      getValue: (data) => data?.sfa_sales_type?.id || '',
-      getDisplayValue: (data) => data?.sfa_sales_type?.name || '-',
+      value: data?.sfaSalesType?.id,
+      getValue: (data) => {
+        const value = data?.sfaSalesType?.id || '';
+        console.log(
+          'sfaSalesType getValue:',
+          value,
+          'from:',
+          data?.sfaSalesType,
+        );
+        return value;
+      },
+      getDisplayValue: (data) => data?.sfaSalesType?.name || '-',
       editable: true,
     },
-    sfa_classification: {
+    sfaClassification: {
       type: 'select',
       label: '매출구분',
-      value: data?.sfa_classification?.id,
-      getValue: (data) => data?.sfa_classification?.id || '',
-      getDisplayValue: (data) => data?.sfa_classification?.name || '-',
+      value: data?.sfaClassification?.id,
+      getValue: (data) => {
+        const value = data?.sfaClassification?.id || '';
+        console.log(
+          'sfaClassification getValue:',
+          value,
+          'from:',
+          data?.sfaClassification,
+        );
+        return value;
+      },
+      getDisplayValue: (data) => data?.sfaClassification?.name || '-',
       editable: true,
     },
-    revenue_source: {
-      type: 'customer',
-      label: '매출처',
-      value: data?.sfa_customers?.[0]?.customer?.id || '',
-      getValue: (data) => data?.sfa_customers?.[0]?.customer?.id || '',
-      getDisplayValue: (data) =>
-        data?.sfa_customers?.[0]?.customer?.name || '-',
-      editable: true,
-    },
-    end_customer: {
+    customer: {
       type: 'customer',
       label: '고객사',
-      value: data?.sfa_customers?.[1]?.customer?.id || '',
-      getValue: (data) => data?.sfa_customers?.[1]?.customer?.id || '',
-      getDisplayValue: (data) =>
-        data?.sfa_customers?.[1]?.customer?.name || '-',
+      value: data?.customer?.id || '',
+      getValue: (data) => {
+        const value = data?.customer?.id || '';
+        console.log('customer getValue:', value, 'from:', data?.customer);
+        return value;
+      },
+      getDisplayValue: (data) => data?.customer?.name || '-',
       editable: true,
     },
-    is_project: {
+    isSameBilling: {
+      type: 'radio',
+      label: '매출처',
+      value: data?.isSameBilling,
+      getValue: (data) => {
+        const value = data?.isSameBilling; // null, undefined, true, false 모두 그대로 유지
+        console.log(
+          'isSameBilling getValue:',
+          value,
+          'type:',
+          typeof value,
+          'original:',
+          data?.isSameBilling,
+        );
+        return value;
+      },
+      getDisplayValue: (data) =>
+        data?.isSameBilling === true
+          ? '고객사와 동일'
+          : data?.isSameBilling === false
+          ? '별도 매출처'
+          : '-',
+      editable: true,
+    },
+    isProject: {
       type: 'switch',
       label: '프로젝트여부',
-      value: data?.is_project,
-      getValue: (data) => data?.is_project || false,
-      getDisplayValue: (data) => (data?.is_project ? 'YES' : 'NO'),
+      value: data?.isProject,
+      getValue: (data) => {
+        const value = data?.isProject !== undefined ? data.isProject : false;
+        console.log(
+          'isProject getValue:',
+          value,
+          'type:',
+          typeof value,
+          'original:',
+          data?.isProject,
+        );
+        return value;
+      },
+      getDisplayValue: (data) => (data?.isProject ? 'YES' : 'NO'),
       editable: true,
     },
     description: {
       type: 'text',
       label: '비고',
       value: data?.description,
-      getValue: (data) => data?.description || '',
+      getValue: (data) => {
+        const value = data?.description || '';
+        console.log('description getValue:', value);
+        return value;
+      },
       editable: true,
     },
+  };
+
+  // 고객유형 변경 핸들러
+  const handleCustomerTypeChange = (isSameBilling) => {
+    handleValueChange(isSameBilling);
   };
 
   // 편집 버튼 렌더링
@@ -125,48 +214,34 @@ const EditableSfaDetail = ({
     const isEditing = editField === fieldName;
     // if (featureMode !== 'editBase') return;
 
-    // 특수 필드 처리 (매출파트너, 프로젝트여부)
-    if (fieldName === 'selling_partner') {
+    // 특수 필드 처리 (프로젝트여부, 매출처)
+    if (fieldName === 'isProject') {
       return (
         <div className="group relative flex items-center justify-between w-full h-8">
           {isEditing ? (
             <div className="flex items-center w-full gap-1">
-              <div className="flex items-center gap-2 flex-grow">
-                <Checkbox
-                  id="has_partner"
-                  checked={partnerState.pendingState}
-                  onChange={(e) => handlePartnerStateChange(e)}
-                  // disabled={isSubmitting}
+              <div className="flex items-center flex-grow">
+                <Switch
+                  checked={editState.newValue === true}
+                  onChange={() =>
+                    handleValueChange(!(editState.newValue === true))
+                  }
+                  size="sm"
                 />
-                <CustomerSearchInput
-                  value={editState.newValue}
-                  onSelect={(selected) => {
-                    handleValueChange({
-                      target: {
-                        value: selected.id,
-                        type: 'customer-search', // 커스텀 타입 지정
-                        name: selected.name,
-                      },
-                    });
-                  }}
-                  disabled={!partnerState.pendingState}
-                  size="small"
-                />
+                <span className="ml-2 text-sm">
+                  {editState.newValue ? 'YES' : 'NO'}
+                </span>
               </div>
               {renderEditButtons()}
             </div>
           ) : (
             <div className="flex items-center w-full h-8">
-              <span className="flex-grow truncate">
-                {partnerState.isEnabled
-                  ? data?.selling_partner?.name || '-'
-                  : 'NO'}
-              </span>
+              <span className="flex-grow truncate">{content}</span>
               <button
                 type="button"
-                onClick={() => startEditing(fieldName)}
+                onClick={() => startEditing(fieldName, editableFields)}
                 className="invisible group-hover:visible flex items-center justify-center 
-                         h-7 w-7 rounded-sm hover:bg-blue-100"
+                          h-7 w-7 rounded-sm hover:bg-blue-100"
               >
                 <Icons.Edit
                   className="h-4 w-4 text-blue-600"
@@ -179,36 +254,49 @@ const EditableSfaDetail = ({
       );
     }
 
-    if (fieldName === 'is_project') {
+    if (fieldName === 'isSameBilling') {
       return (
         <div className="group relative flex items-center justify-between w-full h-8">
           {isEditing ? (
             <div className="flex items-center w-full gap-1">
-              <div className="flex-grow">
-                <Switch
-                  checked={editState.newValue}
-                  onChange={() =>
-                    handleValueChange({
-                      target: {
-                        value: !editState.newValue,
-                        type: 'switch',
-                      },
-                    })
-                  }
-                />
+              <div className="flex space-x-4 flex-grow">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="customerType"
+                    className="text-blue-600 focus:ring-blue-500"
+                    checked={editState.newValue === true}
+                    onChange={() => handleCustomerTypeChange(true)}
+                  />
+                  <CheckCircle className="ml-2 h-4 w-4 text-green-500" />
+                  <span className="ml-1 text-sm text-gray-700">
+                    고객사와 동일
+                  </span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="customerType"
+                    className="text-blue-600 focus:ring-blue-500"
+                    checked={editState.newValue === false}
+                    onChange={() => handleCustomerTypeChange(false)}
+                  />
+                  <Building2 className="ml-2 h-4 w-4 text-blue-500" />
+                  <span className="ml-1 text-sm text-gray-700">
+                    별도 매출처
+                  </span>
+                </label>
               </div>
               {renderEditButtons()}
             </div>
           ) : (
             <div className="flex items-center w-full h-8">
-              <span className="flex-grow truncate">
-                {data?.is_project ? 'YES' : 'NO'}
-              </span>
+              <span className="flex-grow truncate">{content}</span>
               <button
                 type="button"
-                onClick={() => startEditing(fieldName)}
+                onClick={() => startEditing(fieldName, editableFields)}
                 className="invisible group-hover:visible flex items-center justify-center 
-                           h-7 w-7 rounded-sm hover:bg-blue-100"
+                          h-7 w-7 rounded-sm hover:bg-blue-100"
               >
                 <Icons.Edit
                   className="h-4 w-4 text-blue-600"
@@ -237,7 +325,7 @@ const EditableSfaDetail = ({
                   className="w-full h-8 text-sm"
                 >
                   <option value="">선택하세요</option>
-                  {sfaSalesTypeData?.data?.map((option) => (
+                  {sfaSalesTypeData?.map((option) => (
                     <option key={option.id} value={option.id}>
                       {option.name}
                     </option>
@@ -250,7 +338,7 @@ const EditableSfaDetail = ({
                   className="w-full h-8 text-sm"
                 >
                   <option value="">선택하세요</option>
-                  {sfaClassificationData?.data?.map((option) => (
+                  {sfaClassificationData?.map((option) => (
                     <option key={option.id} value={option.id}>
                       {option.name}
                     </option>
@@ -316,10 +404,10 @@ const EditableSfaDetail = ({
         </DescriptionItem>
         <DescriptionItem className="px-0.5">
           {featureMode !== 'editBase'
-            ? data.sfa_sales_type?.name || '-'
+            ? data.sfaSalesType?.name || '-'
             : renderEditableField(
-                'sfa_sales_type',
-                editableFields.sfa_sales_type.getDisplayValue(data),
+                'sfaSalesType',
+                editableFields.sfaSalesType.getDisplayValue(data),
               )}
         </DescriptionItem>
       </DescriptionRow>
@@ -329,48 +417,54 @@ const EditableSfaDetail = ({
           고객사
         </DescriptionItem>
         <DescriptionItem className="px-0.5">
-          {data?.customer?.name || '-'}
-          {/* {featureMode !== 'editBase'
-            ? data?.sfa_customers?.[0]?.customer?.name || '-'
+          {/* {data?.customer?.name || '-'} */}
+          {featureMode !== 'editBase'
+            ? data?.customer?.name || '-'
             : renderEditableField(
-                'revenue_source',
-                editableFields.revenue_source.getDisplayValue(data),
-              )} */}
+                'customer',
+                editableFields.customer.getDisplayValue(data),
+              )}
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
-          ---
+          매출처
         </DescriptionItem>
         <DescriptionItem className="px-0.5">
-          {'-'}
-          {/* {featureMode !== 'editBase'
-            ? data?.sfa_customers?.[1]?.customer?.name || '-'
+          {featureMode !== 'editBase'
+            ? data.isSameBilling === true
+              ? '고객사와 동일'
+              : data.isSameBilling === false
+              ? '별도 매출처'
+              : '-'
             : renderEditableField(
-                'end_customer',
-                editableFields.end_customer.getDisplayValue(data),
-              )} */}
+                'isSameBilling',
+                editableFields.isSameBilling.getDisplayValue(data),
+              )}
         </DescriptionItem>
       </DescriptionRow>
 
       <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
-          프로젝트여부
-        </DescriptionItem>
-        <DescriptionItem className="px-0.5">
-          {featureMode !== 'editBase'
-            ? data.is_project
-              ? 'YES'
-              : 'NO'
-            : renderEditableField('is_project', null)}
-        </DescriptionItem>
-        <DescriptionItem label width="w-[140px]">
           매출구분
         </DescriptionItem>
         <DescriptionItem>
           {/* {renderEditableField(
-            'sfa_classification',
-            editableFields.sfa_classification.getDisplayValue(data),
+            'sfaClassification',
+            editableFields.sfaClassification.getDisplayValue(data),
           )} */}
-          {data.sfa_classification?.name || '-'}
+          {data.sfaClassification?.name || '-'}
+        </DescriptionItem>
+        <DescriptionItem label width="w-[140px]">
+          프로젝트여부
+        </DescriptionItem>
+        <DescriptionItem className="px-0.5">
+          {featureMode !== 'editBase'
+            ? data.isProject
+              ? 'YES'
+              : 'NO'
+            : renderEditableField(
+                'isProject',
+                editableFields.isProject.getDisplayValue(data),
+              )}
         </DescriptionItem>
       </DescriptionRow>
       {/* 4행: 매출, 매출이익 */}
@@ -379,39 +473,22 @@ const EditableSfaDetail = ({
           결제 매출/이익
         </DescriptionItem>
         <DescriptionItem>
-          {typeof data.total_price === 'number'
-            ? data.total_price.toLocaleString()
+          {paymentTotals.totalAmount > 0 || paymentTotals.totalProfit > 0
+            ? `${paymentTotals.totalAmount.toLocaleString()} / ${paymentTotals.totalProfit.toLocaleString()}`
             : '-'}
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
-          사업부 매출
+          _
         </DescriptionItem>
-        <DescriptionItem>
-          {/* {typeof data.sales_profit === 'number'
-            ? data.sales_profit.toLocaleString()
-            : '-'} */}
-        </DescriptionItem>
+        <DescriptionItem></DescriptionItem>
       </DescriptionRow>
 
-      {/* 5행: 건명, 프로젝트여부 */}
-      <DescriptionRow equalItems>
-        <DescriptionItem label width="w-[140px]">
-          매출확정여부
-        </DescriptionItem>
-        <DescriptionItem>{data.confirmed ? 'YES' : 'NO'}</DescriptionItem>
-        <DescriptionItem label width="w-[140px]">
-          지원프로그램
-        </DescriptionItem>
-        <DescriptionItem grow>{data.proposal?.name || '-'}</DescriptionItem>
-      </DescriptionRow>
-
-      {/* 6행: 비고 */}
+      {/* 5행: 비고 */}
       <DescriptionRow>
         <DescriptionItem label width="w-[140px]">
-          매출품목
+          사업부 매출
         </DescriptionItem>
-        <DescriptionItem>{'-'}</DescriptionItem>
-        {/* <DescriptionItem>{itemsAndTeams}</DescriptionItem> */}
+        <DescriptionItem>{renderSfaByItems(data.sfaByItems)}</DescriptionItem>
       </DescriptionRow>
 
       {/* 6행: 비고 */}

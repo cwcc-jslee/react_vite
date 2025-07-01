@@ -20,3 +20,55 @@ export const formatCustomerDisplay = (revenueSource, sfaCustomer) => {
   // 다른 경우 두 이름을 조합하여 반환
   return `${revenueSource.name} / ${sfaCustomer.name}`;
 };
+
+/**
+ * 결제 매출/이익 합계 계산
+ * @param {Array} paymentsData - 결제 데이터 배열
+ * @returns {Object} { totalAmount, totalProfit } 합계 객체
+ */
+export const calculatePaymentTotals = (paymentsData) => {
+  if (!paymentsData || !Array.isArray(paymentsData)) {
+    return { totalAmount: 0, totalProfit: 0 };
+  }
+
+  return paymentsData.reduce(
+    (totals, payment) => {
+      const amount = typeof payment.amount === 'number' ? payment.amount : 0;
+      const profitAmount =
+        typeof payment.profitAmount === 'number' ? payment.profitAmount : 0;
+
+      return {
+        totalAmount: totals.totalAmount + amount,
+        totalProfit: totals.totalProfit + profitAmount,
+      };
+    },
+    { totalAmount: 0, totalProfit: 0 },
+  );
+};
+
+/**
+ * 사업부 매출 데이터를 포맷팅
+ * @param {Array} itemsData - 사업부 항목 데이터 배열
+ * @returns {Array|null} 포맷팅된 데이터 배열 또는 null
+ */
+export const formatSfaByItems = (itemsData) => {
+  if (!itemsData || !Array.isArray(itemsData)) return null;
+
+  return itemsData.map((item, index) => {
+    const teamName = item.teamName || '-';
+    const itemName = item.itemName || '-';
+    const price =
+      typeof item.itemPrice === 'number'
+        ? item.itemPrice.toLocaleString()
+        : '-';
+    const badgeText = `${teamName}/${itemName}/${price}`;
+
+    return {
+      key: index,
+      text: badgeText,
+      teamName,
+      itemName,
+      price,
+    };
+  });
+};

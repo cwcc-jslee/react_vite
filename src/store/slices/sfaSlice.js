@@ -62,12 +62,53 @@ export const fetchSfas = createAsyncThunk(
   },
 );
 
+// SFA 상세 조회 액션
+export const fetchSfaDetail = createAsyncThunk(
+  'sfa/fetchSfaDetail',
+  async (sfaId, { rejectWithValue }) => {
+    try {
+      const response = await sfaService.getSfaDetail(sfaId);
+
+      // 디버깅을 위한 로그 추가
+      console.log('fetchSfaDetail - sfaId:', sfaId);
+      console.log('fetchSfaDetail - full response:', response);
+
+      // API 응답이 response 자체에 데이터가 있는 구조
+      if (!response || typeof response !== 'object') {
+        console.log('fetchSfaDetail - Error: response is not valid object');
+        return rejectWithValue('SFA 정보를 찾을 수 없습니다.');
+      }
+
+      // response가 배열인 경우 첫 번째 항목, 아니면 response 자체 사용
+      const sfaData = Array.isArray(response) ? response[0] : response;
+      console.log('fetchSfaDetail - sfaData:', sfaData);
+
+      if (!sfaData || !sfaData.id) {
+        console.log('fetchSfaDetail - Error: sfaData is invalid or missing id');
+        return rejectWithValue('SFA 데이터가 유효하지 않습니다.');
+      }
+
+      const convertedData = convertKeysToCamelCase(sfaData);
+      console.log('fetchSfaDetail - convertedData:', convertedData);
+
+      return convertedData;
+    } catch (error) {
+      console.log('fetchSfaDetail - Error caught:', error);
+      return rejectWithValue(
+        error.response?.data?.error?.message ||
+          'SFA 상세 정보를 불러오는 중 오류가 발생했습니다.',
+      );
+    }
+  },
+);
+
 // SFA 초기 상태
 const initialState = {
   // 목록 데이터
   items: [],
   status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
   error: null,
+  selectedItem: { data: null, status: 'idle', error: null },
   // 폼 상태
   form: { ...FORM_INITIAL_STATE },
   // 페이지네이션
@@ -115,6 +156,11 @@ const sfaSlice = createSlice({
     resetFilters: (state) => {
       state.filters = { ...DEFAULT_FILTERS };
       state.pagination = { ...DEFAULT_PAGINATION };
+    },
+
+    // 선택된 항목 초기화
+    clearSelectedItem: (state) => {
+      state.selectedItem = { data: null, status: 'idle', error: null };
     },
 
     // 필터 단일 필드 업데이트
@@ -192,6 +238,27 @@ const sfaSlice = createSlice({
           message: '데이터 조회 실패',
           description: action.payload || 'SFA 목록을 불러오는데 실패했습니다.',
         });
+      })
+
+      // SFA 상세 조회
+      .addCase(fetchSfaDetail.pending, (state) => {
+        state.selectedItem.status = 'loading';
+        state.selectedItem.error = null;
+      })
+      .addCase(fetchSfaDetail.fulfilled, (state, action) => {
+        state.selectedItem.status = 'succeeded';
+        state.selectedItem.data = action.payload;
+        state.selectedItem.error = null;
+      })
+      .addCase(fetchSfaDetail.rejected, (state, action) => {
+        state.selectedItem.status = 'failed';
+        state.selectedItem.data = null;
+        state.selectedItem.error = action.payload;
+        notification.error({
+          message: '상세 정보 조회 실패',
+          description:
+            action.payload || 'SFA 상세 정보를 불러오는데 실패했습니다.',
+        });
       });
   },
 });
@@ -209,6 +276,7 @@ export const {
   resetForm,
   initializeFormData,
   setFormIsValid,
+  clearSelectedItem,
 } = sfaSlice.actions;
 
 export default sfaSlice.reducer;
