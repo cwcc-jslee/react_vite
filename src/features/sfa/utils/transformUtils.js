@@ -59,6 +59,24 @@ export const transformToDBFields = {
       value: items,
     });
 
+    // 배열 안전성 확인
+    if (!Array.isArray(items)) {
+      console.warn(
+        'transformSalesByItems: items is not an array, returning empty JSON array',
+      );
+      console.groupEnd();
+      return JSON.stringify([]);
+    }
+
+    // 빈 배열인 경우
+    if (items.length === 0) {
+      console.log(
+        'transformSalesByItems: empty array, returning empty JSON array',
+      );
+      console.groupEnd();
+      return JSON.stringify([]);
+    }
+
     const transformed = items.map((item) => ({
       item_id: item.itemId || null,
       item_name: item.itemName || '',
@@ -108,6 +126,7 @@ export const transformToDBFields = {
       profit_amount: Math.floor(parseNumber(payment.profitAmount)),
       scheduled_date: payment.scheduledDate || null,
       recognition_date: payment.recognitionDate,
+      payment_label: payment.paymentLabel,
       memo: payment.memo,
       // 추가 필드가 있다면 여기에 작성
     };

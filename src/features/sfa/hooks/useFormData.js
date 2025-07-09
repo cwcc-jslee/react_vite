@@ -302,6 +302,8 @@ export const useFormData = (drawerState) => {
       setFormData((prev) => {
         const newPayment = { ...initialSalesByPayment };
 
+        console.log('>>handleAddPayment>> [prev] : ', prev);
+
         // isSameBilling이 true이고 고객 정보가 있는 경우에만 revenueSource 설정
         if (prev.isSameBilling && prev.customer?.id) {
           newPayment.revenueSource = prev.customer;

@@ -29,6 +29,8 @@ export const useSfaForm = () => {
       // isProject,
     };
 
+    console.log('>>processSubmit>> [enrichedFormData] : ', enrichedFormData);
+
     try {
       setIsSubmitting(true);
       const response = await createSfaWithPayment(enrichedFormData);

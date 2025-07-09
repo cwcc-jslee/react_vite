@@ -21,7 +21,7 @@
  * const { data, isLoading, error, refetch } = useCodebook(['codeType1', 'codeType2']);
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { convertKeysToCamelCase } from '../utils/transformUtils';
 import {
@@ -132,10 +132,33 @@ export const useCodebook = (codeTypes) => {
     useCodebookLoader(codeTypes);
   const typesData = useCodebookData(codeTypes);
 
+  // 렌더링 횟수 추적
+  const renderCount = React.useRef(0);
+  renderCount.current += 1;
+  console.log(
+    `🔥 [useCodebook] 렌더링 횟수: ${renderCount.current}, codeTypes:`,
+    codeTypes,
+  );
+
   // 데이터가 없을 때 자동으로 API 호출
   if (!isLoading && !isDataComplete) {
+    console.log(
+      '🔥 [useCodebook] fetchData 호출됨 - isLoading:',
+      isLoading,
+      'isDataComplete:',
+      isDataComplete,
+    );
     fetchData();
   }
+
+  // 상태 변경 추적
+  React.useEffect(() => {
+    console.log('🔥 [useCodebook] typesData 변경됨:', typesData);
+  }, [typesData]);
+
+  React.useEffect(() => {
+    console.log('🔥 [useCodebook] isLoading 변경됨:', isLoading);
+  }, [isLoading]);
 
   return {
     data: typesData,

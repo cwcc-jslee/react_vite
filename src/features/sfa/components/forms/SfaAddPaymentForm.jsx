@@ -6,8 +6,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useFormValidation } from '../../hooks/useFormValidation.js';
 import { useSfaForm } from '../../hooks/useSfaForm.js';
-import SalesByPayment from '../elements/SalesByPayment.jsx';
-// import { useSfaForm } from '../../hooks/useSfaForm.js';
+import SalesAddByPayment from '../elements/SalesAddByPayment.jsx';
+import { useCodebook } from '../../../../shared/hooks/useCodebook';
+import { getUniqueRevenueSources } from '../../utils/transformUtils';
 import {
   Form,
   Group,
@@ -29,7 +30,21 @@ const SfaAddPaymentForm = ({ data, controlMode, featureMode }) => {
     processPaymentSubmit,
     selectedPaymentIds,
     resetPaymentForm,
+    handleRevenueSourceSelect,
   } = formProps;
+
+  // 결제구분, 매출확률 codebook
+  const {
+    data: paymentCodebooks,
+    isLoading: isLoadingCodebook,
+    error: codebookError,
+  } = useCodebook(['rePaymentMethod', 'sfaPercentage']);
+
+  // revenueSource 데이터 중복 제거 및 정렬
+  const uniqueRevenueSources = React.useMemo(
+    () => getUniqueRevenueSources(formData.salesByPayments),
+    [formData.salesByPayments],
+  );
 
   // 폼 상태를 로컬로 관리하여 불필요한 리렌더링 방지
   // const [localFormData, setLocalFormData] = useState(formData);
@@ -103,13 +118,23 @@ const SfaAddPaymentForm = ({ data, controlMode, featureMode }) => {
         action="#"
       >
         {/* 결제 매출 추가 */}
-        <SalesByPayment
-          payments={formData.salesByPayments}
-          onChange={handlePaymentChange}
-          // onAdd={handleAddSalesPayment}
-          onRemove={handleRemovePayment}
-          isSubmitting={isSubmitting}
-        />
+        <div className="flex flex-col gap-2">
+          {formData.salesByPayments.map((payment, index) => (
+            <SalesAddByPayment
+              key={`payment-${payment.id || index}`}
+              payment={payment}
+              index={index}
+              isSameBilling={formData.isSameBilling || true}
+              onChange={handlePaymentChange}
+              onRemove={handleRemovePayment}
+              isSubmitting={isSubmitting}
+              handleRevenueSourceSelect={handleRevenueSourceSelect}
+              savedRevenueSources={uniqueRevenueSources}
+              codebooks={paymentCodebooks}
+              isLoadingCodebook={isLoadingCodebook}
+            />
+          ))}
+        </div>
 
         {/* Submit Button */}
         <Group>

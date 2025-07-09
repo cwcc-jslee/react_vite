@@ -3,7 +3,7 @@
  * 매출 결제 정보를 입력받는 컴포넌트
  * 결제 구분, 확정여부, 매출확률, 매출액, 이익/마진 등의 정보를 관리
  */
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { CustomerSearchInput } from '@shared/components/customer/CustomerSearchInput';
 import {
   Trash2,
@@ -30,7 +30,7 @@ import { truncateText } from '../../../../shared/utils/textUtils';
 const SalesAddByPayment = ({
   payment,
   index,
-  formData,
+  isSameBilling,
   onChange,
   onRemove,
   isSubmitting,
@@ -41,7 +41,20 @@ const SalesAddByPayment = ({
 }) => {
   const [displayValue, setDisplayValue] = useState('');
   const [isRevenueSearch, setIsRevenueSearch] = useState(false);
-  const isFormatting = useRef(false);
+
+  console.log('>>payment : ', payment);
+  console.log('>>index : ', index);
+  console.log('>>isSameBilling : ', isSameBilling);
+  // console.log(`>>formData : `, formData);
+
+  // payment 변경 감지
+  useEffect(() => {
+    console.log('🔍 [SalesAddByPayment] Payment prop changed:', {
+      index,
+      isConfirmed: payment.isConfirmed,
+      payment: payment,
+    });
+  }, [payment.isConfirmed, payment, index]);
 
   // 금액 입력 처리
   const handleAmountChange = (value) => {
@@ -50,11 +63,7 @@ const SalesAddByPayment = ({
 
     const numericValue = sanitizedValue.replace(/,/g, '');
     if (numericValue !== payment.amount) {
-      isFormatting.current = true;
       onChange(index, 'amount', numericValue);
-      setTimeout(() => {
-        isFormatting.current = false;
-      }, 0);
     }
   };
 
@@ -71,6 +80,13 @@ const SalesAddByPayment = ({
 
   // 이익/마진 값 변경 처리
   const handleEntryChange = (field, value) => {
+    console.log('🔧 [SalesAddByPayment] handleEntryChange called:', {
+      index,
+      field,
+      value,
+      currentPayment: payment,
+    });
+
     if (['amount', 'marginProfitValue', 'isProfit'].includes(field)) {
       const amount = Number(field === 'amount' ? value : payment.amount) || 0;
       const marginProfitValue =
@@ -79,33 +95,43 @@ const SalesAddByPayment = ({
         ) || 0;
       const isProfit = field === 'isProfit' ? value : payment.isProfit;
 
-      isFormatting.current = true;
-      onChange(index, field, value);
-
       const calculatedProfitAmount = isProfit
         ? marginProfitValue
         : (amount * marginProfitValue) / 100;
 
-      onChange(index, 'profitAmount', calculatedProfitAmount.toString());
+      // 한 번에 여러 필드 업데이트
+      const updates = {
+        [field]: value,
+        profitAmount: calculatedProfitAmount.toString(),
+      };
 
-      setTimeout(() => {
-        isFormatting.current = false;
-      }, 0);
+      console.log('🔧 [SalesAddByPayment] Entry updates:', updates);
+
+      // 여러 필드를 한 번에 업데이트 (객체 형태로 전달)
+      onChange(index, updates);
     } else {
       onChange(index, field, value);
     }
   };
 
-  // 확정여부 변경 처리
+  // 확정여부 변경 처리 - 한 번에 여러 필드 업데이트
   const handleConfirmedChange = (checked) => {
-    isFormatting.current = true;
-    onChange(index, 'isConfirmed', checked);
-    if (checked) {
-      onChange(index, 'probability', '100');
-    }
-    setTimeout(() => {
-      isFormatting.current = false;
-    }, 0);
+    console.log('🔧 [SalesAddByPayment] handleConfirmedChange called:', {
+      index,
+      checked,
+      currentPayment: payment,
+    });
+
+    // 한 번에 여러 필드 업데이트
+    const updates = {
+      isConfirmed: checked,
+      ...(checked && { probability: '100' }),
+    };
+
+    console.log('🔧 [SalesAddByPayment] Applying updates:', updates);
+
+    // 여러 필드를 한 번에 업데이트 (객체 형태로 전달)
+    onChange(index, updates);
   };
 
   return (
@@ -116,13 +142,13 @@ const SalesAddByPayment = ({
             매출처
           </span>
           <div className="relative h-9">
-            {formData.isSameBilling && payment?.revenueSource?.id ? (
+            {isSameBilling && payment?.revenueSource?.id ? (
               <div className="flex items-center rounded-lg bg-green-50 px-3 py-2">
                 <span className="text-sm text-green-700">
                   {truncateText(payment?.revenueSource?.name, 8)}
                 </span>
               </div>
-            ) : !formData.isSameBilling && savedRevenueSources?.length > 0 ? (
+            ) : !isSameBilling && savedRevenueSources?.length > 0 ? (
               isRevenueSearch ? (
                 <CustomerSearchInput
                   onSelect={(customer) => {
@@ -197,11 +223,20 @@ const SalesAddByPayment = ({
             확정여부
           </span>
           <div className="flex items-center gap-2 h-9">
-            <Checkbox
-              checked={payment.isConfirmed}
-              onChange={(e) => handleConfirmedChange(e.target.checked)}
+            <input
+              type="checkbox"
+              checked={Boolean(payment.isConfirmed)}
+              onChange={(e) => {
+                console.log('🔧 [SalesAddByPayment] Checkbox changed:', {
+                  index,
+                  oldValue: payment.isConfirmed,
+                  newValue: e.target.checked,
+                  payment: payment,
+                });
+                handleConfirmedChange(e.target.checked);
+              }}
               disabled={isSubmitting}
-              className="w-4 h-4"
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
             />
             {payment.isConfirmed ? (
               <CheckCircle2 className="text-green-500" size={16} />
@@ -292,7 +327,7 @@ const SalesAddByPayment = ({
       </div>
 
       {/* 두 번째 행 - 날짜 및 메모 */}
-      <div className="grid grid-cols-[0.8fr,0.8fr,2fr,0.8fr] gap-3">
+      <div className="grid grid-cols-[0.8fr,0.8fr,1fr,1fr,0.8fr] gap-3">
         <div className="flex flex-col">
           <span className="text-xs text-gray-500 mb-1 h-4 flex items-center">
             매출인식일자
@@ -331,6 +366,19 @@ const SalesAddByPayment = ({
               size={16}
             />
           </div>
+        </div>
+
+        <div className="flex flex-col">
+          <span className="text-xs text-gray-500 mb-1 h-4 flex items-center">
+            라벨
+          </span>
+          <Input
+            type="text"
+            value={payment.paymentLabel}
+            onChange={(e) => onChange(index, 'paymentLabel', e.target.value)}
+            disabled={isSubmitting}
+            className="h-9"
+          />
         </div>
 
         <div className="flex flex-col">

@@ -181,6 +181,7 @@ const sfaSlice = createSlice({
     // 폼 필드 업데이트
     updateFormField: (state, action) => {
       const { name, value } = action.payload;
+
       state.form.data[name] = value;
 
       // 에러 초기화

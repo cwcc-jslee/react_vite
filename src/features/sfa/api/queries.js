@@ -116,6 +116,7 @@ export const buildSfaListQuery = (params) => {
       'profit_config',
       'recognition_date',
       'scheduled_date',
+      'payment_label',
     ],
     populate: {
       revenue_source: {
@@ -210,6 +211,7 @@ export const buildSfaDetailQuery = (id) => {
             'recognition_date',
             'scheduled_date',
             'profit_config',
+            'payment_label',
             'memo',
           ],
           // populate: '*',

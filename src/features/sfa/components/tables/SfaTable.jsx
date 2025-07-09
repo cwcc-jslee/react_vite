@@ -85,12 +85,26 @@ const TableRow = ({
       </td>
       <td className="px-3 py-2 text-sm">
         <div className="group relative">
-          <span>{truncateText(item.sfa?.name)}</span>
-          {item.sfa?.name && item.sfa.name.length > 25 && (
-            <div className="invisible group-hover:visible absolute z-10 p-2 bg-gray-800 text-white text-sm rounded shadow-lg whitespace-normal max-w-xs">
-              {item.sfa.name}
-            </div>
-          )}
+          <span>
+            {truncateText(
+              item.sfa?.name
+                ? item.paymentLabel
+                  ? `${item.sfa.name}__${item.paymentLabel}`
+                  : item.sfa.name
+                : '',
+            )}
+          </span>
+          {item.sfa?.name &&
+            (item.paymentLabel
+              ? `${item.sfa.name}__${item.paymentLabel}`
+              : item.sfa.name
+            ).length > 25 && (
+              <div className="invisible group-hover:visible absolute z-10 p-2 bg-gray-800 text-white text-sm rounded shadow-lg whitespace-normal max-w-xs">
+                {item.paymentLabel
+                  ? `${item.sfa.name}__${item.paymentLabel}`
+                  : item.sfa.name}
+              </div>
+            )}
         </div>
       </td>
       <td className="px-3 py-2 text-center text-sm">

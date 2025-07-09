@@ -48,6 +48,20 @@ export const sfaSubmitService = {
       salesPayments,
     });
 
+    // 배열 안전성 확인
+    if (!Array.isArray(salesPayments)) {
+      console.warn(
+        '[SFA] salesPayments is not an array, returning empty array',
+      );
+      return [];
+    }
+
+    // 빈 배열인 경우 빠른 반환
+    if (salesPayments.length === 0) {
+      console.log('[SFA] No payments to create, returning empty array');
+      return [];
+    }
+
     try {
       // 각 payment 데이터를 변환하고 API 요청을 생성
       const promises = salesPayments.map(async (payment) => {
@@ -187,6 +201,18 @@ export const sfaSubmitService = {
       customers,
     });
 
+    // 배열 안전성 확인
+    if (!Array.isArray(customers)) {
+      console.warn('[SFA] customers is not an array, returning empty array');
+      return [];
+    }
+
+    // 빈 배열인 경우 빠른 반환
+    if (customers.length === 0) {
+      console.log('[SFA] No customers to create, returning empty array');
+      return [];
+    }
+
     try {
       // 각 customer 데이터를 변환하고 API 요청을 생성
       const promises = customers.map(async (customer) => {
@@ -242,6 +268,7 @@ export const createSfaWithPayment = async (formData) => {
     // if (!customersResponse) {
     //   throw new Error('고객사 정보 생성 실패');
     // }
+    console.log('>>salesByPayments : ', formData.salesByPayments);
 
     // 3. 결제 매출 정보 생성
     const paymentsResponse = await sfaSubmitService.addSfaPayment(

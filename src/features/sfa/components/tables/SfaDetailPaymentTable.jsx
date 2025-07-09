@@ -105,6 +105,7 @@ const SfaDetailPaymentTable = ({
             <Table.Th>매출액</Table.Th>
             <Table.Th>매출이익</Table.Th>
             <Table.Th>매출인식일</Table.Th>
+            <Table.Th>매출라벨</Table.Th>
             {renderLastColumn()}
           </Table.Row>
         </Table.Head>
@@ -131,6 +132,7 @@ const SfaDetailPaymentTable = ({
                   : '-'}
               </Table.Td>
               <Table.Td align="center">{item.recognitionDate || '-'}</Table.Td>
+              <Table.Td align="center">{item.paymentLabel || '-'}</Table.Td>
               {renderLastCell(item.documentId, item.id)}
             </Table.Row>
           ))}

@@ -32,6 +32,7 @@ import {
   fetchSfaDetail,
   clearSelectedItem,
 } from '../../../store/slices/sfaSlice';
+import React from 'react';
 
 /**
  * SFA 관련 상태와 액션을 관리하는 커스텀 훅
@@ -156,7 +157,9 @@ export const useSfaStore = () => {
     // 폼 액션
     form: {
       // 필드 업데이트
-      updateField: (name, value) => dispatch(updateFormField({ name, value })),
+      updateField: (name, value) => {
+        return dispatch(updateFormField({ name, value }));
+      },
       // 폼 초기화
       resetForm: () => dispatch(resetForm()),
       // 폼 오류 설정

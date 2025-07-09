@@ -121,3 +121,41 @@ export const transformToApiFormat = (data, fieldMapping = {}) => {
 
   return result;
 };
+
+/**
+ * 객체에서 {id, name} 형태의 값을 id만 추출하는 함수
+ * @param {any} value - 변환할 값
+ * @returns {any} id가 있으면 id만, 없으면 원본 값
+ */
+export const extractId = (value) => {
+  if (value && typeof value === 'object' && value.id !== undefined) {
+    return value.id;
+  }
+  return value;
+};
+
+/**
+ * 객체의 모든 {id, name} 형태의 필드를 id만 추출하는 함수
+ * @param {Object} obj - 변환할 객체
+ * @param {Array<string>} [excludeFields=[]] - 변환에서 제외할 필드명 배열
+ * @returns {Object} id가 추출된 새 객체
+ */
+export const extractIdsFromObject = (obj, excludeFields = []) => {
+  if (!obj || typeof obj !== 'object') {
+    return obj;
+  }
+
+  const result = {};
+
+  Object.keys(obj).forEach((key) => {
+    if (excludeFields.includes(key)) {
+      // 제외 필드는 그대로 유지
+      result[key] = obj[key];
+    } else {
+      // id 추출 시도
+      result[key] = extractId(obj[key]);
+    }
+  });
+
+  return result;
+};

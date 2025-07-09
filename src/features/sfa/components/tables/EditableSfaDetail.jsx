@@ -17,14 +17,12 @@ import {
   calculatePaymentTotals,
   formatSfaByItems,
 } from '../../utils/displayUtils';
+import { useCodebook } from '../../../../shared/hooks/useCodebook';
 
 /**
  * 수정 가능한 SFA 상세 정보 컴포넌트
- * @param {Object} props
- * @param {Object} props.data - SFA 상세 데이터
- * @param {Object} props.sfaSalesTypeData - 매출유형 데이터
  */
-const EditableSfaDetail = ({ data, featureMode, codebooks }) => {
+const EditableSfaDetail = ({ data, featureMode }) => {
   const {
     editState,
     startEditing,
@@ -33,17 +31,22 @@ const EditableSfaDetail = ({ data, featureMode, codebooks }) => {
     handleValueChange,
   } = useEditableField(data);
 
-  const {
-    sfaSalesType: sfaSalesTypeData,
-    sfaClassification: sfaClassificationData,
-  } = codebooks;
+  // const {
+  //   sfaSalesType: sfaSalesTypeData,
+  //   sfaClassification: sfaClassificationData,
+  // } = codebooks;
+
+  const { data: codebooks, isLoading: isLoadingCodebook } = useCodebook([
+    'sfaSalesType',
+    'sfaClassification',
+  ]);
 
   const { editField } = editState;
 
   console.log(`**** EditableSfaDetail's Data : ${data.documentId}`);
   console.log('=== EditableSfaDetail 데이터 구조 ===');
   console.log('전체 data:', data);
-  console.log('sfaSalesTypeData:', sfaSalesTypeData);
+  console.log('codebooks:', codebooks);
   console.log('==================================');
 
   // 결제 매출/이익 합계 계산
@@ -325,7 +328,7 @@ const EditableSfaDetail = ({ data, featureMode, codebooks }) => {
                   className="w-full h-8 text-sm"
                 >
                   <option value="">선택하세요</option>
-                  {sfaSalesTypeData?.map((option) => (
+                  {codebooks?.sfaSalesType?.map((option) => (
                     <option key={option.id} value={option.id}>
                       {option.name}
                     </option>
@@ -338,7 +341,7 @@ const EditableSfaDetail = ({ data, featureMode, codebooks }) => {
                   className="w-full h-8 text-sm"
                 >
                   <option value="">선택하세요</option>
-                  {sfaClassificationData?.map((option) => (
+                  {codebooks?.sfaClassification?.map((option) => (
                     <option key={option.id} value={option.id}>
                       {option.name}
                     </option>

@@ -15,7 +15,8 @@ export const useCustomerSearch = (initialValue = '') => {
     try {
       const response = await apiClient.get('/customers', {
         params: {
-          populate: '*', // Strapi v4 이상에서 필요
+          // populate: '*', // Strapi v4 이상에서 필요
+          fields: ['name'],
           filters: {
             name: {
               $containsi: term,

@@ -8,10 +8,12 @@ import SfaDetailPaymentTable from '../tables/SfaDetailPaymentTable';
 import SfaEditPaymentForm from '../forms/SfaEditPaymentForm';
 import { useSfaForm } from '../../hooks/useSfaForm';
 import { useFormValidationEdit } from '../../hooks/useFormValidationEdit';
-import SalesByPayment from '../elements/SalesByPayment';
+import SalesAddByPayment from '../elements/SalesAddByPayment';
 import { Form, Group, Button } from '../../../../shared/components/ui';
 import ModalRenderer from '../../../../shared/components/ui/modal/ModalRenderer';
 import useModal from '../../../../shared/hooks/useModal';
+import { useCodebook } from '../../../../shared/hooks/useCodebook';
+import { getUniqueRevenueSources } from '../../utils/transformUtils';
 
 /**
  * @param {Object} props
@@ -32,6 +34,8 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
     processPaymentSubmit,
     togglePaymentSelection,
     resetPaymentForm,
+    handleRemovePayment,
+    handleRevenueSourceSelect,
   } = useSfaForm();
 
   // useModal 훅 사용
@@ -45,6 +49,19 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
     closeModal,
     handleConfirm,
   } = useModal();
+
+  // 결제구분, 매출확률 codebook
+  const {
+    data: paymentCodebooks,
+    isLoading: isLoadingCodebook,
+    error: codebookError,
+  } = useCodebook(['rePaymentMethod', 'sfaPercentage']);
+
+  // revenueSource 데이터 중복 제거 및 정렬
+  const uniqueRevenueSources = React.useMemo(
+    () => getUniqueRevenueSources(formData.salesByPayments),
+    [formData.salesByPayments],
+  );
 
   const { validatePaymentForm } = useFormValidationEdit(formData);
 
@@ -156,13 +173,23 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
             action="#"
           >
             {/* 결제 매출 추가 */}
-            <SalesByPayment
-              payments={formData.salesByPayments}
-              onChange={handlePaymentChange}
-              // onAdd={handleAddSalesPayment}
-              //   onRemove={handleRemovePayment}
-              isSubmitting={isSubmitting}
-            />
+            <div className="flex flex-col gap-2">
+              {formData.salesByPayments.map((payment, index) => (
+                <SalesAddByPayment
+                  key={`payment-${payment.id || index}`}
+                  payment={payment}
+                  index={index}
+                  isSameBilling={formData.isSameBilling || false}
+                  onChange={handlePaymentChange}
+                  onRemove={handleRemovePayment}
+                  isSubmitting={isSubmitting}
+                  handleRevenueSourceSelect={handleRevenueSourceSelect}
+                  savedRevenueSources={uniqueRevenueSources}
+                  codebooks={paymentCodebooks}
+                  isLoadingCodebook={isLoadingCodebook}
+                />
+              ))}
+            </div>
 
             {/* Submit Button */}
             <Group>

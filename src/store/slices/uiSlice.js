@@ -104,10 +104,36 @@ const uiSlice = createSlice({
      * 드로어 상태 변경
      */
     setDrawer: (state, action) => {
-      state.drawer = {
-        ...state.drawer,
-        ...action.payload,
-      };
+      console.log('🚨 [uiSlice] setDrawer reducer 실행됨!');
+      console.log('🚨 [uiSlice] 현재 drawer:', state.drawer);
+      console.log('🚨 [uiSlice] action.payload:', action.payload);
+
+      // 실제로 변경이 필요한지 확인
+      const currentDrawer = state.drawer;
+      const newPayload = action.payload;
+
+      let hasChanged = false;
+      Object.keys(newPayload).forEach((key) => {
+        if (currentDrawer[key] !== newPayload[key]) {
+          hasChanged = true;
+          console.log(
+            `🚨 [uiSlice] ${key} 변경됨:`,
+            currentDrawer[key],
+            '→',
+            newPayload[key],
+          );
+        }
+      });
+
+      if (hasChanged) {
+        console.log('🚨 [uiSlice] 실제 변경 발생 - 새 drawer 객체 생성');
+        state.drawer = {
+          ...state.drawer,
+          ...action.payload,
+        };
+      } else {
+        console.log('🚨 [uiSlice] 변경 없음 - 기존 drawer 객체 유지');
+      }
     },
 
     /**

@@ -30,9 +30,8 @@ export const initialSalesByPayment = {
 export const initialFormState = {
   name: '',
   customer: {},
-  sfaSalesType: '',
-  sfaClassification: '',
-  itemAmount: '',
+  sfaSalesType: null,
+  sfaClassification: null,
   paymentAmount: '',
   description: '',
   salesByItems: [],
