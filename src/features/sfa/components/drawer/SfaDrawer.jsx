@@ -20,8 +20,9 @@ import SfaAddForm from '../forms/SfaAddForm.jsx';
 import SfaDetailTable from '../tables/SfaDetailTable.jsx';
 // import SfaDetailPaymentTable from '../tables/SfaDetailPaymentTable.jsx';
 import EditableSfaDetail from '../tables/EditableSfaDetail.jsx';
-import SfaAddPaymentForm from '../forms/SfaAddPaymentForm.jsx';
-import SfaPaymentSection from '../compose/SfaPaymentSection.jsx';
+import SfaEditPaymentSection from '../sections/SfaEditPaymentSection.jsx';
+// import SfaAddPaymentForm from '../forms/SfaAddPaymentForm.jsx';
+import SfaPaymentSection from '../sections/SfaPaymentSection.jsx';
 
 const SfaDrawer = React.memo(
   ({ drawer }) => {
@@ -259,25 +260,18 @@ const SfaDrawer = React.memo(
           // onUpdate={handleFieldUpdate}
         />
 
-        {mode === 'edit' && (
-          <SfaAddPaymentForm
-            data={data}
-            controlMode={mode}
-            featureMode={featureMode}
-          />
-        )}
+        <SfaEditPaymentSection
+          data={data}
+          controlMode={mode}
+          featureMode={featureMode}
+        />
+
         <SfaPaymentSection
           data={data}
           controlMode={mode}
           featureMode={featureMode}
           togglePaymentSelection={togglePaymentSelection}
         />
-        {/* <SfaDetailPaymentTable
-        data={data.sfa_by_payments || []}
-        controlMode="edit"
-        featureMode={featureMode}
-        togglePaymentSelection={togglePaymentSelection}
-      /> */}
       </>
     ));
     EditContent.displayName = 'EditContent';

@@ -19,6 +19,8 @@ import {
   setFormErrors,
   setFormSubmitting,
   setFormIsValid,
+  // 폼 데이터 일괄 업데이트 액션 추가
+  initializeFormData,
   // 필터 관련 기본 액션만 (특화된 액션 제거)
   updateFilterField,
   updateFilterFields,
@@ -156,12 +158,14 @@ export const useSfaStore = () => {
 
     // 폼 액션
     form: {
-      // 필드 업데이트
+      // 단일 필드 업데이트
       updateField: (name, value) => {
         return dispatch(updateFormField({ name, value }));
       },
+      // 폼 데이터 일괄 설정
+      setData: (data) => dispatch(initializeFormData(data)),
       // 폼 초기화
-      resetForm: () => dispatch(resetForm()),
+      reset: () => dispatch(resetForm()),
       // 폼 오류 설정
       setErrors: (errors) => dispatch(setFormErrors(errors)),
       // 제출 상태 설정

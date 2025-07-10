@@ -24,7 +24,8 @@ export const FORM_INITIAL_STATE = {
     // industry: '',
     // notes: '',
     customer: {},
-    salesByPayments: [],
+    sfaByPayments: [],
+    sfaDraftPayments: [], // 초안 결제매출
     salesByItems: [],
     isProject: false,
     isSameBilling: true,

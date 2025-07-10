@@ -31,11 +31,6 @@ const EditableSfaDetail = ({ data, featureMode }) => {
     handleValueChange,
   } = useEditableField(data);
 
-  // const {
-  //   sfaSalesType: sfaSalesTypeData,
-  //   sfaClassification: sfaClassificationData,
-  // } = codebooks;
-
   const { data: codebooks, isLoading: isLoadingCodebook } = useCodebook([
     'sfaSalesType',
     'sfaClassification',

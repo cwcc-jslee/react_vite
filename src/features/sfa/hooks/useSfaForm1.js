@@ -13,7 +13,7 @@ import {
 import {
   FORM_LIMITS,
   initialSalesByItem,
-  initialSalesByPayment,
+  initialSfaByPayment,
   INITIAL_PAYMENT_ID_STATE,
 } from '../constants/formInitialState';
 
@@ -109,7 +109,7 @@ export const useSfaForm1 = () => {
   const handleCustomerTypeChange = useCallback(
     (isSame) => {
       actions.form.updateField('isSameBilling', isSame);
-      actions.form.updateField('salesByPayments', []);
+      actions.form.updateField('sfaByPayments', []);
     },
     [actions.form, form.data.isSameBilling],
   );
@@ -117,7 +117,7 @@ export const useSfaForm1 = () => {
   const toggleIsSameBilling = useCallback(() => {
     const currentValue = form.data.isSameBilling || false;
     actions.form.updateField('isSameBilling', !currentValue);
-    actions.form.updateField('salesByPayments', []);
+    actions.form.updateField('sfaByPayments', []);
   }, [actions.form, form.data.isSameBilling]);
 
   const handleCustomerSelect = useCallback(
@@ -190,28 +190,28 @@ export const useSfaForm1 = () => {
   // === 결제 관련 핸들러 ===
   const handleAddPayment = useCallback(
     async (isSameBilling, customer) => {
-      const currentPayments = form.data.salesByPayments || [];
+      const currentPayments = form.data.sfaByPayments || [];
       if (currentPayments.length >= FORM_LIMITS.MAX_PAYMENTS) return;
 
-      const newPayment = { ...initialSalesByPayment };
+      const newPayment = { ...initialSfaByPayment };
       // isSameBilling이 true이고 customer가 있으면 revenueSource 설정
       if (isSameBilling && customer?.id) {
         newPayment.revenueSource = customer;
       }
 
       const newPayments = [...currentPayments, newPayment];
-      actions.form.updateField('salesByPayments', newPayments);
+      actions.form.updateField('sfaByPayments', newPayments);
     },
-    [actions.form, form.data.salesByPayments],
+    [actions.form, form.data.sfaByPayments],
   );
 
   const handleRemovePayment = useCallback(
     (index) => {
-      const currentPayments = [...(form.data.salesByPayments || [])];
+      const currentPayments = [...(form.data.sfaByPayments || [])];
       currentPayments.splice(index, 1);
-      actions.form.updateField('salesByPayments', currentPayments);
+      actions.form.updateField('sfaByPayments', currentPayments);
     },
-    [actions.form, form.data.salesByPayments],
+    [actions.form, form.data.sfaByPayments],
   );
 
   const handlePaymentChange = useCallback(
@@ -220,11 +220,11 @@ export const useSfaForm1 = () => {
         index,
         fieldOrFields,
         value,
-        currentPayments: form.data.salesByPayments,
-        targetPayment: form.data.salesByPayments?.[index],
+        currentPayments: form.data.sfaByPayments,
+        targetPayment: form.data.sfaByPayments?.[index],
       });
 
-      const currentPayments = [...(form.data.salesByPayments || [])];
+      const currentPayments = [...(form.data.sfaByPayments || [])];
       const oldPayment = { ...currentPayments[index] };
 
       // 객체 형태의 여러 필드 업데이트 지원
@@ -255,21 +255,21 @@ export const useSfaForm1 = () => {
         });
       }
 
-      actions.form.updateField('salesByPayments', currentPayments);
+      actions.form.updateField('sfaByPayments', currentPayments);
     },
-    [actions.form, form.data.salesByPayments],
+    [actions.form, form.data.sfaByPayments],
   );
 
   const handleRevenueSourceSelect = useCallback(
     (customer, paymentIndex) => {
-      const currentPayments = [...(form.data.salesByPayments || [])];
+      const currentPayments = [...(form.data.sfaByPayments || [])];
       currentPayments[paymentIndex] = {
         ...currentPayments[paymentIndex],
         revenueSource: { id: customer.id, name: customer.name },
       };
-      actions.form.updateField('salesByPayments', currentPayments);
+      actions.form.updateField('sfaByPayments', currentPayments);
     },
-    [actions.form, form.data.salesByPayments],
+    [actions.form, form.data.sfaByPayments],
   );
 
   // === 결제매출 수정 관련 ===
@@ -286,7 +286,7 @@ export const useSfaForm1 = () => {
       );
 
       if (payment) {
-        actions.form.updateField('salesByPayments', [
+        actions.form.updateField('sfaByPayments', [
           {
             id: payment.id,
             documentId: payment.documentId,
@@ -310,7 +310,7 @@ export const useSfaForm1 = () => {
   );
 
   const resetPaymentForm = useCallback(() => {
-    actions.form.updateField('salesByPayments', []);
+    actions.form.updateField('sfaByPayments', []);
   }, [actions.form]);
 
   const processPaymentSubmit = useCallback(
@@ -324,14 +324,14 @@ export const useSfaForm1 = () => {
           case 'create':
             response = await sfaSubmitService.addSfaPayment(
               targetId,
-              formData.salesByPayments,
+              formData.sfaByPayments,
             );
             actionDescription = '등록';
             break;
           case 'update':
             response = await sfaSubmitService.updateSfaPayment(
               targetId,
-              formData.salesByPayments[0],
+              formData.sfaByPayments[0],
             );
             actionDescription = '수정';
             break;

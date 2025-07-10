@@ -552,7 +552,7 @@ const SalesRegistrationDrawer = ({ isOpen, onClose }) => {
                         {formData.businessUnits
                           .reduce((sum, unit) => {
                             const amount = parseFloat(
-                              unit.amount?.replace(/,/g, '') || 0,
+                              String(unit.amount || 0).replace(/,/g, ''),
                             );
                             return sum + amount;
                           }, 0)
@@ -569,7 +569,7 @@ const SalesRegistrationDrawer = ({ isOpen, onClose }) => {
                         );
                         const deptTotal = deptUnits.reduce((sum, unit) => {
                           const amount = parseFloat(
-                            unit.amount?.replace(/,/g, '') || 0,
+                            String(unit.amount || 0).replace(/,/g, ''),
                           );
                           return sum + amount;
                         }, 0);
@@ -759,7 +759,7 @@ const SalesRegistrationDrawer = ({ isOpen, onClose }) => {
                           {formData.salesCustomers
                             .reduce((sum, customer) => {
                               const amount = parseFloat(
-                                customer.amount?.replace(/,/g, '') || 0,
+                                String(customer.amount || 0).replace(/,/g, ''),
                               );
                               return sum + amount;
                             }, 0)

@@ -7,7 +7,7 @@ import {
   FORM_LIMITS,
   initialFormState,
   initialSalesByItem,
-  initialSalesByPayment,
+  initialSfaByPayment,
   INITIAL_PAYMENT_ID_STATE,
 } from '../constants/formInitialState';
 
@@ -63,7 +63,7 @@ export const useFormData = (drawerState) => {
       0,
     );
 
-    const paymentTotal = formData.salesByPayments.reduce(
+    const paymentTotal = formData.sfaByPayments.reduce(
       (sum, payment) => sum + (parseInt(payment.amount) || 0),
       0,
     );
@@ -73,7 +73,7 @@ export const useFormData = (drawerState) => {
       itemAmount: itemTotal.toString(),
       paymentAmount: paymentTotal.toString(),
     }));
-  }, [formData.salesByItems, formData.salesByPayments]);
+  }, [formData.salesByItems, formData.sfaByPayments]);
 
   // 아이템 데이터 조회
   const loadItems = useCallback(async (classificationId) => {
@@ -158,7 +158,7 @@ export const useFormData = (drawerState) => {
     setFormData((prev) => ({
       ...prev,
       isSameBilling: isSame,
-      salesByPayments: [], // salesByPayments 초기화
+      sfaByPayments: [], // sfaByPayments 초기화
     }));
   };
 
@@ -184,7 +184,7 @@ export const useFormData = (drawerState) => {
     setFormData((prev) => ({
       ...prev,
       isSameBilling: !prev.isSameBilling,
-      salesByPayments: [], // salesByPayments 초기화
+      sfaByPayments: [], // sfaByPayments 초기화
     }));
   };
 
@@ -290,7 +290,7 @@ export const useFormData = (drawerState) => {
    * 결제 방법 데이터가 없을 경우 먼저 조회
    */
   const handleAddPayment = async () => {
-    if (formData.salesByPayments.length >= 3) return;
+    if (formData.sfaByPayments.length >= 3) return;
 
     try {
       // 결제 방법 데이터가 없는 경우 먼저 조회
@@ -300,7 +300,7 @@ export const useFormData = (drawerState) => {
 
       // 현재 formData 상태를 보존하면서 새로운 결제매출 추가
       setFormData((prev) => {
-        const newPayment = { ...initialSalesByPayment };
+        const newPayment = { ...initialSfaByPayment };
 
         console.log('>>handleAddPayment>> [prev] : ', prev);
 
@@ -311,7 +311,7 @@ export const useFormData = (drawerState) => {
 
         return {
           ...prev,
-          salesByPayments: [...prev.salesByPayments, newPayment],
+          sfaByPayments: [...prev.sfaByPayments, newPayment],
         };
       });
     } catch (error) {
@@ -326,7 +326,7 @@ export const useFormData = (drawerState) => {
   const handleRemovePayment = (index) => {
     setFormData((prev) => ({
       ...prev,
-      salesByPayments: prev.salesByPayments.filter((_, i) => i !== index),
+      sfaByPayments: prev.sfaByPayments.filter((_, i) => i !== index),
     }));
   };
 
@@ -357,14 +357,14 @@ export const useFormData = (drawerState) => {
   // 결제매출 관련 핸들러
   const handlePaymentChange = (index, field, value) => {
     setFormData((prev) => {
-      const updatedPayments = [...prev.salesByPayments];
+      const updatedPayments = [...prev.sfaByPayments];
       updatedPayments[index] = {
         ...updatedPayments[index],
         [field]: value,
       };
       return {
         ...prev,
-        salesByPayments: updatedPayments,
+        sfaByPayments: updatedPayments,
       };
     });
   };
@@ -422,7 +422,7 @@ export const useFormData = (drawerState) => {
 
   //경제매출 수정 선택시
   const handleEditPayment = async () => {
-    if (formData.salesByPayments.length >= 3) return;
+    if (formData.sfaByPayments.length >= 3) return;
 
     try {
       if (!paymentData.data.length) {
@@ -449,7 +449,7 @@ export const useFormData = (drawerState) => {
       // }
       setFormData((prev) => ({
         ...prev,
-        salesByPayments: [
+        sfaByPayments: [
           {
             // 선택시 추가
             id: payment.id,
@@ -479,7 +479,7 @@ export const useFormData = (drawerState) => {
       // 순차적으로 상태 업데이트
       setFormData((prev) => ({
         ...prev,
-        salesByPayments: [],
+        sfaByPayments: [],
       }));
     } catch (error) {
       console.error('Reset 중 오류 발생:', error);
@@ -488,14 +488,14 @@ export const useFormData = (drawerState) => {
 
   const handleRevenueSourceSelect = (customer, paymentIndex) => {
     setFormData((prev) => {
-      const updatedPayments = [...prev.salesByPayments];
+      const updatedPayments = [...prev.sfaByPayments];
       updatedPayments[paymentIndex] = {
         ...updatedPayments[paymentIndex],
         revenueSource: { id: customer.id, name: customer.name },
       };
       return {
         ...prev,
-        salesByPayments: updatedPayments,
+        sfaByPayments: updatedPayments,
       };
     });
   };

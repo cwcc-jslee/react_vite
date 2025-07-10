@@ -13,7 +13,7 @@ export const initialSalesByItem = {
   amount: '',
 };
 
-export const initialSalesByPayment = {
+export const initialSfaByPayment = {
   revenueSource: {},
   billingType: '',
   isConfirmed: false,
@@ -35,7 +35,8 @@ export const initialFormState = {
   paymentAmount: '',
   description: '',
   salesByItems: [],
-  salesByPayments: [],
+  sfaByPayments: [],
+  sfaDraftPayments: [], // 초안 결제매출
   isProject: false,
   isSameBilling: true,
 };

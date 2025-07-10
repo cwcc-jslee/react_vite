@@ -82,13 +82,11 @@ const SfaAddForm = () => {
   ]);
 
   // revenueSource 데이터 중복 제거 및 정렬
-  const uniqueRevenueSources = getUniqueRevenueSources(
-    form.data.salesByPayments,
-  );
+  const uniqueRevenueSources = getUniqueRevenueSources(form.data.sfaByPayments);
 
   // 조건부 렌더링 값들
   const hasCustomer = !!form.data.customer?.id;
-  const hasPayments = form.data.salesByPayments?.length > 0;
+  const hasPayments = form.data.sfaByPayments?.length > 0;
   const hasItems = form.data.salesByItems?.length > 0;
 
   const handleSubmit = async (e) => {
@@ -351,7 +349,7 @@ const SfaAddForm = () => {
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              {(form.data.salesByPayments || []).map((payment, index) => (
+              {(form.data.sfaByPayments || []).map((payment, index) => (
                 <SalesAddByPayment
                   key={`payment-${payment.id || index}`}
                   payment={payment}
@@ -373,16 +371,16 @@ const SfaAddForm = () => {
             <div className="mt-3 rounded-lg bg-blue-50 p-3">
               <div className="flex justify-between text-sm">
                 <span className="text-blue-700">
-                  {`총 결제구분 : ${form.data.salesByPayments?.length || 0}건`}
+                  {`총 결제구분 : ${form.data.sfaByPayments?.length || 0}건`}
                 </span>
-                {form.data.salesByPayments &&
-                  Array.isArray(form.data.salesByPayments) && (
+                {form.data.sfaByPayments &&
+                  Array.isArray(form.data.sfaByPayments) && (
                     <span className="text-blue-700">
                       총 금액:{' '}
-                      {form.data.salesByPayments
-                        .reduce((sum, customer) => {
+                      {form.data.sfaByPayments
+                        .reduce((sum, payment) => {
                           const amount = parseFloat(
-                            customer.amount?.replace(/,/g, '') || 0,
+                            String(payment.amount || 0).replace(/,/g, ''),
                           );
                           return sum + amount;
                         }, 0)
@@ -442,9 +440,9 @@ const SfaAddForm = () => {
                     <span className="text-blue-700">
                       총 금액:{' '}
                       {form.data.salesByItems
-                        .reduce((sum, customer) => {
+                        .reduce((sum, item) => {
                           const amount = parseFloat(
-                            customer.amount?.replace(/,/g, '') || 0,
+                            String(item.amount || 0).replace(/,/g, ''),
                           );
                           return sum + amount;
                         }, 0)

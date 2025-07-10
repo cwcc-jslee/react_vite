@@ -1,4 +1,4 @@
-// src/features/sfa/components/compose/SfaPaymentSection.jsx
+// src/features/sfa/components/sections/SfaPaymentSection.jsx
 /**
  * SFA 매출 관리 섹션 컴포넌트
  * 매출 내역 테이블과 수정 폼을 상황에 따라 표시하고 관리
@@ -174,7 +174,7 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
           >
             {/* 결제 매출 추가 */}
             <div className="flex flex-col gap-2">
-              {formData.salesByPayments.map((payment, index) => (
+              {formData.sfaByPayments.map((payment, index) => (
                 <SalesAddByPayment
                   key={`payment-${payment.id || index}`}
                   payment={payment}
@@ -193,7 +193,7 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
 
             {/* Submit Button */}
             <Group>
-              {formData.salesByPayments.length !== 0 && (
+              {formData.sfaByPayments.length !== 0 && (
                 <Group
                   direction="horizontal"
                   spacing="md"
@@ -237,7 +237,7 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
 
   return (
     <>
-      {renderPaymentSelection()}
+      {/* {renderPaymentSelection()} */}
       <div className="space-y-6">
         {/* 매출 내역 테이블 */}
         <SfaDetailPaymentTable

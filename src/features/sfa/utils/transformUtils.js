@@ -319,9 +319,10 @@ export const transformToDBFields = {
  * @param {Array} salesByPayments - 결제 매출 배열
  * @returns {Array} - 중복 제거되고 정렬된 매출처 배열
  */
-export const getUniqueRevenueSources = (salesByPayments) => {
-  // salesByPayments에서 revenueSource 추출
-  const paymentSources = salesByPayments
+export const getUniqueRevenueSources = (sfaByPayments = []) => {
+  // sfaByPayments에서 revenueSource 추출
+  console.log('sfaByPayments:', sfaByPayments);
+  const paymentSources = sfaByPayments
     .map((payment) => payment.revenueSource)
     .filter((source) => source?.id && source?.name);
 
