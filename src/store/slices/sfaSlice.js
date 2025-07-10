@@ -11,7 +11,6 @@ import dayjs from 'dayjs';
 import {
   DEFAULT_PAGINATION,
   DEFAULT_FILTERS,
-  FORM_INITIAL_STATE,
 } from '../../features/sfa/constants/initialState';
 
 // SFA 목록 조회 액션
@@ -109,8 +108,13 @@ const initialState = {
   status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
   error: null,
   selectedItem: { data: null, status: 'idle', error: null },
-  // 폼 상태
-  form: { ...FORM_INITIAL_STATE },
+  // 폼 상태 - 완전 빈값으로 시작
+  form: {
+    data: {}, // 🗑️ 완전 빈값으로 시작
+    errors: {},
+    isSubmitting: false,
+    isValid: true,
+  },
   // 페이지네이션
   pagination: { ...DEFAULT_PAGINATION },
   // 필터
@@ -190,9 +194,15 @@ const sfaSlice = createSlice({
       }
     },
 
-    // 폼 초기화
-    resetForm: (state) => {
-      state.form = { ...FORM_INITIAL_STATE };
+    // 폼 리셋 (payload에 따라 동작 결정)
+    // - payload 없음: 완전 빈값으로 초기화
+    // - payload 있음: 해당 값으로 초기화
+    resetForm: (state, action) => {
+      const resetData = action.payload || {}; // 빈값 또는 지정값
+      state.form.data = { ...resetData };
+      state.form.errors = {};
+      state.form.isSubmitting = false;
+      state.form.isValid = true;
     },
 
     // 폼 데이터 일괄 업데이트
@@ -274,7 +284,7 @@ export const {
   updateFormField,
   setFormErrors,
   setFormSubmitting,
-  resetForm,
+  resetForm, // 🔄 통합된 리셋 (빈값 또는 지정값)
   initializeFormData,
   setFormIsValid,
   clearSelectedItem,

@@ -25,8 +25,8 @@ const SfaEditPaymentSection = ({ data, controlMode, featureMode }) => {
   const errors = form.errors || {};
   const isSubmitting = form.isSubmitting;
 
-  // useSfaForm1에서 필요한 핸들러만 가져오기
-  const { validateForm } = useSfaForm1();
+  // useSfaForm1에서 필요한 핸들러들 가져오기
+  const { validateForm, handleAddPayment } = useSfaForm1();
 
   // 결제구분, 매출확률 codebook
   const {
@@ -59,38 +59,15 @@ const SfaEditPaymentSection = ({ data, controlMode, featureMode }) => {
         ...data,
         sfaDraftPayments: [], // 초안 결제매출 초기화
       };
-      actions.form.setData(updatedData);
+      actions.form.reset(updatedData);
     }
     // 컴포넌트 종료 시 초안 결제매출만 초기화
     return () => {
       actions.form.updateField('sfaDraftPayments', []);
     };
-  }, []);
+  }, [featureMode]);
 
   // sfaDraftPayments 전용 핸들러들
-  const handleAddNewPayment = useCallback(
-    (isSameBilling, customer) => {
-      const currentPayments = form.data.sfaDraftPayments || [];
-      if (currentPayments.length >= 3) return; // 최대 3개 제한
-
-      const newPayment = {
-        revenueSource: isSameBilling && customer?.id ? customer : null,
-        amount: '',
-        billingType: '',
-        probability: '',
-        recognitionDate: '',
-        scheduledDate: '',
-        memo: '',
-        profitAmount: '',
-        isProfit: false,
-        marginProfitValue: '',
-      };
-
-      const newPayments = [...currentPayments, newPayment];
-      actions.form.updateField('sfaDraftPayments', newPayments);
-    },
-    [form.data.sfaDraftPayments, actions.form],
-  );
 
   const handleNewPaymentChange = useCallback(
     (index, fieldOrFields, value) => {
@@ -161,9 +138,7 @@ const SfaEditPaymentSection = ({ data, controlMode, featureMode }) => {
         <Button
           type="button"
           variant="primary"
-          onClick={() =>
-            handleAddNewPayment(data?.isSameBilling, data?.customer)
-          }
+          onClick={() => handleAddPayment(data?.isSameBilling, data?.customer)}
           disabled={
             isSubmitting || (form.data.sfaDraftPayments?.length || 0) >= 3
           }
@@ -203,7 +178,7 @@ const SfaEditPaymentSection = ({ data, controlMode, featureMode }) => {
             <SalesAddByPayment
               payment={payment}
               index={index}
-              isSameBilling={form.data.isSameBilling || true}
+              isSameBilling={form.data.isSameBilling}
               onChange={handleNewPaymentChange}
               onRemove={handleRemoveNewPayment}
               isSubmitting={isSubmitting}

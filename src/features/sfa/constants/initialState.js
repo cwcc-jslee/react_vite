@@ -25,8 +25,7 @@ export const FORM_INITIAL_STATE = {
     // notes: '',
     customer: {},
     sfaByPayments: [],
-    sfaDraftPayments: [], // 초안 결제매출
-    salesByItems: [],
+    sfaByItems: [],
     isProject: false,
     isSameBilling: true,
     sfaClassification: null,

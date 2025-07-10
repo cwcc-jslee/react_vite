@@ -1,9 +1,9 @@
 /**
- * SFA(Sales Force Automation) 전용 Drawer 컴포넌트입니다.
- * 매출, 프로젝트, 고객 관리 등 SFA 기능에 특화된 Drawer를 제공합니다.
+ * SFA(Sales Force Automation) 상세보기/수정 전용 Drawer 컴포넌트입니다.
+ * view 모드와 edit 모드만 처리하며, 상세 정보 조회 및 수정 기능을 제공합니다.
  */
 
-// src/features/sfa/components/drawer/SfaDrawer.jsx
+// src/features/sfa/components/drawer/SfaViewDrawer.jsx
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setDrawer } from '../../../../store/slices/uiSlice.js';
@@ -16,7 +16,6 @@ import { useUiStore } from '../../../../shared/hooks/useUiStore.js';
 import { sfaSubmitService } from '../../services/sfaSubmitService.js';
 import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer.jsx';
 import ActionMenuBar from '../../../../shared/components/ui/button/ActionMenuBar.jsx';
-import SfaAddForm from '../forms/SfaAddForm.jsx';
 import SfaDetailTable from '../tables/SfaDetailTable.jsx';
 // import SfaDetailPaymentTable from '../tables/SfaDetailPaymentTable.jsx';
 import EditableSfaDetail from '../tables/EditableSfaDetail.jsx';
@@ -24,81 +23,31 @@ import SfaEditPaymentSection from '../sections/SfaEditPaymentSection.jsx';
 // import SfaAddPaymentForm from '../forms/SfaAddPaymentForm.jsx';
 import SfaPaymentSection from '../sections/SfaPaymentSection.jsx';
 
-const SfaDrawer = React.memo(
+const SfaViewDrawer = React.memo(
   ({ drawer }) => {
     const dispatch = useDispatch();
 
-    // SfaDrawer에서는 폼 상태가 필요없으므로 useSfaStore 제거
+    // SfaViewDrawer에서는 폼 상태가 필요없으므로 useSfaStore 제거
     // const { actions } = useSfaStore(); // 🚨 제거: 불필요한 전체 SFA 상태 구독
 
     const { actions: uiActions } = useUiStore();
 
     // Codebook 데이터 조회 제거 - SfaAddForm에서 직접 처리
 
-    // SfaDrawer에서 필요한 기능들을 직접 구현 (useSfaForm 제거하여 불필요한 상태 구독 방지)
+    // SfaViewDrawer에서 필요한 기능들을 직접 구현 (useSfaForm 제거하여 불필요한 상태 구독 방지)
     const resetPaymentForm = () => {
       // 결제매출 폼 리셋 로직
       console.log('Payment form reset');
     };
 
-    const togglePaymentSelection = async (item) => {
-      // 결제매출 선택 토글 로직
-      console.log('Payment selection toggled:', item);
+    const selectPaymentForEdit = async (paymentSelection) => {
+      // 결제매출 선택 로직 (수정용)
+      console.log('Payment selected for edit:', paymentSelection);
     };
 
     // const { drawerState, setDrawer } = useSfa();
     const { visible, mode, featureMode, data } = drawer;
     const { setDrawerClose, handleSetDrawer } = useSfaDrawer();
-
-    // codebooks 메모이제이션 제거 - SfaAddForm에서 직접 처리
-
-    // drawer 메모이제이션하여 불필요한 리렌더링 방지
-    const memoizedDrawer = React.useMemo(
-      () => ({
-        visible,
-        mode,
-        featureMode,
-        data,
-      }),
-      [visible, mode, featureMode, data],
-    );
-
-    // 렌더링 추적을 위한 로그 (필요시 제거)
-    console.log(`>>Sfa Drawer 렌더링 : `, memoizedDrawer);
-
-    // 재렌더링 원인 추적용 상세 로그
-    const renderCount = React.useRef(0);
-    renderCount.current += 1;
-
-    console.log(`🔄 [SfaDrawer] 렌더링 횟수: ${renderCount.current}`);
-    console.log(`🔄 [SfaDrawer] drawer props:`, {
-      visible: drawer.visible,
-      mode: drawer.mode,
-      featureMode: drawer.featureMode,
-      hasData: !!drawer.data,
-    });
-
-    // drawer 변경 감지
-    React.useEffect(() => {
-      console.log(`🔄 [SfaDrawer] drawer.visible 변경:`, drawer.visible);
-    }, [drawer.visible]);
-
-    React.useEffect(() => {
-      console.log(`🔄 [SfaDrawer] drawer.mode 변경:`, drawer.mode);
-    }, [drawer.mode]);
-
-    React.useEffect(() => {
-      console.log(
-        `🔄 [SfaDrawer] drawer.featureMode 변경:`,
-        drawer.featureMode,
-      );
-    }, [drawer.featureMode]);
-
-    React.useEffect(() => {
-      console.log(`🔄 [SfaDrawer] drawer.data 변경:`, !!drawer.data);
-    }, [drawer.data]);
-
-    // codebooks 변경 감지 제거 - SfaAddForm에서 직접 처리
 
     // SFA 삭제 함수
     const handleDelete = async () => {
@@ -160,7 +109,6 @@ const SfaDrawer = React.memo(
         label: 'Edit',
         active: mode === 'edit',
         onClick: () => {
-          console.log('🚨 [SfaDrawer] Edit 버튼 클릭 - setDrawer 호출됨');
           // setActiveControl('edit');
           dispatch(setDrawer({ mode: 'edit', featureMode: 'editBase' }));
         },
@@ -175,9 +123,6 @@ const SfaDrawer = React.memo(
               label: '기본정보수정',
               active: featureMode === 'editBase',
               onClick: () => {
-                console.log(
-                  '🚨 [SfaDrawer] 기본정보수정 버튼 클릭 - setDrawer 호출됨',
-                );
                 dispatch(setDrawer({ featureMode: 'editBase' }));
                 resetPaymentForm();
               },
@@ -187,9 +132,6 @@ const SfaDrawer = React.memo(
               label: '결제매출등록',
               active: featureMode === 'addPayment',
               onClick: () => {
-                console.log(
-                  '🚨 [SfaDrawer] 결제매출등록 버튼 클릭 - setDrawer 호출됨',
-                );
                 dispatch(setDrawer({ featureMode: 'addPayment' }));
                 resetPaymentForm();
               },
@@ -199,9 +141,6 @@ const SfaDrawer = React.memo(
               label: '결제매출수정',
               active: featureMode === 'editPayment',
               onClick: () => {
-                console.log(
-                  '🚨 [SfaDrawer] 결제매출수정 버튼 클릭 - setDrawer 호출됨',
-                );
                 dispatch(setDrawer({ featureMode: 'editPayment' }));
                 resetPaymentForm();
               },
@@ -218,7 +157,6 @@ const SfaDrawer = React.memo(
     const getHeaderTitle = () => {
       if (mode) {
         const titles = {
-          add: '매출등록',
           view: 'SFA 상세정보',
           edit: 'SFA 수정',
         };
@@ -228,9 +166,6 @@ const SfaDrawer = React.memo(
     };
 
     // ViewContent 컴포넌트 - 조회 모드 UI
-    const AddContent = React.memo(() => <SfaAddForm />);
-    AddContent.displayName = 'AddContent';
-
     const ViewContent = React.memo(({ data }) => (
       <>
         <SfaDetailTable data={data} />
@@ -242,7 +177,7 @@ const SfaDrawer = React.memo(
           data={data}
           controlMode={mode}
           featureMode={featureMode}
-          togglePaymentSelection={togglePaymentSelection}
+          selectPaymentForEdit={selectPaymentForEdit}
         />
       </>
     ));
@@ -270,7 +205,7 @@ const SfaDrawer = React.memo(
           data={data}
           controlMode={mode}
           featureMode={featureMode}
-          togglePaymentSelection={togglePaymentSelection}
+          selectPaymentForEdit={selectPaymentForEdit}
         />
       </>
     ));
@@ -294,7 +229,6 @@ const SfaDrawer = React.memo(
         controlMode={mode}
       >
         {/* {renderDrawerContent()} */}
-        {mode === 'add' && <AddContent />}
         {mode === 'view' && <ViewContent data={data} />}
         {mode === 'edit' && <EditContent data={data} />}
       </BaseDrawer>
@@ -305,60 +239,6 @@ const SfaDrawer = React.memo(
     const prevDrawer = prevProps.drawer;
     const nextDrawer = nextProps.drawer;
 
-    console.log('🚨 [SfaDrawer] memo 비교 함수 실행');
-    console.log('🚨 [SfaDrawer] prevDrawer 전체:', prevDrawer);
-    console.log('🚨 [SfaDrawer] nextDrawer 전체:', nextDrawer);
-
-    // 각 속성별 상세 비교
-    console.log('🚨 [SfaDrawer] 속성별 비교:');
-    console.log(
-      '  - visible:',
-      prevDrawer.visible,
-      '→',
-      nextDrawer.visible,
-      '일치:',
-      prevDrawer.visible === nextDrawer.visible,
-    );
-    console.log(
-      '  - mode:',
-      prevDrawer.mode,
-      '→',
-      nextDrawer.mode,
-      '일치:',
-      prevDrawer.mode === nextDrawer.mode,
-    );
-    console.log(
-      '  - featureMode:',
-      prevDrawer.featureMode,
-      '→',
-      nextDrawer.featureMode,
-      '일치:',
-      prevDrawer.featureMode === nextDrawer.featureMode,
-    );
-    console.log(
-      '  - data 참조:',
-      prevDrawer.data === nextDrawer.data,
-      '같은 객체:',
-      prevDrawer.data === nextDrawer.data,
-    );
-
-    // drawer 객체 자체의 참조 비교
-    console.log(
-      '🚨 [SfaDrawer] drawer 객체 참조 비교:',
-      prevDrawer === nextDrawer,
-    );
-
-    // 깊은 비교를 위해 JSON.stringify 사용
-    const prevDrawerStr = JSON.stringify(prevDrawer);
-    const nextDrawerStr = JSON.stringify(nextDrawer);
-    console.log('🚨 [SfaDrawer] JSON 비교:', prevDrawerStr === nextDrawerStr);
-
-    if (prevDrawerStr !== nextDrawerStr) {
-      console.log('🚨 [SfaDrawer] 변경된 내용:');
-      console.log('  - 이전:', prevDrawerStr);
-      console.log('  - 현재:', nextDrawerStr);
-    }
-
     // drawer의 중요한 props만 비교
     const isEqual =
       prevDrawer.visible === nextDrawer.visible &&
@@ -366,15 +246,10 @@ const SfaDrawer = React.memo(
       prevDrawer.featureMode === nextDrawer.featureMode &&
       prevDrawer.data === nextDrawer.data;
 
-    console.log(
-      '🚨 [SfaDrawer] 최종 비교 결과:',
-      isEqual ? '동일 (재렌더링 안함)' : '다름 (재렌더링 함)',
-    );
-
     return isEqual;
   },
 );
 
-SfaDrawer.displayName = 'SfaDrawer';
+SfaViewDrawer.displayName = 'SfaViewDrawer';
 
-export default SfaDrawer;
+export default SfaViewDrawer;

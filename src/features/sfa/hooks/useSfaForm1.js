@@ -86,19 +86,19 @@ export const useSfaForm1 = () => {
       // 특별한 로직 처리
       if (name === 'sfaClassification' && fieldValue) {
         loadItems(fieldValue.id || fieldValue);
-        // salesByItems의 itemName 초기화
-        const currentItems = [...(form.data.salesByItems || [])];
+        // sfaByItems의 itemName 초기화
+        const currentItems = [...(form.data.sfaByItems || [])];
         const updatedItems = currentItems.map((item) => ({
           ...item,
           itemName: '',
         }));
-        actions.form.updateField('salesByItems', updatedItems);
+        actions.form.updateField('sfaByItems', updatedItems);
       }
 
       // 에러 정리
       clearFieldError(name);
     },
-    [actions.form, loadItems, clearFieldError, form.data.salesByItems],
+    [actions.form, loadItems, clearFieldError, form.data.sfaByItems],
   );
 
   const handleProjectToggle = useCallback(() => {
@@ -132,7 +132,7 @@ export const useSfaForm1 = () => {
   );
 
   const resetForm = useCallback(() => {
-    actions.form.resetForm();
+    actions.form.reset();
   }, [actions.form]);
 
   const setFieldValue = useCallback(
@@ -153,45 +153,50 @@ export const useSfaForm1 = () => {
 
   // === 판매 아이템 관련 핸들러 ===
   const handleAddSalesItem = useCallback(() => {
-    const currentItems = form.data.salesByItems || [];
+    const currentItems = form.data.sfaByItems || [];
     if (currentItems.length < FORM_LIMITS.MAX_SALES_ITEMS) {
       const newItems = [...currentItems, { ...initialSalesByItem }];
-      actions.form.updateField('salesByItems', newItems);
+      actions.form.updateField('sfaByItems', newItems);
     }
-  }, [actions.form, form.data.salesByItems]);
+  }, [actions.form, form.data.sfaByItems]);
 
   const handleRemoveSalesItem = useCallback(
     (index) => {
-      const currentItems = [...(form.data.salesByItems || [])];
+      const currentItems = [...(form.data.sfaByItems || [])];
       currentItems.splice(index, 1);
-      actions.form.updateField('salesByItems', currentItems);
+      actions.form.updateField('sfaByItems', currentItems);
 
       // 관련 에러 정리
       clearFieldError(`salesItems.${index}.productType`);
       clearFieldError(`salesItems.${index}.teamName`);
       clearFieldError(`salesItems.${index}.amount`);
     },
-    [actions.form, clearFieldError, form.data.salesByItems],
+    [actions.form, clearFieldError, form.data.sfaByItems],
   );
 
   const handleSalesItemChange = useCallback(
     (index, fields, values) => {
-      const currentItems = [...(form.data.salesByItems || [])];
+      const currentItems = [...(form.data.sfaByItems || [])];
       if (typeof fields === 'string') {
         currentItems[index] = { ...currentItems[index], [fields]: values };
       } else if (typeof fields === 'object') {
         currentItems[index] = { ...currentItems[index], ...fields };
       }
-      actions.form.updateField('salesByItems', currentItems);
+      actions.form.updateField('sfaByItems', currentItems);
     },
-    [actions.form, form.data.salesByItems],
+    [actions.form, form.data.sfaByItems],
   );
 
   // === 결제 관련 핸들러 ===
   const handleAddPayment = useCallback(
     async (isSameBilling, customer) => {
-      const currentPayments = form.data.sfaByPayments || [];
-      if (currentPayments.length >= FORM_LIMITS.MAX_PAYMENTS) return;
+      // drawer.mode에 따라 업데이트할 필드와 데이터 결정
+      const isEditMode = drawer.mode === 'edit';
+      const fieldName = isEditMode ? 'sfaDraftPayments' : 'sfaByPayments';
+      const currentPayments = form.data[fieldName] || [];
+      const maxLimit = isEditMode ? 3 : FORM_LIMITS.MAX_PAYMENTS;
+
+      if (currentPayments.length >= maxLimit) return;
 
       const newPayment = { ...initialSfaByPayment };
       // isSameBilling이 true이고 customer가 있으면 revenueSource 설정
@@ -200,9 +205,14 @@ export const useSfaForm1 = () => {
       }
 
       const newPayments = [...currentPayments, newPayment];
-      actions.form.updateField('sfaByPayments', newPayments);
+      actions.form.updateField(fieldName, newPayments);
     },
-    [actions.form, form.data.sfaByPayments],
+    [
+      actions.form,
+      form.data.sfaByPayments,
+      form.data.sfaDraftPayments,
+      drawer.mode,
+    ],
   );
 
   const handleRemovePayment = useCallback(
@@ -216,14 +226,6 @@ export const useSfaForm1 = () => {
 
   const handlePaymentChange = useCallback(
     (index, fieldOrFields, value) => {
-      console.log('🔧 [useSfaForm1] handlePaymentChange called:', {
-        index,
-        fieldOrFields,
-        value,
-        currentPayments: form.data.sfaByPayments,
-        targetPayment: form.data.sfaByPayments?.[index],
-      });
-
       const currentPayments = [...(form.data.sfaByPayments || [])];
       const oldPayment = { ...currentPayments[index] };
 
@@ -233,26 +235,12 @@ export const useSfaForm1 = () => {
           ...currentPayments[index],
           ...fieldOrFields,
         };
-        console.log('🔧 [useSfaForm1] Multiple fields update:', {
-          index,
-          updates: fieldOrFields,
-          oldPayment,
-          newPayment: currentPayments[index],
-        });
       } else {
         // 단일 필드 업데이트
         currentPayments[index] = {
           ...currentPayments[index],
           [fieldOrFields]: value,
         };
-        console.log('🔧 [useSfaForm1] Single field update:', {
-          index,
-          field: fieldOrFields,
-          oldValue: oldPayment[fieldOrFields],
-          newValue: value,
-          oldPayment,
-          newPayment: currentPayments[index],
-        });
       }
 
       actions.form.updateField('sfaByPayments', currentPayments);
@@ -273,8 +261,12 @@ export const useSfaForm1 = () => {
   );
 
   // === 결제매출 수정 관련 ===
-  const togglePaymentSelection = useCallback(
-    async (item) => {
+  /**
+   * 특정 결제매출을 수정용으로 선택하여 sfaDraftPayments에 로드
+   * @param {Object} paymentSelection - 선택된 결제매출 정보 {documentId, id}
+   */
+  const selectPaymentForEdit = useCallback(
+    async (paymentSelection) => {
       // drawer.data가 존재하지 않으면 early return
       if (!drawer.data?.sfaByPayments) {
         console.warn('drawer.data.sfaByPayments가 존재하지 않습니다.');
@@ -282,28 +274,30 @@ export const useSfaForm1 = () => {
       }
 
       const payment = drawer.data.sfaByPayments.find(
-        (p) => p.documentId === item.documentId,
+        (p) => p.documentId === paymentSelection,
       );
 
       if (payment) {
-        actions.form.updateField('sfaByPayments', [
-          {
-            id: payment.id,
-            documentId: payment.documentId,
-            billingType: payment.billingType || '',
-            isConfirmed: payment.isConfirmed || false,
-            probability: payment.probability?.toString() || '',
-            amount: payment.amount?.toString() || '',
-            profitAmount: payment.profitAmount?.toString() || '',
-            isProfit: payment.profitConfig?.isProfit || false,
-            marginProfitValue:
-              payment.profitConfig?.marginProfitValue?.toString() || '',
-            recognitionDate: payment.recognitionDate || '',
-            scheduledDate: payment.scheduledDate || '',
-            memo: payment.memo || '',
-            sfa: payment.sfa || null,
-          },
-        ]);
+        // 수정 기능이므로 sfaDraftPayments에 최대 1개만 업데이트
+        const selectedPayment = {
+          id: payment.id,
+          documentId: payment.documentId,
+          revenueSource: payment.revenueSource || null,
+          billingType: payment.billingType || '',
+          isConfirmed: payment.isConfirmed || false,
+          probability: payment.probability?.toString() || '',
+          amount: payment.amount?.toString() || '',
+          profitAmount: payment.profitAmount?.toString() || '',
+          isProfit: payment.profitConfig?.isProfit || false,
+          marginProfitValue:
+            payment.profitConfig?.marginProfitValue?.toString() || '',
+          recognitionDate: payment.recognitionDate || '',
+          scheduledDate: payment.scheduledDate || '',
+          memo: payment.memo || '',
+        };
+
+        // sfaDraftPayments에 단일 객체로 업데이트 (최대 1개)
+        actions.form.updateField('sfaDraftPayments', [selectedPayment]);
       }
     },
     [drawer.data?.sfaByPayments, actions.form],
@@ -412,7 +406,7 @@ export const useSfaForm1 = () => {
     handleRevenueSourceSelect,
 
     // 결제매출 수정 관련
-    togglePaymentSelection,
+    selectPaymentForEdit,
     resetPaymentForm,
 
     // 제출 로직

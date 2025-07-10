@@ -44,7 +44,7 @@ const SfaDetailPaymentTable = ({
         <Button
           size="sm"
           variant="outline"
-          onClick={() => handlePaymentSelection?.({ documentId, id })}
+          onClick={() => handlePaymentSelection?.(documentId)}
         >
           edit
         </Button>

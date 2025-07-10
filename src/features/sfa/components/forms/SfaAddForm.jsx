@@ -87,7 +87,7 @@ const SfaAddForm = () => {
   // 조건부 렌더링 값들
   const hasCustomer = !!form.data.customer?.id;
   const hasPayments = form.data.sfaByPayments?.length > 0;
-  const hasItems = form.data.salesByItems?.length > 0;
+  const hasItems = form.data.sfaByItems?.length > 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -417,7 +417,7 @@ const SfaAddForm = () => {
           ) : (
             <div className="flex flex-col gap-2">
               <SalesByItem
-                items={form.data.salesByItems || []}
+                items={form.data.sfaByItems || []}
                 onChange={handleSalesItemChange}
                 onRemove={handleRemoveSalesItem}
                 isSubmitting={isSubmitting}
@@ -433,13 +433,13 @@ const SfaAddForm = () => {
             <div className="mt-3 rounded-lg bg-blue-50 p-3">
               <div className="flex justify-between text-sm">
                 <span className="text-green-700">
-                  {`총 사업부매출 : ${form.data.salesByItems?.length || 0}건`}
+                  {`총 사업부매출 : ${form.data.sfaByItems?.length || 0}건`}
                 </span>
-                {form.data.salesByItems &&
-                  Array.isArray(form.data.salesByItems) && (
+                {form.data.sfaByItems &&
+                  Array.isArray(form.data.sfaByItems) && (
                     <span className="text-blue-700">
                       총 금액:{' '}
-                      {form.data.salesByItems
+                      {form.data.sfaByItems
                         .reduce((sum, item) => {
                           const amount = parseFloat(
                             String(item.amount || 0).replace(/,/g, ''),

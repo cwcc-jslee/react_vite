@@ -9,7 +9,8 @@ import { updateFilterFields, fetchSfas } from '../../../store/slices/sfaSlice';
 // import { useSfa } from '../context/SfaProvider';
 // import { useSfaSearchFilter } from '../hooks/useSfaSearchFilter';
 import { Section } from '../../../shared/components/ui/layout/components';
-import SfaDrawer from '../components/drawer/SfaDrawer';
+import SfaAddLayout from '../layouts/SfaAddLayout';
+import SfaViewEditLayout from '../layouts/SfaViewEditLayout';
 // import { useSfaStore } from '../hooks/useSfaStore'; // 제거: SFA 상태 구독 방지
 
 // Components
@@ -22,13 +23,15 @@ import SfaSearchForm from '../components/forms/SfaSearchForm';
 /**
  * SFA 메인 컨테이너 컴포넌트
  * 페이지 레이아웃과 주요 컴포넌트들을 관리
+ * - SfaAddLayout: 신규등록 모드 (add)
+ * - SfaViewEditLayout: 상세보기/수정 모드 (view/edit)
  */
 const SfaContainer = React.memo(() => {
   const dispatch = useDispatch();
 
   // 레이아웃 관련 상태 가져오기 (SFA 상태는 구독하지 않음)
   const components = useSelector((state) => state.ui.pageLayout.components);
-  const drawer = useSelector((state) => state.ui.drawer);
+  const drawer = useSelector((state) => state.ui.drawer); // 조건부 렌더링을 위한 drawer 상태
 
   // 컴포넌트 마운트 시 초기 필터 설정 및 SFA 목록 데이터 조회 (1번만 실행)
   React.useEffect(() => {
@@ -51,8 +54,6 @@ const SfaContainer = React.memo(() => {
     dispatch(fetchSfas());
   }, [dispatch]); // 의존성 배열 단순화
 
-  // drawer를 더 세밀하게 메모이제이션하여 불필요한 리렌더링 방지
-
   return (
     <>
       <Section>
@@ -62,7 +63,14 @@ const SfaContainer = React.memo(() => {
         {components.monthlyStatus && <SfaQuarterlyOverview />}
         {components.sfaTable && <SfaTable />}
       </Section>
-      {drawer.visible && <SfaDrawer drawer={drawer} />}
+
+      {/* 💡 조건부 마운트 방식 - 컨테이너에서 조건 검사 */}
+      {drawer.visible && drawer.mode === 'add' && <SfaAddLayout />}
+
+      {/* View/Edit 모드일 때는 SfaViewEditLayout 사용 */}
+      {drawer.visible && ['view', 'edit'].includes(drawer.mode) && (
+        <SfaViewEditLayout />
+      )}
     </>
   );
 });

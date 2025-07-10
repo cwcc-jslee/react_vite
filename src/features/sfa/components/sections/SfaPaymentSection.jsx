@@ -5,8 +5,8 @@
  */
 import React, { useState } from 'react';
 import SfaDetailPaymentTable from '../tables/SfaDetailPaymentTable';
-import SfaEditPaymentForm from '../forms/SfaEditPaymentForm';
-import { useSfaForm } from '../../hooks/useSfaForm';
+import { useSfaForm1 } from '../../hooks/useSfaForm1';
+import { useSfaStore } from '../../hooks/useSfaStore';
 import { useFormValidationEdit } from '../../hooks/useFormValidationEdit';
 import SalesAddByPayment from '../elements/SalesAddByPayment';
 import { Form, Group, Button } from '../../../../shared/components/ui';
@@ -21,22 +21,23 @@ import { getUniqueRevenueSources } from '../../utils/transformUtils';
  * @param {Object} props.data - SFA 데이터
  */
 const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
-  // 선택된 결제 정보 상태
-  const [selectedPayment, setSelectedPayment] = useState({
-    documentId: null,
-    id: null,
-  });
+  // useSfaStore에서 form과 actions 직접 가져오기
+  const { form, actions } = useSfaStore();
+  const errors = form.errors || {};
+  const isSubmitting = form.isSubmitting;
 
+  // 선택된 결제 정보 상태
+  const [selectedPayment, setSelectedPayment] = useState(null);
+
+  // useSfaForm1에서 필요한 핸들러들 가져오기
   const {
-    formData,
-    isSubmitting,
     handlePaymentChange,
     processPaymentSubmit,
-    togglePaymentSelection,
+    selectPaymentForEdit,
     resetPaymentForm,
     handleRemovePayment,
     handleRevenueSourceSelect,
-  } = useSfaForm();
+  } = useSfaForm1();
 
   // useModal 훅 사용
   const {
@@ -59,18 +60,18 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
 
   // revenueSource 데이터 중복 제거 및 정렬
   const uniqueRevenueSources = React.useMemo(
-    () => getUniqueRevenueSources(formData.salesByPayments),
-    [formData.salesByPayments],
+    () => getUniqueRevenueSources(form.data.sfaByPayments),
+    [form.data.sfaByPayments],
   );
 
-  const { validatePaymentForm } = useFormValidationEdit(formData);
+  const { validatePaymentForm } = useFormValidationEdit(form.data);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const sfaId = data.id;
 
     // 유효성 검사 수행
-    const isValid = validatePaymentForm(formData.salesByPayments);
+    const isValid = validatePaymentForm(form.data.sfaByPayments);
     if (!isValid) return;
 
     await processPaymentSubmit('update', selectedPayment.id, sfaId);
@@ -134,18 +135,15 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
 
   // 수정 취소 핸들러
   const handleEditCancel = () => {
-    setSelectedPayment({
-      documentId: null,
-      id: null,
-    });
+    setSelectedPayment(null);
     resetPaymentForm();
   };
 
-  // 결제 선택 토글 핸들러
-  const handlePaymentSelection = (paymentInfo) => {
-    console.log(`>> handlepayment selection : `, paymentInfo);
-    setSelectedPayment(paymentInfo);
-    togglePaymentSelection(paymentInfo);
+  // 결제 선택 핸들러 (수정용)
+  const handlePaymentSelection = (documentId) => {
+    console.log(`>> handlepayment selection : `, documentId);
+    setSelectedPayment(documentId);
+    selectPaymentForEdit(documentId);
   };
 
   // 뷰 액션 핸들러
@@ -154,7 +152,7 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
     console.log('View payment:', paymentInfo);
   };
 
-  console.log(`>>sfapaymentsection formdata : `, formData);
+  console.log(`>>sfapaymentsection form.data : `, form.data);
   console.log(`controlmode ${controlMode}, feturemode ${featureMode}`);
 
   // 수정 모드일 때 결제매출 선택 UI 렌더링
@@ -174,12 +172,12 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
           >
             {/* 결제 매출 추가 */}
             <div className="flex flex-col gap-2">
-              {formData.sfaByPayments.map((payment, index) => (
+              {form.data.sfaByPayments.map((payment, index) => (
                 <SalesAddByPayment
                   key={`payment-${payment.id || index}`}
                   payment={payment}
                   index={index}
-                  isSameBilling={formData.isSameBilling || false}
+                  isSameBilling={form.data.isSameBilling || false}
                   onChange={handlePaymentChange}
                   onRemove={handleRemovePayment}
                   isSubmitting={isSubmitting}
@@ -193,7 +191,7 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
 
             {/* Submit Button */}
             <Group>
-              {formData.sfaByPayments.length !== 0 && (
+              {form.data.sfaByPayments.length !== 0 && (
                 <Group
                   direction="horizontal"
                   spacing="md"
