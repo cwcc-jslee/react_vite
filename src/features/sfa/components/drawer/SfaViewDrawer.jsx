@@ -113,6 +113,12 @@ const SfaViewDrawer = React.memo(
           dispatch(setDrawer({ mode: 'edit', featureMode: 'editBase' }));
         },
       },
+      {
+        key: 'delete',
+        label: 'Del',
+        active: mode === 'delete',
+        onClick: handleDelete,
+      },
     ];
 
     const functionMenus =
@@ -129,7 +135,7 @@ const SfaViewDrawer = React.memo(
             },
             {
               key: 'addPayment',
-              label: '결제매출등록',
+              label: '결제매출추가',
               active: featureMode === 'addPayment',
               onClick: () => {
                 dispatch(setDrawer({ featureMode: 'addPayment' }));
@@ -145,11 +151,11 @@ const SfaViewDrawer = React.memo(
                 resetPaymentForm();
               },
             },
-            {
-              key: 'delete',
-              label: 'SFA삭제',
-              onClick: handleDelete,
-            },
+            // {
+            //   key: 'delete',
+            //   label: 'SFA삭제',
+            //   onClick: handleDelete,
+            // },
           ]
         : [];
 

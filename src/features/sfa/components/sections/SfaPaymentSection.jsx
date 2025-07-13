@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import SfaDetailPaymentTable from '../tables/SfaDetailPaymentTable';
 import { useSfaForm1 } from '../../hooks/useSfaForm1';
 import { useSfaStore } from '../../hooks/useSfaStore';
+import { useSfaOperations } from '../../hooks/useSfaSubmit';
 import { useFormValidationEdit } from '../../hooks/useFormValidationEdit';
 import SalesAddByPayment from '../elements/SalesAddByPayment';
 import { Form, Group, Button } from '../../../../shared/components/ui';
@@ -30,14 +31,10 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
   const [selectedPayment, setSelectedPayment] = useState(null);
 
   // useSfaForm1에서 필요한 핸들러들 가져오기
-  const {
-    handlePaymentChange,
-    processPaymentSubmit,
-    selectPaymentForEdit,
-    resetPaymentForm,
-    handleRemovePayment,
-    handleRevenueSourceSelect,
-  } = useSfaForm1();
+  const { selectPaymentForEdit, resetPaymentForm } = useSfaForm1();
+
+  // useSfaOperations에서 제출 로직 가져오기
+  const { processPaymentOperation } = useSfaOperations();
 
   // useModal 훅 사용
   const {
@@ -63,20 +60,6 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
     () => getUniqueRevenueSources(form.data.sfaByPayments),
     [form.data.sfaByPayments],
   );
-
-  const { validatePaymentForm } = useFormValidationEdit(form.data);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const sfaId = data.id;
-
-    // 유효성 검사 수행
-    const isValid = validatePaymentForm(form.data.sfaByPayments);
-    if (!isValid) return;
-
-    await processPaymentSubmit('update', selectedPayment.id, sfaId);
-  };
-
   // 삭제 확인 모달 표시 처리
   const confirmDeletePayment = (paymentInfo) => {
     // 삭제 전 사용자 확인을 위한 모달 표시
@@ -112,23 +95,27 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
   // 결제 매출 정보 삭제
   const handleDeletePayment = async (paymentInfo) => {
     console.log(`>> handlepayment delete : `, paymentInfo);
-    // notification 실행
 
-    try {
-      const sfaId = data.id;
-      await processPaymentSubmit('delete', paymentInfo.documentId, sfaId);
+    const sfaId = data.id;
+    // 결제매출 삭제
+    const result = await processPaymentOperation(
+      'delete',
+      paymentInfo.documentId,
+    );
+
+    if (result?.success) {
+      // 성공 후 데이터 갱신 및 뷰 모드로 전환
+      actions.data.fetchSfaDetail(sfaId);
       // 성공 알림 표시
       openSuccessModal(
         '삭제 완료',
         '결제 매출 정보가 성공적으로 삭제되었습니다.',
       );
-    } catch (error) {
+    } else if (result?.error) {
       // 실패 알림 표시
       openErrorModal(
         '삭제 실패',
-        `결제 매출 정보 삭제 중 오류가 발생했습니다: ${
-          error.message || '알 수 없는 오류'
-        }`,
+        `결제 매출 정보 삭제 중 오류가 발생했습니다: ${result.error}`,
       );
     }
   };
@@ -155,87 +142,8 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
   console.log(`>>sfapaymentsection form.data : `, form.data);
   console.log(`controlmode ${controlMode}, feturemode ${featureMode}`);
 
-  // 수정 모드일 때 결제매출 선택 UI 렌더링
-  const renderPaymentSelection = () => {
-    if (controlMode === 'edit' && featureMode === 'editPayment') {
-      return (
-        <>
-          <h3 className="text-lg font-medium mb-3">
-            수정 결제매출 ID : {selectedPayment?.id || ''}
-          </h3>
-          <Form
-            onSubmit={handleSubmit}
-            className="space-y-6"
-            // 추가: method와 action 속성 명시적 지정
-            method="PUT"
-            action="#"
-          >
-            {/* 결제 매출 추가 */}
-            <div className="flex flex-col gap-2">
-              {form.data.sfaByPayments.map((payment, index) => (
-                <SalesAddByPayment
-                  key={`payment-${payment.id || index}`}
-                  payment={payment}
-                  index={index}
-                  isSameBilling={form.data.isSameBilling || false}
-                  onChange={handlePaymentChange}
-                  onRemove={handleRemovePayment}
-                  isSubmitting={isSubmitting}
-                  handleRevenueSourceSelect={handleRevenueSourceSelect}
-                  savedRevenueSources={uniqueRevenueSources}
-                  codebooks={paymentCodebooks}
-                  isLoadingCodebook={isLoadingCodebook}
-                />
-              ))}
-            </div>
-
-            {/* Submit Button */}
-            <Group>
-              {form.data.sfaByPayments.length !== 0 && (
-                <Group
-                  direction="horizontal"
-                  spacing="md"
-                  className="pt-4 border-t border-gray-200"
-                >
-                  <Button
-                    type="button"
-                    variant="primary"
-                    disabled={isSubmitting}
-                    className="w-[120px] h-8 text-base font-medium bg-indigo-500 hover:bg-fuchsia-500"
-                    onClick={handleEditCancel}
-                  >
-                    취소
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    disabled={isSubmitting}
-                    className="w-[120px] h-8 text-base font-medium bg-indigo-500 hover:bg-fuchsia-500"
-                    onClick={(e) => {
-                      // 버튼 클릭 시에도 이벤트 전파 방지
-                      e.preventDefault();
-                      handleSubmit(e);
-                    }}
-                  >
-                    {isSubmitting
-                      ? '처리중...'
-                      : featureMode === 'addPayment'
-                      ? '저장'
-                      : '수정'}
-                  </Button>
-                </Group>
-              )}
-            </Group>
-          </Form>
-        </>
-      );
-    }
-    return null;
-  };
-
   return (
     <>
-      {/* {renderPaymentSelection()} */}
       <div className="space-y-6">
         {/* 매출 내역 테이블 */}
         <SfaDetailPaymentTable

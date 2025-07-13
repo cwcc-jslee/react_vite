@@ -153,7 +153,15 @@ export const useFormValidation = (formData) => {
       const paymentErrors = [];
 
       Object.entries(PAYMENT_REQUIRED_FIELDS).forEach(([field, label]) => {
-        if (!payment[field]) paymentErrors.push(label);
+        const value = payment[field];
+        const isEmpty =
+          !value ||
+          (typeof value === 'object' && Object.keys(value).length === 0) ||
+          (Array.isArray(value) && value.length === 0);
+
+        if (isEmpty) {
+          paymentErrors.push(label);
+        }
       });
 
       if (paymentErrors.length > 0) {

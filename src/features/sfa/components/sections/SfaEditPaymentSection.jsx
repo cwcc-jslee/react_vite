@@ -7,9 +7,11 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useFormValidation } from '../../hooks/useFormValidation.js';
 import { useSfaForm1 } from '../../hooks/useSfaForm1.js';
 import { useSfaStore } from '../../hooks/useSfaStore.js';
+import { useSfaOperations } from '../../hooks/useSfaSubmit.js';
 import SalesAddByPayment from '../elements/SalesAddByPayment.jsx';
 import { useCodebook } from '../../../../shared/hooks/useCodebook';
 import { getUniqueRevenueSources } from '../../utils/transformUtils';
+import { useUiStore } from '../../../../shared/hooks/useUiStore';
 import {
   Form,
   Group,
@@ -25,8 +27,14 @@ const SfaEditPaymentSection = ({ data, controlMode, featureMode }) => {
   const errors = form.errors || {};
   const isSubmitting = form.isSubmitting;
 
+  // useUiStore에서 uiActions 가져오기
+  const { actions: uiActions } = useUiStore();
+
   // useSfaForm1에서 필요한 핸들러들 가져오기
   const { validateForm, handleAddPayment } = useSfaForm1();
+
+  // useSfaOperations에서 제출 로직 가져오기
+  const { processPaymentOperation } = useSfaOperations();
 
   // 결제구분, 매출확률 codebook
   const {
@@ -114,17 +122,41 @@ const SfaEditPaymentSection = ({ data, controlMode, featureMode }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const sfaId = data.id;
-    console.log(`***** 기존 결제매출 : `, form.data.sfaByPayments);
-    console.log(`***** 초안 결제매출 : `, form.data.sfaDraftPayments);
-    console.log(`***** sfaId : `, sfaId);
 
     // 초안 결제매출만 유효성 검사
     const isValid = validatePaymentForm(form.data.sfaDraftPayments || []);
     if (!isValid) return;
 
-    // processPaymentSubmit 함수는 우선 비활성화
-    // await processPaymentSubmit('create', sfaId, sfaId);
-    console.log('processPaymentSubmit 비활성화 - 나중에 구현 예정');
+    // featureMode에 따른 processMode 결정 (명시적 정의만 처리)
+    let processMode;
+    if (featureMode === 'editPayment') {
+      processMode = 'update';
+    } else if (featureMode === 'addPayment') {
+      processMode = 'add';
+    } else {
+      console.warn('지원하지 않는 featureMode:', featureMode);
+      return;
+    }
+
+    const result = await processPaymentOperation(processMode, sfaId);
+
+    if (result?.success) {
+      // 성공 후 데이터 갱신 및 뷰 모드로 전환
+      const resultAction = await actions.data.fetchSfaDetail(sfaId);
+
+      // fetchSfaDetail이 성공하면 drawer를 view 모드로 전환
+      if (resultAction.type.endsWith('/fulfilled')) {
+        uiActions.drawer.open({
+          mode: 'view',
+          data: resultAction.payload,
+        });
+      }
+
+      // sfaDraftPayments 폼 초기화
+      resetPaymentForm();
+    } else if (result?.error) {
+      console.error('결제매출 추가 실패:', result.error);
+    }
   };
 
   const handleCancle = async () => {
@@ -159,7 +191,7 @@ const SfaEditPaymentSection = ({ data, controlMode, featureMode }) => {
       return (
         <div>
           <h3 className="text-lg font-medium mb-3">
-            수정 결제매출 ID : {form.selectedPaymentIds?.id}
+            수정 결제매출 ID : {form.data?.sfaDraftPayments[0]?.id || ''}
           </h3>
         </div>
       );

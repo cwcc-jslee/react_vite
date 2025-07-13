@@ -7,7 +7,7 @@ import SalesAddByPayment from '../elements/SalesAddByPayment.jsx';
 import RevenueSource from '../elements/RevenueSource.jsx';
 import { useSfaForm1 } from '../../hooks/useSfaForm1.js';
 import { useSfaStore } from '../../hooks/useSfaStore.js';
-import { useSfaSubmit } from '../../hooks/useSfaSubmit.js';
+import { useSfaOperations } from '../../hooks/useSfaSubmit.js';
 import useModal from '@shared/hooks/useModal.js';
 import ModalRenderer from '@shared/components/ui/modal/ModalRenderer.jsx';
 import {
@@ -63,8 +63,8 @@ const SfaAddForm = () => {
     checkAmounts,
   } = useSfaForm1();
 
-  // useSfaSubmit에서 제출 로직 가져오기
-  const { handleFormSubmit } = useSfaSubmit();
+  // useSfaOperations에서 제출 로직 가져오기
+  const { createSfa } = useSfaOperations();
 
   // useModal 훅 사용
   const { modalState, openModal, closeModal, handleConfirm } = useModal();
@@ -100,7 +100,7 @@ const SfaAddForm = () => {
       // 금액 불일치 모달 열기
       openAmountConfirmModal();
     } else {
-      await handleFormSubmit(form.data);
+      await createSfa(form.data);
     }
   };
 
@@ -127,7 +127,7 @@ const SfaAddForm = () => {
       message,
       { isProject: form.data.isProject },
       async (data) => {
-        await handleFormSubmit(form.data);
+        await createSfa(form.data);
       },
     );
   };

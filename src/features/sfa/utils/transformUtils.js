@@ -124,7 +124,7 @@ export const transformToDBFields = {
         return JSON.stringify(config);
       })(),
       profit_amount: Math.floor(parseNumber(payment.profitAmount)),
-      scheduled_date: payment.scheduledDate || null,
+      scheduled_date: toDate(payment.scheduledDate),
       recognition_date: payment.recognitionDate,
       payment_label: payment.paymentLabel,
       memo: payment.memo,
@@ -167,8 +167,9 @@ export const transformToDBFields = {
         return JSON.stringify(config);
       })(),
       profit_amount: Math.floor(parseNumber(payment.profitAmount)),
-      scheduled_date: payment.scheduledDate || null,
+      scheduled_date: toDate(payment.scheduledDate),
       recognition_date: payment.recognitionDate,
+      payment_label: payment.paymentLabel,
       memo: payment.memo,
       // 추가 필드가 있다면 여기에 작성
     };

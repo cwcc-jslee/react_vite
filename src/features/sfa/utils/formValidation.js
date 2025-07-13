@@ -60,12 +60,12 @@ const validateBasicInfo = (formData) => {
 const validateSalesItems = (formData) => {
   const errors = [];
 
-  if (formData.salesByItems.length === 0) {
+  if (formData.sfaByItems.length === 0) {
     errors.push(ERROR_MESSAGES.MIN_SALES_ITEMS);
     return errors;
   }
 
-  formData.salesByItems.forEach((item, index) => {
+  formData.sfaByItems.forEach((item, index) => {
     const missingFields = [];
     if (!item.itemName) missingFields.push('매출품목');
     if (!item.teamName) missingFields.push('사업부');
@@ -98,15 +98,15 @@ const validatePaymentMargin = (payment, index, errors) => {
   }
 };
 
-const validatePayments = (salesByPayments) => {
+const validatePayments = (sfaByPayments) => {
   const errors = [];
 
-  if (!salesByPayments || salesByPayments.length === 0) {
+  if (!sfaByPayments || sfaByPayments.length === 0) {
     errors.push('결제 매출 정보가 필요합니다.');
     return errors;
   }
 
-  salesByPayments.forEach((payment, index) => {
+  sfaByPayments.forEach((payment, index) => {
     // revenueSource 필드 검증
     if (
       !payment.revenueSource ||
@@ -124,7 +124,7 @@ const validatePayments = (salesByPayments) => {
     }
 
     // 매출액 검증
-    if (!payment.amount || payment.amount === '0') {
+    if (!payment.amount || payment.amount.trim() === '') {
       errors.push(`${index + 1}번째 결제 매출의 매출액을 입력해주세요.`);
     }
 
@@ -134,9 +134,9 @@ const validatePayments = (salesByPayments) => {
     }
 
     // 결제일자 검증
-    if (!payment.scheduledDate) {
-      errors.push(`${index + 1}번째 결제 매출의 결제일자를 선택해주세요.`);
-    }
+    // if (!payment.scheduledDate) {
+    //   errors.push(`${index + 1}번째 결제 매출의 결제일자를 선택해주세요.`);
+    // }
 
     // 매출확률 검증
     if (!payment.probability) {
@@ -177,7 +177,7 @@ const validatePayments = (salesByPayments) => {
 export const validateForm = (formData) => {
   const errors = {
     [ERROR_GROUPS.BASIC_INFO]: validateBasicInfo(formData),
-    [ERROR_GROUPS.PAYMENTS]: validatePayments(formData.salesByPayments),
+    [ERROR_GROUPS.PAYMENTS]: validatePayments(formData.sfaByPayments),
     [ERROR_GROUPS.SALES_ITEMS]: validateSalesItems(formData),
   };
 

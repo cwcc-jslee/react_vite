@@ -1,8 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { apiCommon } from '../../../shared/api/apiCommon';
-import { sfaSubmitService } from '../services/sfaSubmitService';
-import { notification } from '../../../shared/services/notification';
-import { sfaApi } from '../api/sfaApi';
 import { useUiStore } from '../../../shared/hooks/useUiStore';
 import { useSfaStore } from './useSfaStore';
 import {
@@ -293,6 +290,7 @@ export const useSfaForm1 = () => {
             payment.profitConfig?.marginProfitValue?.toString() || '',
           recognitionDate: payment.recognitionDate || '',
           scheduledDate: payment.scheduledDate || '',
+          paymentLabel: payment.paymentLabel || '',
           memo: payment.memo || '',
         };
 
@@ -306,63 +304,6 @@ export const useSfaForm1 = () => {
   const resetPaymentForm = useCallback(() => {
     actions.form.updateField('sfaByPayments', []);
   }, [actions.form]);
-
-  const processPaymentSubmit = useCallback(
-    async (processMode, targetId, sfaId, formData) => {
-      try {
-        actions.form.setSubmitting(true);
-        let response;
-        let actionDescription;
-
-        switch (processMode) {
-          case 'create':
-            response = await sfaSubmitService.addSfaPayment(
-              targetId,
-              formData.sfaByPayments,
-            );
-            actionDescription = '등록';
-            break;
-          case 'update':
-            response = await sfaSubmitService.updateSfaPayment(
-              targetId,
-              formData.sfaByPayments[0],
-            );
-            actionDescription = '수정';
-            break;
-          case 'delete':
-            response = await sfaSubmitService.deleteSfaPayment(targetId);
-            actionDescription = '삭제';
-            break;
-          default:
-            throw new Error('잘못된 처리 모드입니다.');
-        }
-
-        notification.success({
-          message: '저장 성공',
-          description: `성공적으로 ${actionDescription}되었습니다.`,
-        });
-
-        const updateData = await sfaApi.getSfaDetail(sfaId);
-        uiActions.drawer.update({
-          controlMode: 'view',
-          data: updateData.data[0],
-        });
-      } catch (error) {
-        const errorMessage = error?.message || '저장 중 오류가 발생했습니다.';
-        actions.form.setErrors({
-          ...(form.errors || {}),
-          submit: errorMessage,
-        });
-        notification.error({
-          message: '저장 실패',
-          description: errorMessage,
-        });
-      } finally {
-        actions.form.setSubmitting(false);
-      }
-    },
-    [actions.form, uiActions.drawer],
-  );
 
   // === 검증 함수들 ===
   const validateFormData = useCallback((formData, hasPartner) => {
@@ -408,9 +349,6 @@ export const useSfaForm1 = () => {
     // 결제매출 수정 관련
     selectPaymentForEdit,
     resetPaymentForm,
-
-    // 제출 로직
-    processPaymentSubmit,
 
     // 검증 함수
     validateForm: validateFormData,
