@@ -6,6 +6,7 @@ import { useSfa } from '../context/SfaProvider';
 import { useSfaStore } from './useSfaStore';
 import { useUiStore } from '../../../shared/hooks/useUiStore';
 import { convertKeysToSnakeCase } from '../../../shared/utils/transformUtils';
+import { transformToDBFields } from '../utils/transformUtils';
 
 /**
  * 편집 가능한 필드의 상태와 동작을 관리하는 커스텀 훅
@@ -137,7 +138,7 @@ export const useEditableField = (initialData) => {
       return;
     }
     const sfaId = initialData.documentId;
-    const formData = { [editField]: newValue };
+    let formData = { [editField]: newValue };
 
     try {
       console.log('=== SFA 편집 저장 시작 ===');
@@ -148,13 +149,32 @@ export const useEditableField = (initialData) => {
       console.log('폼 데이터:', formData);
       console.log('===========================');
 
-      // 일반 필드 처리
-      // 유효성 검증
-      // 키 정보 스네이크케이스로 변환
-      const snakeCaseFormData = convertKeysToSnakeCase(formData);
-      // 값이 같으면 업데이트 하지 않음
-      if (currentValue !== newValue) {
-        await sfaSubmitService.updateSfaBase(sfaId, snakeCaseFormData);
+      // sfaByItems 필드 특별 처리
+      if (editField === 'sfaByItems') {
+        // 사업부 매출 데이터를 DB 형식으로 변환
+        const transformedItems =
+          transformToDBFields.transformSalesByItems(newValue);
+        formData = {
+          sfa_by_items: transformedItems, // snake_case 키 직접 사용
+        };
+        console.log('=== 사업부 매출 데이터 변환 ===');
+        console.log('원본 데이터:', newValue);
+        console.log('변환된 데이터:', transformedItems);
+        console.log('최종 폼 데이터:', formData);
+        console.log('===============================');
+      } else {
+        // 일반 필드 처리 - 키 정보 스네이크케이스로 변환
+        formData = convertKeysToSnakeCase(formData);
+      }
+
+      // 값이 같으면 업데이트 하지 않음 (sfaByItems는 배열이므로 JSON 비교)
+      const valuesEqual =
+        editField === 'sfaByItems'
+          ? JSON.stringify(currentValue) === JSON.stringify(newValue)
+          : currentValue === newValue;
+
+      if (!valuesEqual) {
+        await sfaSubmitService.updateSfaBase(sfaId, formData);
       } else {
         // 에러 표시 값 동일
         console.log('=== 값 동일로 업데이트 생략 ===');

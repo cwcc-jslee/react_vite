@@ -1,5 +1,5 @@
 // src/features/sfa/components/tables/EditableSfaDetail.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import * as Icons from 'lucide-react';
 import { CheckCircle, Building2 } from 'lucide-react';
 import { CustomerSearchInput } from '../../../../shared/components/customer/CustomerSearchInput';
@@ -18,6 +18,11 @@ import {
   formatSfaByItems,
 } from '../../utils/displayUtils';
 import { useCodebook } from '../../../../shared/hooks/useCodebook';
+import { useSfaStore } from '../../hooks/useSfaStore';
+import { useUiStore } from '../../../../shared/hooks/useUiStore';
+import { transformToDBFields } from '../../utils/transformUtils';
+import { sfaSubmitService } from '../../services/sfaSubmitService';
+import SfaEditItemForm from '../forms/SfaEditItemForm';
 
 /**
  * 수정 가능한 SFA 상세 정보 컴포넌트
@@ -34,15 +39,19 @@ const EditableSfaDetail = ({ data, featureMode }) => {
   const { data: codebooks, isLoading: isLoadingCodebook } = useCodebook([
     'sfaSalesType',
     'sfaClassification',
+    'sfaItemType', // 매출품목 타입 추가
   ]);
+
+  // SFA Store actions 가져오기
+  const { form, actions } = useSfaStore();
+
+  // UI Store actions 가져오기
+  const { actions: uiActions } = useUiStore();
 
   const { editField } = editState;
 
-  console.log(`**** EditableSfaDetail's Data : ${data.documentId}`);
-  console.log('=== EditableSfaDetail 데이터 구조 ===');
-  console.log('전체 data:', data);
-  console.log('codebooks:', codebooks);
-  console.log('==================================');
+  // 사업부 매출 편집 상태 관리
+  const [isSfaByItemsEditing, setIsSfaByItemsEditing] = useState(false);
 
   // 결제 매출/이익 합계 계산
   const paymentTotals = calculatePaymentTotals(data.sfaByPayments);
@@ -180,11 +189,110 @@ const EditableSfaDetail = ({ data, featureMode }) => {
       },
       editable: true,
     },
+    sfaByItems: {
+      type: 'sfaByItems',
+      label: '사업부 매출',
+      value: data?.sfaByItems,
+      getValue: (data) => {
+        const value = data?.sfaByItems || [];
+        console.log('sfaByItems getValue:', value);
+        return value;
+      },
+      getDisplayValue: (data) => formatSfaByItems(data?.sfaByItems),
+      editable: true,
+    },
   };
 
   // 고객유형 변경 핸들러
   const handleCustomerTypeChange = (isSameBilling) => {
     handleValueChange(isSameBilling);
+  };
+
+  // 사업부 매출 편집 시작
+  const startEditingSfaByItems = () => {
+    // 기존 sfaByItems 데이터를 sfaDraftItems로 복사
+    const draftItems = (data?.sfaByItems || []).map((item) => ({
+      id: item.id,
+      itemId: item.itemId,
+      itemName: item.itemName,
+      teamId: item.teamId,
+      teamName: item.teamName,
+      amount: item.amount ?? item.itemPrice ?? '',
+    }));
+
+    // sfaDraftItems에 데이터 설정
+    actions.form.updateField('sfaDraftItems', draftItems);
+    setIsSfaByItemsEditing(true);
+  };
+
+  // 사업부 매출 편집 저장
+  const saveSfaByItems = async (updatedItems) => {
+    console.log('>>>>> saveSfaByItems: ', updatedItems);
+
+    try {
+      const sfaId = data.documentId;
+      const sfaByItemsField = editableFields.sfaByItems;
+      const currentValue = sfaByItemsField.getValue(data);
+
+      console.log('=== 사업부 매출 저장 시작 ===');
+      console.log('SFA ID:', sfaId);
+      console.log('현재 값:', currentValue);
+      console.log('새로운 값:', updatedItems);
+
+      // 값이 같은지 비교 (JSON 문자열로 비교)
+      const valuesEqual =
+        JSON.stringify(currentValue) === JSON.stringify(updatedItems);
+
+      if (!valuesEqual) {
+        // 사업부 매출 데이터를 DB 형식으로 변환
+        const transformedItems =
+          transformToDBFields.transformSalesByItems(updatedItems);
+        const formData = {
+          sfa_by_items: transformedItems,
+        };
+
+        console.log('변환된 데이터:', transformedItems);
+        console.log('폼 데이터:', formData);
+
+        // 서버 업데이트
+        await sfaSubmitService.updateSfaBase(sfaId, formData);
+
+        // 최신 데이터 조회 및 UI 업데이트
+        const updateAction = await actions.data.fetchSfaDetail(data.id);
+
+        if (updateAction.meta.requestStatus === 'fulfilled') {
+          const updatedData = updateAction.payload;
+
+          uiActions.drawer.update({
+            mode: 'view',
+            featureMode: null,
+            data: updatedData,
+          });
+
+          console.log('=== 사업부 매출 저장 성공 ===');
+        }
+      } else {
+        console.log('=== 값 동일로 업데이트 생략 ===');
+      }
+
+      // 저장 후 sfaDraftItems 초기화 및 편집 모드 종료
+      actions.form.updateField('sfaDraftItems', []);
+      setIsSfaByItemsEditing(false);
+    } catch (error) {
+      console.error('사업부 매출 저장 실패:', error);
+      // 에러 발생 시 편집 상태 초기화
+      actions.form.updateField('sfaDraftItems', []);
+      setIsSfaByItemsEditing(false);
+    }
+  };
+
+  // 사업부 매출 편집 취소
+  const cancelSfaByItems = () => {
+    // 취소 시 sfaDraftItems 초기화
+    actions.form.updateField('sfaDraftItems', []);
+    setIsSfaByItemsEditing(false);
+    // useEditableField의 편집 상태도 초기화
+    cancelEditing();
   };
 
   // 편집 버튼 렌더링
@@ -293,6 +401,43 @@ const EditableSfaDetail = ({ data, featureMode }) => {
               <button
                 type="button"
                 onClick={() => startEditing(fieldName, editableFields)}
+                className="invisible group-hover:visible flex items-center justify-center 
+                          h-7 w-7 rounded-sm hover:bg-blue-100"
+              >
+                <Icons.Edit
+                  className="h-4 w-4 text-blue-600"
+                  strokeWidth={2.5}
+                />
+              </button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // 사업부 매출 필드 처리
+    if (fieldName === 'sfaByItems') {
+      return (
+        <div className="group relative flex items-center justify-between w-full min-h-8">
+          {isEditing ? (
+            <SfaEditItemForm
+              data={form.data.sfaDraftItems} // sfaDraftItems 사용
+              onSave={saveSfaByItems}
+              onCancel={cancelSfaByItems}
+              codebooks={codebooks}
+              isLoadingCodebook={isLoadingCodebook}
+              isEditing={isSfaByItemsEditing}
+              sfaClassificationId={data?.sfaClassification?.id}
+            />
+          ) : (
+            <div className="flex items-center w-full min-h-8">
+              <span className="flex-grow">{content}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  startEditingSfaByItems();
+                  startEditing(fieldName, editableFields);
+                }}
                 className="invisible group-hover:visible flex items-center justify-center 
                           h-7 w-7 rounded-sm hover:bg-blue-100"
               >
@@ -481,12 +626,19 @@ const EditableSfaDetail = ({ data, featureMode }) => {
         <DescriptionItem></DescriptionItem>
       </DescriptionRow>
 
-      {/* 5행: 비고 */}
+      {/* 5행: 사업부 매출 */}
       <DescriptionRow>
         <DescriptionItem label width="w-[140px]">
           사업부 매출
         </DescriptionItem>
-        <DescriptionItem>{renderSfaByItems(data.sfaByItems)}</DescriptionItem>
+        <DescriptionItem className="px-0.5">
+          {featureMode !== 'editBase'
+            ? renderSfaByItems(data.sfaByItems)
+            : renderEditableField(
+                'sfaByItems',
+                renderSfaByItems(data.sfaByItems),
+              )}
+        </DescriptionItem>
       </DescriptionRow>
 
       {/* 6행: 비고 */}

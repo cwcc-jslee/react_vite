@@ -57,11 +57,14 @@ export const formatSfaByItems = (itemsData) => {
   return itemsData.map((item, index) => {
     const teamName = item.teamName || '-';
     const itemName = item.itemName || '-';
+
+    // amount 또는 itemPrice 사용, null/undefined/빈 문자열인 경우만 '-' 표시
+    const amount = item.amount ?? item.itemPrice;
     const price =
-      typeof item.itemPrice === 'number'
-        ? item.itemPrice.toLocaleString()
-        : '-';
-    const badgeText = `${teamName}/${itemName}/${price}`;
+      amount != null && amount !== '' ? Number(amount).toLocaleString() : '-';
+
+    // '항목명-팀명(가격)' 형태로 변경
+    const badgeText = `${itemName}-${teamName}(${price})`;
 
     return {
       key: index,

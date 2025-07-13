@@ -26,6 +26,7 @@ export const FORM_INITIAL_STATE = {
     customer: {},
     sfaByPayments: [],
     sfaByItems: [],
+    sfaDraftItems: [], // 편집 모드에서 사용하는 임시 사업부 매출 정보
     isProject: false,
     isSameBilling: true,
     sfaClassification: null,
