@@ -55,8 +55,8 @@ export const useFormValidation = (initialErrors = {}) => {
       // 최소 길이 검사
       if (field === 'name' && value) {
         const trimmedValue = value.trim();
-        if (trimmedValue.length < 3) {
-          setFieldError(field, '고객명은 최소 3자 이상 입력해야 합니다.');
+        if (trimmedValue.length < 2) {
+          setFieldError(field, '고객명은 최소 2자 이상 입력해야 합니다.');
           return false;
         }
       }
@@ -115,8 +115,8 @@ export const useFormValidation = (initialErrors = {}) => {
       isValid = false;
     } else {
       const trimmedName = formData.name.trim();
-      if (trimmedName.length < 3) {
-        errors.name = '고객명은 최소 3자 이상 입력해야 합니다.';
+      if (trimmedName.length < 2) {
+        errors.name = '고객명은 최소 2자 이상 입력해야 합니다.';
         isValid = false;
       }
     }
@@ -167,8 +167,8 @@ export const useFormValidation = (initialErrors = {}) => {
       // 추가 필드별 검증 로직
       if (field === 'name' && formData[field]) {
         const trimmedValue = formData[field].trim();
-        if (trimmedValue.length < 3) {
-          errors[field] = '고객명은 최소 3자 이상 입력해야 합니다.';
+        if (trimmedValue.length < 2) {
+          errors[field] = '고객명은 최소 2자 이상 입력해야 합니다.';
           isValid = false;
           return;
         }
@@ -206,8 +206,8 @@ export const useFormValidation = (initialErrors = {}) => {
         // 추가 필드별 검증 로직
         if (editedData?.name) {
           const trimmedValue = editedData.name.trim();
-          if (trimmedValue.length < 3) {
-            errors.name = '고객명은 최소 3자 이상 입력해야 합니다.';
+          if (trimmedValue.length < 2) {
+            errors.name = '고객명은 최소 2자 이상 입력해야 합니다.';
             isValid = false;
           }
         }

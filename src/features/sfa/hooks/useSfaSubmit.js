@@ -47,6 +47,7 @@ export const useSfaOperations = () => {
           sfaByItems = [],
           itemAmount,
           paymentAmount,
+          sfaDraftItems = [], // 삭제필요
           ...rawSfaData
         } = formData;
 
@@ -433,8 +434,97 @@ export const useSfaOperations = () => {
     ],
   );
 
+  // === 일괄 결제 업데이트 로직 ===
+  const bulkUpdatePayments = useCallback(async (paymentIds, updateData) => {
+    try {
+      console.log('🔧 [bulkUpdatePayments] 일괄 업데이트 시작:', {
+        paymentIds,
+        updateData,
+      });
+
+      // 각 결제 ID에 대해 개별 업데이트 API 호출 (병렬 처리)
+      const updatePromises = paymentIds.map(async (paymentId, index) => {
+        console.log(`🚀 [일괄 업데이트 ${index + 1}] 결제 ID: ${paymentId}`);
+        console.log(
+          `🚀 [일괄 업데이트 ${index + 1}] 업데이트 데이터:`,
+          updateData,
+        );
+
+        try {
+          const response = await apiService.put(
+            `/sfa-by-payment-withhistory/${paymentId}`,
+            updateData,
+          );
+          console.log(
+            `✅ [일괄 업데이트 ${index + 1}] 성공 응답:`,
+            response.data,
+          );
+          return { paymentId, success: true, data: response.data };
+        } catch (error) {
+          console.error(`❌ [일괄 업데이트 ${index + 1}] 실패:`, error);
+          console.error(
+            `❌ [일괄 업데이트 ${index + 1}] 오류 상세:`,
+            error.response?.data,
+          );
+          return { paymentId, success: false, error: error.message };
+        }
+      });
+
+      // 모든 업데이트 요청을 병렬로 처리
+      const results = await Promise.all(updatePromises);
+
+      // 성공/실패 결과 분석
+      const successResults = results.filter((result) => result.success);
+      const failedResults = results.filter((result) => !result.success);
+
+      console.log('🔧 [bulkUpdatePayments] 일괄 업데이트 완료:', {
+        total: results.length,
+        success: successResults.length,
+        failed: failedResults.length,
+        results,
+      });
+
+      // 결과에 따른 알림 처리
+      if (failedResults.length === 0) {
+        // 모든 업데이트 성공
+        notification.success({
+          message: '일괄 업데이트 성공',
+          description: `${successResults.length}개 항목이 성공적으로 업데이트되었습니다.`,
+        });
+      } else if (successResults.length === 0) {
+        // 모든 업데이트 실패
+        throw new Error('모든 항목의 업데이트에 실패했습니다.');
+      } else {
+        // 일부 성공, 일부 실패
+        notification.warning({
+          message: '일괄 업데이트 부분 완료',
+          description: `${successResults.length}개 항목은 성공, ${failedResults.length}개 항목은 실패했습니다.`,
+        });
+      }
+
+      return {
+        success: true,
+        results,
+        successCount: successResults.length,
+        failedCount: failedResults.length,
+      };
+    } catch (error) {
+      console.error('Bulk update error:', error);
+      const errorMessage =
+        error?.message || '일괄 업데이트 중 오류가 발생했습니다.';
+
+      notification.error({
+        message: '일괄 업데이트 실패',
+        description: errorMessage,
+      });
+
+      return { success: false, error: errorMessage };
+    }
+  }, []);
+
   return {
     createSfa,
     processPaymentOperation,
+    bulkUpdatePayments,
   };
 };

@@ -23,6 +23,7 @@ export const DEFAULT_FILTERS = {
     {
       task_schedule_type: { $eq: 'scheduled' },
     },
+    { task_progress: { $ne: 97 } },
   ],
 };
 
