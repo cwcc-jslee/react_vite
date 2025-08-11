@@ -21,7 +21,14 @@ export const buildProjectTaskListQuery = (params) => {
     fields: ['*'],
     populate: {
       project: {
-        fields: ['name', 'work_type'],
+        fields: [
+          'name',
+          'work_type',
+          'plan_start_date',
+          'plan_end_date',
+          'start_date',
+          'end_date',
+        ],
         populate: {
           sfa: {
             fields: ['name'],

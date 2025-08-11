@@ -27,6 +27,10 @@ const TodoSection = ({ tasks, activeMenu }) => {
 
   // 필터 상태 관리
   const [taskDateFilter, setTaskDateFilter] = useState('started');
+  const [taskTypeFilter, setTaskTypeFilter] = useState({
+    scheduled: true, // 기본값: scheduled만 체크
+    ongoing: false,
+  });
 
   // 날짜 필터 토글 핸들러
   const toggleTaskDateFilter = useCallback(() => {
@@ -34,27 +38,73 @@ const TodoSection = ({ tasks, activeMenu }) => {
     setTaskDateFilter(newFilter);
   }, [taskDateFilter]);
 
+  // 작업 유형 필터 핸들러
+  const handleTaskTypeChange = useCallback((type) => {
+    setTaskTypeFilter((prev) => ({
+      ...prev,
+      [type]: !prev[type],
+    }));
+  }, []);
+
   // 필터링된 작업 목록
   const filteredTasks = useCallback(() => {
     if (!tasks) return [];
 
-    // activeMenu가 'todayTasks'가 아닌 경우 원본 tasks 반환
-    if (activeMenu !== 'todayTasks') {
-      return tasks;
+    console.log('**** tasks ****', tasks);
+
+    let filteredByType = tasks;
+
+    // 1. 작업 유형별 필터링
+    if (!taskTypeFilter.scheduled && !taskTypeFilter.ongoing) {
+      // 둘 다 체크 해제된 경우 빈 배열 반환
+      return [];
     }
 
+    if (!taskTypeFilter.scheduled || !taskTypeFilter.ongoing) {
+      // 하나만 선택된 경우
+      filteredByType = tasks.filter((task) => {
+        if (taskTypeFilter.scheduled && !taskTypeFilter.ongoing) {
+          return task.taskScheduleType === 'scheduled';
+        }
+        if (taskTypeFilter.ongoing && !taskTypeFilter.scheduled) {
+          return task.taskScheduleType === 'ongoing';
+        }
+        return true;
+      });
+    }
+
+    // activeMenu가 'todayTasks'가 아닌 경우 작업 유형 필터만 적용
+    if (activeMenu !== 'todayTasks') {
+      return filteredByType;
+    }
+
+    // 2. 날짜 필터링 (todayTasks인 경우만)
     const today = dayjs().startOf('day');
 
-    return tasks.filter((task) => {
-      const planStartDate = dayjs(task.planStartDate).startOf('day');
+    return filteredByType.filter((task) => {
+      let startDate;
+
+      if (task.taskScheduleType === 'scheduled') {
+        // scheduled: task의 planStartDate 기준
+        startDate = dayjs(task.planStartDate).startOf('day');
+      } else if (task.taskScheduleType === 'ongoing') {
+        // ongoing: project의 startDate 기준
+        startDate = dayjs(task.project?.startDate).startOf('day');
+      } else {
+        return true; // 알 수 없는 타입은 항상 표시
+      }
+
+      if (!startDate.isValid()) {
+        return true; // 날짜가 없는 경우 항상 표시
+      }
 
       if (taskDateFilter === 'started') {
-        return planStartDate.isBefore(today) || planStartDate.isSame(today);
+        return startDate.isBefore(today) || startDate.isSame(today);
       } else {
-        return planStartDate.isAfter(today);
+        return startDate.isAfter(today);
       }
     });
-  }, [tasks, taskDateFilter, activeMenu]);
+  }, [tasks, taskDateFilter, taskTypeFilter, activeMenu]);
 
   // 패널 관련 함수
   // 패널 헤더에 추가할 액션 버튼 - 패널 타입에 따라 다르게 설정
@@ -185,6 +235,41 @@ const TodoSection = ({ tasks, activeMenu }) => {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">할 일 목록</h2>
           <div className="flex space-x-4">
+            {/* 작업 유형 필터 */}
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="scheduled-filter"
+                  checked={taskTypeFilter.scheduled}
+                  onChange={() => handleTaskTypeChange('scheduled')}
+                  className="mr-2 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                />
+                <label
+                  htmlFor="scheduled-filter"
+                  className="text-sm text-gray-700"
+                >
+                  scheduled
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="ongoing-filter"
+                  checked={taskTypeFilter.ongoing}
+                  onChange={() => handleTaskTypeChange('ongoing')}
+                  className="mr-2 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                />
+                <label
+                  htmlFor="ongoing-filter"
+                  className="text-sm text-gray-700"
+                >
+                  ongoing
+                </label>
+              </div>
+            </div>
+
+            {/* 날짜 필터 토글 */}
             {activeMenu !== 'searchTasks' && (
               <div className="flex items-center">
                 <Switch
@@ -204,6 +289,17 @@ const TodoSection = ({ tasks, activeMenu }) => {
         {process.env.NODE_ENV !== 'production' && (
           <div className="mb-4 p-2 bg-gray-100 text-xs">
             <div>총 작업: {tasks?.length || 0}</div>
+            <div>필터된 작업: {filteredTasks().length}</div>
+            <div>
+              scheduled:{' '}
+              {tasks?.filter((t) => t.taskScheduleType === 'scheduled')
+                .length || 0}
+            </div>
+            <div>
+              ongoing:{' '}
+              {tasks?.filter((t) => t.taskScheduleType === 'ongoing').length ||
+                0}
+            </div>
           </div>
         )}
 
@@ -221,9 +317,25 @@ const TodoSection = ({ tasks, activeMenu }) => {
           </div>
         ) : (
           <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
-            {taskDateFilter === 'started'
-              ? '시작된 작업이 없습니다.'
-              : '예정된 작업이 없습니다.'}
+            {(() => {
+              if (!taskTypeFilter.scheduled && !taskTypeFilter.ongoing) {
+                return '작업 유형을 선택해주세요.';
+              }
+
+              const selectedTypes = [];
+              if (taskTypeFilter.scheduled) selectedTypes.push('scheduled');
+              if (taskTypeFilter.ongoing) selectedTypes.push('ongoing');
+
+              const typeText = selectedTypes.join(', ');
+
+              if (activeMenu === 'todayTasks') {
+                return `${typeText} 작업 중 ${
+                  taskDateFilter === 'started' ? '시작된' : '예정된'
+                } 작업이 없습니다.`;
+              } else {
+                return `${typeText} 작업이 없습니다.`;
+              }
+            })()}
           </div>
         )}
       </div>

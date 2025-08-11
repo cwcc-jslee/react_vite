@@ -37,6 +37,15 @@ const TodoCard = ({
 
   // 일정 상태 계산 함수
   const getScheduleStatus = useMemo(() => {
+    // ongoing 타입인 경우 별도 처리
+    if (task.taskScheduleType === 'ongoing') {
+      return {
+        status: 'ongoing',
+        daysText: 'ongoing',
+        statusClass: 'text-purple-600 font-bold',
+      };
+    }
+
     // 오늘 날짜 (시간 제외)
     const today = dayjs().startOf('day');
 
@@ -83,7 +92,7 @@ const TodoCard = ({
         statusClass: 'text-green-600',
       };
     }
-  }, [task.endDate, task.planEndDate]);
+  }, [task.endDate, task.planEndDate, task.taskScheduleType]);
 
   // 우선순위 라벨 및 색상 설정
   const getPriorityBadge = (priority) => {
@@ -133,9 +142,9 @@ const TodoCard = ({
     // 선택된 상태일 때 다른 테두리 스타일 적용
     if (isSelected) return 'border-blue-500 border-2 shadow-lg';
 
-    if (isOngoing) return 'border-gray-200';
-
     switch (getScheduleStatus.status) {
+      case 'ongoing':
+        return 'border-purple-300 border-2';
       case 'delayed':
         return 'border-red-300 border-2';
       case 'today':
@@ -145,7 +154,7 @@ const TodoCard = ({
       default:
         return 'border-gray-200';
     }
-  }, [isOngoing, getScheduleStatus, isSelected]);
+  }, [getScheduleStatus, isSelected]);
 
   // 원형 진행률 컴포넌트
   const CircularProgress = ({ progress, revisionNumber }) => {
@@ -197,44 +206,49 @@ const TodoCard = ({
     >
       <div className="flex justify-between items-center mb-3">
         <div className="flex items-center">
-          {/* 일정 상태 배지 - 위치 이동 */}
-          {!isOngoing && (
-            <div className="mr-3">
-              <Badge
-                className={`px-2 py-1 rounded-md flex items-center ${
-                  getScheduleStatus.status === 'delayed'
-                    ? 'bg-red-400 text-red-800'
-                    : getScheduleStatus.status === 'today'
-                    ? 'bg-orange-400 text-orange-800'
-                    : getScheduleStatus.status === 'urgent'
-                    ? 'bg-amber-400 text-amber-800'
-                    : 'bg-green-400 text-green-800'
-                }`}
-              >
-                {getScheduleStatus.status === 'delayed' && (
-                  <FiAlertCircle className="mr-1" size={14} />
-                )}
-                {getScheduleStatus.status === 'today' && (
-                  <FiClock className="mr-1" size={14} />
-                )}
-                {getScheduleStatus.status === 'urgent' && (
-                  <FiClock className="mr-1" size={14} />
-                )}
-                {getScheduleStatus.status === 'normal' && (
-                  <FiCheckCircle className="mr-1" size={14} />
-                )}
-                <span>
-                  {getScheduleStatus.status === 'delayed'
-                    ? '지연'
-                    : getScheduleStatus.status === 'today'
-                    ? '오늘 마감'
-                    : getScheduleStatus.status === 'urgent'
-                    ? '임박'
-                    : '정상'}
-                </span>
-              </Badge>
-            </div>
-          )}
+          {/* 일정 상태 배지 */}
+          <div className="mr-3">
+            <Badge
+              className={`px-2 py-1 rounded-md flex items-center ${
+                getScheduleStatus.status === 'ongoing'
+                  ? 'bg-purple-400 text-purple-800'
+                  : getScheduleStatus.status === 'delayed'
+                  ? 'bg-red-400 text-red-800'
+                  : getScheduleStatus.status === 'today'
+                  ? 'bg-orange-400 text-orange-800'
+                  : getScheduleStatus.status === 'urgent'
+                  ? 'bg-amber-400 text-amber-800'
+                  : 'bg-green-400 text-green-800'
+              }`}
+            >
+              {getScheduleStatus.status === 'ongoing' && (
+                <FiClock className="mr-1" size={14} />
+              )}
+              {getScheduleStatus.status === 'delayed' && (
+                <FiAlertCircle className="mr-1" size={14} />
+              )}
+              {getScheduleStatus.status === 'today' && (
+                <FiClock className="mr-1" size={14} />
+              )}
+              {getScheduleStatus.status === 'urgent' && (
+                <FiClock className="mr-1" size={14} />
+              )}
+              {getScheduleStatus.status === 'normal' && (
+                <FiCheckCircle className="mr-1" size={14} />
+              )}
+              <span>
+                {getScheduleStatus.status === 'ongoing'
+                  ? 'ongoing'
+                  : getScheduleStatus.status === 'delayed'
+                  ? '지연'
+                  : getScheduleStatus.status === 'today'
+                  ? '오늘 마감'
+                  : getScheduleStatus.status === 'urgent'
+                  ? '임박'
+                  : '정상'}
+              </span>
+            </Badge>
+          </div>
           {/* 고객사 정보 추가 */}
           {task.project.sfa?.customer && (
             <Tag color="orange" className="mr-2">
@@ -333,17 +347,66 @@ const TodoCard = ({
         <div className="w-full md:w-1/4 mt-3 md:mt-0">
           <div className="flex flex-col">
             {isOngoing ? (
-              <div className="flex items-center mb-1">
-                <span className="text-sm inline-flex items-center text-amber-600">
-                  <FiClock className="mr-1" size={14} />
-                  schedule type ongoing
-                </span>
-              </div>
+              <>
+                <div className="flex items-center mb-1">
+                  <span className="text-sm font-medium text-gray-500 mr-2">
+                    프로젝트 시작일:
+                  </span>
+                  <span
+                    className={`text-sm inline-flex items-center ${
+                      task.project?.startDate
+                        ? 'text-gray-700'
+                        : 'text-gray-500 italic'
+                    }`}
+                  >
+                    <FiCalendar className="mr-1" size={14} />
+                    {formatDate(
+                      task.project?.startDate || task.project?.planStartDate,
+                    )}
+                    {!task.project?.startDate &&
+                      task.project?.planStartDate && (
+                        <span className="ml-1 text-xs text-gray-500">(예)</span>
+                      )}
+                  </span>
+                </div>
+                <div className="flex items-center mb-1">
+                  <span className="text-sm font-medium text-gray-500 mr-2">
+                    프로젝트 종료일:
+                  </span>
+                  <span
+                    className={`text-sm inline-flex items-center ${
+                      task.project?.endDate
+                        ? 'text-gray-700'
+                        : 'text-gray-500 italic'
+                    }`}
+                  >
+                    <FiCalendar className="mr-1" size={14} />
+                    {formatDate(
+                      task.project?.endDate || task.project?.planEndDate,
+                    )}
+                    {!task.project?.endDate && task.project?.planEndDate && (
+                      <span className="ml-1 text-xs text-gray-500">(예)</span>
+                    )}
+                  </span>
+                </div>
+                {/* 일정 상태 표시 */}
+                <div className="flex items-center">
+                  <span className="text-sm font-medium text-gray-500 mr-2">
+                    일정 상태:
+                  </span>
+                  <span
+                    className={`text-sm inline-flex items-center ${getScheduleStatus.statusClass}`}
+                  >
+                    <FiClock className="mr-1" size={16} />
+                    {getScheduleStatus.daysText}
+                  </span>
+                </div>
+              </>
             ) : (
               <>
                 <div className="flex items-center mb-1">
                   <span className="text-sm font-medium text-gray-500 mr-2">
-                    시작일:
+                    TASK 시작일:
                   </span>
                   <span
                     className={`text-sm inline-flex items-center ${
@@ -359,7 +422,7 @@ const TodoCard = ({
                 </div>
                 <div className="flex items-center mb-1">
                   <span className="text-sm font-medium text-gray-500 mr-2">
-                    종료일:
+                    TASK 종료일:
                   </span>
                   <span
                     className={`text-sm inline-flex items-center ${

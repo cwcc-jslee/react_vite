@@ -23,13 +23,18 @@ const TableHeaderCell = ({ children, onClick, colSpan, rowSpan }) => (
 );
 
 // Table Data Cell Component
-const TableDataCell = ({ children, onClick, isProbability }) => (
+const TableDataCell = ({ children, onClick, isProbability, isHighlighted }) => (
   <td
     onClick={onClick}
     className={`
       p-3 border border-gray-200 text-sm cursor-pointer
       ${isProbability ? 'bg-gray-50 text-center font-medium' : 'text-right'}
-      hover:bg-gray-100 transition-colors
+      ${
+        isHighlighted
+          ? 'bg-blue-50 font-semibold border-blue-300 hover:bg-blue-100'
+          : 'hover:bg-gray-100'
+      }
+      transition-colors
     `}
   >
     {children}
@@ -52,7 +57,7 @@ const SfaQuarterlyOverview = () => {
   const calculateMonths = () => {
     const baseDate = dayjs();
     const months = [];
-    for (let i = -1; i <= 2; i++) {
+    for (let i = -2; i <= 2; i++) {
       const currentDate = baseDate.add(i, 'month');
       months.push({
         month: currentDate.format('MM'),
@@ -152,7 +157,7 @@ const SfaQuarterlyOverview = () => {
       <tr key={prob}>
         <TableDataCell
           isProbability
-          onClick={() => handleCellClick(months[0], prob)}
+          onClick={() => handleCellClick(months[1], prob)}
         >
           {prob}
         </TableDataCell>
@@ -164,64 +169,47 @@ const SfaQuarterlyOverview = () => {
           };
 
           if (index === 0) {
-            // 전월
-            if (prob === 'confirmed') {
-              return (
-                <React.Fragment key={`${month.month}-prev`}>
-                  <TableDataCell onClick={() => handleCellClick(month, prob)}>
-                    {probData.revenue.toLocaleString()}
-                  </TableDataCell>
-                  <TableDataCell onClick={() => handleCellClick(month, prob)}>
-                    {probData.profit.toLocaleString()}
-                  </TableDataCell>
-                </React.Fragment>
-              );
-            }
+            // 전전월 (매출액만)
             return (
-              <React.Fragment key={`${month.month}-prev`}>
-                <TableDataCell onClick={() => handleCellClick(month, prob)}>
-                  -
-                </TableDataCell>
-                <TableDataCell onClick={() => handleCellClick(month, prob)}>
-                  -
-                </TableDataCell>
-              </React.Fragment>
+              <TableDataCell
+                key={`${month.month}-prev-prev`}
+                onClick={() => handleCellClick(month, prob)}
+              >
+                {probData.revenue.toLocaleString()}
+              </TableDataCell>
             );
           }
 
           if (index === 1) {
-            // 당월
-            if (prob === 'confirmed') {
-              return (
-                <React.Fragment key={`${month.month}-current`}>
-                  <TableDataCell onClick={() => handleCellClick(month, prob)}>
-                    -
-                  </TableDataCell>
-                  <TableDataCell onClick={() => handleCellClick(month, prob)}>
-                    -
-                  </TableDataCell>
-                  <TableDataCell onClick={() => handleCellClick(month, prob)}>
-                    {probData.revenue.toLocaleString()}
-                  </TableDataCell>
-                  <TableDataCell onClick={() => handleCellClick(month, prob)}>
-                    {probData.profit.toLocaleString()}
-                  </TableDataCell>
-                </React.Fragment>
-              );
-            }
+            // 전월
             return (
-              <React.Fragment key={`${month.month}-current`}>
+              <React.Fragment key={`${month.month}-prev`}>
                 <TableDataCell onClick={() => handleCellClick(month, prob)}>
                   {probData.revenue.toLocaleString()}
                 </TableDataCell>
                 <TableDataCell onClick={() => handleCellClick(month, prob)}>
                   {probData.profit.toLocaleString()}
                 </TableDataCell>
-                <TableDataCell onClick={() => handleCellClick(month, prob)}>
-                  -
+              </React.Fragment>
+            );
+          }
+
+          if (index === 2) {
+            // 당월
+            const isConfirmed = prob === 'confirmed';
+            return (
+              <React.Fragment key={`${month.month}-current`}>
+                <TableDataCell
+                  onClick={() => handleCellClick(month, prob)}
+                  isHighlighted={isConfirmed}
+                >
+                  {probData.revenue.toLocaleString()}
                 </TableDataCell>
-                <TableDataCell onClick={() => handleCellClick(month, prob)}>
-                  -
+                <TableDataCell
+                  onClick={() => handleCellClick(month, prob)}
+                  isHighlighted={isConfirmed}
+                >
+                  {probData.profit.toLocaleString()}
                 </TableDataCell>
               </React.Fragment>
             );
@@ -250,41 +238,46 @@ const SfaQuarterlyOverview = () => {
           <tr>
             <TableHeaderCell rowSpan="2">확률</TableHeaderCell>
             <TableHeaderCell
-              colSpan="2"
+              colSpan="1"
               onClick={() => handleHeaderClick(months[0])}
             >
-              전월({months[0].year}.{months[0].month})
+              전전월
             </TableHeaderCell>
             <TableHeaderCell
-              colSpan="4"
+              colSpan="2"
               onClick={() => handleHeaderClick(months[1])}
             >
-              당월({months[1].year}.{months[1].month})
+              전월({months[1].year}.{months[1].month})
             </TableHeaderCell>
             <TableHeaderCell
               colSpan="2"
               onClick={() => handleHeaderClick(months[2])}
             >
-              익월({months[2].year}.{months[2].month})
+              당월({months[2].year}.{months[2].month})
             </TableHeaderCell>
             <TableHeaderCell
               colSpan="2"
               onClick={() => handleHeaderClick(months[3])}
             >
-              익익월({months[3].year}.{months[3].month})
+              익월({months[3].year}.{months[3].month})
+            </TableHeaderCell>
+            <TableHeaderCell
+              colSpan="2"
+              onClick={() => handleHeaderClick(months[4])}
+            >
+              익익월({months[4].year}.{months[4].month})
             </TableHeaderCell>
           </tr>
           <tr>
-            <TableHeaderCell>실제매출액</TableHeaderCell>
-            <TableHeaderCell>실제매출이익</TableHeaderCell>
-            <TableHeaderCell>예상매출액</TableHeaderCell>
-            <TableHeaderCell>예상매출이익</TableHeaderCell>
-            <TableHeaderCell>실제매출액</TableHeaderCell>
-            <TableHeaderCell>실제매출이익</TableHeaderCell>
-            <TableHeaderCell>예상매출액</TableHeaderCell>
-            <TableHeaderCell>예상매출이익</TableHeaderCell>
-            <TableHeaderCell>예상매출액</TableHeaderCell>
-            <TableHeaderCell>예상매출이익</TableHeaderCell>
+            <TableHeaderCell>매출액</TableHeaderCell>
+            <TableHeaderCell>매출액</TableHeaderCell>
+            <TableHeaderCell>매출이익</TableHeaderCell>
+            <TableHeaderCell>매출액</TableHeaderCell>
+            <TableHeaderCell>매출이익</TableHeaderCell>
+            <TableHeaderCell>매출액</TableHeaderCell>
+            <TableHeaderCell>매출이익</TableHeaderCell>
+            <TableHeaderCell>매출액</TableHeaderCell>
+            <TableHeaderCell>매출이익</TableHeaderCell>
           </tr>
         </thead>
         <tbody>{probabilities.map(renderRow)}</tbody>

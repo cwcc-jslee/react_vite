@@ -8,7 +8,11 @@ export const buildSfaListQuery = (params) => {
   const { pagination = { start: 0, limit: 25 }, filters = {} } = params;
 
   // 기본 필터 구성
-  const baseFilters = [{ is_deleted: { $eq: false } }];
+  const baseFilters = [
+    { is_deleted: { $eq: false } },
+    { sfa: { is_deleted: { $eq: false } } },
+    { sfa: { is_failed: { $eq: false } } },
+  ];
 
   // 날짜 범위 필터 처리 (filters.dateRange에서 가져옴)
   if (filters.dateRange) {
@@ -128,9 +132,9 @@ export const buildSfaListQuery = (params) => {
           customer: {
             fields: ['name'],
           },
-          selling_partner: {
-            fields: ['name'],
-          },
+          // selling_partner: {
+          //   fields: ['name'],
+          // },
           sfa_classification: {
             fields: ['name'],
           },
