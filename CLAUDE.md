@@ -23,6 +23,13 @@ npm run preview  # Preview production build
 
 Note: The README mentions `npm start` and `npm test` but these scripts are not defined in package.json. Use the commands above instead.
 
+### Preview Server
+```bash
+npm run preview
+```
+- Runs on http://192.168.20.101:3001
+- Previews production build locally
+
 ## Architecture Overview
 
 ### Core Structure
@@ -65,6 +72,7 @@ src/features/{feature}/
 - `@` → `./src`
 - `@features` → `./src/features`
 - `@shared` → `./src/shared`
+- `@assets` → `./src/assets`
 - `@components` → `./src/shared/components`
 - `@utils` → `./src/shared/utils`
 - `@hooks` → `./src/shared/hooks`
@@ -87,11 +95,12 @@ src/features/{feature}/
 ### Additional Libraries
 - **React Router v7** for routing
 - **Chart.js + Recharts** for data visualization
-- **React DnD** for drag-and-drop functionality
+- **DnD Kit** (`@dnd-kit/core`, `@dnd-kit/sortable`) for drag-and-drop functionality
 - **DayJS** for date manipulation
 - **Axios** for HTTP requests
 - **Papa Parse** for CSV parsing
 - **React DatePicker** for date inputs
+- **XLSX** for Excel file handling
 
 ## Development Guidelines
 
@@ -129,7 +138,13 @@ src/features/{feature}/
 6. **Contact Management** (`features/contact`): Contact data with Excel import functionality
 
 ## API Integration
-- Base API URL: `http://192.168.20.101:1337`
+- Base API URL: `http://192.168.20.101:1337` (configurable via `VITE_API_URL`)
 - Configured with Vite proxy for `/api` routes
 - Uses Axios for HTTP requests
 - Authentication via JWT tokens stored in localStorage
+- Shared API utilities in `src/shared/api/`
+
+## Environment Configuration
+- **Development host/port**: Configurable via `VITE_HOST` and `VITE_PORT` environment variables
+- **Default development server**: http://192.168.20.101:3001
+- **API URL**: Configurable via `VITE_API_URL` environment variable
