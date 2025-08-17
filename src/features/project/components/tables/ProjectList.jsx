@@ -11,6 +11,7 @@ import Badge from '../../../../shared/components/ui/badge/Badge';
 const COLUMNS = [
   { key: 'id', title: 'ID', align: 'left' },
   { key: 'scheduleStatus', title: '일정상태', align: 'center' },
+  { key: 'taskStatus', title: 'TASK상태', align: 'center' },
   { key: 'customer', title: '고객사', align: 'left' },
   { key: 'name', title: '프로젝트명', align: 'left' },
   { key: 'progressStatus', title: '진행상태', align: 'center' },
@@ -118,6 +119,22 @@ const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
                 : item.scheduleStatus === 'imminent'
                 ? 'warning'
                 : item.scheduleStatus === 'delayed'
+                ? 'error'
+                : 'default'
+            }
+          />
+        ) : (
+          '-'
+        )}
+      </td>
+      <td className="px-3 py-2 text-center text-sm">
+        {item?.taskStatus ? (
+          <Badge
+            label={item.taskStatus}
+            color={
+              item.taskStatus === '정상'
+                ? 'success'
+                : item.taskStatus.startsWith('지연')
                 ? 'error'
                 : 'default'
             }

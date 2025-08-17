@@ -32,7 +32,7 @@ const ProjectContainer = () => {
 
   // 컴포넌트 마운트 시 프로젝트 목록 조회
   useEffect(() => {
-    // actions.getProjectList();
+    actions.getProjectList();
     // actions.getProjectsWithSchedule();
     actions.dashboard.fetchStatus(); // 상태와 진행률 데이터를 한 번에 가져옴
     actions.dashboard.fetchScheduleStatus();

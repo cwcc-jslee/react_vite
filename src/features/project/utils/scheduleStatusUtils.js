@@ -28,14 +28,31 @@ export function getScheduleStatus(item) {
   if (today.isAfter(plan, 'day')) return 'delayed';
   if (plan.diff(today, 'day') <= 3) return 'imminent';
 
-  if (Array.isArray(item.projectTasks)) {
-    for (const task of item.projectTasks) {
-      if (task.taskProgress?.name !== '100%') {
-        const taskEnd = dayjs(task.planEndDate);
-        if (today.isAfter(taskEnd, 'day')) return 'delayed';
-        if (taskEnd.diff(today, 'day') <= 3) return 'imminent';
+  return 'normal';
+}
+
+/**
+ * 프로젝트의 개별 태스크 일정 지연 상태를 계산하는 함수
+ * @param {object} item 프로젝트 객체
+ * @returns {string} 태스크 상태 ('정상', '지연-N')
+ */
+export function getTaskStatus(item) {
+  if (!item || !Array.isArray(item.projectTasks) || item.projectTasks.length === 0) {
+    return '정상';
+  }
+
+  const today = dayjs();
+  let delayedTaskCount = 0;
+
+  for (const task of item.projectTasks) {
+    // 완료되지 않은 태스크만 체크
+    if (task.taskProgress?.name !== '100%' && task.planEndDate) {
+      const taskEnd = dayjs(task.planEndDate);
+      if (today.isAfter(taskEnd, 'day')) {
+        delayedTaskCount++;
       }
     }
   }
-  return 'normal';
+
+  return delayedTaskCount > 0 ? `지연-${delayedTaskCount}` : '정상';
 }

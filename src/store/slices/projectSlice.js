@@ -194,7 +194,9 @@ export const fetchProjectScheduleStatus = createAsyncThunk(
     try {
       const state = getState();
       const { filters: storeFilters } = state.project;
-      const filters = storeFilters || {};
+      // const filters = storeFilters || {};
+      // 진행중 프로젝트에 대해서만
+      const filters = { pjt_status: { $eq: 88 }, work_type: 'project' };
 
       const pageSize = 20; // 고정 페이지 크기
 

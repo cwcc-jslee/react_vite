@@ -148,3 +148,9 @@ src/features/{feature}/
 - **Development host/port**: Configurable via `VITE_HOST` and `VITE_PORT` environment variables
 - **Default development server**: http://192.168.20.101:3001
 - **API URL**: Configurable via `VITE_API_URL` environment variable
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
