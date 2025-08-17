@@ -72,7 +72,8 @@ export const buildProjectListQuery = (params) => {
         fields: ['name'],
       },
       project_tasks: {
-        fields: ['plan_end_date'],
+        filters: { is_scheduled: { $eq: true } },
+        fields: ['plan_end_date', 'planning_time_data'],
         populate: {
           task_progress: {
             fields: ['name', 'code'],

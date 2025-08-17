@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { Row, Col } from '../../../shared/components/ui';
 import ProjectStatusDonutCharts from '../components/charts/ProjectStatusDonutCharts';
 import ProjectProgressChart from '../components/charts/ProjectProgressChart';
-import ProjectTreeMap from '../components/charts/ProjectTreeMap';
+import ProjectTaskDelayChart from '../components/charts/ProjectTaskDelayChart';
 import { useProjectSearch } from '../hooks/useProjectSearch';
 import { useProjectStore } from '../hooks/useProjectStore';
 
@@ -46,10 +46,10 @@ const ProjectChartsSection = () => {
         </div>
       </Col>
 
-      {/* 오른쪽: 프로젝트 작업 시간 트리맵 */}
+      {/* 오른쪽: 태스크 지연 현황 차트 */}
       <Col span={8}>
         <div className="h-[420px]">
-          <ProjectTreeMap />
+          <ProjectTaskDelayChart />
         </div>
       </Col>
     </Row>

@@ -81,8 +81,9 @@ const ProjectStatusDonutCharts = ({
         .filter((item) => item.value > 0)
     : [];
 
-  // Recharts 데이터 형식으로 변환 (일정 상태)
-  const scheduleChartData = Object.entries(scheduleStatus || {})
+  // Recharts 데이터 형식으로 변환 (일정 상태) - 프로젝트 데이터 사용
+  const projectScheduleData = scheduleStatus?.project || scheduleStatus || {};
+  const scheduleChartData = Object.entries(projectScheduleData)
     .filter(([key]) => key !== 'total')
     .map(([key, value]) => ({
       name: scheduleNames[key] || key,

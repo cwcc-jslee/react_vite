@@ -17,7 +17,7 @@ import {
   FORM_INITIAL_STATE,
   SELECTED_ITEM_INITIAL_STATE,
 } from '../../features/project/constants/initialState';
-import { getScheduleStatus } from '../../features/project/utils/scheduleStatusUtils';
+import { getScheduleStatus, aggregateTaskScheduleStatus } from '../../features/project/utils/scheduleStatusUtils';
 
 // 프로젝트 목록 조회 액션
 export const fetchProjects = createAsyncThunk(
@@ -240,7 +240,7 @@ export const fetchProjectScheduleStatus = createAsyncThunk(
         }
       }
 
-      // 시간 상태 계산
+      // 프로젝트 시간 상태 계산
       const scheduleStatus = {
         normal: 0,
         delayed: 0,
@@ -256,7 +256,15 @@ export const fetchProjectScheduleStatus = createAsyncThunk(
         }
       });
 
-      return scheduleStatus;
+      // 태스크 시간 상태 계산
+      const taskScheduleStatus = aggregateTaskScheduleStatus(allProjects);
+
+      return {
+        // 프로젝트 일정 상태
+        project: scheduleStatus,
+        // 태스크 일정 상태
+        task: taskScheduleStatus,
+      };
     } catch (error) {
       return rejectWithValue(
         error.message || '프로젝트 시간 상태를 가져오는데 실패했습니다.',
@@ -279,10 +287,18 @@ const initialState = {
       status: 'idle',
       error: null,
       data: {
-        normal: 0,
-        delayed: 0,
-        imminent: 0,
-        total: 0,
+        project: {
+          normal: 0,
+          delayed: 0,
+          imminent: 0,
+          total: 0,
+        },
+        task: {
+          normal: 0,
+          delayed: 0,
+          imminent: 0,
+          total: 0,
+        },
       },
     },
   },
