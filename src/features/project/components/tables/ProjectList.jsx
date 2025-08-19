@@ -82,7 +82,10 @@ const TableErrorState = ({ columnsCount, message }) => {
 };
 
 // 잔여일정 계산 함수
-const formatRemainingDays = (planEndDate) => {
+const formatRemainingDays = (item) => {
+  // endDate가 없으면 planEndDate 사용
+  const planEndDate = item?.endDate || item?.planEndDate;
+  
   if (!planEndDate) return <span>-</span>;
 
   const today = new Date();
@@ -169,7 +172,11 @@ const formatProjectHours = (item) => {
 };
 
 // 프로젝트 기간 계산 함수
-const formatProjectPeriod = (startDate, endDate) => {
+const formatProjectPeriod = (item) => {
+  // startDate가 없으면 planStartDate 사용, endDate가 없으면 planEndDate 사용
+  const startDate = item?.startDate || item?.planStartDate;
+  const endDate = item?.endDate || item?.planEndDate;
+  
   if (!startDate || !endDate) return <span>-</span>;
 
   const start = new Date(startDate);
@@ -264,7 +271,7 @@ const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
         )}
       </td>
       <td className="px-3 py-2 text-center text-sm">
-        {formatRemainingDays(item?.planEndDate)}
+        {formatRemainingDays(item)}
       </td>
       <td className="px-3 py-2 text-center text-sm">
         {item?.taskStatus ? (
@@ -339,7 +346,7 @@ const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
       </td>
       <td className="px-3 py-2 text-center text-sm">{item?.service?.name}</td>
       <td className="px-3 py-2 text-center text-sm">
-        {formatProjectPeriod(item?.startDate, item?.planEndDate)}
+        {formatProjectPeriod(item)}
       </td>
       <td className="px-3 py-2 text-center text-sm">
         {item?.lastWorkupdateDate}

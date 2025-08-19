@@ -5,6 +5,7 @@ import { Row, Col } from '../../../shared/components/ui';
 import ProjectStatusDonutCharts from '../components/charts/ProjectStatusDonutCharts';
 import ProjectProgressChart from '../components/charts/ProjectProgressChart';
 import ProjectTaskDelayChart from '../components/charts/ProjectTaskDelayChart';
+import ProjectRemainingPeriodChart from '../components/charts/ProjectRemainingPeriodChart';
 import { useProjectSearch } from '../hooks/useProjectSearch';
 import { useProjectStore } from '../hooks/useProjectStore';
 
@@ -17,39 +18,46 @@ import { useProjectStore } from '../hooks/useProjectStore';
 const ProjectChartsSection = () => {
   const { searchFormData } = useProjectSearch();
   const { dashboardData, actions } = useProjectStore();
-  const { projectStatus, projectProgress, scheduleStatus } = dashboardData;
+  const { projectStatus, projectProgress, projectAnalytics } = dashboardData;
   const isFiltered = searchFormData.pjtStatus !== '';
 
   // 컴포넌트 마운트 시 대시보드 데이터 조회
   useEffect(() => {
     // actions.dashboard.fetchStatus();
-    // actions.dashboard.fetchScheduleStatus();
+    // actions.dashboard.fetchDashboardData();
   }, []);
 
   return (
     <Row gutter={[16, 16]}>
-      {/* 왼쪽: 프로젝트 상태 도넛 차트 */}
-      <Col span={8}>
+      {/* 프로젝트 상태 도넛 차트 */}
+      <Col span={6}>
         <div className="h-[420px]">
           <ProjectStatusDonutCharts
             projectStatus={projectStatus || {}}
-            scheduleStatus={scheduleStatus || {}}
+            scheduleStatus={projectAnalytics || {}}
             isFiltered={isFiltered}
           />
         </div>
       </Col>
 
-      {/* 가운데: 프로젝트 진행 단계별 막대 차트 */}
-      <Col span={8}>
+      {/* 프로젝트 진행 단계별 막대 차트 */}
+      <Col span={6}>
         <div className="h-[420px]">
           <ProjectProgressChart projectProgress={projectProgress} />
         </div>
       </Col>
 
-      {/* 오른쪽: 태스크 지연 현황 차트 */}
-      <Col span={8}>
+      {/* 태스크 지연 현황 차트 */}
+      <Col span={6}>
         <div className="h-[420px]">
           <ProjectTaskDelayChart />
+        </div>
+      </Col>
+
+      {/* 프로젝트 남은 기간 차트 */}
+      <Col span={6}>
+        <div className="h-[420px]">
+          <ProjectRemainingPeriodChart />
         </div>
       </Col>
     </Row>

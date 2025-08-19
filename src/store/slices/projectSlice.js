@@ -19,6 +19,64 @@ import {
 } from '../../features/project/constants/initialState';
 import { getScheduleStatus, aggregateTaskScheduleStatus } from '../../features/project/utils/scheduleStatusUtils';
 
+// 남은 기간별 상태 계산 함수
+const calculateRemainingPeriods = (projects) => {
+  const remainingPeriodStatus = {
+    overdue2Month: 0,     // 2달 이상 초과
+    overdue1Month: 0,     // 1달 이상 초과
+    imminent: 0,          // 임박 (7일 이하)
+    oneMonth: 0,          // 1달 이내
+    twoMonths: 0,         // 2달 이내
+    threeMonths: 0,       // 3달 이내
+    longTerm: 0,          // 3달 이상
+    total: projects.length,
+  };
+
+  projects.forEach((project) => {
+    // endDate가 없으면 planEndDate 사용
+    const endDate = project?.endDate || project?.planEndDate;
+    
+    if (!endDate) return;
+
+    const today = new Date();
+    const projectEndDate = new Date(endDate);
+    
+    // 시간을 제거하고 날짜만 비교
+    today.setHours(0, 0, 0, 0);
+    projectEndDate.setHours(0, 0, 0, 0);
+    
+    const diffTime = projectEndDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) {
+      // 기간 초과
+      const overdueDays = Math.abs(diffDays);
+      if (overdueDays >= 60) { // 2달(60일) 이상 초과
+        remainingPeriodStatus.overdue2Month++;
+      } else if (overdueDays >= 30) { // 1달(30일) 이상 초과
+        remainingPeriodStatus.overdue1Month++;
+      }
+    } else if (diffDays <= 7) {
+      // 임박 (7일 이하)
+      remainingPeriodStatus.imminent++;
+    } else if (diffDays <= 30) {
+      // 1달 이내
+      remainingPeriodStatus.oneMonth++;
+    } else if (diffDays <= 60) {
+      // 2달 이내
+      remainingPeriodStatus.twoMonths++;
+    } else if (diffDays <= 90) {
+      // 3달 이내
+      remainingPeriodStatus.threeMonths++;
+    } else {
+      // 3달 이상
+      remainingPeriodStatus.longTerm++;
+    }
+  });
+
+  return remainingPeriodStatus;
+};
+
 // 프로젝트 목록 조회 액션
 export const fetchProjects = createAsyncThunk(
   'project/fetchProjects',
@@ -187,9 +245,9 @@ export const fetchProjectStatus = createAsyncThunk(
   },
 );
 
-// 프로젝트 시간상태 조회 액션
-export const fetchProjectScheduleStatus = createAsyncThunk(
-  'project/fetchScheduleStatus',
+// 프로젝트 대시보드 데이터 조회 액션
+export const fetchProjectDashboardData = createAsyncThunk(
+  'project/fetchDashboardData',
   async (_, { getState, rejectWithValue }) => {
     try {
       const state = getState();
@@ -258,16 +316,21 @@ export const fetchProjectScheduleStatus = createAsyncThunk(
 
       // 태스크 시간 상태 계산
       const taskScheduleStatus = aggregateTaskScheduleStatus(allProjects);
+      
+      // 남은 기간별 상태 계산
+      const remainingPeriodStatus = calculateRemainingPeriods(allProjects);
 
       return {
         // 프로젝트 일정 상태
         project: scheduleStatus,
         // 태스크 일정 상태
         task: taskScheduleStatus,
+        // 남은 기간별 상태
+        remainingPeriod: remainingPeriodStatus,
       };
     } catch (error) {
       return rejectWithValue(
-        error.message || '프로젝트 시간 상태를 가져오는데 실패했습니다.',
+        error.message || '프로젝트 대시보드 데이터를 가져오는데 실패했습니다.',
       );
     }
   },
@@ -283,7 +346,7 @@ const initialState = {
   pagination: { ...DEFAULT_PAGINATION },
   dashboard: {
     ...DASHBOARD_INITIAL_STATE,
-    scheduleStatus: {
+    projectAnalytics: {
       status: 'idle',
       error: null,
       data: {
@@ -512,23 +575,23 @@ const projectSlice = createSlice({
         });
       })
 
-      // 프로젝트 시간상태 조회
-      .addCase(fetchProjectScheduleStatus.pending, (state) => {
-        state.dashboard.scheduleStatus.status = 'loading';
-        state.dashboard.scheduleStatus.error = null;
+      // 프로젝트 대시보드 데이터 조회
+      .addCase(fetchProjectDashboardData.pending, (state) => {
+        state.dashboard.projectAnalytics.status = 'loading';
+        state.dashboard.projectAnalytics.error = null;
       })
-      .addCase(fetchProjectScheduleStatus.fulfilled, (state, action) => {
-        state.dashboard.scheduleStatus.status = 'succeeded';
-        state.dashboard.scheduleStatus.data = action.payload;
-        state.dashboard.scheduleStatus.error = null;
+      .addCase(fetchProjectDashboardData.fulfilled, (state, action) => {
+        state.dashboard.projectAnalytics.status = 'succeeded';
+        state.dashboard.projectAnalytics.data = action.payload;
+        state.dashboard.projectAnalytics.error = null;
       })
-      .addCase(fetchProjectScheduleStatus.rejected, (state, action) => {
-        state.dashboard.scheduleStatus.status = 'failed';
-        state.dashboard.scheduleStatus.error = action.payload;
+      .addCase(fetchProjectDashboardData.rejected, (state, action) => {
+        state.dashboard.projectAnalytics.status = 'failed';
+        state.dashboard.projectAnalytics.error = action.payload;
         notification.error({
-          message: '시간 상태 조회 실패',
+          message: '대시보드 데이터 조회 실패',
           description:
-            action.payload || '프로젝트 시간 상태를 가져오는데 실패했습니다.',
+            action.payload || '프로젝트 대시보드 데이터를 가져오는데 실패했습니다.',
         });
       });
   },

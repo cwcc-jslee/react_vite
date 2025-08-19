@@ -1,4 +1,4 @@
-// src/features/project/components/charts/ProjectTaskDelayChart.jsx
+// src/features/project/components/charts/ProjectRemainingPeriodChart.jsx
 import React, { useState } from 'react';
 import {
   PieChart,
@@ -14,107 +14,104 @@ import {
 } from 'recharts';
 import ChartContainer from '../../../../shared/components/charts/ChartContainer';
 import { useProjectStore } from '../../hooks/useProjectStore';
-import { getTaskStatus } from '../../utils/scheduleStatusUtils';
 
 /**
- * 프로젝트별 태스크 지연 현황을 표시하는 차트 컴포넌트
- * @returns {JSX.Element} 태스크 지연 차트 컴포넌트
+ * 프로젝트 남은 기간별 현황을 표시하는 차트 컴포넌트
+ * @returns {JSX.Element} 남은 기간별 차트 컴포넌트
  */
-const ProjectTaskDelayChart = () => {
-  const { items, dashboardData } = useProjectStore();
+const ProjectRemainingPeriodChart = () => {
+  const { dashboardData } = useProjectStore();
   const [chartType, setChartType] = useState('bar'); // 'donut' or 'bar'
   const [activeIndex, setActiveIndex] = useState(null);
   
-  // API에서 받은 태스크 일정 상태 데이터
-  const taskScheduleData = dashboardData?.projectAnalytics?.task || {
-    normal: 0,
-    delayed: 0,
+  // API에서 받은 남은 기간별 데이터
+  const remainingPeriodData = dashboardData?.projectAnalytics?.remainingPeriod || {
+    overdue2Month: 0,
+    overdue1Month: 0,
     imminent: 0,
+    oneMonth: 0,
+    twoMonths: 0,
+    threeMonths: 0,
+    longTerm: 0,
     total: 0,
   };
 
   // 디버깅 로그
-  console.log('ProjectTaskDelayChart - dashboardData:', dashboardData);
-  console.log('ProjectTaskDelayChart - projectAnalytics:', dashboardData?.projectAnalytics);
-  console.log('ProjectTaskDelayChart - taskScheduleData:', taskScheduleData);
+  console.log('ProjectRemainingPeriodChart - dashboardData:', dashboardData);
+  console.log('ProjectRemainingPeriodChart - remainingPeriodData:', remainingPeriodData);
 
-  // 태스크 지연 데이터 가공 (API 데이터 활용)
-  const processTaskDelayData = () => {
-    const normalTasks = taskScheduleData.normal || 0;
-    const delayedTasks = taskScheduleData.delayed || 0;
-    const imminentTasks = taskScheduleData.imminent || 0;
-    const totalTasks = taskScheduleData.total || 0;
-
+  // 남은 기간 데이터 가공
+  const processRemainingPeriodData = () => {
     const result = [
       {
-        name: '정상',
-        value: normalTasks,
-        type: 'normal',
-        detail: `${normalTasks}개 태스크 (전체 ${totalTasks}개 중)`
+        name: '2달이상 초과',
+        value: remainingPeriodData.overdue2Month || 0,
+        type: 'overdue2Month',
+        detail: `${remainingPeriodData.overdue2Month}개 프로젝트 (2달 이상 초과)`
+      },
+      {
+        name: '1달이상 초과',
+        value: remainingPeriodData.overdue1Month || 0,
+        type: 'overdue1Month',
+        detail: `${remainingPeriodData.overdue1Month}개 프로젝트 (1달 이상 초과)`
       },
       {
         name: '임박',
-        value: imminentTasks,
+        value: remainingPeriodData.imminent || 0,
         type: 'imminent',
-        detail: `${imminentTasks}개 태스크 (3일 이내 완료 예정)`
+        detail: `${remainingPeriodData.imminent}개 프로젝트 (7일 이하)`
       },
       {
-        name: '지연',
-        value: delayedTasks,
-        type: 'delayed',
-        detail: `${delayedTasks}개 태스크 (완료 예정일 초과)`
+        name: '1달 이내',
+        value: remainingPeriodData.oneMonth || 0,
+        type: 'oneMonth',
+        detail: `${remainingPeriodData.oneMonth}개 프로젝트 (1달 이내)`
+      },
+      {
+        name: '2달 이내',
+        value: remainingPeriodData.twoMonths || 0,
+        type: 'twoMonths',
+        detail: `${remainingPeriodData.twoMonths}개 프로젝트 (2달 이내)`
+      },
+      {
+        name: '3달 이내',
+        value: remainingPeriodData.threeMonths || 0,
+        type: 'threeMonths',
+        detail: `${remainingPeriodData.threeMonths}개 프로젝트 (3달 이내)`
+      },
+      {
+        name: '3달 이상',
+        value: remainingPeriodData.longTerm || 0,
+        type: 'longTerm',
+        detail: `${remainingPeriodData.longTerm}개 프로젝트 (3달 이상)`
       }
     ].filter(item => item.value > 0);
 
-    console.log('ProjectTaskDelayChart - processTaskDelayData result:', result);
+    console.log('ProjectRemainingPeriodChart - processRemainingPeriodData result:', result);
     return result;
   };
 
-  // 지연 분포 데이터 (막대 차트용) - API 데이터 활용
-  const processDelayDistribution = () => {
-    const normalTasks = taskScheduleData.normal || 0;
-    const delayedTasks = taskScheduleData.delayed || 0;
-    const imminentTasks = taskScheduleData.imminent || 0;
-
-    return [
-      {
-        name: '정상',
-        value: normalTasks,
-        count: normalTasks,
-        description: '계획된 일정 내'
-      },
-      {
-        name: '임박',
-        value: imminentTasks,
-        count: imminentTasks,
-        description: '3일 이내 완료 예정'
-      },
-      {
-        name: '지연',
-        value: delayedTasks,
-        count: delayedTasks,
-        description: '완료 예정일 초과'
-      }
-    ].filter(item => item.value > 0);
-  };
-
-  const taskDelayData = processTaskDelayData();
-  const distributionData = processDelayDistribution();
-
-  console.log('ProjectTaskDelayChart - final taskDelayData:', taskDelayData);
-  console.log('ProjectTaskDelayChart - final distributionData:', distributionData);
+  const chartData = processRemainingPeriodData();
 
   // 색상 정의
   const colors = {
-    normal: '#10b981',   // 에메랄드 그린
-    imminent: '#f59e0b', // 앰버 옐로우
-    delayed: '#ef4444',  // 레드
+    overdue2Month: '#dc2626',  // 진한 빨강 - 2달 이상 초과
+    overdue1Month: '#ef4444',  // 빨강 - 1달 이상 초과
+    imminent: '#f59e0b',       // 주황 - 임박
+    oneMonth: '#3b82f6',       // 파랑 - 1달 이내
+    twoMonths: '#06b6d4',      // 하늘색 - 2달 이내
+    threeMonths: '#10b981',    // 초록 - 3달 이내
+    longTerm: '#059669',       // 진한 초록 - 3달 이상
   };
 
   const barColors = {
-    '정상': '#10b981',   // 에메랄드 그린
-    '임박': '#f59e0b',   // 앰버 옐로우
-    '지연': '#ef4444',   // 레드
+    '2달이상 초과': '#dc2626',
+    '1달이상 초과': '#ef4444',
+    '임박': '#f59e0b',
+    '1달 이내': '#3b82f6',
+    '2달 이내': '#06b6d4',
+    '3달 이내': '#10b981',
+    '3달 이상': '#059669',
   };
 
   // 커스텀 툴팁
@@ -125,7 +122,7 @@ const ProjectTaskDelayChart = () => {
         <div className="bg-white p-3 shadow-lg rounded border border-gray-200">
           <p className="text-sm font-medium">{data.name}</p>
           <p className="text-sm text-gray-600">
-            {data.detail || data.description || `${data.value}개 태스크`}
+            {data.detail || `${data.value}개 프로젝트`}
           </p>
         </div>
       );
@@ -140,24 +137,32 @@ const ProjectTaskDelayChart = () => {
 
   // 가운데 텍스트 계산
   const getCenterText = () => {
-    if (activeIndex !== null && taskDelayData[activeIndex]) {
-      const data = taskDelayData[activeIndex];
+    if (activeIndex !== null && chartData[activeIndex]) {
+      const data = chartData[activeIndex];
       return {
         status: data.name,
         count: data.value,
       };
     }
     
-    // 지연 데이터가 있으면 우선 표시, 없으면 임박 데이터 표시
-    const delayedData = taskDelayData.find(item => item.type === 'delayed');
-    if (delayedData) {
+    // 초과 데이터가 있으면 우선 표시
+    const overdue2Data = chartData.find(item => item.type === 'overdue2Month');
+    if (overdue2Data) {
       return {
-        status: delayedData.name,
-        count: delayedData.value,
+        status: overdue2Data.name,
+        count: overdue2Data.value,
       };
     }
     
-    const imminentData = taskDelayData.find(item => item.type === 'imminent');
+    const overdue1Data = chartData.find(item => item.type === 'overdue1Month');
+    if (overdue1Data) {
+      return {
+        status: overdue1Data.name,
+        count: overdue1Data.value,
+      };
+    }
+    
+    const imminentData = chartData.find(item => item.type === 'imminent');
     if (imminentData) {
       return {
         status: imminentData.name,
@@ -165,15 +170,15 @@ const ProjectTaskDelayChart = () => {
       };
     }
     
-    return taskDelayData.length > 0
-      ? { status: taskDelayData[0].name, count: taskDelayData[0].value }
+    return chartData.length > 0
+      ? { status: chartData[0].name, count: chartData[0].value }
       : { status: '데이터 없음', count: 0 };
   };
 
   const centerText = getCenterText();
 
   // 범례 데이터
-  const legendItems = taskDelayData.map(item => ({
+  const legendItems = chartData.map(item => ({
     name: item.name,
     value: item.value,
     color: colors[item.type]
@@ -181,12 +186,12 @@ const ProjectTaskDelayChart = () => {
 
   // 커스텀 범례
   const renderCustomLegend = (items) => (
-    <div className="flex flex-wrap gap-3 justify-center mt-2">
+    <div className="flex flex-wrap gap-2 justify-center mt-2">
       {items.map((item, idx) => (
         <div key={idx} className="flex items-center text-xs">
           <span
             className="inline-block rounded-full mr-1"
-            style={{ width: 12, height: 12, backgroundColor: item.color }}
+            style={{ width: 10, height: 10, backgroundColor: item.color }}
           />
           <span>
             {item.name} <span className="font-semibold">({item.value})</span>
@@ -225,7 +230,7 @@ const ProjectTaskDelayChart = () => {
   );
 
   return (
-    <ChartContainer title="태스크 지연 현황">
+    <ChartContainer title="프로젝트 남은 기간">
       <div className="relative h-full">
         {renderTypeToggle()}
         
@@ -236,7 +241,7 @@ const ProjectTaskDelayChart = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={taskDelayData}
+                    data={chartData}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -247,7 +252,7 @@ const ProjectTaskDelayChart = () => {
                     activeIndex={activeIndex}
                     style={{ outline: 'none' }}
                   >
-                    {taskDelayData.map((entry, index) => (
+                    {chartData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={colors[entry.type]}
@@ -289,19 +294,20 @@ const ProjectTaskDelayChart = () => {
           // 막대 차트
           <div className="h-full pt-8">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={distributionData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   dataKey="name" 
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 10 }}
                   angle={-45}
                   textAnchor="end"
-                  height={60}
+                  height={80}
+                  interval={0}
                 />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]} label={{ position: 'top', fontSize: 12, fill: '#333' }}>
-                  {distributionData.map((entry, index) => (
+                  {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={barColors[entry.name] || '#8884d8'} />
                   ))}
                 </Bar>
@@ -314,4 +320,4 @@ const ProjectTaskDelayChart = () => {
   );
 };
 
-export default ProjectTaskDelayChart;
+export default ProjectRemainingPeriodChart;
