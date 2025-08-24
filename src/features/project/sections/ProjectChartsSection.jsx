@@ -18,7 +18,7 @@ import { useProjectStore } from '../hooks/useProjectStore';
 const ProjectChartsSection = () => {
   const { searchFormData } = useProjectSearch();
   const { dashboardData, actions } = useProjectStore();
-  const { projectStatus, projectProgress, projectAnalytics } = dashboardData;
+  const { projectStatus, projectProgress, projectAnalytics, progressDistribution } = dashboardData;
   const isFiltered = searchFormData.pjtStatus !== '';
 
   // 컴포넌트 마운트 시 대시보드 데이터 조회
@@ -43,7 +43,10 @@ const ProjectChartsSection = () => {
       {/* 프로젝트 진행 단계별 막대 차트 */}
       <Col span={6}>
         <div className="h-[420px]">
-          <ProjectProgressChart projectProgress={projectProgress} />
+          <ProjectProgressChart 
+            projectProgress={projectProgress} 
+            progressDistribution={progressDistribution}
+          />
         </div>
       </Col>
 

@@ -56,6 +56,7 @@ export const useProjectStore = () => {
     projectStatus: dashboard.projectStatus?.data || null,
     projectProgress: dashboard.projectProgress?.data || null,
     projectAnalytics: dashboard.projectAnalytics?.data || null,
+    progressDistribution: dashboard.projectAnalytics?.data?.progressDistribution || null,
   };
 
   // 액션 핸들러

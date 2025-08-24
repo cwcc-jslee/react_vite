@@ -333,7 +333,31 @@ const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
         )}
       </td>
       <td className="px-3 py-2 text-center text-sm">
-        {item?.projectProgress ? `${item.projectProgress}%` : '-'}
+        {item?.calculatedProgress !== undefined ? (
+          <div className="flex flex-col items-center gap-1">
+            <span className={`text-sm font-medium ${
+              item.calculatedProgress >= 75 ? 'text-green-600' :
+              item.calculatedProgress >= 50 ? 'text-blue-600' :
+              item.calculatedProgress >= 25 ? 'text-orange-600' :
+              'text-red-600'
+            }`}>
+              {item.calculatedProgress}%
+            </span>
+            <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all duration-300 ${
+                  item.calculatedProgress >= 75 ? 'bg-green-500' :
+                  item.calculatedProgress >= 50 ? 'bg-blue-500' :
+                  item.calculatedProgress >= 25 ? 'bg-orange-500' :
+                  'bg-red-500'
+                }`}
+                style={{ width: `${Math.min(item.calculatedProgress, 100)}%` }}
+              />
+            </div>
+          </div>
+        ) : (
+          item?.projectProgress ? `${item.projectProgress}%` : '-'
+        )}
       </td>
       <td className="px-3 py-2 text-center text-sm">
         {item?.projectTasks?.length

@@ -14,21 +14,21 @@ import {
 import ChartContainer from '../../../../shared/components/charts/ChartContainer';
 import { useProjectSearch } from '../../hooks/useProjectSearch';
 
-// 진행률 범위 정의
+// 진행률 범위 정의 (progressDistribution 구간과 매칭)
 const PROGRESS_RANGES = {
-  ZERO: { min: 0, max: 9, label: '0%' },
-  TEN_PERCENT: { min: 10, max: 24, label: '10%' },
-  QUARTER: { min: 25, max: 49, label: '25%' },
-  HALF: { min: 50, max: 74, label: '50%' },
-  THREE_QUARTERS: { min: 75, max: 99, label: '75%' },
-  COMPLETED: { min: 100, max: 100, label: '100%' },
+  ZERO_TO_25: { min: 0, max: 25, label: '0-25%', key: '0-25' },
+  TWENTY_SIX_TO_50: { min: 26, max: 50, label: '26-50%', key: '26-50' },
+  FIFTY_ONE_TO_75: { min: 51, max: 75, label: '51-75%', key: '51-75' },
+  SEVENTY_SIX_TO_90: { min: 76, max: 90, label: '76-90%', key: '76-90' },
+  NINETY_ONE_TO_100: { min: 91, max: 100, label: '91-100%', key: '91-100' },
 };
 
 /**
  * 프로젝트 진행 단계별 수량을 세로 막대 차트로 표시하는 컴포넌트 (리팩토링 버전)
+ * @param {Object} progressDistribution - 계산된 프로젝트 진행률 분포 데이터
  * @returns {JSX.Element} 프로젝트 진행 상태 차트 컴포넌트
  */
-const ProjectProgressChart = ({ projectProgress = [] }) => {
+const ProjectProgressChart = ({ projectProgress = [], progressDistribution = null }) => {
   const { handleProgressFilter } = useProjectSearch();
   const [activeIndex, setActiveIndex] = useState(null);
 
@@ -62,56 +62,75 @@ const ProjectProgressChart = ({ projectProgress = [] }) => {
     };
   };
 
-  // 각 단계별 프로젝트 수 (실제 구현 시 props 또는 API에서 가져올 수 있음)
-  const progressData = [
+  // progressDistribution 데이터를 사용하여 차트 데이터 생성
+  const progressData = progressDistribution ? [
     {
-      name: PROGRESS_RANGES.ZERO.label,
-      value: projectProgress['0%'],
+      name: PROGRESS_RANGES.ZERO_TO_25.label,
+      value: progressDistribution['0-25'] || 0,
       color: '#D13438',
       isProgress: true,
-      range: PROGRESS_RANGES.ZERO,
+      range: PROGRESS_RANGES.ZERO_TO_25,
     },
     {
-      name: PROGRESS_RANGES.TEN_PERCENT.label,
-      value: projectProgress['10%'],
+      name: PROGRESS_RANGES.TWENTY_SIX_TO_50.label,
+      value: progressDistribution['26-50'] || 0,
       color: '#FF8C00',
       isProgress: true,
-      range: PROGRESS_RANGES.TEN_PERCENT,
+      range: PROGRESS_RANGES.TWENTY_SIX_TO_50,
     },
     {
-      name: PROGRESS_RANGES.QUARTER.label,
-      value: projectProgress['25%'],
-      color: '#FF8C00',
-      isProgress: true,
-      range: PROGRESS_RANGES.QUARTER,
-    },
-    {
-      name: PROGRESS_RANGES.HALF.label,
-      value: projectProgress['50%'],
+      name: PROGRESS_RANGES.FIFTY_ONE_TO_75.label,
+      value: progressDistribution['51-75'] || 0,
       color: '#FFB900',
       isProgress: true,
-      range: PROGRESS_RANGES.HALF,
+      range: PROGRESS_RANGES.FIFTY_ONE_TO_75,
     },
     {
-      name: PROGRESS_RANGES.THREE_QUARTERS.label,
-      value: projectProgress['75%'],
+      name: PROGRESS_RANGES.SEVENTY_SIX_TO_90.label,
+      value: progressDistribution['76-90'] || 0,
       color: '#107C10',
       isProgress: true,
-      range: PROGRESS_RANGES.THREE_QUARTERS,
+      range: PROGRESS_RANGES.SEVENTY_SIX_TO_90,
     },
     {
-      name: PROGRESS_RANGES.COMPLETED.label,
-      value: projectProgress['100%'],
+      name: PROGRESS_RANGES.NINETY_ONE_TO_100.label,
+      value: progressDistribution['91-100'] || 0,
       color: '#0078D4',
       isProgress: true,
-      range: PROGRESS_RANGES.COMPLETED,
+      range: PROGRESS_RANGES.NINETY_ONE_TO_100,
     },
-    // {
-    //   name: '검수',
-    //   value: projectProgress['25%'],
-    //   color: '#5C2D91',
-    //   isProgress: false,
-    // },
+  ] : [
+    // 기존 projectProgress 데이터 사용 (fallback)
+    {
+      name: '0%',
+      value: projectProgress['0%'] || 0,
+      color: '#D13438',
+      isProgress: true,
+    },
+    {
+      name: '25%',
+      value: projectProgress['25%'] || 0,
+      color: '#FF8C00',
+      isProgress: true,
+    },
+    {
+      name: '50%',
+      value: projectProgress['50%'] || 0,
+      color: '#FFB900',
+      isProgress: true,
+    },
+    {
+      name: '75%',
+      value: projectProgress['75%'] || 0,
+      color: '#107C10',
+      isProgress: true,
+    },
+    {
+      name: '100%',
+      value: projectProgress['100%'] || 0,
+      color: '#0078D4',
+      isProgress: true,
+    },
   ];
 
   // 진행 단계 인덱스 찾기

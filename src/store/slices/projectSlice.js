@@ -17,65 +17,8 @@ import {
   FORM_INITIAL_STATE,
   SELECTED_ITEM_INITIAL_STATE,
 } from '../../features/project/constants/initialState';
-import { getScheduleStatus, aggregateTaskScheduleStatus } from '../../features/project/utils/scheduleStatusUtils';
-
-// 남은 기간별 상태 계산 함수
-const calculateRemainingPeriods = (projects) => {
-  const remainingPeriodStatus = {
-    overdue2Month: 0,     // 2달 이상 초과
-    overdue1Month: 0,     // 1달 이상 초과
-    imminent: 0,          // 임박 (7일 이하)
-    oneMonth: 0,          // 1달 이내
-    twoMonths: 0,         // 2달 이내
-    threeMonths: 0,       // 3달 이내
-    longTerm: 0,          // 3달 이상
-    total: projects.length,
-  };
-
-  projects.forEach((project) => {
-    // endDate가 없으면 planEndDate 사용
-    const endDate = project?.endDate || project?.planEndDate;
-    
-    if (!endDate) return;
-
-    const today = new Date();
-    const projectEndDate = new Date(endDate);
-    
-    // 시간을 제거하고 날짜만 비교
-    today.setHours(0, 0, 0, 0);
-    projectEndDate.setHours(0, 0, 0, 0);
-    
-    const diffTime = projectEndDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays < 0) {
-      // 기간 초과
-      const overdueDays = Math.abs(diffDays);
-      if (overdueDays >= 60) { // 2달(60일) 이상 초과
-        remainingPeriodStatus.overdue2Month++;
-      } else if (overdueDays >= 30) { // 1달(30일) 이상 초과
-        remainingPeriodStatus.overdue1Month++;
-      }
-    } else if (diffDays <= 7) {
-      // 임박 (7일 이하)
-      remainingPeriodStatus.imminent++;
-    } else if (diffDays <= 30) {
-      // 1달 이내
-      remainingPeriodStatus.oneMonth++;
-    } else if (diffDays <= 60) {
-      // 2달 이내
-      remainingPeriodStatus.twoMonths++;
-    } else if (diffDays <= 90) {
-      // 3달 이내
-      remainingPeriodStatus.threeMonths++;
-    } else {
-      // 3달 이상
-      remainingPeriodStatus.longTerm++;
-    }
-  });
-
-  return remainingPeriodStatus;
-};
+import { getScheduleStatus } from '../../features/project/utils/scheduleStatusUtils';
+import { processDashboardData, validateApiResponse, calculatePagination } from '../../features/project/utils/projectDataUtils';
 
 // 프로젝트 목록 조회 액션
 export const fetchProjects = createAsyncThunk(
@@ -268,12 +211,14 @@ export const fetchProjectDashboardData = createAsyncThunk(
           filters,
         });
 
-      if (!firstPageResponse.meta || !firstPageResponse.meta.pagination) {
-        throw new Error('페이지네이션 정보를 가져올 수 없습니다.');
+      // API 응답 검증
+      const validation = validateApiResponse(firstPageResponse);
+      if (!validation.isValid) {
+        throw new Error(validation.errors.join(', '));
       }
 
       const totalItems = firstPageResponse.meta.pagination.total;
-      const totalPages = Math.ceil(totalItems / pageSize);
+      const paginationInfo = calculatePagination(totalItems, pageSize);
 
       // 모든 페이지의 데이터를 가져오기
       const allProjects = [];
@@ -284,7 +229,7 @@ export const fetchProjectDashboardData = createAsyncThunk(
       }
 
       // 나머지 페이지 데이터 가져오기 (2페이지부터)
-      for (let page = 2; page <= totalPages; page++) {
+      for (let page = 2; page <= paginationInfo.totalPages; page++) {
         const response = await projectApiService.getProjectScheduleStatus({
           pagination: {
             pageSize,
@@ -298,36 +243,8 @@ export const fetchProjectDashboardData = createAsyncThunk(
         }
       }
 
-      // 프로젝트 시간 상태 계산
-      const scheduleStatus = {
-        normal: 0,
-        delayed: 0,
-        imminent: 0,
-        total: allProjects.length,
-      };
-
-      allProjects.forEach((project) => {
-        const status = getScheduleStatus(project);
-
-        if (status) {
-          scheduleStatus[status]++;
-        }
-      });
-
-      // 태스크 시간 상태 계산
-      const taskScheduleStatus = aggregateTaskScheduleStatus(allProjects);
-      
-      // 남은 기간별 상태 계산
-      const remainingPeriodStatus = calculateRemainingPeriods(allProjects);
-
-      return {
-        // 프로젝트 일정 상태
-        project: scheduleStatus,
-        // 태스크 일정 상태
-        task: taskScheduleStatus,
-        // 남은 기간별 상태
-        remainingPeriod: remainingPeriodStatus,
-      };
+      // 대시보드 데이터 처리 (utils 함수 사용)
+      return processDashboardData(allProjects, getScheduleStatus);
     } catch (error) {
       return rejectWithValue(
         error.message || '프로젝트 대시보드 데이터를 가져오는데 실패했습니다.',
