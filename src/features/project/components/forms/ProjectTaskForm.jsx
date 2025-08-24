@@ -70,12 +70,22 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
   // 새 체크리스트 항목을 위한 상태
   const [newChecklistItem, setNewChecklistItem] = useState('');
 
-  const isScheduled = taskFormData.taskScheduleType === 'scheduled';
+  // 작업일정과 진행률 체크 상태 관리 (task 데이터 기반, 기본값 true)
+  const [isScheduled, setIsScheduled] = useState(task?.isScheduled !== false);
+  const [isProgress, setIsProgress] = useState(task?.isProgress !== false);
 
   // 체크리스트 통계
   const checklistStats = getChecklistStats();
 
   console.log(`==== task ==== : `, task);
+
+  // task 데이터 변경 시 상태 동기화
+  useEffect(() => {
+    if (task) {
+      setIsScheduled(task.isScheduled !== false);
+      setIsProgress(task.isProgress !== false);
+    }
+  }, [task]);
 
   // 체크리스트 입력 핸들러
   const handleNewChecklistItemKeyDown = (e) => {
@@ -105,11 +115,12 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
 
   // 계획 시간 계산 함수
   const calculatePlannedHours = () => {
-    const personnelCount =
-      parseInt(taskFormData.planningTimeData.personnelCount) || 0;
-    const allocationRate =
-      parseFloat(taskFormData.planningTimeData.allocationRate) || 0;
-    const workDays = parseInt(taskFormData.planningTimeData.workDays) || 0;
+    // planningTimeData가 없는 경우 안전하게 처리
+    const planningData = taskFormData.planningTimeData || {};
+    
+    const personnelCount = parseInt(planningData.personnelCount) || 0;
+    const allocationRate = parseFloat(planningData.allocationRate) || 0;
+    const workDays = parseInt(planningData.workDays) || 0;
 
     // 각 작업일은 8시간으로 가정 (기본 업무 시간)
     const hoursPerDay = 8;
@@ -121,9 +132,9 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
     return Math.round(totalHours);
   };
 
-  // 인원, 투입률, 작업일 변경 시 계획 시간 자동 계산
+  // 인원, 투입률, 작업일 변경 시 계획 시간 자동 계산 (시간관리 활성화 시에만)
   useEffect(() => {
-    if (isScheduled) {
+    if (isProgress && taskFormData.planningTimeData) {
       const totalPlannedHours = calculatePlannedHours();
       const calculationDate = new Date().toISOString().split('T')[0]; // 현재 날짜를 YYYY-MM-DD 형식으로
 
@@ -134,14 +145,40 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
           totalPlannedHours,
           calculationDate,
         },
+        isProgress,
       }));
     }
   }, [
     taskFormData.planningTimeData?.personnelCount,
     taskFormData.planningTimeData?.allocationRate,
     taskFormData.planningTimeData?.workDays,
-    isScheduled,
+    isProgress,
   ]);
+
+  // 일정관리 상태 변경 시 taskFormData 업데이트 및 시간관리 연동
+  useEffect(() => {
+    // 일정관리 활성화 시 시간관리도 자동 활성화
+    if (isScheduled) {
+      setIsProgress(true);
+    } else {
+      // 일정관리 비활성화 시 시간관리도 자동 비활성화
+      setIsProgress(false);
+    }
+    
+    setTaskFormData((prev) => ({
+      ...prev,
+      taskScheduleType: isScheduled ? 'scheduled' : 'ongoing',
+      isScheduled,
+    }));
+  }, [isScheduled]);
+
+  // 시간관리 상태 변경 시 taskFormData 업데이트
+  useEffect(() => {
+    setTaskFormData((prev) => ({
+      ...prev,
+      isProgress,
+    }));
+  }, [isProgress]);
 
   // 폼 유효성 검사 함수
   const validateForm = () => {
@@ -155,7 +192,7 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
       validationErrors.push('작업명은 필수입니다.');
     }
 
-    // isScheduled가 true일 때 추가 검사
+    // 일정관리가 활성화일 때 날짜 검사
     if (isScheduled) {
       // 계획 시작일, 계획 종료일 검사
       if (!taskFormData.planStartDate) {
@@ -177,10 +214,13 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
           );
         }
       }
+    }
 
+    // 시간관리가 활성화일 때 인원/투입률/작업일 검사
+    if (isProgress) {
       // 인원 검사 (1~10 사이의 정수)
       const personnelCount = parseInt(
-        taskFormData.planningTimeData.personnelCount,
+        taskFormData.planningTimeData?.personnelCount,
       );
       if (isNaN(personnelCount) || personnelCount < 1 || personnelCount > 10) {
         validationErrors.push('인원은 1에서 10 사이의 정수여야 합니다.');
@@ -188,7 +228,7 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
 
       // 투입률 검사 (0~1 사이의 소수, 소수점 첫째 자리까지)
       const allocationRate = parseFloat(
-        taskFormData.planningTimeData.allocationRate,
+        taskFormData.planningTimeData?.allocationRate,
       );
       if (isNaN(allocationRate) || allocationRate <= 0 || allocationRate > 1) {
         validationErrors.push('투입률은 0보다 크고 1 이하의 값이어야 합니다.');
@@ -204,7 +244,7 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
       }
 
       // 작업일 검사 (0~30 사이의 정수)
-      const workDays = parseInt(taskFormData.planningTimeData.workDays);
+      const workDays = parseInt(taskFormData.planningTimeData?.workDays);
       if (isNaN(workDays) || workDays < 1 || workDays > 30) {
         console.log('>>> workDay : ', workDays);
         validationErrors.push('작업일은 1에서 30 사이의 정수여야 합니다.');
@@ -264,24 +304,23 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
         </FormItem>
       </Group>
 
-      {/* 작업일정, 우선순위, 진행상태 */}
+      {/* 일정관리, 시간관리, 우선순위, 진행상태 */}
       <Group direction="horizontal" spacing="lg" className="mb-6">
-        {/* 작업일정 구분 */}
+        {/* 일정관리 */}
         <FormItem direction="vertical" className="flex-1">
-          <Label className="text-left">작업일정 구분</Label>
+          <Label className="text-left">일정관리</Label>
           <Switch
-            // checked={taskFormData.taskScheduleType}
-            // onChange={handleSwitchChange}
-            checked={taskFormData.taskScheduleType === 'scheduled'}
-            onChange={handleSwitchChange}
-            // onChange={() => {
-            //   updateField(
-            //     'taskScheduleType',
-            //     taskFormData.taskScheduleType === 'scheduled'
-            //       ? 'ongoing'
-            //       : 'scheduled',
-            //   );
-            // }}
+            checked={isScheduled}
+            onChange={() => setIsScheduled(!isScheduled)}
+          />
+        </FormItem>
+        {/* 시간관리 */}
+        <FormItem direction="vertical" className="flex-1">
+          <Label className="text-left">시간관리</Label>
+          <Switch
+            checked={isProgress}
+            onChange={() => setIsProgress(!isProgress)}
+            disabled={isScheduled}
           />
         </FormItem>
         <FormItem direction="vertical" className="flex-1">
@@ -343,7 +382,7 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
         </FormItem>
       </Group>
 
-      {/*  작업일정 - 계획일정 활성화시시 */}
+      {/* 일정관리 - 계획 시작일, 계획 종료일, 기간 */}
       {isScheduled && (
         <Group direction="horizontal" spacing="lg" className="mb-6">
           <FormItem direction="vertical" className="flex-1">
@@ -373,7 +412,6 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
             <Label className="text-left">기간</Label>
             <Input
               type="text"
-              // name="dueDate"
               value={task?.days ? `${task.days}일` : ''}
               disabled={true}
             />
@@ -381,7 +419,8 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
         </Group>
       )}
 
-      {isScheduled && (
+      {/* 시간관리 - 인원, 투입률, 작업일, 계획시간 */}
+      {isProgress && (
         <Group direction="horizontal" spacing="lg" className="mb-6">
           <FormItem direction="vertical" className="flex-1">
             <Label className="text-left">인원</Label>
@@ -390,7 +429,6 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
               name="planningTimeData.personnelCount"
               value={taskFormData?.planningTimeData?.personnelCount || ''}
               onChange={handleInputChange}
-              // disabled={!taskFormData.taskScheduleType}
             />
           </FormItem>
           <FormItem direction="vertical" className="flex-1">
@@ -400,8 +438,7 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
               name="planningTimeData.allocationRate"
               value={taskFormData?.planningTimeData?.allocationRate || ''}
               onChange={handleInputChange}
-              // disabled={!taskFormData.taskScheduleType}
-              // placeholder="0.1-1.0"
+              placeholder="0.1-1.0"
             />
           </FormItem>
           <FormItem direction="vertical" className="flex-1">
@@ -411,7 +448,6 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
               name="planningTimeData.workDays"
               value={taskFormData?.planningTimeData?.workDays}
               onChange={handleInputChange}
-              // disabled={!taskFormData.taskScheduleType}
             />
           </FormItem>
           <FormItem direction="vertical" className="flex-1">

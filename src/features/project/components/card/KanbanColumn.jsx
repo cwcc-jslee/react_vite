@@ -80,7 +80,9 @@ const KanbanColumn = ({
   const handleAddTaskClick = () => {
     const newTask = {
       name: '새 작업',
-      taskScheduleType: 'scheduled',
+      // taskScheduleType: 'scheduled',
+      isScheduled: true,
+      isProgress: true,
     };
 
     onAddTask(bucketIndex, newTask);

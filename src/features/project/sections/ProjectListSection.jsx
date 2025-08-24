@@ -29,13 +29,16 @@ const ProjectListSection = () => {
   const itemsWithEnhancedData = enhanceItemsWithScheduleStatus(items);
 
   console.log(`ProjectListSection items: `, items);
-  console.log(`ProjectListSection enhanced items: `, itemsWithEnhancedData.slice(0, 2).map(item => ({
-    id: item.id,
-    name: item.name,
-    projectProgress: item.projectProgress,
-    calculatedProgress: item.calculatedProgress,
-    taskCount: item.projectTasks?.length || 0
-  })));
+  console.log(
+    `ProjectListSection enhanced items: `,
+    itemsWithEnhancedData.slice(0, 2).map((item) => ({
+      id: item.id,
+      name: item.name,
+      projectProgress: item.projectProgress,
+      calculatedProgress: item.calculatedProgress,
+      taskCount: item.projectTasks?.length || 0,
+    })),
+  );
 
   return (
     <div className="space-y-4">
