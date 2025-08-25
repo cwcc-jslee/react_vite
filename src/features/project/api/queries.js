@@ -73,7 +73,12 @@ export const buildProjectListQuery = (params) => {
       },
       project_tasks: {
         filters: { is_scheduled: { $eq: true } },
-        fields: ['plan_end_date', 'planning_time_data'],
+        fields: [
+          'plan_end_date',
+          'planning_time_data',
+          'is_scheduled',
+          'is_progress',
+        ],
         populate: {
           task_progress: {
             fields: ['name', 'code'],
@@ -91,9 +96,6 @@ export const buildProjectListQuery = (params) => {
   return qs.stringify(query, { encodeValuesOnly: true });
 };
 
-/**
- * CUSTOMER 목록 조회를 위한 쿼리 파라미터 생성
- */
 export const buildProjectListNameQuery = (params) => {
   const { pagination = { current: 1, pageSize: 25 }, filters = {} } = params;
 
@@ -126,7 +128,7 @@ export const buildProjectDetailQuery = (id) => {
       fields: ['*'],
       populate: {
         sfa: {
-          fields: ['name', 'total_price'],
+          fields: ['name', 'sfa_by_items'],
           populate: {
             customer: {
               fields: ['name'],
@@ -170,7 +172,7 @@ export const buildProjectDetailQuery = (id) => {
               fields: ['name', 'position', 'remarks'],
             },
             task_progress: {
-              fields: ['name'],
+              fields: ['name', 'code'],
             },
             priority_level: {
               fields: ['name'],
@@ -217,7 +219,12 @@ export const buildProjectScheduleStatusQuery = (params) => {
       },
       project_tasks: {
         filters: { is_scheduled: { $eq: true } },
-        fields: ['plan_end_date', 'planning_time_data'],
+        fields: [
+          'plan_end_date',
+          'planning_time_data',
+          'is_scheduled',
+          'is_progress',
+        ],
         populate: {
           task_progress: {
             fields: ['name', 'code'],

@@ -20,6 +20,11 @@ export const DEFAULT_PAGINATION = {
   total: 0,
 };
 
+// 프로젝트 비용 관련 상수 정의
+export const PROJECT_COST_CONSTANTS = {
+  HOURLY_RATE: 94000, // 시간당 비용 (원)
+};
+
 // 프로젝트 상태 초기값
 export const PROJECT_STATUS_INITIAL_STATE = {
   data: {

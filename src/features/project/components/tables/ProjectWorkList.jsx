@@ -67,7 +67,7 @@ const TableRow = ({ item, index }) => {
         {getDisplayValue(item.taskProgress)}
       </td>
       <td className="px-3 py-2 text-center text-sm">
-        {getDisplayValue(item.user)}
+        {getDisplayValue(item.user.username)}
       </td>
       <td className="px-3 py-2 text-center text-sm">
         {getDisplayValue(item.workDate)}

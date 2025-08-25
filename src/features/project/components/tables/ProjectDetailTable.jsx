@@ -16,6 +16,12 @@ import {
   calculateProjectTotalPlannedHours,
   validateProjectPlanningHours,
 } from '../../utils/projectTimeUtils';
+import {
+  calculateProjectPrice,
+  formatProjectPrice,
+  getProjectPriceDetails,
+} from '../../utils/projectPriceUtils';
+import { calculateProjectProgress } from '../../utils/projectProgressUtils';
 
 /**
  * 완료 여부를 표시하는 Status Badge 컴포넌트
@@ -48,25 +54,20 @@ const ProjectDetailTable = ({
 }) => {
   if (!data) return null;
   console.log('>>>>>data', data);
+  console.log('>>>>>projectTasks', projectTasks);
+
+  // 진행률 계산 (태스크 계획시간 기반 가중평균)
+  const calculatedProgress = calculateProjectProgress(projectTasks);
 
   // 완료된 태스크 수 계산
-  const completedTasksCount = projectTasks.filter(
-    (task) => task.isCompleted,
-  ).length;
-
-  // 전체 진행률 계산 (완료된 태스크 / 전체 태스크 * 100 또는 projectProgress 값 사용)
-  const calculateProgress = () => {
-    if (data.projectProgress !== undefined) {
-      return data.projectProgress;
-    }
-    if (!projectTasks.length) return 0;
-    return Math.round((completedTasksCount / projectTasks.length) * 100);
-  };
+  const completedTasksCount = projectTasks.filter((task) => {
+    const progressCode = task.taskProgress?.code;
+    return progressCode === '100' || progressCode === 100 || task.isCompleted;
+  }).length;
 
   // 진행률에 따른 상태 계산
   const getProgressStatus = () => {
-    const progress = calculateProgress();
-    if (progress >= 100) return 'success';
+    if (calculatedProgress >= 100) return 'success';
     return 'normal';
   };
 
@@ -77,7 +78,7 @@ const ProjectDetailTable = ({
   const formatProjectDuration = () => {
     const startDate = data.startDate || '-';
     const endDate = data.planEndDate || '-';
-    
+
     return `${startDate} - ${endDate}`;
   };
 
@@ -108,11 +109,27 @@ const ProjectDetailTable = ({
           진행률
         </DescriptionItem>
         <DescriptionItem>
-          <Progress
-            percent={calculateProgress()}
-            status={getProgressStatus()}
-            size="small"
-          />
+          <Tooltip
+            content={
+              <div className="flex flex-col gap-1 text-xs">
+                <div>가중평균 진행률: {calculatedProgress}%</div>
+                <div>
+                  완료 태스크: {completedTasksCount}/{projectTasks.length}
+                </div>
+                <div className="text-gray-400 border-t pt-1 mt-1">
+                  * 태스크 계획시간 기반 가중평균 계산
+                </div>
+              </div>
+            }
+          >
+            <div className="cursor-help">
+              <Progress
+                percent={calculatedProgress}
+                status={getProgressStatus()}
+                size="small"
+              />
+            </div>
+          </Tooltip>
         </DescriptionItem>
       </DescriptionRow>
 
@@ -262,91 +279,116 @@ const ProjectDetailTable = ({
           <Tooltip
             content={
               <div className="flex flex-col gap-1 text-xs">
-                <div>
-                  프로젝트 금액:{' '}
-                  {data?.sfa?.totalPrice
-                    ? `${data.sfa.totalPrice.toLocaleString()}원`
-                    : '정보없음'}
-                </div>
-                <div>
-                  계획시간: {calculateProjectTotalPlannedHours(projectTasks)}
-                  시간
-                </div>
-                {data?.sfa?.totalPrice ? (
-                  <>
-                    <div>
-                      예상시간:{' '}
-                      {
-                        validateProjectPlanningHours(
-                          data.sfa.totalPrice,
-                          calculateProjectTotalPlannedHours(projectTasks),
-                        ).expectedHours
-                      }
-                      시간
-                    </div>
-                    <div>
-                      시간당 단가:{' '}
-                      {validateProjectPlanningHours(
-                        data.sfa.totalPrice,
-                        calculateProjectTotalPlannedHours(projectTasks),
-                      ).hourlyRate.toLocaleString()}
-                      원
-                    </div>
-                    <div className="text-gray-400">
-                      * 20% 이상 차이 시 경고, 10% 이상 차이 시 주의
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-amber-500">
-                    매출정보를 입력하면 검증이 가능합니다
-                  </div>
-                )}
+                {(() => {
+                  const validation = validateProjectPlanningHours(
+                    data,
+                    calculateProjectTotalPlannedHours(projectTasks),
+                  );
+                  return (
+                    <>
+                      <div>
+                        프로젝트 금액:{' '}
+                        {validation.totalAmount
+                          ? `${validation.totalAmount.toLocaleString()}원`
+                          : '정보없음'}
+                      </div>
+                      <div>
+                        계획시간:{' '}
+                        {calculateProjectTotalPlannedHours(projectTasks)}
+                        시간
+                      </div>
+                      {validation.totalAmount ? (
+                        <>
+                          <div>
+                            금액대비 적정시간: {validation.expectedHours}시간
+                          </div>
+                          <div>
+                            시간 차이: {validation.difference > 0 ? '+' : ''}
+                            {validation.difference}시간
+                          </div>
+                          <div>
+                            비율 차이: {validation.percentage > 0 ? '+' : ''}
+                            {validation.percentage}%
+                          </div>
+                          <div>
+                            시간당 단가:{' '}
+                            {validation.hourlyRate.toLocaleString()}원
+                          </div>
+                          <div
+                            className={`font-medium ${
+                              validation.status === 'error'
+                                ? 'text-red-600'
+                                : validation.status === 'warning'
+                                ? 'text-amber-600'
+                                : validation.status === 'caution'
+                                ? 'text-blue-600'
+                                : 'text-green-600'
+                            }`}
+                          >
+                            검증결과: {validation.message}
+                          </div>
+                          <div className="text-gray-400 border-t pt-1 mt-1">
+                            * 5% 초과 시 초과, 20% 미만 시 부족, 10% 미만 시
+                            주의
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-amber-500">
+                          매출정보를 입력하면 검증이 가능합니다
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             }
           >
             <div className="flex items-center gap-2">
-              <Badge
-                className={`${
-                  validateProjectPlanningHours(
-                    data?.sfa?.totalPrice,
-                    calculateProjectTotalPlannedHours(projectTasks),
-                  ).status === 'error'
-                    ? 'bg-red-100 text-red-800'
-                    : validateProjectPlanningHours(
-                        data?.sfa?.totalPrice,
-                        calculateProjectTotalPlannedHours(projectTasks),
-                      ).status === 'warning'
-                    ? 'bg-amber-100 text-amber-800'
-                    : validateProjectPlanningHours(
-                        data?.sfa?.totalPrice,
-                        calculateProjectTotalPlannedHours(projectTasks),
-                      ).status === 'caution'
-                    ? 'bg-blue-100 text-blue-800'
-                    : validateProjectPlanningHours(
-                        data?.sfa?.totalPrice,
-                        calculateProjectTotalPlannedHours(projectTasks),
-                      ).status === 'disabled'
-                    ? 'bg-gray-100 text-gray-500'
-                    : 'bg-green-100 text-green-800'
-                }`}
-                label={
-                  validateProjectPlanningHours(
-                    data?.sfa?.totalPrice,
-                    calculateProjectTotalPlannedHours(projectTasks),
-                  ).message
-                }
-              />
-              {data?.sfa?.totalPrice && (
-                <span className="text-sm">
-                  {
-                    validateProjectPlanningHours(
-                      data.sfa.totalPrice,
-                      calculateProjectTotalPlannedHours(projectTasks),
-                    ).percentage
-                  }
-                  %
-                </span>
-              )}
+              {(() => {
+                const validation = validateProjectPlanningHours(
+                  data,
+                  calculateProjectTotalPlannedHours(projectTasks),
+                );
+                return (
+                  <>
+                    <Badge
+                      className={`${
+                        validation.status === 'error'
+                          ? 'bg-red-100 text-red-800'
+                          : validation.status === 'warning'
+                          ? 'bg-amber-100 text-amber-800'
+                          : validation.status === 'caution'
+                          ? 'bg-blue-100 text-blue-800'
+                          : validation.status === 'disabled'
+                          ? 'bg-gray-100 text-gray-500'
+                          : 'bg-green-100 text-green-800'
+                      }`}
+                      label={validation.message}
+                    />
+                    {validation.totalAmount && (
+                      <div className="flex items-center gap-1 text-sm">
+                        <span
+                          className={`font-medium ${
+                            validation.status === 'error'
+                              ? 'text-red-600'
+                              : validation.status === 'warning'
+                              ? 'text-amber-600'
+                              : validation.status === 'caution'
+                              ? 'text-blue-600'
+                              : 'text-green-600'
+                          }`}
+                        >
+                          {validation.percentage > 0 ? '+' : ''}
+                          {validation.percentage}%
+                        </span>
+                        <span className="text-gray-500">
+                          ({validation.expectedHours}h 기준)
+                        </span>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </Tooltip>
         </DescriptionItem>
@@ -373,9 +415,55 @@ const ProjectDetailTable = ({
           {data.scheduleRisk || '정상'} / {data.timeRisk || '정상'}
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
+          프로젝트 금액
+        </DescriptionItem>
+        <DescriptionItem>
+          <Tooltip
+            content={
+              <div className="flex flex-col gap-1 text-xs">
+                {(() => {
+                  const priceDetails = getProjectPriceDetails(data);
+                  return (
+                    <>
+                      <div>
+                        사업부: {data.team?.name || '정보없음'} / 서비스:{' '}
+                        {data.service?.name || '정보없음'}
+                      </div>
+                      {priceDetails.hasMatchedItems ? (
+                        <>
+                          <div className="border-t pt-1 mt-1">
+                            <div className="font-medium">매칭된 SFA 항목:</div>
+                            {priceDetails.matchedItems.map((item, index) => (
+                              <div key={index} className="ml-2">
+                                • {item.itemName} ({item.teamName}):{' '}
+                                {item.formattedPrice}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="border-t pt-1 mt-1 font-medium">
+                            총 프로젝트 금액: {priceDetails.formattedPrice}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-amber-500">
+                          일치하는 SFA 항목이 없습니다
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            }
+          >
+            <span className="cursor-help">
+              {formatProjectPrice(calculateProjectPrice(data))}
+            </span>
+          </Tooltip>
+        </DescriptionItem>
+        {/* <DescriptionItem label width="w-[140px]">
           담당자
         </DescriptionItem>
-        <DescriptionItem>{data.manager?.name || '-'}</DescriptionItem>
+        <DescriptionItem>{data.manager?.name || '-'}</DescriptionItem> */}
       </DescriptionRow>
 
       {/* 4행:  */}

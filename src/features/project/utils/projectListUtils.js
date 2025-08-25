@@ -20,7 +20,7 @@ export const enhanceItemsWithScheduleStatus = (items) => {
     ...item,
     scheduleStatus: getScheduleStatus(item),
     taskStatus: getTaskStatus(item),
-    calculatedProgress: calculateProjectProgress(item),
+    calculatedProgress: calculateProjectProgress(item.projectTasks),
   }));
 };
 

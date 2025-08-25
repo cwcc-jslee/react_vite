@@ -1,34 +1,45 @@
 /**
- * @file projectProgressUtils.js 
+ * @file projectProgressUtils.js
  * @description 프로젝트 진행률 계산 관련 유틸리티 함수들
  */
 
 /**
  * 프로젝트 진행률 계산 함수
  * Task별 계획시간을 가중치로 사용한 가중평균 방식
- * @param {Object} project - 프로젝트 객체
+ * @param {Array} projectTasks - 프로젝트 태스크 배열
  * @returns {number} - 계산된 진행률 (0-100)
  */
-export const calculateProjectProgress = (project) => {
-  if (!project.projectTasks || project.projectTasks.length === 0) {
+export const calculateProjectProgress = (projectTasks) => {
+  if (!projectTasks || projectTasks.length === 0) {
     return 0;
   }
 
-  const tasks = project.projectTasks;
+  // isProgress가 true인 태스크만 필터링
+  const progressEnabledTasks = projectTasks.filter(
+    (task) => task.isProgress === true,
+  );
+
+  console.log('>>>>progressEnabledTasks', progressEnabledTasks);
+
+  // 진행률 계산 대상 태스크가 없으면 0 반환
+  if (progressEnabledTasks.length === 0) {
+    return 0;
+  }
+
   let totalWeight = 0;
   let weightedProgress = 0;
 
-  tasks.forEach((task) => {
+  progressEnabledTasks.forEach((task) => {
     // Task 진행률 (code 값을 숫자로 변환, 기본값 0)
-    const taskProgressValue = task.taskProgress?.code 
-      ? parseInt(task.taskProgress.code, 10) 
+    const taskProgressValue = task.taskProgress?.code
+      ? parseInt(task.taskProgress.code, 10)
       : 0;
 
     // Task 가중치 (계획시간 기준, 없으면 1로 설정)
     const taskWeight = task.planningTimeData?.totalPlannedHours || 1;
 
     totalWeight += taskWeight;
-    weightedProgress += (taskProgressValue * taskWeight);
+    weightedProgress += taskProgressValue * taskWeight;
   });
 
   // 가중 평균 계산
@@ -45,9 +56,9 @@ export const updateProjectsWithProgress = (projects) => {
     return [];
   }
 
-  return projects.map(project => ({
+  return projects.map((project) => ({
     ...project,
-    calculatedProgress: calculateProjectProgress(project)
+    calculatedProgress: calculateProjectProgress(project.projectTasks),
   }));
 };
 
@@ -66,9 +77,9 @@ export const calculateProgressDistribution = (projectsWithProgress) => {
     total: projectsWithProgress.length,
   };
 
-  projectsWithProgress.forEach(project => {
+  projectsWithProgress.forEach((project) => {
     const progress = project.calculatedProgress || 0;
-    
+
     if (progress >= 0 && progress <= 25) {
       distribution['0-25']++;
     } else if (progress >= 26 && progress <= 50) {
@@ -91,32 +102,39 @@ export const calculateProgressDistribution = (projectsWithProgress) => {
  * @returns {Object} - 진행률 통계 객체
  */
 export const generateProgressStats = (projectsWithProgress) => {
-  if (!Array.isArray(projectsWithProgress) || projectsWithProgress.length === 0) {
+  if (
+    !Array.isArray(projectsWithProgress) ||
+    projectsWithProgress.length === 0
+  ) {
     return {
       totalProjects: 0,
       averageProgress: 0,
       distribution: calculateProgressDistribution([]),
-      sampleProjects: []
+      sampleProjects: [],
     };
   }
 
-  const totalProgress = projectsWithProgress.reduce((sum, project) => 
-    sum + (project.calculatedProgress || 0), 0);
-  
-  const averageProgress = Math.round(totalProgress / projectsWithProgress.length);
-  
+  const totalProgress = projectsWithProgress.reduce(
+    (sum, project) => sum + (project.calculatedProgress || 0),
+    0,
+  );
+
+  const averageProgress = Math.round(
+    totalProgress / projectsWithProgress.length,
+  );
+
   const distribution = calculateProgressDistribution(projectsWithProgress);
-  
-  const sampleProjects = projectsWithProgress.slice(0, 3).map(p => ({
+
+  const sampleProjects = projectsWithProgress.slice(0, 3).map((p) => ({
     id: p.id,
     calculatedProgress: p.calculatedProgress,
-    taskCount: p.projectTasks?.length || 0
+    taskCount: p.projectTasks?.length || 0,
   }));
 
   return {
     totalProjects: projectsWithProgress.length,
     averageProgress,
     distribution,
-    sampleProjects
+    sampleProjects,
   };
 };
