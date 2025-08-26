@@ -76,8 +76,8 @@ const ProjectDetailTable = ({
 
   // 프로젝트 기간 표시 함수
   const formatProjectDuration = () => {
-    const startDate = data.startDate || '-';
-    const endDate = data.planEndDate || '-';
+    const startDate = data.startDate || data.planStartDate || '-';
+    const endDate = data.endDate || data.planEndDate || '-';
 
     return `${startDate} - ${endDate}`;
   };

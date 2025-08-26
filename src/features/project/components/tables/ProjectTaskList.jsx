@@ -10,6 +10,7 @@ import {
   Progress,
 } from '../../../../shared/components/ui';
 import { FiCheckSquare, FiClock, FiCalendar } from 'react-icons/fi';
+import { getTaskScheduleStatus } from '../../utils/scheduleStatusUtils';
 
 /**
  * 프로젝트 작업 테이블 컴포넌트
@@ -71,10 +72,44 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
     }
   };
 
+  // 태스크 상태 계산 및 표시 함수 (ProjectList와 동일한 스타일)
+  const formatTaskStatus = (task) => {
+    const status = getTaskScheduleStatus(task);
+    switch (status) {
+      case 'normal':
+        return <span className="text-xs text-green-600 font-medium">정상</span>;
+      case 'imminent':
+        return <span className="text-xs text-orange-500 font-medium">임박</span>;
+      case 'delayed':
+        return <span className="text-xs text-red-500 font-bold">지연</span>;
+      default:
+        return <span className="text-xs text-green-600 font-medium">정상</span>;
+    }
+  };
+
+  // 개별 태스크의 시간초과 상태 계산 함수
+  const formatTaskTimeOverStatus = (task) => {
+    if (!task.planningTimeData?.totalPlannedHours) return '-';
+    
+    const totalPlannedHours = task.planningTimeData.totalPlannedHours || 0;
+    const totalActualHours = task.totalWorkHours || 0;
+    
+    if (totalActualHours <= totalPlannedHours) {
+      // 계획시간 내
+      return <span className="text-xs text-green-600 font-medium">정상</span>;
+    } else {
+      // 계획시간 초과
+      const overHours = totalActualHours - totalPlannedHours;
+      return <span className="text-xs text-red-500 font-bold">+{overHours}h</span>;
+    }
+  };
+
   // 테이블 컬럼 정의
   const columns = [
     { key: 'index', title: '순번', align: 'center', width: '60px' },
     { key: 'completed', title: '완료', align: 'center', width: '60px' },
+    { key: 'taskStatus', title: 'TASK상태', align: 'center', width: '80px' },
+    { key: 'timeOverStatus', title: '시간초과', align: 'center', width: '80px' },
     { key: 'name', title: '작업명', align: 'left' },
     { key: 'bucket', title: '버킷', align: 'center' },
     { key: 'taskScheduleType', title: '일정구분', align: 'center' },
@@ -153,6 +188,16 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
                     checked={task.taskProgress?.name === '100%'}
                     disabled={true}
                   />
+                </td>
+
+                {/* TASK상태 */}
+                <td className="px-3 py-2 text-center text-sm">
+                  {formatTaskStatus(task)}
+                </td>
+
+                {/* 시간초과 */}
+                <td className="px-3 py-2 text-center text-sm">
+                  {formatTaskTimeOverStatus(task)}
                 </td>
 
                 {/* 작업명 */}
