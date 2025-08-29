@@ -83,19 +83,26 @@ export const DASHBOARD_INITIAL_STATE = {
 // 프로젝트 폼 초기 상태
 export const FORM_INITIAL_STATE = {
   data: {
-    title: '',
-    description: '',
-    start_date: '',
-    end_date: '',
-    status: '',
-    priority: '',
-    manager: '',
-    members: [],
-    attachments: [],
+    projectType: 'revenue',
+    name: '',
+    customer: null,
+    sfa: '',
+    service: null,
+    team: null,
+    pjtStatus: null,
+    importanceLevel: null,
+    fy: null,
+    planStartDate: '',
+    planEndDate: '',
+    templateId: '',
+    remarks: '',
   },
   errors: {},
   isSubmitting: false,
-  isValid: true,
+  isValid: false,
+  mode: 'create',
+  editingId: null,
+  isDirty: false,
 };
 
 // 프로젝트 선택 항목 초기 상태

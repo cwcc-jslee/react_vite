@@ -29,7 +29,6 @@ const ProjectAddBaseForm = ({
   formData,
   updateField,
   isSubmitting,
-  // workTypeOptions,
   templeteOptions,
   handleTemplateSelect,
 }) => {
@@ -83,38 +82,35 @@ const ProjectAddBaseForm = ({
     })),
   ];
 
-  // work_type 옵션 목록
-  const workTypeOptions = [
-    { value: 'project', label: '프로젝트' },
-    { value: 'single', label: '단건' },
+  // 프로젝트 유형 옵션 목록
+  const projectTypeOptions = [
+    { value: 'revenue', label: '매출' },
+    { value: 'investment', label: '투자' },
   ];
 
   return (
     <Row gutter={16} className="w-full">
       <Col span={24} className="space-y-4">
-        {/* 1열: work_type, 고객사, SFA, 프로젝트명 */}
+        {/* 1열: 유형, 고객사, SFA, 프로젝트명 */}
         <Group direction="horizontal" className="gap-6">
           <FormItem className="flex-1">
             <Label required className="text-left">
-              작업유형
+              유형
             </Label>
             <Select
-              name="workType"
-              value={formData.workType || 'project'}
+              name="projectType"
+              value={formData.projectType || 'revenue'}
               onChange={(e) => {
                 const value = e.target.value;
-                updateField('workType', value);
-                // 작업 유형에 따른 템플릿 설정
-                if (value === 'single') {
-                  updateField('templateId', '3');
-                  handleTemplateSelect('3');
-                } else if (value === 'project') {
-                  updateField('templateId', '2');
-                  handleTemplateSelect('2');
+                updateField('projectType', value);
+                
+                // 투자로 변경시 SFA 필드 초기화
+                if (value === 'investment') {
+                  updateField('sfa', '');
                 }
               }}
             >
-              {workTypeOptions.map((option) => (
+              {projectTypeOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -127,24 +123,33 @@ const ProjectAddBaseForm = ({
               고객사
             </Label>
             <CustomerSearchInput
-              onSelect={(e) => setSelectedCustomerId(e.id)}
+              onSelect={(customer) => {
+                setSelectedCustomerId(customer.id);
+                updateField('customer', customer);
+              }}
               size="small"
             />
           </FormItem>
 
           <FormItem className="flex-1">
-            <Label required className="text-left">
+            <Label 
+              required={formData.projectType === 'revenue'} 
+              className="text-left"
+            >
               SFA
             </Label>
             <Select
               name="sfa"
               value={formData.sfa || ''}
               onChange={updateField}
+              disabled={formData.projectType === 'investment'}
             >
               {sfaOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {isSfaLoading && option.value === ''
                     ? '로딩 중...'
+                    : formData.projectType === 'investment' && option.value === ''
+                    ? '투자 프로젝트는 SFA 불필요'
                     : option.label}
                 </option>
               ))}
@@ -163,52 +168,8 @@ const ProjectAddBaseForm = ({
           </FormItem>
         </Group>
 
-        {/* 2열: 상태, 중요도, 서비스, 사업부 */}
+        {/* 2열: 서비스, 사업부, 상태, 중요도 */}
         <Group direction="horizontal" className="gap-6">
-          <FormItem className="flex-1">
-            <Label className="text-left">상태</Label>
-            <Select
-              name="pjtStatus"
-              value={formData.pjtStatus?.id}
-              onChange={(e) => {
-                const selectedId = e.target.value;
-                const selectedItem = codebooks?.pjtStatus?.find(
-                  (item) =>
-                    item.id === selectedId || item.id === Number(selectedId),
-                );
-                updateField('pjtStatus', selectedItem);
-              }}
-            >
-              {codebooks?.pjtStatus?.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </FormItem>
-
-          <FormItem className="flex-1">
-            <Label className="text-left">중요도</Label>
-            <Select
-              name="importanceLevel"
-              value={formData.importanceLevel?.id}
-              onChange={(e) => {
-                const selectedId = e.target.value;
-                const selectedItem = codebooks?.importanceLevel?.find(
-                  (item) =>
-                    item.id === selectedId || item.id === Number(selectedId),
-                );
-                updateField('importanceLevel', selectedItem);
-              }}
-            >
-              {codebooks?.importanceLevel?.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </FormItem>
-
           <FormItem className="flex-1">
             <Label required className="text-left">
               서비스
@@ -252,6 +213,50 @@ const ProjectAddBaseForm = ({
               {teamOptions.map((option) => (
                 <option key={option.id} value={option.id}>
                   {option.name}
+                </option>
+              ))}
+            </Select>
+          </FormItem>
+
+          <FormItem className="flex-1">
+            <Label className="text-left">상태</Label>
+            <Select
+              name="pjtStatus"
+              value={formData.pjtStatus?.id}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                const selectedItem = codebooks?.pjtStatus?.find(
+                  (item) =>
+                    item.id === selectedId || item.id === Number(selectedId),
+                );
+                updateField('pjtStatus', selectedItem);
+              }}
+            >
+              {codebooks?.pjtStatus?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </Select>
+          </FormItem>
+
+          <FormItem className="flex-1">
+            <Label className="text-left">중요도</Label>
+            <Select
+              name="importanceLevel"
+              value={formData.importanceLevel?.id}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                const selectedItem = codebooks?.importanceLevel?.find(
+                  (item) =>
+                    item.id === selectedId || item.id === Number(selectedId),
+                );
+                updateField('importanceLevel', selectedItem);
+              }}
+            >
+              {codebooks?.importanceLevel?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
                 </option>
               ))}
             </Select>
@@ -318,7 +323,7 @@ const ProjectAddBaseForm = ({
                 updateField('templateId', value);
                 handleTemplateSelect(value);
               }}
-              disabled={formData.workType === 'single'}
+              disabled={false}
             >
               {templeteOptions.map((option) => (
                 <option key={option.value} value={option.value}>

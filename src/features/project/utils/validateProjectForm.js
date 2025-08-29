@@ -8,8 +8,8 @@ export const validateProjectForm = (formData) => {
   const errors = [];
   let isValid = true;
 
-  // SFA 검사
-  if (!formData.sfa) {
+  // SFA 검사 (매출 유형일 때만)
+  if (!formData.sfa && formData.projectType === 'revenue') {
     errors.push('SFA를 선택해주세요.');
     isValid = false;
   }

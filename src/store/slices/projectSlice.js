@@ -18,7 +18,11 @@ import {
   SELECTED_ITEM_INITIAL_STATE,
 } from '../../features/project/constants/initialState';
 import { getScheduleStatus } from '../../features/project/utils/scheduleStatusUtils';
-import { processDashboardData, validateApiResponse, calculatePagination } from '../../features/project/utils/projectDataUtils';
+import {
+  processDashboardData,
+  validateApiResponse,
+  calculatePagination,
+} from '../../features/project/utils/projectDataUtils';
 
 // 프로젝트 목록 조회 액션
 export const fetchProjects = createAsyncThunk(
@@ -332,10 +336,22 @@ const projectSlice = createSlice({
       state.selectedItem = initialState.selectedItem;
     },
 
+    // 폼 초기화
+    initForm: (state, action) => {
+      const { data, mode = 'create', id = null } = action.payload;
+      state.form = {
+        ...initialState.form,
+        data: { ...initialState.form.data, ...data },
+        mode,
+        editingId: id,
+      };
+    },
+
     // 폼 데이터 변경
     updateFormField: (state, action) => {
       const { name, value } = action.payload;
-      state.form[name] = value;
+      state.form.data[name] = value;
+      state.form.isDirty = true;
 
       // 에러 초기화
       if (state.form.errors[name]) {
@@ -343,14 +359,27 @@ const projectSlice = createSlice({
       }
     },
 
+    // 여러 필드 일괄 변경
+    updateFormFields: (state, action) => {
+      Object.entries(action.payload).forEach(([name, value]) => {
+        state.form.data[name] = value;
+      });
+      state.form.isDirty = true;
+    },
+
     // 폼 데이터 초기화
     resetForm: (state) => {
-      state.form = initialState.form;
+      state.form = { ...initialState.form };
     },
 
     // 폼 에러 설정
     setFormErrors: (state, action) => {
       state.form.errors = action.payload;
+    },
+
+    // 폼 에러 초기화
+    clearFormErrors: (state) => {
+      state.form.errors = {};
     },
 
     // 폼 제출 상태 설정
@@ -361,6 +390,16 @@ const projectSlice = createSlice({
     // 폼 유효성 설정
     setFormIsValid: (state, action) => {
       state.form.isValid = action.payload;
+    },
+
+    // 폼 모드 설정
+    setFormMode: (state, action) => {
+      state.form.mode = action.payload;
+    },
+
+    // 편집 ID 설정
+    setEditingId: (state, action) => {
+      state.form.editingId = action.payload;
     },
 
     // works 페이지네이션 변경
@@ -508,7 +547,8 @@ const projectSlice = createSlice({
         notification.error({
           message: '대시보드 데이터 조회 실패',
           description:
-            action.payload || '프로젝트 대시보드 데이터를 가져오는데 실패했습니다.',
+            action.payload ||
+            '프로젝트 대시보드 데이터를 가져오는데 실패했습니다.',
         });
       });
   },
@@ -520,11 +560,16 @@ export const {
   setFilters,
   resetFilters,
   clearSelectedItem,
+  initForm,
   updateFormField,
-  setFormErrors,
-  setFormSubmitting,
+  updateFormFields,
   resetForm,
+  setFormErrors,
+  clearFormErrors,
+  setFormSubmitting,
   setFormIsValid,
+  setFormMode,
+  setEditingId,
   setWorksPage,
   setWorksPageSize,
 } = projectSlice.actions;

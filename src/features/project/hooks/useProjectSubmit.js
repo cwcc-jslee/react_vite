@@ -31,7 +31,7 @@ import { processRelationFields } from '../../../shared/utils/relationFieldUtils'
  */
 export const useProjectSubmit = () => {
   const dispatch = useDispatch();
-  const { data: formData } = useSelector((state) => state.pageForm);
+  const formData = useSelector((state) => state.project.form.data || {});
   const buckets = useSelector((state) => state.projectBucket.buckets);
   const [progress, setProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);

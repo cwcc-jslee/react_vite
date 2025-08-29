@@ -19,17 +19,30 @@ import { useEffect, useCallback, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   initForm,
+  resetForm,
   updateFormField,
   updateFormFields,
-  resetForm,
   setFormErrors,
   clearFormErrors,
-  setFormSubmitting,
-  setFormIsValid,
   setFormMode,
   setEditingId,
-} from '../../../store/slices/projectSlice';
-import { createProject } from '../../../store/slices/projectSlice';
+  prepareFormData,
+  submitFormStart,
+  submitFormSuccess,
+  submitFormFailure,
+  selectFormData,
+  selectFormErrors,
+  selectFormSubmitting,
+  selectFormMode,
+  selectFormValidity,
+  selectEditingId,
+  selectFormDirty,
+} from '../../../store/slices/pageFormSlice';
+import {
+  createProject,
+  // updateProject,
+  // PROJECT_PAGE_TYPE,
+} from '../store/projectStoreActions';
 
 /**
  * 프로젝트 폼 관리를 위한 커스텀 훅
@@ -40,13 +53,13 @@ export const useProjectForm = () => {
   const [formProgress, setFormProgress] = useState(0);
 
   // 폼 상태 선택자
-  const formData = useSelector((state) => state.project.form.data);
-  const formErrors = useSelector((state) => state.project.form.errors);
-  const isSubmitting = useSelector((state) => state.project.form.isSubmitting);
-  const formMode = useSelector((state) => state.project.form.mode);
-  const isFormValid = useSelector((state) => state.project.form.isValid);
-  const editingId = useSelector((state) => state.project.form.editingId);
-  const isDirty = useSelector((state) => state.project.form.isDirty);
+  const formData = useSelector(selectFormData);
+  const formErrors = useSelector(selectFormErrors);
+  const isSubmitting = useSelector(selectFormSubmitting);
+  const formMode = useSelector(selectFormMode);
+  const isFormValid = useSelector(selectFormValidity);
+  const editingId = useSelector(selectEditingId);
+  const isDirty = useSelector(selectFormDirty);
 
   // 핵심 폼 초기화 함수 (저수준 API)
   const initializeForm = useCallback(
@@ -58,6 +71,10 @@ export const useProjectForm = () => {
           id,
         }),
       );
+      // if (mode === 'edit') {
+      //   dispatch(setFormMode('edit'));
+      //   dispatch(setEditingId(id));
+      // }
       setFormProgress(0);
     },
     [dispatch],
@@ -92,21 +109,15 @@ export const useProjectForm = () => {
   // 폼 필드 변경 핸들러
   const updateField = useCallback(
     (nameOrEvent, valueOrNothing) => {
-      let name, value;
-
       // 이벤트 객체인 경우 처리
-      if (typeof nameOrEvent === 'string') {
-        name = nameOrEvent;
-        value = valueOrNothing;
-      } else if (nameOrEvent && nameOrEvent.target) {
-        name = nameOrEvent.target.name;
-        value = nameOrEvent.target.value;
-      } else {
-        console.warn('Invalid arguments passed to updateField');
-        return;
-      }
+      const name =
+        typeof nameOrEvent === 'string' ? nameOrEvent : nameOrEvent.target.name;
+      const value =
+        typeof valueOrNothing === 'undefined'
+          ? nameOrEvent.target.value
+          : valueOrNothing;
 
-      // Redux action dispatch
+      // Redux action dispatch using action creator
       dispatch(updateFormField({ name, value }));
 
       // 필드 변경 시 폼 진행률 업데이트
@@ -150,49 +161,26 @@ export const useProjectForm = () => {
       isValid = false;
     }
 
-    if (!formData.customer) {
-      errors.customer = '고객사를 선택하세요';
+    if (!formData.customerId) {
+      errors.customerId = '고객사를 선택하세요';
       isValid = false;
     }
 
-    if (!formData.sfa && formData.projectType === 'revenue') {
-      errors.sfa = 'SFA를 선택하세요';
+    if (!formData.startDate) {
+      errors.startDate = '시작일을 선택하세요';
       isValid = false;
     }
 
-    if (!formData.planStartDate) {
-      errors.planStartDate = '계획 시작일을 선택하세요';
-      isValid = false;
-    }
-
-    if (!formData.planEndDate) {
-      errors.planEndDate = '계획 종료일을 선택하세요';
-      isValid = false;
-    }
-
-    if (!formData.service) {
-      errors.service = '서비스를 선택하세요';
-      isValid = false;
-    }
-
-    if (!formData.team) {
-      errors.team = '사업부를 선택하세요';
-      isValid = false;
-    }
-
-    if (!formData.fy) {
-      errors.fy = '사업년도를 선택하세요';
+    if (!formData.status) {
+      errors.status = '상태를 선택하세요';
       isValid = false;
     }
 
     // 에러 상태 업데이트
     if (!isValid) {
       dispatch(setFormErrors(errors));
-    } else {
-      dispatch(clearFormErrors());
     }
 
-    dispatch(setFormIsValid(isValid));
     return isValid;
   }, [dispatch, formData]);
 
@@ -200,27 +188,30 @@ export const useProjectForm = () => {
   const handleCreateProject = useCallback(async () => {
     if (!validateForm()) return false;
 
-    dispatch(setFormSubmitting(true));
+    dispatch(submitFormStart());
 
     try {
+      // 폼 데이터 전처리
+      const preparedData = prepareFormData(formData);
+
       // 프로젝트 생성 액션 디스패치
-      const resultAction = await dispatch(createProject(formData));
+      const resultAction = await dispatch(createProject(preparedData));
 
       if (createProject.fulfilled.match(resultAction)) {
-        setFormProgress(100);
+        dispatch(submitFormSuccess());
         return true;
       } else {
         // 서버 에러 처리
         const errorData = resultAction.payload || {
           global: '프로젝트 생성 실패',
         };
-        dispatch(setFormErrors(errorData));
+        dispatch(submitFormFailure(errorData));
         return false;
       }
     } catch (error) {
       // 예외 처리
       dispatch(
-        setFormErrors({
+        submitFormFailure({
           global: error.message || '프로젝트 생성 중 오류가 발생했습니다',
         }),
       );
