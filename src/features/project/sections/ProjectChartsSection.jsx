@@ -2,7 +2,11 @@
 
 import React, { useEffect } from 'react';
 import { Row, Col } from '../../../shared/components/ui';
-import ProjectStatusDonutCharts from '../components/charts/ProjectStatusDonutCharts';
+import ProjectTypeDonutChart from '../components/charts/ProjectTypeDonutChart';
+import ProjectTeamDonutChart from '../components/charts/ProjectTeamDonutChart';
+import ProjectServiceDonutChart from '../components/charts/ProjectServiceDonutChart';
+import ProjectStatusDonutChart from '../components/charts/ProjectStatusDonutChart';
+import ProjectScheduleDonutChart from '../components/charts/ProjectScheduleDonutChart';
 import ProjectProgressChart from '../components/charts/ProjectProgressChart';
 import ProjectTaskDelayChart from '../components/charts/ProjectTaskDelayChart';
 import ProjectRemainingPeriodChart from '../components/charts/ProjectRemainingPeriodChart';
@@ -18,8 +22,12 @@ import { useProjectStore } from '../hooks/useProjectStore';
 const ProjectChartsSection = () => {
   const { searchFormData } = useProjectSearch();
   const { dashboardData, actions } = useProjectStore();
-  const { projectStatus, projectProgress, projectAnalytics, progressDistribution } = dashboardData;
+  const { projectType, team, service, projectStatus, projectProgress, projectAnalytics, progressDistribution } = dashboardData;
   const isFiltered = searchFormData.pjtStatus !== '';
+
+  console.log('=== ProjectChartsSection 렌더링 ===');
+  console.log('전체 dashboardData:', dashboardData);
+  console.log('projectType 데이터:', projectType);
 
   // 컴포넌트 마운트 시 대시보드 데이터 조회
   useEffect(() => {
@@ -28,42 +36,87 @@ const ProjectChartsSection = () => {
   }, []);
 
   return (
-    <Row gutter={[16, 16]}>
-      {/* 프로젝트 상태 도넛 차트 */}
-      <Col span={6}>
-        <div className="h-[420px]">
-          <ProjectStatusDonutCharts
-            projectStatus={projectStatus || {}}
-            scheduleStatus={projectAnalytics || {}}
-            isFiltered={isFiltered}
-          />
-        </div>
-      </Col>
+    <>
+      {/* 첫 번째 행 - 4개 차트 */}
+      <Row gutter={[16, 16]}>
+        {/* 프로젝트 타입 도넛 차트 */}
+        <Col span={6}>
+          <div className="h-[350px]">
+            <ProjectTypeDonutChart
+              projectType={projectType || {}}
+              isFiltered={isFiltered}
+            />
+          </div>
+        </Col>
 
-      {/* 프로젝트 진행 단계별 막대 차트 */}
-      <Col span={6}>
-        <div className="h-[420px]">
-          <ProjectProgressChart 
-            projectProgress={projectProgress} 
-            progressDistribution={progressDistribution}
-          />
-        </div>
-      </Col>
+        {/* 팀별 도넛 차트 */}
+        <Col span={6}>
+          <div className="h-[350px]">
+            <ProjectTeamDonutChart
+              team={team || {}}
+              isFiltered={isFiltered}
+            />
+          </div>
+        </Col>
 
-      {/* 태스크 지연 현황 차트 */}
-      <Col span={6}>
-        <div className="h-[420px]">
-          <ProjectTaskDelayChart />
-        </div>
-      </Col>
+        {/* 서비스별 도넛 차트 */}
+        <Col span={6}>
+          <div className="h-[350px]">
+            <ProjectServiceDonutChart
+              service={service || {}}
+              isFiltered={isFiltered}
+            />
+          </div>
+        </Col>
 
-      {/* 프로젝트 남은 기간 차트 */}
-      <Col span={6}>
-        <div className="h-[420px]">
-          <ProjectRemainingPeriodChart />
-        </div>
-      </Col>
-    </Row>
+        {/* 프로젝트 상태 도넛 차트 */}
+        <Col span={6}>
+          <div className="h-[350px]">
+            <ProjectStatusDonutChart
+              projectStatus={projectStatus || {}}
+              isFiltered={isFiltered}
+            />
+          </div>
+        </Col>
+      </Row>
+
+      {/* 두 번째 행 - 4개 차트 */}
+      <Row gutter={[16, 16]} className="mt-4">
+        {/* 프로젝트 진행 단계별 막대 차트 */}
+        <Col span={6}>
+          <div className="h-[350px]">
+            <ProjectProgressChart 
+              projectProgress={projectProgress} 
+              progressDistribution={progressDistribution}
+            />
+          </div>
+        </Col>
+
+        {/* 태스크 지연 현황 차트 */}
+        <Col span={6}>
+          <div className="h-[350px]">
+            <ProjectTaskDelayChart />
+          </div>
+        </Col>
+
+        {/* 프로젝트 남은 기간 차트 */}
+        <Col span={6}>
+          <div className="h-[350px]">
+            <ProjectRemainingPeriodChart />
+          </div>
+        </Col>
+
+        {/* 일정 상태 도넛 차트 */}
+        <Col span={6}>
+          <div className="h-[350px]">
+            <ProjectScheduleDonutChart
+              scheduleStatus={projectAnalytics || {}}
+              isFiltered={isFiltered}
+            />
+          </div>
+        </Col>
+      </Row>
+    </>
   );
 };
 

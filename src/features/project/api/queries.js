@@ -224,6 +224,12 @@ export const buildProjectScheduleStatusQuery = (params) => {
       pjt_status: {
         fields: ['name'],
       },
+      team: {
+        fields: ['name'],
+      },
+      service: {
+        fields: ['name'],
+      },
       project_tasks: {
         filters: { is_scheduled: { $eq: true } },
         fields: [

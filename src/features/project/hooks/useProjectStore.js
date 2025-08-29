@@ -53,7 +53,10 @@ export const useProjectStore = () => {
 
   // 대시보드 데이터만 선택적으로 추출
   const dashboardData = {
-    projectStatus: dashboard.projectStatus?.data || null,
+    projectType: dashboard.projectAnalytics?.data?.projectType || {},
+    team: dashboard.projectAnalytics?.data?.team || {},
+    service: dashboard.projectAnalytics?.data?.service || {},
+    projectStatus: dashboard.projectAnalytics?.data?.projectStatus || null,
     projectProgress: dashboard.projectProgress?.data || null,
     projectAnalytics: dashboard.projectAnalytics?.data || null,
     progressDistribution: dashboard.projectAnalytics?.data?.progressDistribution || null,

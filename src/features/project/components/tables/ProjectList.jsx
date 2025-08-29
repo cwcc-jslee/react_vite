@@ -85,7 +85,7 @@ const TableErrorState = ({ columnsCount, message }) => {
 const formatRemainingDays = (item) => {
   // endDate가 없으면 planEndDate 사용
   const planEndDate = item?.endDate || item?.planEndDate;
-  
+
   if (!planEndDate) return <span>-</span>;
 
   const today = new Date();
@@ -123,19 +123,20 @@ const formatRemainingDays = (item) => {
 // 시간초과 상태 계산 함수
 const formatTimeOverStatus = (item) => {
   if (!item?.projectTasks?.length) return '-';
-  
+
   // 모든 태스크의 계획시간 합계
   const totalPlannedHours = item.projectTasks.reduce(
     (sum, task) => sum + (task.planningTimeData?.totalPlannedHours || 0),
     0,
   );
-  
-  // 실제 투입시간 (billable + non_billable)  
-  const totalActualHours = (item.totalProjectHours || 0) + (item.totalProjectNonBillableHours || 0);
-  
+
+  // 실제 투입시간 (billable + non_billable)
+  const totalActualHours =
+    (item.totalProjectHours || 0) + (item.totalProjectNonBillableHours || 0);
+
   // 진행률 (현재는 100%로 가정, 향후 실제 진행률 적용)
   const progressRate = 100; // TODO: 실제 진행률로 변경 예정
-  
+
   // 현재 진행률 100% 가정하에 실제시간과 계획시간 직접 비교
   if (totalActualHours <= totalPlannedHours) {
     // 계획시간 내
@@ -143,7 +144,9 @@ const formatTimeOverStatus = (item) => {
   } else {
     // 계획시간 초과
     const overHours = totalActualHours - totalPlannedHours;
-    return <span className="text-xs text-red-500 font-bold">+{overHours}h</span>;
+    return (
+      <span className="text-xs text-red-500 font-bold">+{overHours}h</span>
+    );
   }
 };
 
@@ -151,7 +154,7 @@ const formatTimeOverStatus = (item) => {
 const formatProjectHours = (item) => {
   if (!item?.projectTasks?.length) return '-';
 
-  console.log('***** 시간계산 ******', item);
+  // console.log('***** 시간계산 ******', item);
 
   // 모든 태스크의 계획시간 합계 (planningTimeData.totalPlannedHours)
   const totalPlannedHours = item.projectTasks.reduce(
@@ -176,7 +179,7 @@ const formatProjectPeriod = (item) => {
   // startDate가 없으면 planStartDate 사용, endDate가 없으면 planEndDate 사용
   const startDate = item?.startDate || item?.planStartDate;
   const endDate = item?.endDate || item?.planEndDate;
-  
+
   if (!startDate || !endDate) return <span>-</span>;
 
   const start = new Date(startDate);
@@ -335,28 +338,38 @@ const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
       <td className="px-3 py-2 text-center text-sm">
         {item?.calculatedProgress !== undefined ? (
           <div className="flex flex-col items-center gap-1">
-            <span className={`text-sm font-medium ${
-              item.calculatedProgress >= 75 ? 'text-green-600' :
-              item.calculatedProgress >= 50 ? 'text-blue-600' :
-              item.calculatedProgress >= 25 ? 'text-orange-600' :
-              'text-red-600'
-            }`}>
+            <span
+              className={`text-sm font-medium ${
+                item.calculatedProgress >= 75
+                  ? 'text-green-600'
+                  : item.calculatedProgress >= 50
+                  ? 'text-blue-600'
+                  : item.calculatedProgress >= 25
+                  ? 'text-orange-600'
+                  : 'text-red-600'
+              }`}
+            >
               {item.calculatedProgress}%
             </span>
             <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-              <div 
+              <div
                 className={`h-full rounded-full transition-all duration-300 ${
-                  item.calculatedProgress >= 75 ? 'bg-green-500' :
-                  item.calculatedProgress >= 50 ? 'bg-blue-500' :
-                  item.calculatedProgress >= 25 ? 'bg-orange-500' :
-                  'bg-red-500'
+                  item.calculatedProgress >= 75
+                    ? 'bg-green-500'
+                    : item.calculatedProgress >= 50
+                    ? 'bg-blue-500'
+                    : item.calculatedProgress >= 25
+                    ? 'bg-orange-500'
+                    : 'bg-red-500'
                 }`}
                 style={{ width: `${Math.min(item.calculatedProgress, 100)}%` }}
               />
             </div>
           </div>
+        ) : item?.projectProgress ? (
+          `${item.projectProgress}%`
         ) : (
-          item?.projectProgress ? `${item.projectProgress}%` : '-'
+          '-'
         )}
       </td>
       <td className="px-3 py-2 text-center text-sm">

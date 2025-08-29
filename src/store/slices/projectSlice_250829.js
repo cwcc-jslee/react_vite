@@ -199,10 +199,9 @@ export const fetchProjectDashboardData = createAsyncThunk(
     try {
       const state = getState();
       const { filters: storeFilters } = state.project;
-      // 종료(90)가 아닌 모든 상태의 프로젝트 가져오기
-      const filters = {
-        pjt_status: { $ne: 90 }, // 종료가 아닌
-      };
+      // const filters = storeFilters || {};
+      // 진행중 프로젝트에 대해서만
+      const filters = { pjt_status: { $eq: 88 }, work_type: 'project' };
 
       const pageSize = 20; // 고정 페이지 크기
 
@@ -284,19 +283,6 @@ const initialState = {
           imminent: 0,
           total: 0,
         },
-        projectStatus: {
-          pending: 0, // 85: 보류
-          notStarted: 0, // 86: 시작전
-          waiting: 0, // 87: 대기
-          inProgress: 0, // 88: 진행중
-          review: 0, // 89: 검수
-        },
-        projectType: {
-          revenue: 0, // 매출
-          investment: 0, // 투자
-        },
-        team: {},      // 팀별 카운터 (동적)
-        service: {},   // 서비스별 카운터 (동적)
       },
     },
   },
