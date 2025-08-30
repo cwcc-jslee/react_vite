@@ -13,7 +13,7 @@ import { todoApiService } from '../../features/todo/services/todoApiService';
 import {
   DEFAULT_FILTERS,
   DEFAULT_PAGINATION,
-  DASHBOARD_INITIAL_STATE,
+  // DASHBOARD_INITIAL_STATE,
   FORM_INITIAL_STATE,
   SELECTED_ITEM_INITIAL_STATE,
 } from '../../features/project/constants/initialState';
@@ -154,44 +154,6 @@ export const fetchProjectWorks = createAsyncThunk(
   },
 );
 
-// 프로젝트 상태 조회 액션 수정
-export const fetchProjectStatus = createAsyncThunk(
-  'project/fetchStatus',
-  async (_, { rejectWithValue }) => {
-    try {
-      // 상태와 진행률 데이터를 병렬로 가져오기
-      const [statusResponse, progressResponse] = await Promise.all([
-        apiService.get('/project-api/status'),
-        apiService.get('/project-api/progress'),
-      ]);
-
-      // 각 응답의 에러 체크
-      if (!statusResponse.data || !statusResponse.data.data) {
-        throw new Error('프로젝트 상태 데이터를 가져오는데 실패했습니다.');
-      }
-
-      if (!progressResponse.data || !progressResponse.data.data) {
-        throw new Error('프로젝트 진행률 데이터를 가져오는데 실패했습니다.');
-      }
-
-      const statusData = statusResponse.data.data;
-      const progressData = progressResponse.data.data;
-
-      console.log('====== statusData', statusData);
-      console.log('====== progressData', progressData.progressDistribution);
-
-      return {
-        projectStatus: statusData,
-        projectProgress: progressData.progressDistribution,
-      };
-    } catch (error) {
-      return rejectWithValue(
-        error.message || '프로젝트 상태 데이터를 가져오는데 실패했습니다',
-      );
-    }
-  },
-);
-
 // 프로젝트 대시보드 데이터 조회 액션
 export const fetchProjectDashboardData = createAsyncThunk(
   'project/fetchDashboardData',
@@ -267,38 +229,33 @@ const initialState = {
   filters: { ...DEFAULT_FILTERS },
   pagination: { ...DEFAULT_PAGINATION },
   dashboard: {
-    ...DASHBOARD_INITIAL_STATE,
-    projectAnalytics: {
-      status: 'idle',
-      error: null,
-      data: {
-        project: {
-          normal: 0,
-          delayed: 0,
-          imminent: 0,
-          total: 0,
-        },
-        task: {
-          normal: 0,
-          delayed: 0,
-          imminent: 0,
-          total: 0,
-        },
-        projectStatus: {
-          pending: 0, // 85: 보류
-          notStarted: 0, // 86: 시작전
-          waiting: 0, // 87: 대기
-          inProgress: 0, // 88: 진행중
-          review: 0, // 89: 검수
-        },
-        projectType: {
-          revenue: 0, // 매출
-          investment: 0, // 투자
-        },
-        team: {},      // 팀별 카운터 (동적)
-        service: {},   // 서비스별 카운터 (동적)
-      },
+    status: 'idle',
+    error: null,
+    project: {
+      normal: 0,
+      delayed: 0,
+      imminent: 0,
+      total: 0,
     },
+    task: {
+      normal: 0,
+      delayed: 0,
+      imminent: 0,
+      total: 0,
+    },
+    projectStatus: {
+      pending: 0, // 85: 보류
+      notStarted: 0, // 86: 시작전
+      waiting: 0, // 87: 대기
+      inProgress: 0, // 88: 진행중
+      review: 0, // 89: 검수
+    },
+    projectType: {
+      revenue: 0, // 매출
+      investment: 0, // 투자
+    },
+    team: {}, // 팀별 카운터 (동적)
+    service: {}, // 서비스별 카운터 (동적)
   },
   form: FORM_INITIAL_STATE,
 };
@@ -518,46 +475,19 @@ const projectSlice = createSlice({
         });
       })
 
-      // 프로젝트 상태 조회
-      .addCase(fetchProjectStatus.pending, (state) => {
-        state.dashboard.projectStatus.status = 'loading';
-        state.dashboard.projectProgress.status = 'loading';
-        state.dashboard.projectStatus.error = null;
-        state.dashboard.projectProgress.error = null;
-      })
-      .addCase(fetchProjectStatus.fulfilled, (state, action) => {
-        state.dashboard.projectStatus.status = 'succeeded';
-        state.dashboard.projectProgress.status = 'succeeded';
-        state.dashboard.projectStatus.data = action.payload.projectStatus;
-        state.dashboard.projectProgress.data = action.payload.projectProgress;
-      })
-      .addCase(fetchProjectStatus.rejected, (state, action) => {
-        state.dashboard.projectStatus.status = 'failed';
-        state.dashboard.projectProgress.status = 'failed';
-        state.dashboard.projectStatus.error = action.payload;
-        state.dashboard.projectProgress.error = action.payload;
-
-        // 에러 알림
-        notification.error({
-          message: '데이터 조회 실패',
-          description:
-            action.payload || '프로젝트 상태 데이터를 가져오는데 실패했습니다',
-        });
-      })
-
       // 프로젝트 대시보드 데이터 조회
       .addCase(fetchProjectDashboardData.pending, (state) => {
-        state.dashboard.projectAnalytics.status = 'loading';
-        state.dashboard.projectAnalytics.error = null;
+        state.dashboard.status = 'loading';
+        state.dashboard.error = null;
       })
       .addCase(fetchProjectDashboardData.fulfilled, (state, action) => {
-        state.dashboard.projectAnalytics.status = 'succeeded';
-        state.dashboard.projectAnalytics.data = action.payload;
-        state.dashboard.projectAnalytics.error = null;
+        state.dashboard.status = 'succeeded';
+        Object.assign(state.dashboard, action.payload);
+        state.dashboard.error = null;
       })
       .addCase(fetchProjectDashboardData.rejected, (state, action) => {
-        state.dashboard.projectAnalytics.status = 'failed';
-        state.dashboard.projectAnalytics.error = action.payload;
+        state.dashboard.status = 'failed';
+        state.dashboard.error = action.payload;
         notification.error({
           message: '대시보드 데이터 조회 실패',
           description:

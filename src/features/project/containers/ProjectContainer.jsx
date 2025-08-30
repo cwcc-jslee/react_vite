@@ -34,7 +34,7 @@ const ProjectContainer = () => {
   useEffect(() => {
     actions.getProjectList();
     // actions.getProjectsWithSchedule();
-    actions.dashboard.fetchStatus(); // 상태와 진행률 데이터를 한 번에 가져옴
+    // actions.dashboard.fetchStatus(); // 상태와 진행률 데이터를 한 번에 가져옴
     actions.dashboard.fetchDashboardData();
 
     // 컴포넌트 언마운트 시 정리

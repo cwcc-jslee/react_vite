@@ -74,11 +74,11 @@ export const SCHEDULE_STATUS_INITIAL_STATE = {
   error: null,
 };
 // 대시보드 초기 상태
-export const DASHBOARD_INITIAL_STATE = {
-  projectStatus: PROJECT_STATUS_INITIAL_STATE,
-  projectProgress: PROJECT_PROGRESS_INITIAL_STATE,
-  scheduleStatus: SCHEDULE_STATUS_INITIAL_STATE,
-};
+// export const DASHBOARD_INITIAL_STATE = {
+//   projectStatus: PROJECT_STATUS_INITIAL_STATE,
+//   projectProgress: PROJECT_PROGRESS_INITIAL_STATE,
+//   scheduleStatus: SCHEDULE_STATUS_INITIAL_STATE,
+// };
 
 // 프로젝트 폼 초기 상태
 export const FORM_INITIAL_STATE = {

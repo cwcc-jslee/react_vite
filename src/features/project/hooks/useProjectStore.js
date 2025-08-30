@@ -26,7 +26,6 @@ import {
   fetchProjectWorks,
   setWorksPage,
   setWorksPageSize,
-  fetchProjectStatus,
   fetchProjectDashboardData,
 } from '../../../store/slices/projectSlice';
 import { changePageMenu, changeSubMenu } from '../../../store/slices/uiSlice';
@@ -53,13 +52,13 @@ export const useProjectStore = () => {
 
   // 대시보드 데이터만 선택적으로 추출
   const dashboardData = {
-    projectType: dashboard.projectAnalytics?.data?.projectType || {},
-    team: dashboard.projectAnalytics?.data?.team || {},
-    service: dashboard.projectAnalytics?.data?.service || {},
-    projectStatus: dashboard.projectAnalytics?.data?.projectStatus || null,
-    projectProgress: dashboard.projectProgress?.data || null,
-    projectAnalytics: dashboard.projectAnalytics?.data || null,
-    progressDistribution: dashboard.projectAnalytics?.data?.progressDistribution || null,
+    projectType: dashboard.projectType || {},
+    team: dashboard.team || {},
+    service: dashboard.service || {},
+    projectStatus: dashboard.projectStatus || null,
+    projectProgress: dashboard.projectProgress || null,
+    projectAnalytics: dashboard || null,
+    progressDistribution: dashboard.progressDistribution || null,
   };
 
   // 액션 핸들러
@@ -191,17 +190,12 @@ export const useProjectStore = () => {
 
     // 대시보드 액션
     dashboard: {
-      // 프로젝트 상태 조회
-      fetchStatus: () => {
-        dispatch(fetchProjectStatus());
-      },
       // 프로젝트 대시보드 데이터 조회
       fetchDashboardData: () => {
         dispatch(fetchProjectDashboardData());
       },
       // 대시보드 데이터 새로고침
       refresh: () => {
-        dispatch(fetchProjectStatus());
         dispatch(fetchProjectDashboardData());
       },
     },

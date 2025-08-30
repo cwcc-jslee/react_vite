@@ -103,31 +103,31 @@ const ProjectProgressChart = ({ projectProgress = [], progressDistribution = nul
     // 기존 projectProgress 데이터 사용 (fallback)
     {
       name: '0%',
-      value: projectProgress['0%'] || 0,
+      value: (projectProgress && projectProgress['0%']) || 0,
       color: '#D13438',
       isProgress: true,
     },
     {
       name: '25%',
-      value: projectProgress['25%'] || 0,
+      value: (projectProgress && projectProgress['25%']) || 0,
       color: '#FF8C00',
       isProgress: true,
     },
     {
       name: '50%',
-      value: projectProgress['50%'] || 0,
+      value: (projectProgress && projectProgress['50%']) || 0,
       color: '#FFB900',
       isProgress: true,
     },
     {
       name: '75%',
-      value: projectProgress['75%'] || 0,
+      value: (projectProgress && projectProgress['75%']) || 0,
       color: '#107C10',
       isProgress: true,
     },
     {
       name: '100%',
-      value: projectProgress['100%'] || 0,
+      value: (projectProgress && projectProgress['100%']) || 0,
       color: '#0078D4',
       isProgress: true,
     },

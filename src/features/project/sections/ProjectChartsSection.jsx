@@ -22,7 +22,15 @@ import { useProjectStore } from '../hooks/useProjectStore';
 const ProjectChartsSection = () => {
   const { searchFormData } = useProjectSearch();
   const { dashboardData, actions } = useProjectStore();
-  const { projectType, team, service, projectStatus, projectProgress, projectAnalytics, progressDistribution } = dashboardData;
+  const {
+    projectType,
+    team,
+    service,
+    projectStatus,
+    projectProgress,
+    projectAnalytics,
+    progressDistribution,
+  } = dashboardData;
   const isFiltered = searchFormData.pjtStatus !== '';
 
   console.log('=== ProjectChartsSection 렌더링 ===');
@@ -49,13 +57,20 @@ const ProjectChartsSection = () => {
           </div>
         </Col>
 
+        {/* 프로젝트 상태 도넛 차트 */}
+        <Col span={6}>
+          <div className="h-[350px]">
+            <ProjectStatusDonutChart
+              projectStatus={projectStatus || {}}
+              isFiltered={isFiltered}
+            />
+          </div>
+        </Col>
+
         {/* 팀별 도넛 차트 */}
         <Col span={6}>
           <div className="h-[350px]">
-            <ProjectTeamDonutChart
-              team={team || {}}
-              isFiltered={isFiltered}
-            />
+            <ProjectTeamDonutChart team={team || {}} isFiltered={isFiltered} />
           </div>
         </Col>
 
@@ -68,16 +83,6 @@ const ProjectChartsSection = () => {
             />
           </div>
         </Col>
-
-        {/* 프로젝트 상태 도넛 차트 */}
-        <Col span={6}>
-          <div className="h-[350px]">
-            <ProjectStatusDonutChart
-              projectStatus={projectStatus || {}}
-              isFiltered={isFiltered}
-            />
-          </div>
-        </Col>
       </Row>
 
       {/* 두 번째 행 - 4개 차트 */}
@@ -85,8 +90,8 @@ const ProjectChartsSection = () => {
         {/* 프로젝트 진행 단계별 막대 차트 */}
         <Col span={6}>
           <div className="h-[350px]">
-            <ProjectProgressChart 
-              projectProgress={projectProgress} 
+            <ProjectProgressChart
+              projectProgress={projectProgress}
               progressDistribution={progressDistribution}
             />
           </div>
