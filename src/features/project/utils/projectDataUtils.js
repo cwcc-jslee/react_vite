@@ -6,7 +6,7 @@
 import { aggregateTaskScheduleStatus } from './scheduleStatusUtils';
 import {
   updateProjectsWithProgress,
-  generateProgressStats,
+  calculateProgressDistribution,
 } from './projectProgressUtils';
 import { calculateRemainingPeriods } from './projectPeriodUtils';
 
@@ -63,10 +63,10 @@ export const processDashboardData = (allProjects, getScheduleStatus) => {
   const projectsWithProgress = updateProjectsWithProgress(inProgressProjects);
   const taskScheduleStatus = aggregateTaskScheduleStatus(inProgressProjects);
   const remainingPeriodStatus = calculateRemainingPeriods(inProgressProjects);
-  const progressStats = generateProgressStats(projectsWithProgress);
+  const progressDistribution = calculateProgressDistribution(projectsWithProgress);
 
   // 디버깅 로그
-  console.log('====== 프로젝트 진행률 계산 결과', progressStats);
+  console.log('====== 프로젝트 진행률 분포 결과', progressDistribution);
 
   // 프로젝트 상태별 카운터는 모든 프로젝트(종료 제외) 대상
   const projectStatusCount = calculateProjectStatusCount(allProjects);
@@ -81,26 +81,24 @@ export const processDashboardData = (allProjects, getScheduleStatus) => {
   const serviceCount = calculateServiceCount(allProjects);
 
   return {
-    // 프로젝트 일정 상태
-    project: projectScheduleStatus,
-    // 태스크 일정 상태
-    task: taskScheduleStatus,
-    // 남은 기간별 상태
-    remainingPeriod: remainingPeriodStatus,
-    // 진행률 계산된 프로젝트 목록
+    // 프로젝트 일정 상태 (정상/지연/임박)
+    projectScheduleStatus: projectScheduleStatus,
+    // 태스크 일정 상태 (정상/지연/임박)
+    taskScheduleStatus: taskScheduleStatus,
+    // 프로젝트 남은 기간별 분포
+    projectRemainingPeriod: remainingPeriodStatus,
+    // 프로젝트 상태별 카운터 (보류/시작전/대기/진행중/검수)
+    projectStatusCount: projectStatusCount,
+    // 프로젝트 타입별 카운터 (매출/투자)
+    projectTypeCount: projectTypeCount,
+    // 팀별 프로젝트 카운터
+    projectTeamCount: teamCount,
+    // 서비스별 프로젝트 카운터
+    projectServiceCount: serviceCount,
+    // 프로젝트 진행률별 분포 (0-25%, 26-50%, ...)
+    projectProgressDistribution: progressDistribution,
+    // 진행률 계산된 프로젝트 목록 (내부 처리용)
     projectsWithProgress,
-    // 진행률별 분포
-    progressDistribution: progressStats.distribution,
-    // 진행률 통계
-    progressStats,
-    // 프로젝트 상태별 카운터
-    projectStatus: projectStatusCount,
-    // 프로젝트 타입별 카운터
-    projectType: projectTypeCount,
-    // 팀별 카운터
-    team: teamCount,
-    // 서비스별 카운터
-    service: serviceCount,
   };
 };
 

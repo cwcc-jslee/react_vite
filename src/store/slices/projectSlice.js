@@ -231,31 +231,48 @@ const initialState = {
   dashboard: {
     status: 'idle',
     error: null,
-    project: {
+    // 프로젝트 일정 상태 (정상/지연/임박)
+    projectScheduleStatus: {
       normal: 0,
       delayed: 0,
       imminent: 0,
       total: 0,
     },
-    task: {
+    // 태스크 일정 상태 (정상/지연/임박)
+    taskScheduleStatus: {
       normal: 0,
       delayed: 0,
       imminent: 0,
       total: 0,
     },
-    projectStatus: {
+    // 프로젝트 남은 기간별 분포
+    projectRemainingPeriod: {},
+    // 프로젝트 상태별 카운터 (보류/시작전/대기/진행중/검수)
+    projectStatusCount: {
       pending: 0, // 85: 보류
       notStarted: 0, // 86: 시작전
       waiting: 0, // 87: 대기
       inProgress: 0, // 88: 진행중
       review: 0, // 89: 검수
     },
-    projectType: {
+    // 프로젝트 타입별 카운터 (매출/투자)
+    projectTypeCount: {
       revenue: 0, // 매출
       investment: 0, // 투자
     },
-    team: {}, // 팀별 카운터 (동적)
-    service: {}, // 서비스별 카운터 (동적)
+    // 팀별 프로젝트 카운터
+    projectTeamCount: {},
+    // 서비스별 프로젝트 카운터
+    projectServiceCount: {},
+    // 프로젝트 진행률별 분포 (0-25%, 26-50%, ...)
+    projectProgressDistribution: {},
+  },
+  // 차트 필터링 상태
+  chartFilters: {
+    selectedProjectType: null, // null, 'revenue', 'investment'
+    selectedTeam: null, // null, '팀이름'
+    selectedService: null, // null, '서비스이름'
+    selectedStatus: null, // null, 'pending', 'notStarted', etc.
   },
   form: FORM_INITIAL_STATE,
 };
@@ -351,6 +368,51 @@ const projectSlice = createSlice({
     // 폼 에러 초기화
     clearFormErrors: (state) => {
       state.form.errors = {};
+    },
+
+    // 차트 필터링 액션들 (계층적 필터 초기화 포함)
+    setChartFilter: (state, action) => {
+      const { filterType, value } = action.payload;
+      
+      // 같은 값 클릭 시 토글 (선택 해제), 다른 값 클릭 시 선택
+      const newValue = state.chartFilters[filterType] === value ? null : value;
+      state.chartFilters[filterType] = newValue;
+      
+      // 상위 필터 변경 시 하위 필터들 초기화 (계층 구조: 프로젝트 타입 > 프로젝트 상태 > 팀별/서비스별)
+      if (filterType === 'selectedProjectType') {
+        // 프로젝트 타입 변경 시 모든 하위 필터 초기화
+        state.chartFilters.selectedStatus = null;
+        state.chartFilters.selectedTeam = null;
+        state.chartFilters.selectedService = null;
+        console.log('프로젝트 타입 필터 변경: 하위 필터들(상태, 팀, 서비스) 초기화');
+      } else if (filterType === 'selectedStatus') {
+        // 프로젝트 상태 변경 시 팀별/서비스별 필터 초기화
+        state.chartFilters.selectedTeam = null;
+        state.chartFilters.selectedService = null;
+        console.log('프로젝트 상태 필터 변경: 하위 필터들(팀, 서비스) 초기화');
+      } else if (filterType === 'selectedTeam') {
+        // 팀별 현황 변경 시 서비스별 필터 초기화
+        state.chartFilters.selectedService = null;
+        console.log('팀별 현황 필터 변경: 하위 필터(서비스) 초기화');
+      }
+      
+      console.log('필터 변경 후 상태:', JSON.stringify(state.chartFilters, null, 2));
+    },
+
+    // 모든 차트 필터 초기화
+    clearChartFilters: (state) => {
+      state.chartFilters = {
+        selectedProjectType: null,
+        selectedTeam: null,
+        selectedService: null,
+        selectedStatus: null,
+      };
+    },
+
+    // 특정 필터만 초기화
+    clearChartFilter: (state, action) => {
+      const filterType = action.payload;
+      state.chartFilters[filterType] = null;
     },
 
     // 폼 제출 상태 설정
@@ -516,6 +578,10 @@ export const {
   setEditingId,
   setWorksPage,
   setWorksPageSize,
+  // 차트 필터링 액션들
+  setChartFilter,
+  clearChartFilters,
+  clearChartFilter,
 } = projectSlice.actions;
 
 export default projectSlice.reducer;

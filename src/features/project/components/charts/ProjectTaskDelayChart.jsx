@@ -26,7 +26,8 @@ const ProjectTaskDelayChart = () => {
   const [activeIndex, setActiveIndex] = useState(null);
   
   // API에서 받은 태스크 일정 상태 데이터
-  const taskScheduleData = dashboardData?.projectAnalytics?.task || {
+  const taskScheduleData = dashboardData?.projectAnalytics?.taskScheduleStatus || 
+                           dashboardData?.projectAnalytics?.task || {
     normal: 0,
     delayed: 0,
     imminent: 0,

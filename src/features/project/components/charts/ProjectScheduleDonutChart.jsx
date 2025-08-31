@@ -10,7 +10,7 @@ import BaseDonutChart from '../../../../shared/components/charts/BaseDonutChart'
  */
 const ProjectScheduleDonutChart = ({ scheduleStatus = {}, isFiltered = false }) => {
   // 일정 상태 데이터 추출
-  const projectData = scheduleStatus.project || {};
+  const projectData = scheduleStatus.projectScheduleStatus || scheduleStatus.project || {};
   
   // 일정 상태별 데이터 및 색상 정의
   const scheduleData = [

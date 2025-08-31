@@ -3,6 +3,7 @@
 
 import React from 'react';
 import BaseDonutChart from '../../../../shared/components/charts/BaseDonutChart';
+import { useProjectStore } from '../../hooks/useProjectStore';
 
 // 동적 색상 생성을 위한 색상 팔레트 (팀과 다른 색상 사용)
 const COLOR_PALETTE = [
@@ -16,6 +17,8 @@ const COLOR_PALETTE = [
  * 동적 서비스 데이터를 기반으로 프로젝트 수를 시각화
  */
 const ProjectServiceDonutChart = ({ service = {}, isFiltered = false }) => {
+  const { actions, dashboardData } = useProjectStore();
+
   // 서비스 데이터를 배열로 변환하고 정렬 (프로젝트 수 기준 내림차순)
   const serviceEntries = Object.entries(service).sort((a, b) => b[1] - a[1]);
 
@@ -27,6 +30,20 @@ const ProjectServiceDonutChart = ({ service = {}, isFiltered = false }) => {
     bgColor: COLOR_PALETTE[index % COLOR_PALETTE.length] + '80', // 투명도 추가
   }));
 
+  // 활성 세그먼트 결정
+  const getActiveSegment = () => {
+    const selectedService = dashboardData.activeFilters?.selectedService;
+    return selectedService || null;
+  };
+
+  // 세그먼트 클릭 핸들러
+  const handleSegmentClick = (label) => {
+    console.log('ProjectServiceDonutChart - 세그먼트 클릭:', label);
+    
+    // 서비스 이름을 그대로 필터 값으로 사용
+    actions.chartFilters.setFilter('selectedService', label);
+  };
+
   return (
     <BaseDonutChart
       title="서비스별 현황"
@@ -35,6 +52,8 @@ const ProjectServiceDonutChart = ({ service = {}, isFiltered = false }) => {
       totalLabel="총 프로젝트"
       emptyMessage="데이터가 없습니다"
       cutoutPercentage="50%"
+      onSegmentClick={handleSegmentClick}
+      activeSegment={getActiveSegment()}
     />
   );
 };

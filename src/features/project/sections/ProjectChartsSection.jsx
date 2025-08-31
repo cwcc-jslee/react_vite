@@ -30,12 +30,15 @@ const ProjectChartsSection = () => {
     projectProgress,
     projectAnalytics,
     progressDistribution,
+    isFiltered: isChartFiltered,
+    activeFilters,
   } = dashboardData;
   const isFiltered = searchFormData.pjtStatus !== '';
 
   console.log('=== ProjectChartsSection 렌더링 ===');
   console.log('전체 dashboardData:', dashboardData);
   console.log('projectType 데이터:', projectType);
+  console.log('차트 필터 상태:', { isChartFiltered, activeFilters });
 
   // 컴포넌트 마운트 시 대시보드 데이터 조회
   useEffect(() => {
@@ -52,7 +55,7 @@ const ProjectChartsSection = () => {
           <div className="h-[350px]">
             <ProjectTypeDonutChart
               projectType={projectType || {}}
-              isFiltered={isFiltered}
+              isFiltered={isFiltered || isChartFiltered}
             />
           </div>
         </Col>
@@ -62,7 +65,7 @@ const ProjectChartsSection = () => {
           <div className="h-[350px]">
             <ProjectStatusDonutChart
               projectStatus={projectStatus || {}}
-              isFiltered={isFiltered}
+              isFiltered={isFiltered || isChartFiltered}
             />
           </div>
         </Col>
@@ -70,7 +73,10 @@ const ProjectChartsSection = () => {
         {/* 팀별 도넛 차트 */}
         <Col span={6}>
           <div className="h-[350px]">
-            <ProjectTeamDonutChart team={team || {}} isFiltered={isFiltered} />
+            <ProjectTeamDonutChart 
+              team={team || {}} 
+              isFiltered={isFiltered || isChartFiltered} 
+            />
           </div>
         </Col>
 
@@ -79,7 +85,7 @@ const ProjectChartsSection = () => {
           <div className="h-[350px]">
             <ProjectServiceDonutChart
               service={service || {}}
-              isFiltered={isFiltered}
+              isFiltered={isFiltered || isChartFiltered}
             />
           </div>
         </Col>

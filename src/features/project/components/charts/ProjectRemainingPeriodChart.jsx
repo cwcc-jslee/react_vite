@@ -25,7 +25,8 @@ const ProjectRemainingPeriodChart = () => {
   const [activeIndex, setActiveIndex] = useState(null);
   
   // API에서 받은 남은 기간별 데이터
-  const remainingPeriodData = dashboardData?.projectAnalytics?.remainingPeriod || {
+  const remainingPeriodData = dashboardData?.projectAnalytics?.projectRemainingPeriod || 
+                              dashboardData?.projectAnalytics?.remainingPeriod || {
     overdue2Month: 0,
     overdue1Month: 0,
     imminent: 0,
