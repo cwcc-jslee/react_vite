@@ -12,8 +12,6 @@ import { useProjectStore } from '../../hooks/useProjectStore';
 const ProjectTypeDonutChart = ({ projectType = {}, isFiltered = false }) => {
   const { actions, dashboardData } = useProjectStore();
   
-  console.log('=== ProjectTypeDonutChart 렌더링 ===');
-  console.log('받은 projectType 데이터:', projectType);
   
   // 타입별 데이터 및 색상 정의
   const typeData = [
@@ -41,7 +39,6 @@ const ProjectTypeDonutChart = ({ projectType = {}, isFiltered = false }) => {
 
   // 세그먼트 클릭 핸들러
   const handleSegmentClick = (label) => {
-    console.log('ProjectTypeDonutChart - 세그먼트 클릭:', label);
     
     // 차트 필터 토글 (현재 선택된 값과 같으면 null로 초기화, 다르면 새 값으로 설정)
     const filterValue = label === '매출' ? 'revenue' : 'investment';

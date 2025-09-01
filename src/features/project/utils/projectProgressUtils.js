@@ -19,7 +19,6 @@ export const calculateProjectProgress = (projectTasks) => {
     (task) => task.isProgress === true,
   );
 
-  console.log('>>>>progressEnabledTasks', progressEnabledTasks);
 
   // 진행률 계산 대상 태스크가 없으면 0 반환
   if (progressEnabledTasks.length === 0) {

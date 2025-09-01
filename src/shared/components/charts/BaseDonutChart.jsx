@@ -121,7 +121,7 @@ const BaseDonutChart = ({
 
   // 커스텀 범례 렌더링
   const renderCustomLegend = () => (
-    <div className="flex flex-wrap justify-center gap-4 mt-3">
+    <div className="flex flex-wrap justify-center gap-x-3 mt-3 leading-tight" style={{ lineHeight: '1.2', rowGap: '3px' }}>
       {data.map((item, index) => {
         const isSelected = activeIndex === index;
         const isAnySelected = activeIndex !== null;
@@ -145,7 +145,7 @@ const BaseDonutChart = ({
                 boxShadow: isSelected ? `0 0 8px ${item.color}40` : 'none'
               }}
             />
-            <span className={`transition-all duration-300 ${
+            <span className={`transition-all duration-300 whitespace-nowrap ${
               isSelected ? 'text-gray-900 font-bold' : 'text-gray-700'
             }`}>
               {item.label}: <span className={isSelected ? 'font-bold' : 'font-semibold'}>{item.value}개</span>

@@ -37,9 +37,6 @@ const ProjectRemainingPeriodChart = () => {
     total: 0,
   };
 
-  // 디버깅 로그
-  console.log('ProjectRemainingPeriodChart - dashboardData:', dashboardData);
-  console.log('ProjectRemainingPeriodChart - remainingPeriodData:', remainingPeriodData);
 
   // 남은 기간 데이터 가공
   const processRemainingPeriodData = () => {
@@ -88,7 +85,6 @@ const ProjectRemainingPeriodChart = () => {
       }
     ].filter(item => item.value > 0);
 
-    console.log('ProjectRemainingPeriodChart - processRemainingPeriodData result:', result);
     return result;
   };
 

@@ -63,7 +63,8 @@ export const processDashboardData = (allProjects, getScheduleStatus) => {
   const projectsWithProgress = updateProjectsWithProgress(inProgressProjects);
   const taskScheduleStatus = aggregateTaskScheduleStatus(inProgressProjects);
   const remainingPeriodStatus = calculateRemainingPeriods(inProgressProjects);
-  const progressDistribution = calculateProgressDistribution(projectsWithProgress);
+  const progressDistribution =
+    calculateProgressDistribution(projectsWithProgress);
 
   // 디버깅 로그
   console.log('====== 프로젝트 진행률 분포 결과', progressDistribution);
@@ -202,10 +203,10 @@ export const calculateProjectTypeCount = (projects) => {
 
   projects.forEach((project, index) => {
     const projectType = project.projectType;
-    console.log(`프로젝트 ${index + 1}:`, {
-      id: project.id,
-      projectType: projectType,
-    });
+    // console.log(`프로젝트 ${index + 1}:`, {
+    //   id: project.id,
+    //   projectType: projectType,
+    // });
 
     if (projectType === 'revenue') {
       typeCount.revenue++;

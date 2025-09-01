@@ -30,6 +30,7 @@ import {
   setChartFilter,
   clearChartFilters,
   clearChartFilter,
+  updateChartFilteredItems,
 } from '../../../store/slices/projectSlice';
 import { changePageMenu, changeSubMenu } from '../../../store/slices/uiSlice';
 import { PAGE_MENUS } from '@shared/constants/navigation';
@@ -53,6 +54,7 @@ export const useProjectStore = () => {
   // 대시보드 상태 선택
   const dashboard = useSelector((state) => state.project.dashboard);
   const chartFilters = useSelector((state) => state.project.chartFilters);
+  const chartFilteredItems = useSelector((state) => state.project.chartFilteredItems);
 
   // 필터링된 대시보드 데이터 계산 함수
   const getFilteredDashboardData = () => {
@@ -101,7 +103,6 @@ export const useProjectStore = () => {
       activeFilters.push({ type: 'service', value: chartFilters.selectedService });
     }
 
-    console.log('활성화된 필터들:', activeFilters);
 
     // 다중 필터가 있는 경우 조합 비율 계산
     if (activeFilters.length > 0) {
@@ -149,7 +150,6 @@ export const useProjectStore = () => {
         }
         
         combinedRatio *= ratio;
-        console.log(`${filter.type} 필터 비율:`, ratio, `누적 비율:`, combinedRatio);
       });
 
       // 필터링되지 않은 데이터에 조합 비율 적용
@@ -190,90 +190,91 @@ export const useProjectStore = () => {
         return result;
       };
 
-      // 계층적 필터링 적용
+      // 계층적 필터링 적용 - 단계별로 계산
       // 프로젝트 타입 > 프로젝트 상태 > 팀별 현황, 서비스별 현황
+      
+      // 1단계: 프로젝트 상태 계산
+      const calculatedProjectStatus = chartFilters.selectedProjectType ? 
+        (() => {
+          // 선택된 프로젝트 타입의 총 개수를 프로젝트 상태에 비례 분배
+          const selectedTypeCount = dashboard.projectTypeCount?.[chartFilters.selectedProjectType] || 0;
+          const originalStatusTotal = Object.values(dashboard.projectStatusCount || {}).reduce((sum, count) => sum + count, 0);
+          
+          if (originalStatusTotal === 0) return dashboard.projectStatusCount;
+          
+          // 각 상태별로 비례 계산하되, 총합이 선택된 타입 개수와 일치하도록 조정
+          const result = {};
+          let adjustedTotal = 0;
+          
+          Object.keys(dashboard.projectStatusCount || {}).forEach(status => {
+            const originalCount = dashboard.projectStatusCount[status] || 0;
+            const adjustedCount = Math.round((originalCount / originalStatusTotal) * selectedTypeCount);
+            result[status] = adjustedCount;
+            adjustedTotal += adjustedCount;
+          });
+          
+          // 반올림으로 인한 차이를 가장 큰 값에 보정
+          if (adjustedTotal !== selectedTypeCount && selectedTypeCount > 0) {
+            const maxStatus = Object.keys(result).reduce((a, b) => result[a] > result[b] ? a : b);
+            result[maxStatus] += (selectedTypeCount - adjustedTotal);
+          }
+          
+          
+          return result;
+        })() : 
+        dashboard.projectStatusCount;
+
+      // 2단계: 팀별 현황 계산
+      const calculatedTeam = (() => {
+        // 적용할 필터들의 총 개수 계산
+        let targetTotal = 0;
+        
+        if (chartFilters.selectedProjectType && chartFilters.selectedStatus) {
+          // 두 필터 모두 적용: 계산된 프로젝트 상태에서 선택된 상태의 개수
+          targetTotal = calculatedProjectStatus[chartFilters.selectedStatus] || 0;
+        } else if (chartFilters.selectedProjectType) {
+          // 프로젝트 타입만 적용
+          targetTotal = dashboard.projectTypeCount?.[chartFilters.selectedProjectType] || 0;
+        } else if (chartFilters.selectedStatus) {
+          // 프로젝트 상태만 적용 (원본 데이터 사용)
+          targetTotal = dashboard.projectStatusCount?.[chartFilters.selectedStatus] || 0;
+        } else {
+          return dashboard.projectTeamCount;
+        }
+        
+        // 비례 분배
+        const originalTeamTotal = Object.values(dashboard.projectTeamCount || {}).reduce((sum, count) => sum + count, 0);
+        if (originalTeamTotal === 0 || targetTotal === 0) return dashboard.projectTeamCount;
+        
+        const result = {};
+        let adjustedTotal = 0;
+        
+        Object.keys(dashboard.projectTeamCount || {}).forEach(team => {
+          const originalCount = dashboard.projectTeamCount[team] || 0;
+          const adjustedCount = Math.round((originalCount / originalTeamTotal) * targetTotal);
+          result[team] = adjustedCount;
+          adjustedTotal += adjustedCount;
+        });
+        
+        // 반올림 오차 보정
+        if (adjustedTotal !== targetTotal && targetTotal > 0) {
+          const maxTeam = Object.keys(result).reduce((a, b) => result[a] > result[b] ? a : b);
+          result[maxTeam] += (targetTotal - adjustedTotal);
+        }
+        
+        
+        return result;
+      })();
+
       filteredData = {
         // 프로젝트 타입: 항상 원본 데이터 (최상위)
         projectType: dashboard.projectTypeCount,
         
-        // 프로젝트 상태: 프로젝트 타입 필터 영향 받음 (정확한 수량 반영)
-        projectStatus: chartFilters.selectedProjectType ? 
-          (() => {
-            // 선택된 프로젝트 타입의 총 개수를 프로젝트 상태에 비례 분배
-            const selectedTypeCount = dashboard.projectTypeCount?.[chartFilters.selectedProjectType] || 0;
-            const originalStatusTotal = Object.values(dashboard.projectStatusCount || {}).reduce((sum, count) => sum + count, 0);
-            
-            if (originalStatusTotal === 0) return dashboard.projectStatusCount;
-            
-            // 각 상태별로 비례 계산하되, 총합이 선택된 타입 개수와 일치하도록 조정
-            const result = {};
-            let adjustedTotal = 0;
-            
-            Object.keys(dashboard.projectStatusCount || {}).forEach(status => {
-              const originalCount = dashboard.projectStatusCount[status] || 0;
-              const adjustedCount = Math.round((originalCount / originalStatusTotal) * selectedTypeCount);
-              result[status] = adjustedCount;
-              adjustedTotal += adjustedCount;
-            });
-            
-            // 반올림으로 인한 차이를 가장 큰 값에 보정
-            if (adjustedTotal !== selectedTypeCount && selectedTypeCount > 0) {
-              const maxStatus = Object.keys(result).reduce((a, b) => result[a] > result[b] ? a : b);
-              result[maxStatus] += (selectedTypeCount - adjustedTotal);
-            }
-            
-            console.log(`프로젝트 타입 '${chartFilters.selectedProjectType}' 필터 적용:`);
-            console.log(`선택된 타입 총 개수: ${selectedTypeCount}`);
-            console.log(`필터링된 상태 데이터:`, result);
-            console.log(`필터링된 상태 총합: ${Object.values(result).reduce((sum, count) => sum + count, 0)}`);
-            
-            return result;
-          })() : 
-          dashboard.projectStatusCount,
+        // 프로젝트 상태: 위에서 계산된 값 사용
+        projectStatus: calculatedProjectStatus,
         
-        // 팀별 현황: 프로젝트 타입 + 프로젝트 상태 필터 영향 받음 (정확한 수량 반영)
-        team: (() => {
-          // 적용할 필터들의 총 개수 계산
-          let targetTotal = 0;
-          
-          if (chartFilters.selectedProjectType && chartFilters.selectedStatus) {
-            // 두 필터 모두 적용: 필터링된 프로젝트 상태에서 선택된 상태의 개수
-            const filteredStatus = filteredData.projectStatus;
-            targetTotal = filteredStatus[chartFilters.selectedStatus] || 0;
-          } else if (chartFilters.selectedProjectType) {
-            // 프로젝트 타입만 적용
-            targetTotal = dashboard.projectTypeCount?.[chartFilters.selectedProjectType] || 0;
-          } else if (chartFilters.selectedStatus) {
-            // 프로젝트 상태만 적용
-            targetTotal = dashboard.projectStatusCount?.[chartFilters.selectedStatus] || 0;
-          } else {
-            return dashboard.projectTeamCount;
-          }
-          
-          // 비례 분배
-          const originalTeamTotal = Object.values(dashboard.projectTeamCount || {}).reduce((sum, count) => sum + count, 0);
-          if (originalTeamTotal === 0 || targetTotal === 0) return dashboard.projectTeamCount;
-          
-          const result = {};
-          let adjustedTotal = 0;
-          
-          Object.keys(dashboard.projectTeamCount || {}).forEach(team => {
-            const originalCount = dashboard.projectTeamCount[team] || 0;
-            const adjustedCount = Math.round((originalCount / originalTeamTotal) * targetTotal);
-            result[team] = adjustedCount;
-            adjustedTotal += adjustedCount;
-          });
-          
-          // 반올림 오차 보정
-          if (adjustedTotal !== targetTotal && targetTotal > 0) {
-            const maxTeam = Object.keys(result).reduce((a, b) => result[a] > result[b] ? a : b);
-            result[maxTeam] += (targetTotal - adjustedTotal);
-          }
-          
-          console.log(`팀별 현황 필터링: 목표 총합 ${targetTotal}, 실제 총합 ${Object.values(result).reduce((sum, count) => sum + count, 0)}`);
-          
-          return result;
-        })(),
+        // 팀별 현황: 위에서 계산된 값 사용
+        team: calculatedTeam,
         
         // 서비스별 현황: 모든 상위 필터 영향 받음 (정확한 수량 반영)
         service: (() => {
@@ -281,29 +282,25 @@ export const useProjectStore = () => {
           let targetTotal = 0;
           
           if (chartFilters.selectedProjectType && chartFilters.selectedStatus && chartFilters.selectedTeam) {
-            // 3개 필터 모두 적용: 필터링된 팀에서 선택된 팀의 개수
-            const filteredTeam = filteredData.team;
-            targetTotal = filteredTeam[chartFilters.selectedTeam] || 0;
+            // 3개 필터 모두 적용: 계산된 팀에서 선택된 팀의 개수
+            targetTotal = calculatedTeam[chartFilters.selectedTeam] || 0;
           } else if (chartFilters.selectedProjectType && chartFilters.selectedStatus) {
-            // 프로젝트 타입 + 상태: 필터링된 프로젝트 상태에서 선택된 상태의 개수
-            const filteredStatus = filteredData.projectStatus;
-            targetTotal = filteredStatus[chartFilters.selectedStatus] || 0;
+            // 프로젝트 타입 + 상태: 계산된 프로젝트 상태에서 선택된 상태의 개수
+            targetTotal = calculatedProjectStatus[chartFilters.selectedStatus] || 0;
           } else if (chartFilters.selectedProjectType && chartFilters.selectedTeam) {
-            // 프로젝트 타입 + 팀: 필터링된 팀에서 선택된 팀의 개수
-            const filteredTeam = filteredData.team;
-            targetTotal = filteredTeam[chartFilters.selectedTeam] || 0;
+            // 프로젝트 타입 + 팀: 계산된 팀에서 선택된 팀의 개수
+            targetTotal = calculatedTeam[chartFilters.selectedTeam] || 0;
           } else if (chartFilters.selectedStatus && chartFilters.selectedTeam) {
-            // 상태 + 팀: 필터링된 팀에서 선택된 팀의 개수
-            const filteredTeam = filteredData.team;
-            targetTotal = filteredTeam[chartFilters.selectedTeam] || 0;
+            // 상태 + 팀: 계산된 팀에서 선택된 팀의 개수 
+            targetTotal = calculatedTeam[chartFilters.selectedTeam] || 0;
           } else if (chartFilters.selectedProjectType) {
             // 프로젝트 타입만
             targetTotal = dashboard.projectTypeCount?.[chartFilters.selectedProjectType] || 0;
           } else if (chartFilters.selectedStatus) {
-            // 프로젝트 상태만
+            // 프로젝트 상태만 (원본 데이터 사용 - 상태 단독 선택시에는 계층 구조상 프로젝트 타입 필터가 없으므로)
             targetTotal = dashboard.projectStatusCount?.[chartFilters.selectedStatus] || 0;
           } else if (chartFilters.selectedTeam) {
-            // 팀만
+            // 팀만 (원본 데이터 사용 - 팀 단독 선택시에는 상위 필터가 없으므로)
             targetTotal = dashboard.projectTeamCount?.[chartFilters.selectedTeam] || 0;
           } else {
             return dashboard.projectServiceCount;
@@ -329,7 +326,6 @@ export const useProjectStore = () => {
             result[maxService] += (targetTotal - adjustedTotal);
           }
           
-          console.log(`서비스별 현황 필터링: 목표 총합 ${targetTotal}, 실제 총합 ${Object.values(result).reduce((sum, count) => sum + count, 0)}`);
           
           return result;
         })(),
@@ -372,7 +368,6 @@ export const useProjectStore = () => {
         return result;
       }
       
-      console.log('필터링 적용된 데이터:', filteredData);
     }
 
     return {
@@ -530,14 +525,37 @@ export const useProjectStore = () => {
       // 필터 설정 (토글 방식)
       setFilter: (filterType, value) => {
         dispatch(setChartFilter({ filterType, value }));
+        // 필터 변경 후 자동으로 계층적 필터링된 프로젝트 목록 업데이트
+        setTimeout(() => {
+          dispatch(updateChartFilteredItems());
+        }, 100); // 상태 업데이트 후 필터링 실행
       },
       // 모든 필터 초기화
       clearAll: () => {
         dispatch(clearChartFilters());
+        // 필터 초기화 후 전체 프로젝트로 업데이트
+        setTimeout(() => {
+          dispatch(updateChartFilteredItems());
+        }, 100);
       },
       // 특정 필터 초기화
       clear: (filterType) => {
         dispatch(clearChartFilter(filterType));
+        setTimeout(() => {
+          dispatch(updateChartFilteredItems());
+        }, 100);
+      },
+    },
+    
+    // 차트 필터링된 프로젝트 목록 액션
+    chartFilteredItems: {
+      // 계층적 필터링 실행
+      update: () => {
+        dispatch(updateChartFilteredItems());
+      },
+      // 수동 업데이트
+      refresh: () => {
+        dispatch(updateChartFilteredItems());
       },
     },
   };
@@ -553,6 +571,7 @@ export const useProjectStore = () => {
     form,
     dashboard,
     dashboardData, // 추가: 데이터만 추출한 대시보드 상태
+    chartFilteredItems, // 차트 필터링된 프로젝트 목록
 
     // 액션
     actions,

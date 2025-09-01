@@ -34,10 +34,6 @@ const ProjectTaskDelayChart = () => {
     total: 0,
   };
 
-  // 디버깅 로그
-  console.log('ProjectTaskDelayChart - dashboardData:', dashboardData);
-  console.log('ProjectTaskDelayChart - projectAnalytics:', dashboardData?.projectAnalytics);
-  console.log('ProjectTaskDelayChart - taskScheduleData:', taskScheduleData);
 
   // 태스크 지연 데이터 가공 (API 데이터 활용)
   const processTaskDelayData = () => {
@@ -67,7 +63,6 @@ const ProjectTaskDelayChart = () => {
       }
     ].filter(item => item.value > 0);
 
-    console.log('ProjectTaskDelayChart - processTaskDelayData result:', result);
     return result;
   };
 
@@ -102,8 +97,6 @@ const ProjectTaskDelayChart = () => {
   const taskDelayData = processTaskDelayData();
   const distributionData = processDelayDistribution();
 
-  console.log('ProjectTaskDelayChart - final taskDelayData:', taskDelayData);
-  console.log('ProjectTaskDelayChart - final distributionData:', distributionData);
 
   // 색상 정의
   const colors = {

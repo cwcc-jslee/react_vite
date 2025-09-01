@@ -154,6 +154,76 @@ export const fetchProjectWorks = createAsyncThunk(
   },
 );
 
+// 차트 필터링된 프로젝트 목록 생성 액션 (계층적 필터링: 프로젝트 타입 > 상태 > 팀 > 서비스)
+export const updateChartFilteredItems = createAsyncThunk(
+  'project/updateChartFilteredItems',
+  async (_, { getState }) => {
+    const state = getState();
+    const { chartFilters, items } = state.project;
+
+    // 계층적 필터링: 모든 활성 필터를 적용
+    const filteredItems = items.filter((item) => {
+      let isMatch = true;
+
+      // 1단계: 프로젝트 타입 필터
+      if (chartFilters.selectedProjectType) {
+        const expectedType =
+          chartFilters.selectedProjectType === 'revenue' ? '매출' : '투자';
+        if (
+          item.projectType !== expectedType &&
+          item.project_type !== expectedType
+        ) {
+          isMatch = false;
+        }
+      }
+
+      // 2단계: 프로젝트 상태 필터 (프로젝트 타입과 AND 조건)
+      if (chartFilters.selectedStatus) {
+        const statusMap = {
+          pending: 85, // 보류
+          notStarted: 86, // 시작전
+          waiting: 87, // 대기
+          inProgress: 88, // 진행중
+          review: 89, // 검수
+        };
+        const expectedStatusId = statusMap[chartFilters.selectedStatus];
+        if (
+          item.pjtStatus !== expectedStatusId &&
+          item.pjt_status !== expectedStatusId
+        ) {
+          isMatch = false;
+        }
+      }
+
+      // 3단계: 팀별 필터 (상위 필터들과 AND 조건)
+      if (chartFilters.selectedTeam) {
+        if (
+          item.teamName !== chartFilters.selectedTeam &&
+          item.team_name !== chartFilters.selectedTeam &&
+          item.team !== chartFilters.selectedTeam
+        ) {
+          isMatch = false;
+        }
+      }
+
+      // 4단계: 서비스별 필터 (모든 상위 필터들과 AND 조건)
+      if (chartFilters.selectedService) {
+        if (
+          item.serviceName !== chartFilters.selectedService &&
+          item.service_name !== chartFilters.selectedService &&
+          item.service !== chartFilters.selectedService
+        ) {
+          isMatch = false;
+        }
+      }
+
+      return isMatch;
+    });
+
+    return filteredItems; // 간단히 배열만 반환
+  },
+);
+
 // 프로젝트 대시보드 데이터 조회 액션
 export const fetchProjectDashboardData = createAsyncThunk(
   'project/fetchDashboardData',
@@ -209,6 +279,7 @@ export const fetchProjectDashboardData = createAsyncThunk(
           allProjects.push(...convertKeysToCamelCase(response.data));
         }
       }
+      console.log('>>allProjects>>', allProjects);
 
       // 대시보드 데이터 처리 (utils 함수 사용)
       return processDashboardData(allProjects, getScheduleStatus);
@@ -273,6 +344,11 @@ const initialState = {
     selectedTeam: null, // null, '팀이름'
     selectedService: null, // null, '서비스이름'
     selectedStatus: null, // null, 'pending', 'notStarted', etc.
+  },
+
+  // 차트 필터링된 프로젝트 리스트 (서비스별 현황의 총 프로젝트에 해당하는 실제 프로젝트들)
+  chartFilteredItems: {
+    items: [], // 필터링된 프로젝트 목록 (계층적 필터링 결과)
   },
   form: FORM_INITIAL_STATE,
 };
@@ -373,30 +449,25 @@ const projectSlice = createSlice({
     // 차트 필터링 액션들 (계층적 필터 초기화 포함)
     setChartFilter: (state, action) => {
       const { filterType, value } = action.payload;
-      
+
       // 같은 값 클릭 시 토글 (선택 해제), 다른 값 클릭 시 선택
       const newValue = state.chartFilters[filterType] === value ? null : value;
       state.chartFilters[filterType] = newValue;
-      
+
       // 상위 필터 변경 시 하위 필터들 초기화 (계층 구조: 프로젝트 타입 > 프로젝트 상태 > 팀별/서비스별)
       if (filterType === 'selectedProjectType') {
         // 프로젝트 타입 변경 시 모든 하위 필터 초기화
         state.chartFilters.selectedStatus = null;
         state.chartFilters.selectedTeam = null;
         state.chartFilters.selectedService = null;
-        console.log('프로젝트 타입 필터 변경: 하위 필터들(상태, 팀, 서비스) 초기화');
       } else if (filterType === 'selectedStatus') {
         // 프로젝트 상태 변경 시 팀별/서비스별 필터 초기화
         state.chartFilters.selectedTeam = null;
         state.chartFilters.selectedService = null;
-        console.log('프로젝트 상태 필터 변경: 하위 필터들(팀, 서비스) 초기화');
       } else if (filterType === 'selectedTeam') {
         // 팀별 현황 변경 시 서비스별 필터 초기화
         state.chartFilters.selectedService = null;
-        console.log('팀별 현황 필터 변경: 하위 필터(서비스) 초기화');
       }
-      
-      console.log('필터 변경 후 상태:', JSON.stringify(state.chartFilters, null, 2));
     },
 
     // 모든 차트 필터 초기화
@@ -556,6 +627,11 @@ const projectSlice = createSlice({
             action.payload ||
             '프로젝트 대시보드 데이터를 가져오는데 실패했습니다.',
         });
+      })
+
+      // 차트 필터링된 프로젝트 목록 업데이트 액션 처리
+      .addCase(updateChartFilteredItems.fulfilled, (state, action) => {
+        state.chartFilteredItems.items = action.payload;
       });
   },
 });
