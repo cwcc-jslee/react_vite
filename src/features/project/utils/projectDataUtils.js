@@ -100,6 +100,8 @@ export const processDashboardData = (allProjects, getScheduleStatus) => {
     projectProgressDistribution: progressDistribution,
     // 진행률 계산된 프로젝트 목록 (내부 처리용)
     projectsWithProgress,
+    // 전체 프로젝트 목록 (차트 필터링용) - 추가!
+    allProjectsList: allProjects,
   };
 };
 

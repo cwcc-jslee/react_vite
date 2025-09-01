@@ -159,20 +159,20 @@ export const updateChartFilteredItems = createAsyncThunk(
   'project/updateChartFilteredItems',
   async (_, { getState }) => {
     const state = getState();
-    const { chartFilters, items } = state.project;
+    const { chartFilters, dashboard } = state.project;
+    
+    // 전체 프로젝트 데이터 사용 (dashboard.allProjectsList)
+    const allProjectsList = dashboard.allProjectsList || [];
 
     // 계층적 필터링: 모든 활성 필터를 적용
-    const filteredItems = items.filter((item) => {
+    const filteredItems = allProjectsList.filter((item) => {
       let isMatch = true;
 
       // 1단계: 프로젝트 타입 필터
       if (chartFilters.selectedProjectType) {
-        const expectedType =
-          chartFilters.selectedProjectType === 'revenue' ? '매출' : '투자';
-        if (
-          item.projectType !== expectedType &&
-          item.project_type !== expectedType
-        ) {
+        const projectType = item.projectType || item.project_type;
+        const expectedType = chartFilters.selectedProjectType === 'revenue' ? '매출' : '투자';
+        if (projectType !== expectedType && projectType !== chartFilters.selectedProjectType) {
           isMatch = false;
         }
       }
@@ -187,32 +187,24 @@ export const updateChartFilteredItems = createAsyncThunk(
           review: 89, // 검수
         };
         const expectedStatusId = statusMap[chartFilters.selectedStatus];
-        if (
-          item.pjtStatus !== expectedStatusId &&
-          item.pjt_status !== expectedStatusId
-        ) {
+        const projectStatusId = item.pjtStatus?.id || item.pjt_status?.id;
+        if (projectStatusId !== expectedStatusId) {
           isMatch = false;
         }
       }
 
       // 3단계: 팀별 필터 (상위 필터들과 AND 조건)
       if (chartFilters.selectedTeam) {
-        if (
-          item.teamName !== chartFilters.selectedTeam &&
-          item.team_name !== chartFilters.selectedTeam &&
-          item.team !== chartFilters.selectedTeam
-        ) {
+        const teamName = item.teamName || item.team_name || item.team?.name || item.team;
+        if (teamName !== chartFilters.selectedTeam) {
           isMatch = false;
         }
       }
 
       // 4단계: 서비스별 필터 (모든 상위 필터들과 AND 조건)
       if (chartFilters.selectedService) {
-        if (
-          item.serviceName !== chartFilters.selectedService &&
-          item.service_name !== chartFilters.selectedService &&
-          item.service !== chartFilters.selectedService
-        ) {
+        const serviceName = item.serviceName || item.service_name || item.service?.name || item.service;
+        if (serviceName !== chartFilters.selectedService) {
           isMatch = false;
         }
       }
@@ -220,7 +212,7 @@ export const updateChartFilteredItems = createAsyncThunk(
       return isMatch;
     });
 
-    return filteredItems; // 간단히 배열만 반환
+    return filteredItems; // 필터링된 프로젝트 배열 반환
   },
 );
 
@@ -617,6 +609,8 @@ const projectSlice = createSlice({
         state.dashboard.status = 'succeeded';
         Object.assign(state.dashboard, action.payload);
         state.dashboard.error = null;
+        // chartFilteredItems 초기값을 allProjectsList로 설정
+        state.chartFilteredItems.items = action.payload.allProjectsList || [];
       })
       .addCase(fetchProjectDashboardData.rejected, (state, action) => {
         state.dashboard.status = 'failed';
