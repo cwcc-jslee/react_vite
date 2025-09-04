@@ -28,8 +28,8 @@ const TodoSection = ({ tasks, activeMenu }) => {
   // 필터 상태 관리
   const [taskDateFilter, setTaskDateFilter] = useState('started');
   const [taskTypeFilter, setTaskTypeFilter] = useState({
-    scheduled: true, // 기본값: scheduled만 체크
-    ongoing: false,
+    isScheduled: 'true', // 'all', 'true', 'false' - 기본값: 있음
+    isProgress: 'all',   // 'all', 'true', 'false' - 기본값: 모두
   });
 
   // 날짜 필터 토글 핸들러
@@ -39,10 +39,10 @@ const TodoSection = ({ tasks, activeMenu }) => {
   }, [taskDateFilter]);
 
   // 작업 유형 필터 핸들러
-  const handleTaskTypeChange = useCallback((type) => {
+  const handleTaskTypeChange = useCallback((type, value) => {
     setTaskTypeFilter((prev) => ({
       ...prev,
-      [type]: !prev[type],
+      [type]: value,
     }));
   }, []);
 
@@ -55,23 +55,27 @@ const TodoSection = ({ tasks, activeMenu }) => {
     let filteredByType = tasks;
 
     // 1. 작업 유형별 필터링
-    if (!taskTypeFilter.scheduled && !taskTypeFilter.ongoing) {
-      // 둘 다 체크 해제된 경우 빈 배열 반환
-      return [];
-    }
+    filteredByType = tasks.filter((task) => {
+      // isScheduled 필터링
+      let passScheduledFilter = true;
+      if (taskTypeFilter.isScheduled === 'true') {
+        passScheduledFilter = task.isScheduled === true;
+      } else if (taskTypeFilter.isScheduled === 'false') {
+        passScheduledFilter = task.isScheduled === false;
+      }
+      // 'all'인 경우 passScheduledFilter는 true 유지
 
-    if (!taskTypeFilter.scheduled || !taskTypeFilter.ongoing) {
-      // 하나만 선택된 경우
-      filteredByType = tasks.filter((task) => {
-        if (taskTypeFilter.scheduled && !taskTypeFilter.ongoing) {
-          return task.taskScheduleType === 'scheduled';
-        }
-        if (taskTypeFilter.ongoing && !taskTypeFilter.scheduled) {
-          return task.taskScheduleType === 'ongoing';
-        }
-        return true;
-      });
-    }
+      // isProgress 필터링
+      let passProgressFilter = true;
+      if (taskTypeFilter.isProgress === 'true') {
+        passProgressFilter = task.isProgress === true;
+      } else if (taskTypeFilter.isProgress === 'false') {
+        passProgressFilter = task.isProgress === false;
+      }
+      // 'all'인 경우 passProgressFilter는 true 유지
+
+      return passScheduledFilter && passProgressFilter;
+    });
 
     // activeMenu가 'todayTasks'가 아닌 경우 작업 유형 필터만 적용
     if (activeMenu !== 'todayTasks') {
@@ -84,14 +88,12 @@ const TodoSection = ({ tasks, activeMenu }) => {
     return filteredByType.filter((task) => {
       let startDate;
 
-      if (task.taskScheduleType === 'scheduled') {
+      if (task.isScheduled) {
         // scheduled: task의 planStartDate 기준
         startDate = dayjs(task.planStartDate).startOf('day');
-      } else if (task.taskScheduleType === 'ongoing') {
-        // ongoing: project의 startDate 기준
-        startDate = dayjs(task.project?.startDate).startOf('day');
       } else {
-        return true; // 알 수 없는 타입은 항상 표시
+        // ongoing: project의 startDate 또는 planStartDate 기준
+        startDate = dayjs(task.project?.startDate || task.project?.planStartDate).startOf('day');
       }
 
       if (!startDate.isValid()) {
@@ -237,35 +239,29 @@ const TodoSection = ({ tasks, activeMenu }) => {
           <div className="flex space-x-4">
             {/* 작업 유형 필터 */}
             <div className="flex items-center space-x-4">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="scheduled-filter"
-                  checked={taskTypeFilter.scheduled}
-                  onChange={() => handleTaskTypeChange('scheduled')}
-                  className="mr-2 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                />
-                <label
-                  htmlFor="scheduled-filter"
-                  className="text-sm text-gray-700"
+              <div className="flex items-center space-x-2">
+                <label className="text-sm text-gray-700">일정:</label>
+                <select
+                  value={taskTypeFilter.isScheduled}
+                  onChange={(e) => handleTaskTypeChange('isScheduled', e.target.value)}
+                  className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
                 >
-                  scheduled
-                </label>
+                  <option value="all">모두</option>
+                  <option value="true">있음</option>
+                  <option value="false">없음</option>
+                </select>
               </div>
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="ongoing-filter"
-                  checked={taskTypeFilter.ongoing}
-                  onChange={() => handleTaskTypeChange('ongoing')}
-                  className="mr-2 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                />
-                <label
-                  htmlFor="ongoing-filter"
-                  className="text-sm text-gray-700"
+              <div className="flex items-center space-x-2">
+                <label className="text-sm text-gray-700">진행률:</label>
+                <select
+                  value={taskTypeFilter.isProgress}
+                  onChange={(e) => handleTaskTypeChange('isProgress', e.target.value)}
+                  className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
                 >
-                  ongoing
-                </label>
+                  <option value="all">모두</option>
+                  <option value="true">있음</option>
+                  <option value="false">없음</option>
+                </select>
               </div>
             </div>
 
@@ -291,13 +287,23 @@ const TodoSection = ({ tasks, activeMenu }) => {
             <div>총 작업: {tasks?.length || 0}</div>
             <div>필터된 작업: {filteredTasks().length}</div>
             <div>
-              scheduled:{' '}
-              {tasks?.filter((t) => t.taskScheduleType === 'scheduled')
+              일정 true:{' '}
+              {tasks?.filter((t) => t.isScheduled === true)
                 .length || 0}
             </div>
             <div>
-              ongoing:{' '}
-              {tasks?.filter((t) => t.taskScheduleType === 'ongoing').length ||
+              일정 false:{' '}
+              {tasks?.filter((t) => t.isScheduled === false)
+                .length || 0}
+            </div>
+            <div>
+              진행률 true:{' '}
+              {tasks?.filter((t) => t.isProgress === true).length ||
+                0}
+            </div>
+            <div>
+              진행률 false:{' '}
+              {tasks?.filter((t) => t.isProgress === false).length ||
                 0}
             </div>
           </div>
@@ -318,22 +324,26 @@ const TodoSection = ({ tasks, activeMenu }) => {
         ) : (
           <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
             {(() => {
-              if (!taskTypeFilter.scheduled && !taskTypeFilter.ongoing) {
-                return '작업 유형을 선택해주세요.';
+              const selectedTypes = [];
+              if (taskTypeFilter.isScheduled !== 'all') {
+                selectedTypes.push(`일정 ${taskTypeFilter.isScheduled === 'true' ? '있음' : '없음'}`);
+              }
+              if (taskTypeFilter.isProgress !== 'all') {
+                selectedTypes.push(`진행률 ${taskTypeFilter.isProgress === 'true' ? '있음' : '없음'}`);
               }
 
-              const selectedTypes = [];
-              if (taskTypeFilter.scheduled) selectedTypes.push('scheduled');
-              if (taskTypeFilter.ongoing) selectedTypes.push('ongoing');
+              if (selectedTypes.length === 0) {
+                return '조건에 맞는 작업이 없습니다.';
+              }
 
               const typeText = selectedTypes.join(', ');
 
               if (activeMenu === 'todayTasks') {
-                return `${typeText} 작업 중 ${
+                return `${typeText} 조건의 ${
                   taskDateFilter === 'started' ? '시작된' : '예정된'
                 } 작업이 없습니다.`;
               } else {
-                return `${typeText} 작업이 없습니다.`;
+                return `${typeText} 조건의 작업이 없습니다.`;
               }
             })()}
           </div>

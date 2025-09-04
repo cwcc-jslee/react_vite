@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\todo\\sections/**)",
+      "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\todo\\components\\cards/**)",
+      "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\todo\\components\\cards/**)",
+      "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\todo\\sections/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
