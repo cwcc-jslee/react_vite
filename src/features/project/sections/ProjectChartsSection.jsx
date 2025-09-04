@@ -21,7 +21,7 @@ import { useProjectStore } from '../hooks/useProjectStore';
  */
 const ProjectChartsSection = () => {
   const { searchFormData } = useProjectSearch();
-  const { dashboardData, actions } = useProjectStore();
+  const { dashboardData, inProgressFilteredProjects, actions } = useProjectStore();
   const {
     projectType,
     team,
@@ -95,6 +95,9 @@ const ProjectChartsSection = () => {
             <ProjectProgressChart
               projectProgress={projectProgress}
               progressDistribution={progressDistribution}
+              filteredProjects={inProgressFilteredProjects}
+              isFiltered={isChartFiltered}
+              activeFilters={activeFilters}
             />
           </div>
         </Col>
@@ -102,14 +105,22 @@ const ProjectChartsSection = () => {
         {/* 태스크 지연 현황 차트 */}
         <Col span={6}>
           <div className="h-[350px]">
-            <ProjectTaskDelayChart />
+            <ProjectTaskDelayChart 
+              filteredProjects={inProgressFilteredProjects}
+              isFiltered={isChartFiltered}
+              activeFilters={activeFilters}
+            />
           </div>
         </Col>
 
         {/* 프로젝트 남은 기간 차트 */}
         <Col span={6}>
           <div className="h-[350px]">
-            <ProjectRemainingPeriodChart />
+            <ProjectRemainingPeriodChart 
+              filteredProjects={inProgressFilteredProjects}
+              isFiltered={isChartFiltered}
+              activeFilters={activeFilters}
+            />
           </div>
         </Col>
 
@@ -118,7 +129,9 @@ const ProjectChartsSection = () => {
           <div className="h-[350px]">
             <ProjectScheduleDonutChart
               scheduleStatus={projectAnalytics || {}}
-              isFiltered={isFiltered}
+              isFiltered={isFiltered || isChartFiltered}
+              filteredProjects={inProgressFilteredProjects}
+              activeFilters={activeFilters}
             />
           </div>
         </Col>

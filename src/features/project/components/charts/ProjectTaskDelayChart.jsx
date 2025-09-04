@@ -18,21 +18,110 @@ import { getTaskStatus } from '../../utils/scheduleStatusUtils';
 
 /**
  * 프로젝트별 태스크 지연 현황을 표시하는 차트 컴포넌트
+ * @param {Array} filteredProjects - 서비스별 필터링된 진행중 프로젝트 배열
+ * @param {boolean} isFiltered - 필터가 활성화되어 있는지 여부
+ * @param {Object} activeFilters - 현재 활성화된 필터들
  * @returns {JSX.Element} 태스크 지연 차트 컴포넌트
  */
-const ProjectTaskDelayChart = () => {
+const ProjectTaskDelayChart = ({ 
+  filteredProjects = [],
+  isFiltered = false,
+  activeFilters = {}
+}) => {
   const { items, dashboardData } = useProjectStore();
   const [chartType, setChartType] = useState('bar'); // 'donut' or 'bar'
   const [activeIndex, setActiveIndex] = useState(null);
   
-  // API에서 받은 태스크 일정 상태 데이터
-  const taskScheduleData = dashboardData?.projectAnalytics?.taskScheduleStatus || 
-                           dashboardData?.projectAnalytics?.task || {
-    normal: 0,
-    delayed: 0,
-    imminent: 0,
-    total: 0,
+  // filteredProjects에서 태스크 상태 계산
+  const calculateTaskStatusFromProjects = (projects) => {
+    console.log('=== calculateTaskStatusFromProjects ===');
+    console.log('입력 프로젝트 수:', projects.length);
+    
+    const taskStatus = {
+      normal: 0,
+      delayed: 0,
+      imminent: 0,
+      total: 0,
+    };
+
+    projects.forEach((project, projectIndex) => {
+      console.log(`프로젝트 ${projectIndex + 1}:`, {
+        id: project.id,
+        name: project.pjtName || project.projectName,
+        projectTasks: project.projectTasks ? `${project.projectTasks.length}개` : 'undefined',
+        taskKeys: project.projectTasks ? Object.keys(project.projectTasks[0] || {}) : 'no tasks'
+      });
+      
+      if (project.projectTasks && Array.isArray(project.projectTasks)) {
+        project.projectTasks.forEach((task, taskIndex) => {
+          const status = getTaskStatus(task);
+          
+          if (projectIndex === 0 && taskIndex < 3) { // 첫 번째 프로젝트의 첫 3개 태스크만 로그
+            console.log(`  태스크 ${taskIndex + 1}:`, {
+              id: task.id,
+              name: task.taskName || task.name,
+              status: status,
+              taskData: task
+            });
+          }
+          
+          if (status === 'normal') {
+            taskStatus.normal++;
+          } else if (status === 'delayed') {
+            taskStatus.delayed++;
+          } else if (status === 'imminent') {
+            taskStatus.imminent++;
+          }
+          taskStatus.total++;
+        });
+      } else {
+        console.log(`  ⚠️ 프로젝트 ${projectIndex + 1}에 projectTasks가 없음 또는 배열이 아님`);
+      }
+    });
+
+    console.log('최종 태스크 상태:', taskStatus);
+    return taskStatus;
   };
+  
+  // 필터 상태에 따른 태스크 데이터 결정
+  const getTaskScheduleData = () => {
+    console.log('=== ProjectTaskDelayChart 디버깅 ===');
+    console.log('isFiltered:', isFiltered);
+    console.log('filteredProjects.length:', filteredProjects.length);
+    console.log('filteredProjects 샘플:', filteredProjects.slice(0, 2));
+    
+    // 필터가 활성화된 상태라면
+    if (isFiltered) {
+      // filteredProjects가 있으면 동적 계산
+      if (filteredProjects.length > 0) {
+        const result = calculateTaskStatusFromProjects(filteredProjects);
+        console.log('동적 계산된 태스크 상태:', result);
+        return result;
+      } else {
+        console.log('필터는 활성화되었으나 데이터 없음');
+        // 필터가 활성화되어 있지만 데이터가 없으면 빈 데이터 반환
+        return {
+          normal: 0,
+          delayed: 0,
+          imminent: 0,
+          total: 0,
+        };
+      }
+    } else {
+      // 필터가 비활성화 상태면 기존 데이터 사용
+      const originalData = dashboardData?.projectAnalytics?.taskScheduleStatus || 
+             dashboardData?.projectAnalytics?.task || {
+        normal: 0,
+        delayed: 0,
+        imminent: 0,
+        total: 0,
+      };
+      console.log('기존 대시보드 데이터 사용:', originalData);
+      return originalData;
+    }
+  };
+
+  const taskScheduleData = getTaskScheduleData();
 
 
   // 태스크 지연 데이터 가공 (API 데이터 활용)
@@ -218,12 +307,27 @@ const ProjectTaskDelayChart = () => {
     </div>
   );
 
+  // 모든 데이터가 0인지 확인
+  const hasNoData = taskDelayData.length === 0 || taskDelayData.every(item => item.value === 0);
+
   return (
     <ChartContainer title="태스크 지연 현황">
       <div className="relative h-full">
         {renderTypeToggle()}
         
-        {chartType === 'donut' ? (
+        {hasNoData ? (
+          // 데이터가 없을 때 표시할 메시지
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <p className="text-gray-500 text-sm">데이터가 없습니다</p>
+              {isFiltered && (
+                <p className="text-gray-400 text-xs mt-1">
+                  선택된 조건에 해당하는 태스크가 없습니다
+                </p>
+              )}
+            </div>
+          </div>
+        ) : chartType === 'donut' ? (
           // 도넛 차트
           <div className="flex flex-col h-full">
             <div className="flex-1">

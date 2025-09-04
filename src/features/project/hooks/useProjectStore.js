@@ -34,6 +34,7 @@ import {
 } from '../../../store/slices/projectSlice';
 import { changePageMenu, changeSubMenu } from '../../../store/slices/uiSlice';
 import { PAGE_MENUS } from '@shared/constants/navigation';
+import { updateProjectsWithProgress } from '../utils/projectProgressUtils';
 
 /**
  * 프로젝트 관련 상태와 액션을 관리하는 커스텀 훅
@@ -147,6 +148,11 @@ export const useProjectStore = () => {
     const teamFiltered = chartFilters.selectedTeam
       ? statusFiltered.filter(project => matchesTeam(project, chartFilters.selectedTeam))
       : statusFiltered;
+    
+    // 계층 4: 프로젝트 타입 + 상태 + 팀 + 서비스 필터 적용 (두 번째 행 차트용)
+    const serviceFiltered = chartFilters.selectedService
+      ? teamFiltered.filter(project => matchesService(project, chartFilters.selectedService))
+      : teamFiltered;
 
 
     // 필터링된 프로젝트들로 각각 병렬 계산
@@ -239,6 +245,14 @@ export const useProjectStore = () => {
     const calculatedService = calculateServiceCount(teamFiltered);
     
     
+    // 5. 두 번째 행 차트용: 모든 필터 + 진행중 상태 필터링
+    const inProgressServiceFiltered = serviceFiltered.filter(
+      (project) => project.pjtStatus?.id === 88,
+    );
+
+    // 필터링된 프로젝트들에 진행률 계산 적용
+    const inProgressWithCalculatedProgress = updateProjectsWithProgress(inProgressServiceFiltered);
+
     const filteredData = {
       // 1. 프로젝트 타입: 항상 원본 데이터 (필터 선택만 표시, 35개 유지)
       projectType: calculatedProjectType,
@@ -248,6 +262,8 @@ export const useProjectStore = () => {
       team: calculatedTeam,
       // 4. 서비스별 현황: 모든 상위 필터들 적용
       service: calculatedService,
+      // 5. 두 번째 행 차트용: 서비스 필터링된 진행중 프로젝트 (진행률 포함)
+      inProgressFilteredProjects: inProgressWithCalculatedProgress,
       projectAnalytics: dashboard,
       progressDistribution: dashboard.projectProgressDistribution,
       projectProgress: dashboard.projectProgress,
@@ -263,6 +279,7 @@ export const useProjectStore = () => {
 
   // 대시보드 데이터 (필터링 적용)
   const dashboardData = getFilteredDashboardData();
+
 
   // 액션 핸들러
   const actions = {
@@ -455,6 +472,7 @@ export const useProjectStore = () => {
     dashboard,
     dashboardData, // 추가: 데이터만 추출한 대시보드 상태
     chartFilteredItems, // 차트 필터링된 프로젝트 목록
+    inProgressFilteredProjects: dashboardData.inProgressFilteredProjects || [], // 두 번째 행 차트용: 진행중 프로젝트만
 
     // 액션
     actions,
