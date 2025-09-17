@@ -23,11 +23,11 @@ import { useProjectStore } from './useProjectStore';
 const INIT_FORM_DATA = {
   name: '',
   customer: '',
+  fy: '',
   team: '',
   pjtStatus: '',
   importanceLevel: '',
-  workType: '',
-  projectProgress: '',
+  projectType: '',
   dateRange: {
     startDate: null,
     endDate: null,
@@ -48,18 +48,26 @@ export const useProjectSearch = () => {
     const { name, value } = e.target;
 
     if (name === 'startDate' || name === 'endDate') {
-      setSearchFormData((prev) => ({
-        ...prev,
-        dateRange: {
-          ...prev.dateRange,
-          [name]: value,
-        },
-      }));
+      setSearchFormData((prev) => {
+        const updated = {
+          ...prev,
+          dateRange: {
+            ...prev.dateRange,
+            [name]: value,
+          },
+        };
+        console.log('**** searchFormData updated (dateRange) ****', updated);
+        return updated;
+      });
     } else {
-      setSearchFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
+      setSearchFormData((prev) => {
+        const updated = {
+          ...prev,
+          [name]: value,
+        };
+        console.log('**** searchFormData updated ****', updated);
+        return updated;
+      });
     }
   };
 
@@ -68,10 +76,14 @@ export const useProjectSearch = () => {
    * @param {Object} customer - 선택된 고객사 정보
    */
   const handleCustomerSelect = (customer) => {
-    setSearchFormData((prev) => ({
-      ...prev,
-      customer: customer.id,
-    }));
+    setSearchFormData((prev) => {
+      const updated = {
+        ...prev,
+        customer: customer.id,
+      };
+      console.log('**** searchFormData updated (customer) ****', updated);
+      return updated;
+    });
   };
 
   /**
@@ -109,12 +121,12 @@ export const useProjectSearch = () => {
 
     // 중요도 필터
     if (formData.importanceLevel) {
-      filters.importanceLevel = { $eq: formData.importanceLevel };
+      filters.importance_level = { $eq: formData.importanceLevel };
     }
 
-    // 작업유형 필터
-    if (formData.workType) {
-      filters.work_type = { $eq: formData.workType };
+    // 프로젝트유형 필터
+    if (formData.projectType) {
+      filters.project_type = { $eq: formData.projectType };
     }
 
     // 진행률 필터
@@ -141,8 +153,10 @@ export const useProjectSearch = () => {
    * 검색 실행 핸들러
    */
   const handleSearch = () => {
+    console.log('**** searchFormData ****', searchFormData);
     const filters = buildFilters(searchFormData);
-    actions.fetchProjects({ filters });
+    console.log('**** built filters ****', filters);
+    actions.getProjectList({ filters });
   };
 
   /**
@@ -152,7 +166,7 @@ export const useProjectSearch = () => {
     setSearchFormData({
       ...INIT_FORM_DATA,
     });
-    actions.fetchProjects({ filters: {} });
+    actions.getProjectList({ filters: {} });
   };
 
   /**
@@ -163,51 +177,12 @@ export const useProjectSearch = () => {
     if (status !== '') {
       const filters = {
         pjt_status: { $eq: parseInt(status) },
-        work_type: { $eq: 'project' },
       };
       actions.filter.replaceFilters(filters);
       actions.getProjectList();
     } else {
       actions.filter.resetFilters();
       actions.getProjectList();
-    }
-  };
-
-  /**
-   * 진행률 필터 핸들러
-   * @param {Object|string} progress - 프로젝트 진행률 정보 또는 빈 문자열
-   */
-  const handleProgressFilter = (progress) => {
-    if (typeof progress === 'string') {
-      // 필터 초기화
-      setSearchFormData((prev) => ({
-        ...prev,
-        projectProgress: '',
-        pjtStatus: '',
-      }));
-
-      const filters = buildFilters({
-        ...searchFormData,
-        projectProgress: '',
-        pjtStatus: '',
-      });
-
-      actions.fetchProjects({ filters });
-    } else {
-      // 진행률 범위와 상태로 필터링
-      setSearchFormData((prev) => ({
-        ...prev,
-        projectProgress: `${progress.progress.min},${progress.progress.max}`,
-        pjtStatus: progress.status.toString(),
-      }));
-
-      const filters = buildFilters({
-        ...searchFormData,
-        projectProgress: `${progress.progress.min},${progress.progress.max}`,
-        pjtStatus: progress.status.toString(),
-      });
-
-      actions.fetchProjects({ filters });
     }
   };
 
@@ -222,6 +197,5 @@ export const useProjectSearch = () => {
     handleInputChange,
     handleCustomerSelect,
     handleStatusFilter,
-    handleProgressFilter,
   };
 };

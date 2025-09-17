@@ -57,6 +57,7 @@ export const processRelationFields = (data) => {
     'pjtStatus',
     'service',
     'team',
+    'customer',
   ];
 
   idExtractionKeys.forEach((key) => {

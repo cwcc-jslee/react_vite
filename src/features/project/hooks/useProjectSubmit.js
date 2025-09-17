@@ -76,8 +76,8 @@ export const useProjectSubmit = () => {
           bucket.tasks?.map((task) => {
             const cleanedTask = prepareCleanData(task);
 
-            // taskScheduleType이 'ongoing'인 경우 특정 키 삭제
-            if (cleanedTask.taskScheduleType === 'ongoing') {
+            // isScheduled값이  false 인 경우 특정 키 삭제
+            if (!cleanedTask.isScheduled) {
               // 키가 없을 수 있으므로 기본값 undefined로 설정
               const {
                 planningTimeData = undefined,

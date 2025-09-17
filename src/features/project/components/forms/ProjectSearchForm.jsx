@@ -20,7 +20,7 @@ const ProjectSearchForm = () => {
     data: codebooks,
     isLoading,
     error,
-  } = useCodebook(['fy', 'pjtStatus', 'importanceLevel', 'workType']);
+  } = useCodebook(['fy', 'pjtStatus', 'importanceLevel']);
   const { data: teams, isLoading: teamLoading } = useTeam();
   const {
     handleSearch,
@@ -125,33 +125,15 @@ const ProjectSearchForm = () => {
         {/* 세 번째 줄 */}
         <Stack direction="horizontal" spacing="lg">
           <FormItem>
-            <Label>작업유형</Label>
+            <Label>프로젝트 타입</Label>
             <Select
-              name="workType"
-              value={searchFormData.workType}
+              name="projectType"
+              value={searchFormData.projectType}
               onChange={handleInputChange}
             >
               <option value="">선택하세요</option>
-              {codebooks.workType?.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </FormItem>
-          <FormItem>
-            <Label>진행률</Label>
-            <Select
-              name="projectProgress"
-              value={searchFormData.projectProgress}
-              onChange={handleInputChange}
-            >
-              <option value="">선택하세요</option>
-              <option value="0">0%</option>
-              <option value="25">25%</option>
-              <option value="50">50%</option>
-              <option value="75">75%</option>
-              <option value="100">100%</option>
+              <option value="revenue">매출</option>
+              <option value="investment">투자</option>
             </Select>
           </FormItem>
           <FormItem>
@@ -160,19 +142,20 @@ const ProjectSearchForm = () => {
               <Input
                 type="date"
                 name="startDate"
-                value={searchFormData.dateRange.startDate}
+                value={searchFormData.dateRange.startDate || ''}
                 onChange={handleInputChange}
-                disabled={true}
               />
               <span className="text-gray-500">~</span>
               <Input
                 type="date"
                 name="endDate"
-                value={searchFormData.dateRange.endDate}
+                value={searchFormData.dateRange.endDate || ''}
                 onChange={handleInputChange}
-                disabled={true}
               />
             </div>
+          </FormItem>
+          <FormItem>
+            {/* 빈 공간 유지를 위한 placeholder */}
           </FormItem>
         </Stack>
 

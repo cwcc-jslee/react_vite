@@ -8,6 +8,12 @@ export const validateProjectForm = (formData) => {
   const errors = [];
   let isValid = true;
 
+  // 고객사 검사 (필수)
+  if (!formData.customer) {
+    errors.push('고객사를 선택해주세요.');
+    isValid = false;
+  }
+
   // SFA 검사 (매출 유형일 때만)
   if (!formData.sfa && formData.projectType === 'revenue') {
     errors.push('SFA를 선택해주세요.');

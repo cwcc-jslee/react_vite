@@ -4,7 +4,13 @@
       "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\todo\\sections/**)",
       "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\todo\\components\\cards/**)",
       "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\todo\\components\\cards/**)",
-      "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\todo\\sections/**)"
+      "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\todo\\sections/**)",
+      "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\project\\utils/**)",
+      "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\project\\layouts/**)",
+      "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\project\\components\\forms/**)",
+      "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\project\\hooks/**)",
+      "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\project\\hooks/**)",
+      "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\project\\hooks/**)"
     ],
     "deny": [],
     "ask": []
