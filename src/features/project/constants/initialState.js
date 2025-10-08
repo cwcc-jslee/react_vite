@@ -9,8 +9,9 @@
 
 // 필터 기본값 상수 정의
 export const DEFAULT_FILTERS = {
-  pjt_status: { $in: [88] }, // 대기(87), 진행중(88), 검수중(89)
-  work_type: 'project', // 작업 유형이 'project'인 값
+  is_closed: { $eq: false },
+  // pjt_status: { $in: [88] }, // 대기(87), 진행중(88), 검수중(89)
+  // work_type: 'project', // 작업 유형이 'project'인 값
 };
 
 // 페이지네이션 기본값 상수 정의

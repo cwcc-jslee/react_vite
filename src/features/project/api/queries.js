@@ -19,7 +19,7 @@ const combineFilters = (baseFilter, userFilters = {}) => {
 };
 
 /**
- * CUSTOMER 목록 조회를 위한 쿼리 파라미터 생성
+ * PROJECT 목록 조회를 위한 쿼리 파라미터 생성
  */
 export const buildProjectListQuery = (params) => {
   const { pagination = { current: 1, pageSize: 25 }, filters = {} } = params;
@@ -45,7 +45,6 @@ export const buildProjectListQuery = (params) => {
       'project_progress',
       'total_project_hours',
       'total_project_non_billable_hours',
-      'is_completed',
       'createdAt',
     ],
     populate: {
@@ -213,13 +212,7 @@ export const buildProjectScheduleStatusQuery = (params) => {
   // 쿼리 구성
   const query = {
     filters: combinedFilters,
-    fields: [
-      'project_type',
-      'plan_end_date',
-      'end_date',
-      'project_progress',
-      'is_completed',
-    ],
+    fields: ['project_type', 'plan_end_date', 'end_date', 'project_progress'],
     populate: {
       pjt_status: {
         fields: ['name'],

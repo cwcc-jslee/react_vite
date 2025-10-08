@@ -1,6 +1,6 @@
 // src/features/project/components/tables/ProjectTaskList.jsx
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useUiStore } from '../../../../shared/hooks/useUiStore';
 import {
@@ -8,8 +8,11 @@ import {
   Badge,
   Tooltip,
   Progress,
+  Button,
 } from '../../../../shared/components/ui';
-import { FiCheckSquare, FiClock, FiCalendar } from 'react-icons/fi';
+import { FiCheckSquare, FiClock, FiCalendar, FiCheck, FiX, FiMoreVertical, FiEye } from 'react-icons/fi';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import { getTaskScheduleStatus } from '../../utils/scheduleStatusUtils';
 
 /**
@@ -20,6 +23,28 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
   console.log(`>>>> project task list  실행`);
   const dispatch = useDispatch();
   const { actions } = useUiStore();
+
+  // 완료 처리 상태 관리
+  const [completingTaskId, setCompletingTaskId] = useState(null);
+  const [completionDate, setCompletionDate] = useState(new Date());
+
+  // 액션 메뉴 상태 관리
+  const [openMenuId, setOpenMenuId] = useState(null);
+
+  // 메뉴 외부 클릭시 닫기
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setOpenMenuId(null);
+    };
+
+    if (openMenuId) {
+      document.addEventListener('click', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [openMenuId]);
 
   // 우선순위에 따른 배지 색상 결정
   const getPriorityColor = (priority) => {
@@ -107,16 +132,19 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
   // 테이블 컬럼 정의
   const columns = [
     { key: 'index', title: '순번', align: 'center', width: '60px' },
+    { key: 'priority', title: '우선순위', align: 'center' },
     { key: 'completed', title: '완료', align: 'center', width: '60px' },
     { key: 'taskStatus', title: 'TASK상태', align: 'center', width: '80px' },
     { key: 'timeOverStatus', title: '시간초과', align: 'center', width: '80px' },
     { key: 'name', title: '작업명', align: 'left' },
     { key: 'bucket', title: '버킷', align: 'center' },
     { key: 'taskScheduleType', title: '일정구분', align: 'center' },
+    { key: 'progress', title: '진행률', align: 'center', width: '80px' },
     { key: 'checklistProgress', title: '체크리스트', align: 'center' },
     { key: 'assignee', title: '할당대상', align: 'center' },
     { key: 'startDate', title: '시작일', align: 'center' },
     { key: 'endDate', title: '완료일', align: 'center' },
+    { key: 'recentWorkDate', title: '최근작업일', align: 'center' },
     { key: 'duration', title: '기간', align: 'center', width: '70px' },
     {
       key: 'totalWorkHours',
@@ -124,8 +152,7 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
       align: 'left',
       width: '80px',
     },
-    { key: 'progress', title: '완료%', align: 'center', width: '80px' },
-    { key: 'priority', title: '우선순위', align: 'center' },
+    { key: 'actions', title: 'ACTION', align: 'center', width: '80px' },
   ];
 
   // 빈 데이터 상태 표시 컴포넌트
@@ -138,6 +165,48 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
       </td>
     </tr>
   );
+
+  // 액션 메뉴 토글
+  const toggleActionMenu = (taskId, event) => {
+    event.stopPropagation();
+    setOpenMenuId(openMenuId === taskId ? null : taskId);
+  };
+
+  // 액션 메뉴 항목 클릭 핸들러
+  const handleActionClick = (action, task, event) => {
+    event.stopPropagation();
+    setOpenMenuId(null);
+
+    switch (action) {
+      case 'detail':
+        handleTaskRowClick(task);
+        break;
+      case 'complete':
+        if (!task.isCompleted) {
+          setCompletingTaskId(task.id);
+          setCompletionDate(new Date());
+        }
+        break;
+      default:
+        break;
+    }
+  };
+
+  // 완료 처리 확인
+  const handleConfirmComplete = async () => {
+    // TODO: API 호출 로직 추가
+    console.log('완료 처리:', { taskId: completingTaskId, date: completionDate });
+
+    // 임시로 상태만 업데이트 (실제로는 API 호출 후 데이터 리프레시)
+    // await completeTask(completingTaskId, completionDate);
+
+    setCompletingTaskId(null);
+  };
+
+  // 완료 처리 취소
+  const handleCancelComplete = () => {
+    setCompletingTaskId(null);
+  };
 
   // 행 클릭 핸들러
   const handleTaskRowClick = (task) => {
@@ -173,19 +242,36 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
             <EmptyState />
           ) : (
             projectTasks.map((task, index) => (
-              <tr
-                key={task.id || index}
-                className={`hover:bg-gray-50 ${
-                  task.taskProgress?.name === '100%' ? 'bg-gray-50' : ''
-                } cursor-pointer`}
-                onClick={() => handleTaskRowClick(task)}
-              >
+              <React.Fragment key={task.id || index}>
+                <tr
+                  className={`hover:bg-gray-50 ${
+                    task.isCompleted ? 'bg-gray-50' : ''
+                  } ${
+                    completingTaskId === task.id ? 'bg-blue-50' : ''
+                  } cursor-pointer`}
+                  onClick={() => handleTaskRowClick(task)}
+                >
                 {/* 순번 */}
                 <td className="px-3 py-2 text-center text-sm">{index + 1}</td>
+
+                {/* 우선순위 */}
+                <td className="px-3 py-2 text-center">
+                  {task.priorityLevel ? (
+                    <Badge
+                      className={`${getPriorityColor(
+                        task.priority,
+                      )} text-white`}
+                      label={task.priorityLevel}
+                    />
+                  ) : (
+                    '-'
+                  )}
+                </td>
+
                 {/* 완료 체크박스 */}
                 <td className="px-3 py-2 text-center">
                   <Checkbox
-                    checked={task.taskProgress?.name === '100%'}
+                    checked={task.isCompleted}
                     disabled={true}
                   />
                 </td>
@@ -204,7 +290,7 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
                 <td className="px-3 py-2 text-sm">
                   <div
                     className={`${
-                      task.taskProgress?.name === '100%'
+                      task.isCompleted
                         ? 'line-through text-gray-400'
                         : ''
                     }`}
@@ -229,6 +315,19 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
                   ) : task.taskScheduleType === 'scheduled' ? (
                     <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs">
                       SCHEDULED
+                    </span>
+                  ) : (
+                    '-'
+                  )}
+                </td>
+
+                {/* 진행률 */}
+                <td className="px-3 py-2 text-center text-sm">
+                  {task.isProgress ? (
+                    <span className="text-gray-900 font-medium">
+                      {typeof task.taskProgress?.name === 'string'
+                        ? parseInt(task.taskProgress.name, 10)
+                        : task.taskProgress?.name || 0}%
                     </span>
                   ) : (
                     '-'
@@ -335,6 +434,17 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
                   </Tooltip>
                 </td>
 
+                {/* 최근작업일 */}
+                <td className="px-3 py-2 text-center text-sm">
+                  {task.recentWorkDate ? (
+                    <span className="text-gray-900">
+                      {formatDate(task.recentWorkDate)}
+                    </span>
+                  ) : (
+                    '-'
+                  )}
+                </td>
+
                 {/* 기간 */}
                 <td className="px-3 py-2 text-center text-sm">
                   {calculateDuration(task.planStartDate, task.planEndDate)}
@@ -372,33 +482,87 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
                   )}
                 </td>
 
-                {/* 완료% */}
-                <td className="px-3 py-2">
-                  <Progress
-                    percent={
-                      typeof task.taskProgress?.name === 'string'
-                        ? parseInt(task.taskProgress.name, 10)
-                        : task.taskProgress?.name || 0
-                    }
-                    size="sm"
-                    showInfo={true}
-                  />
-                </td>
+                {/* ACTION */}
+                <td className="px-3 py-2 text-center relative">
+                  <div className="relative">
+                    <button
+                      onClick={(event) => toggleActionMenu(task.id, event)}
+                      className="p-1 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <FiMoreVertical size={16} className="text-gray-600" />
+                    </button>
 
-                {/* 우선순위 */}
-                <td className="px-3 py-2 text-center">
-                  {task.priorityLevel ? (
-                    <Badge
-                      className={`${getPriorityColor(
-                        task.priority,
-                      )} text-white`}
-                      label={task.priorityLevel}
-                    />
-                  ) : (
-                    '-'
-                  )}
+                    {/* 드롭다운 메뉴 */}
+                    {openMenuId === task.id && (
+                      <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-md shadow-lg z-10 min-w-[120px]">
+                        <button
+                          onClick={(event) => handleActionClick('detail', task, event)}
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
+                        >
+                          <FiEye size={14} />
+                          TASK 상세
+                        </button>
+                        {!task.isCompleted && (
+                          <button
+                            onClick={(event) => handleActionClick('complete', task, event)}
+                            className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100"
+                          >
+                            <FiCheck size={14} />
+                            완료처리
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </td>
               </tr>
+
+              {/* 완료 처리 입력 행 - 해당 작업 바로 아래 표시 */}
+              {completingTaskId === task.id && (
+                <tr className="bg-blue-50 border-t-2 border-blue-200">
+                  <td colSpan={columns.length} className="px-3 py-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm font-medium text-blue-700">
+                          "{task.name}" 작업 완료 처리
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <FiCalendar className="text-blue-600" />
+                          <span className="text-sm text-gray-600">완료일:</span>
+                          <DatePicker
+                            selected={completionDate}
+                            onChange={(date) => setCompletionDate(date)}
+                            dateFormat="yyyy-MM-dd"
+                            className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            maxDate={new Date()}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          onClick={handleConfirmComplete}
+                          className="flex items-center gap-1"
+                        >
+                          <FiCheck size={14} />
+                          완료
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleCancelComplete}
+                          className="flex items-center gap-1"
+                        >
+                          <FiX size={14} />
+                          취소
+                        </Button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
             ))
           )}
         </tbody>

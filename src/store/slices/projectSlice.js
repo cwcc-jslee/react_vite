@@ -160,7 +160,7 @@ export const updateChartFilteredItems = createAsyncThunk(
   async (_, { getState }) => {
     const state = getState();
     const { chartFilters, dashboard } = state.project;
-    
+
     // 전체 프로젝트 데이터 사용 (dashboard.allProjectsList)
     const allProjectsList = dashboard.allProjectsList || [];
 
@@ -171,8 +171,12 @@ export const updateChartFilteredItems = createAsyncThunk(
       // 1단계: 프로젝트 타입 필터
       if (chartFilters.selectedProjectType) {
         const projectType = item.projectType || item.project_type;
-        const expectedType = chartFilters.selectedProjectType === 'revenue' ? '매출' : '투자';
-        if (projectType !== expectedType && projectType !== chartFilters.selectedProjectType) {
+        const expectedType =
+          chartFilters.selectedProjectType === 'revenue' ? '매출' : '투자';
+        if (
+          projectType !== expectedType &&
+          projectType !== chartFilters.selectedProjectType
+        ) {
           isMatch = false;
         }
       }
@@ -195,7 +199,8 @@ export const updateChartFilteredItems = createAsyncThunk(
 
       // 3단계: 팀별 필터 (상위 필터들과 AND 조건)
       if (chartFilters.selectedTeam) {
-        const teamName = item.teamName || item.team_name || item.team?.name || item.team;
+        const teamName =
+          item.teamName || item.team_name || item.team?.name || item.team;
         if (teamName !== chartFilters.selectedTeam) {
           isMatch = false;
         }
@@ -203,7 +208,11 @@ export const updateChartFilteredItems = createAsyncThunk(
 
       // 4단계: 서비스별 필터 (모든 상위 필터들과 AND 조건)
       if (chartFilters.selectedService) {
-        const serviceName = item.serviceName || item.service_name || item.service?.name || item.service;
+        const serviceName =
+          item.serviceName ||
+          item.service_name ||
+          item.service?.name ||
+          item.service;
         if (serviceName !== chartFilters.selectedService) {
           isMatch = false;
         }
@@ -225,7 +234,8 @@ export const fetchProjectDashboardData = createAsyncThunk(
       const { filters: storeFilters } = state.project;
       // 종료(90)가 아닌 모든 상태의 프로젝트 가져오기
       const filters = {
-        pjt_status: { $ne: 90 }, // 종료가 아닌
+        // pjt_status: { $ne: 90 }, // 종료가 아닌
+        ...DEFAULT_FILTERS,
       };
 
       const pageSize = 20; // 고정 페이지 크기
@@ -460,6 +470,43 @@ const projectSlice = createSlice({
         // 팀별 현황 변경 시 서비스별 필터 초기화
         state.chartFilters.selectedService = null;
       }
+
+      // chartFilters → project.filters 동기화
+      state.filters = { ...DEFAULT_FILTERS };
+
+      // 프로젝트 타입 필터 적용
+      if (state.chartFilters.selectedProjectType) {
+        state.filters.project_type = { $eq: state.chartFilters.selectedProjectType };
+      }
+
+      // 프로젝트 상태 필터 적용
+      if (state.chartFilters.selectedStatus) {
+        const statusMap = {
+          'pending': 85,
+          'notStarted': 86,
+          'waiting': 87,
+          'inProgress': 88,
+          'review': 89,
+        };
+        state.filters.pjt_status = { $eq: statusMap[state.chartFilters.selectedStatus] };
+      }
+
+      // 팀 필터 적용
+      if (state.chartFilters.selectedTeam) {
+        state.filters.team = {
+          name: { $eq: state.chartFilters.selectedTeam }
+        };
+      }
+
+      // 서비스 필터 적용
+      if (state.chartFilters.selectedService) {
+        state.filters.service = {
+          name: { $eq: state.chartFilters.selectedService }
+        };
+      }
+
+      // 페이지를 1로 리셋
+      state.pagination.current = 1;
     },
 
     // 모든 차트 필터 초기화
@@ -470,6 +517,9 @@ const projectSlice = createSlice({
         selectedService: null,
         selectedStatus: null,
       };
+      // project.filters도 초기화
+      state.filters = { ...DEFAULT_FILTERS };
+      state.pagination.current = 1;
     },
 
     // 특정 필터만 초기화

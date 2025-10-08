@@ -428,6 +428,8 @@ export const useProjectStore = () => {
         // 필터 변경 후 자동으로 계층적 필터링된 프로젝트 목록 업데이트
         setTimeout(() => {
           dispatch(updateChartFilteredItems());
+          // 프로젝트 리스트도 새로고침 (project.filters가 업데이트되었으므로)
+          dispatch(fetchProjects());
         }, 100); // 상태 업데이트 후 필터링 실행
       },
       // 모든 필터 초기화
@@ -436,6 +438,8 @@ export const useProjectStore = () => {
         // 필터 초기화 후 전체 프로젝트로 업데이트
         setTimeout(() => {
           dispatch(updateChartFilteredItems());
+          // 프로젝트 리스트도 새로고침
+          dispatch(fetchProjects());
         }, 100);
       },
       // 특정 필터 초기화
@@ -443,6 +447,8 @@ export const useProjectStore = () => {
         dispatch(clearChartFilter(filterType));
         setTimeout(() => {
           dispatch(updateChartFilteredItems());
+          // 프로젝트 리스트도 새로고침
+          dispatch(fetchProjects());
         }, 100);
       },
     },
