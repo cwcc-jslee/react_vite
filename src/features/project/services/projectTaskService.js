@@ -146,11 +146,11 @@ export const projectTaskService = {
       let processedData = { ...taskData };
 
       // 문자열이 아닌 boolean 값이 들어온 경우 처리
-      if (typeof processedData.task_schedule_type === 'boolean') {
-        processedData.task_schedule_type = processedData.task_schedule_type
-          ? 'scheduled'
-          : 'ongoing';
-      }
+      // if (typeof processedData.task_schedule_type === 'boolean') {
+      //   processedData.task_schedule_type = processedData.task_schedule_type
+      //     ? 'scheduled'
+      //     : 'ongoing';
+      // }
 
       const response = await apiService.put(
         `/project-tasks/${taskId}`,
