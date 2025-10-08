@@ -152,29 +152,6 @@ export const PAGE_MENUS = {
           },
         },
       },
-      singletask: {
-        label: 'SingleTask',
-        permissions: ['user'],
-        visible: true,
-        config: {
-          layout: 'list',
-          sections: {
-            projectCharts: false,
-            projectListTable: true,
-            projectAddForm: false,
-            projectDetailTable: false,
-            projectTaskBoard: false,
-          },
-          components: {
-            // projectChart: true,
-            // projectTable: true,
-            // projectAddSection: false,
-          },
-          drawer: {
-            visible: false, // 드로어 표시 여부
-          },
-        },
-      },
       search: {
         label: '상세조회',
         permissions: ['user'],

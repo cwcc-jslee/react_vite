@@ -7,6 +7,7 @@ import {
 } from '../../../../store/slices/uiSlice';
 import { setCurrentPath } from '../../../../store/slices/pageStateSlice';
 import { resetForm } from '../../../../store/slices/pageFormSlice';
+import { resetFilters, clearChartFilters } from '../../../../store/slices/projectSlice';
 import { Breadcrumb } from './components';
 import { PAGE_SUB_MENUS } from '../../../constants/navigation';
 
@@ -63,6 +64,12 @@ const BreadcrumbWithMenu = ({
     dispatch(setCurrentPath(currentPage));
     dispatch(resetForm());
 
+    // 프로젝트 페이지인 경우 필터 초기화
+    if (currentPage === 'project') {
+      dispatch(resetFilters());
+      dispatch(clearChartFilters());
+    }
+
     // UI 메뉴 변경
     dispatch(
       changePageMenu({
@@ -74,6 +81,12 @@ const BreadcrumbWithMenu = ({
 
   // 하위 메뉴 클릭 핸들러
   const handleSubMenuClick = (subMenuId) => {
+    // 프로젝트 페이지의 서브 메뉴 이동 시 필터 초기화
+    if (currentPage === 'project') {
+      dispatch(resetFilters());
+      dispatch(clearChartFilters());
+    }
+
     dispatch(changeSubMenu({ subMenuId }));
   };
 
