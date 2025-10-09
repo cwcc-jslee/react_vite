@@ -21,6 +21,7 @@ import {
 } from 'react-icons/fi';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import dayjs from 'dayjs';
 import { getTaskScheduleStatus } from '../../utils/scheduleStatusUtils';
 import { useProjectTaskUpdate } from '../../hooks/useProjectTaskUpdate';
 
@@ -220,7 +221,8 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
     const task = projectTasks.find((t) => t.id === completingTaskId);
     const taskDocumentId = task?.documentId || completingTaskId;
     const taskName = task?.name || '';
-    const formattedDate = completionDate.toISOString().split('T')[0];
+    // dayjs를 사용하여 날짜 포맷팅 (타임존 이슈 방지)
+    const formattedDate = dayjs(completionDate).format('YYYY-MM-DD');
 
     const result = await completeTask(taskDocumentId, formattedDate, taskName);
 

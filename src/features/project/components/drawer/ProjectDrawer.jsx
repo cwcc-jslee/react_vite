@@ -8,7 +8,7 @@ import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer.jsx';
 import ActionMenuBar from '../../../../shared/components/ui/button/ActionMenuBar.jsx';
 
 // 컴포넌트
-import ProjectEditBaseForm from '../forms/ProjectEditBaseForm.jsx';
+import ProjectStatusUpdateForm from '../forms/ProjectStatusUpdateForm.jsx';
 import ProjectTaskDescription from '../description/ProjectTaskDescription.jsx';
 
 const ProjectDrawer = ({ drawer }) => {
@@ -72,7 +72,7 @@ const ProjectDrawer = ({ drawer }) => {
       controlMode={mode}
     >
       {mode === 'view' && <ViewContent task={data} />}
-      {mode === 'edit' && <ProjectEditBaseForm data={data} />}
+      {mode === 'edit' && <ProjectStatusUpdateForm data={data} />}
     </BaseDrawer>
   );
 };

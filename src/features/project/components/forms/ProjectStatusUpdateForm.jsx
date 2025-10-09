@@ -1,6 +1,6 @@
-// src/features/project/components/ui/ProjectBaseForm.jsx
-// 프로젝트 정보 입력을 위한 폼 컴포넌트
-// 고객사, SFA, 프로젝트명, 서비스, 사업부 정보를 입력 받습니다
+// src/features/project/components/forms/ProjectStatusUpdateForm.jsx
+// 프로젝트 상태 변경을 위한 폼 컴포넌트
+// 프로젝트 상태 및 종료타입을 변경합니다
 
 import React from 'react';
 import { useCodebook } from '../../../../shared/hooks/useCodebook';
@@ -17,9 +17,11 @@ import { useProjectUpdate } from '../../hooks/useProjectUpdate';
 import { notification } from '../../../../shared/services/notification';
 import useUiStore from '../../../../shared/hooks/useUiStore';
 import { useProjectStore } from '../../hooks/useProjectStore';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
-// 프로젝트 정보 입력 폼 컴포넌트
-const ProjectEditBaseForm = ({ data }) => {
+// 프로젝트 상태 변경 폼 컴포넌트
+const ProjectStatusUpdateForm = ({ data }) => {
   const { actions: uiActions } = useUiStore();
   const { actions } = useProjectStore();
 
@@ -46,6 +48,10 @@ const ProjectEditBaseForm = ({ data }) => {
   const nextStatusName = formData.pjtStatus?.name;
   const prevClosureTypeName = data.pjtClosureType?.name;
   const nextClosureTypeName = formData.pjtClosureType?.name;
+
+  console.log('>>> isClosureStatus:', isClosureStatus);
+  console.log('>>> formData.pjtStatus:', formData.pjtStatus);
+  console.log('>>> formData.closureDate:', formData.closureDate);
 
   // 제출 처리 함수
   const handleFormSubmit = async (e) => {
@@ -135,30 +141,44 @@ const ProjectEditBaseForm = ({ data }) => {
       <Group direction="horizontal" className="gap-6">
         {/* 종료타입 선택 (종료 상태일 때만 표시) */}
         {isClosureStatus && (
-          <FormItem className="flex-1">
-            <Label className="text-left mb-2">종료타입 *</Label>
-            <Select
-              name="pjtClosureType"
-              value={formData.pjtClosureType?.id || ''}
-              onChange={(e) => {
-                const selectedId = e.target.value;
-                const selectedItem = availableClosureTypes.find(
-                  (item) =>
-                    item.id === selectedId || item.id === Number(selectedId),
-                );
-                updateField('pjtClosureType', selectedItem);
-              }}
-              className="w-full"
-              disabled={availableClosureTypes.length === 0}
-            >
-              <option value="">종료타입을 선택하세요</option>
-              {availableClosureTypes.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </FormItem>
+          <>
+            <FormItem className="flex-1">
+              <Label className="text-left mb-2">종료타입 *</Label>
+              <Select
+                name="pjtClosureType"
+                value={formData.pjtClosureType?.id || ''}
+                onChange={(e) => {
+                  const selectedId = e.target.value;
+                  const selectedItem = availableClosureTypes.find(
+                    (item) =>
+                      item.id === selectedId || item.id === Number(selectedId),
+                  );
+                  updateField('pjtClosureType', selectedItem);
+                }}
+                className="w-full"
+                disabled={availableClosureTypes.length === 0}
+              >
+                <option value="">종료타입을 선택하세요</option>
+                {availableClosureTypes.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </Select>
+            </FormItem>
+            <FormItem className="flex-1">
+              <Label className="text-left mb-2">종료일 *</Label>
+              <DatePicker
+                selected={
+                  formData.closureDate ? new Date(formData.closureDate) : null
+                }
+                onChange={(date) => updateField('closureDate', date)}
+                dateFormat="yyyy-MM-dd"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholderText="종료일을 선택하세요"
+              />
+            </FormItem>
+          </>
         )}
       </Group>
 
@@ -179,7 +199,8 @@ const ProjectEditBaseForm = ({ data }) => {
             !hasChanges ||
             isSubmitting ||
             availableStatuses.length === 0 ||
-            (isClosureStatus && !formData.pjtClosureType)
+            (isClosureStatus &&
+              (!formData.pjtClosureType || !formData.closureDate))
           }
           className="min-w-[100px] h-10"
           onClick={handleFormSubmit}
@@ -191,4 +212,4 @@ const ProjectEditBaseForm = ({ data }) => {
   );
 };
 
-export default ProjectEditBaseForm;
+export default ProjectStatusUpdateForm;

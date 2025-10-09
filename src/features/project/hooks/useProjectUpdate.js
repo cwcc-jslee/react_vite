@@ -17,6 +17,7 @@ import { useCodebook } from '../../../shared/hooks/useCodebook';
 import { processRelationFields } from '../../../shared/utils/relationFieldUtils';
 import { convertKeysToSnakeCase } from '../../../shared/utils/transformUtils';
 import { useProjectStore } from './useProjectStore';
+import dayjs from 'dayjs';
 
 export const useProjectUpdate = (initialData) => {
   const { data: codebooks } = useCodebook(['pjtStatus', 'pjtClosureType']);
@@ -33,9 +34,10 @@ export const useProjectUpdate = (initialData) => {
         [fieldName]: value,
       };
 
-      // 상태가 '종료'가 아닐 때는 종료타입을 초기화
+      // 상태가 '종료'가 아닐 때는 종료타입과 종료일을 초기화
       if (fieldName === 'pjtStatus' && value?.name !== '종료') {
         newData.pjtClosureType = null;
+        newData.closureDate = null;
       }
 
       return newData;
@@ -140,15 +142,22 @@ export const useProjectUpdate = (initialData) => {
         // 상태 변경 시 테스트 완료 여부 검증
         validateProjectTasks(formData.pjtStatus.name, formData.pjtClosureType);
 
-        // 종료 상태일 때 종료타입 필수 검증
-        if (formData.pjtStatus?.name === '종료' && !formData.pjtClosureType) {
-          throw new Error(
-            '종료 상태로 변경할 때는 종료타입을 선택해야 합니다.',
-          );
+        // 종료 상태일 때 종료타입 및 종료일 필수 검증
+        if (formData.pjtStatus?.name === '종료') {
+          if (!formData.pjtClosureType) {
+            throw new Error(
+              '종료 상태로 변경할 때는 종료타입을 선택해야 합니다.',
+            );
+          }
+          if (!formData.closureDate) {
+            throw new Error(
+              '종료 상태로 변경할 때는 종료일을 선택해야 합니다.',
+            );
+          }
         }
 
         // 불필요 필드 제거 및 데이터 정리
-        const { id, documentId, pjtClosureType, ...restData } = formData;
+        const { id, documentId, pjtClosureType, closureDate, ...restData } = formData;
         console.log(`>>>> restData`, restData);
         // 관계 필드 처리
         const processedData = processRelationFields(restData);
@@ -172,9 +181,15 @@ export const useProjectUpdate = (initialData) => {
         // 프로젝트 상태가 '종료'인 경우에만 project-closures 테이블에 데이터 추가
         if (formData.pjtStatus?.name === '종료') {
           try {
+            // 날짜를 YYYY-MM-DD 형식으로 변환 (타임존 이슈 방지)
+            const formattedClosureDate = closureDate
+              ? dayjs(closureDate).format('YYYY-MM-DD')
+              : null;
+
             const closureData = {
               project: id,
               closure_type: pjtClosureType.id,
+              closure_date: formattedClosureDate,
             };
             await projectApiService.createProjectClosure(closureData);
           } catch (closureError) {

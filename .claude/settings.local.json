@@ -10,7 +10,8 @@
       "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\project\\components\\forms/**)",
       "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\project\\hooks/**)",
       "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\project\\hooks/**)",
-      "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\project\\hooks/**)"
+      "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\project\\hooks/**)",
+      "Bash(git mv:*)"
     ],
     "deny": [],
     "ask": []
