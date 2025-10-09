@@ -88,6 +88,14 @@ const ProjectAddBaseForm = ({
     { value: 'investment', label: '투자' },
   ];
 
+  // 작업 유형 옵션 목록
+  const workTypeOptions = [
+    { value: '', label: '선택하세요' },
+    { value: 'project', label: '프로젝트' },
+    { value: 'task', label: '단순작업' },
+    { value: 'maintenance', label: '유지보수' },
+  ];
+
   return (
     <Row gutter={16} className="w-full">
       <Col span={24} className="space-y-4">
@@ -95,7 +103,7 @@ const ProjectAddBaseForm = ({
         <Group direction="horizontal" className="gap-6">
           <FormItem className="flex-1">
             <Label required className="text-left">
-              유형
+              매출유형
             </Label>
             <Select
               name="projectType"
@@ -103,7 +111,7 @@ const ProjectAddBaseForm = ({
               onChange={(e) => {
                 const value = e.target.value;
                 updateField('projectType', value);
-                
+
                 // 투자로 변경시 SFA 필드 초기화
                 if (value === 'investment') {
                   updateField('sfa', '');
@@ -111,6 +119,25 @@ const ProjectAddBaseForm = ({
               }}
             >
               {projectTypeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+          </FormItem>
+          <FormItem className="flex-1">
+            <Label required className="text-left">
+              작업 유형
+            </Label>
+            <Select
+              name="workType"
+              value={formData.workType || ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                updateField('workType', value);
+              }}
+            >
+              {workTypeOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -132,8 +159,8 @@ const ProjectAddBaseForm = ({
           </FormItem>
 
           <FormItem className="flex-1">
-            <Label 
-              required={formData.projectType === 'revenue'} 
+            <Label
+              required={formData.projectType === 'revenue'}
               className="text-left"
             >
               SFA
@@ -148,14 +175,18 @@ const ProjectAddBaseForm = ({
                 <option key={option.value} value={option.value}>
                   {isSfaLoading && option.value === ''
                     ? '로딩 중...'
-                    : formData.projectType === 'investment' && option.value === ''
+                    : formData.projectType === 'investment' &&
+                      option.value === ''
                     ? '투자 프로젝트는 SFA 불필요'
                     : option.label}
                 </option>
               ))}
             </Select>
           </FormItem>
+        </Group>
 
+        {/* 2열: 서비스, 사업부, 상태, 중요도 */}
+        <Group direction="horizontal" className="gap-6">
           <FormItem className="flex-1">
             <Label required className="text-left">
               프로젝트명
@@ -166,10 +197,6 @@ const ProjectAddBaseForm = ({
               onChange={updateField}
             />
           </FormItem>
-        </Group>
-
-        {/* 2열: 서비스, 사업부, 상태, 중요도 */}
-        <Group direction="horizontal" className="gap-6">
           <FormItem className="flex-1">
             <Label required className="text-left">
               서비스
@@ -239,7 +266,10 @@ const ProjectAddBaseForm = ({
               ))}
             </Select>
           </FormItem>
+        </Group>
 
+        {/* 3열: 사업년도, 계획시작일, 계획종료일 */}
+        <Group direction="horizontal" className="gap-6">
           <FormItem className="flex-1">
             <Label className="text-left">중요도</Label>
             <Select
@@ -261,10 +291,6 @@ const ProjectAddBaseForm = ({
               ))}
             </Select>
           </FormItem>
-        </Group>
-
-        {/* 3열: 사업년도, 계획시작일, 계획종료일 */}
-        <Group direction="horizontal" className="gap-6">
           <FormItem className="flex-1">
             <Label required className="text-left">
               사업년도
@@ -312,7 +338,10 @@ const ProjectAddBaseForm = ({
               onChange={updateField}
             />
           </FormItem>
+        </Group>
 
+        {/* 4열: 비고 */}
+        <Group direction="horizontal" className="gap-6">
           <FormItem className="flex-1">
             <Label className="text-left">템플릿</Label>
             <Select
@@ -332,10 +361,6 @@ const ProjectAddBaseForm = ({
               ))}
             </Select>
           </FormItem>
-        </Group>
-
-        {/* 4열: 비고 */}
-        <Group direction="horizontal" className="gap-6">
           <FormItem className="flex-1">
             <Label className="text-left">비고</Label>
             <Input
@@ -345,8 +370,7 @@ const ProjectAddBaseForm = ({
             />
           </FormItem>
           <FormItem className="flex-1"></FormItem>
-          {/* <FormItem className="flex-1"></FormItem> */}
-          <FormItem className="flex-2"></FormItem>
+          <FormItem className="flex-1"></FormItem>
         </Group>
       </Col>
     </Row>

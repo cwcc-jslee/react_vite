@@ -151,7 +151,7 @@ export const initialState = {
     data: {
       pjtStatus: { id: 86, code: '시작전', name: '시작전' },
       importanceLevel: { id: 121, code: 'medium', name: '중간' },
-      workType: 'project',
+      workType: '',
       fy: { id: 114, code: '25', name: '25년' },
     },
     errors: {},
