@@ -86,6 +86,14 @@ export const buildProjectListQuery = (params) => {
           },
         },
       },
+      project_closure: {
+        fields: ['closure_date'],
+        populate: {
+          closure_type: {
+            fields: ['name', 'code'],
+          },
+        },
+      },
     },
     pagination: {
       start: (pagination.current - 1) * pagination.pageSize,
@@ -189,6 +197,14 @@ export const buildProjectDetailQuery = (id) => {
               //     fields: [],
               //   },
               // },
+            },
+          },
+        },
+        project_closure: {
+          fields: ['closure_date'],
+          populate: {
+            closure_type: {
+              fields: ['name', 'code'],
             },
           },
         },

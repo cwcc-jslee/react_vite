@@ -84,7 +84,7 @@ const ProjectDetailTable = ({
 
   return (
     <Description>
-      {/* 1열: 진행상태, 프로젝트기간, TASK, 진행률 */}
+      {/* 1열: 진행상태, 진행률/종료상태, 프로젝트기간, TASK */}
       <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
           진행상태
@@ -98,6 +98,45 @@ const ProjectDetailTable = ({
           </div>
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
+          {data.isClosed ? '종료상태' : '진행률'}
+        </DescriptionItem>
+        <DescriptionItem>
+          {data.isClosed ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">
+                {data.projectClosure?.closureType?.name || '종료'}
+              </span>
+              {data.projectClosure?.closureDate && (
+                <span className="text-xs text-gray-500">
+                  ({data.projectClosure.closureDate})
+                </span>
+              )}
+            </div>
+          ) : (
+            <Tooltip
+              content={
+                <div className="flex flex-col gap-1 text-xs">
+                  <div>가중평균 진행률: {calculatedProgress}%</div>
+                  <div>
+                    완료 태스크: {completedTasksCount}/{projectTasks.length}
+                  </div>
+                  <div className="text-gray-400 border-t pt-1 mt-1">
+                    * 태스크 계획시간 기반 가중평균 계산
+                  </div>
+                </div>
+              }
+            >
+              <div className="cursor-help">
+                <Progress
+                  percent={calculatedProgress}
+                  status={getProgressStatus()}
+                  size="small"
+                />
+              </div>
+            </Tooltip>
+          )}
+        </DescriptionItem>
+        <DescriptionItem label width="w-[140px]">
           프로젝트기간
         </DescriptionItem>
         <DescriptionItem>{formatProjectDuration()}</DescriptionItem>
@@ -105,32 +144,6 @@ const ProjectDetailTable = ({
           TASK
         </DescriptionItem>
         <DescriptionItem>{`${completedTasksCount}/${projectTasks.length}`}</DescriptionItem>
-        <DescriptionItem label width="w-[140px]">
-          진행률
-        </DescriptionItem>
-        <DescriptionItem>
-          <Tooltip
-            content={
-              <div className="flex flex-col gap-1 text-xs">
-                <div>가중평균 진행률: {calculatedProgress}%</div>
-                <div>
-                  완료 태스크: {completedTasksCount}/{projectTasks.length}
-                </div>
-                <div className="text-gray-400 border-t pt-1 mt-1">
-                  * 태스크 계획시간 기반 가중평균 계산
-                </div>
-              </div>
-            }
-          >
-            <div className="cursor-help">
-              <Progress
-                percent={calculatedProgress}
-                status={getProgressStatus()}
-                size="small"
-              />
-            </div>
-          </Tooltip>
-        </DescriptionItem>
       </DescriptionRow>
 
       {/* 2열: 투입/계획시간, 남은시간, 중요도, 계획시간검증 */}

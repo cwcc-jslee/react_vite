@@ -10,8 +10,26 @@ import Badge from '../../../../shared/components/ui/badge/Badge';
 
 const COLUMNS = [
   { key: 'id', title: 'ID', align: 'left' },
-  { key: 'scheduleStatus', title: '일정상태', align: 'center' },
-  { key: 'remainingDays', title: '잔여일정', align: 'center' },
+  {
+    key: 'scheduleStatus',
+    title: (
+      <div className="text-xs leading-tight">
+        <div>일정상태/</div>
+        <div>종료타입</div>
+      </div>
+    ),
+    align: 'center',
+  },
+  {
+    key: 'remainingDays',
+    title: (
+      <div className="text-xs leading-tight">
+        <div>잔여일정/</div>
+        <div>종료일</div>
+      </div>
+    ),
+    align: 'center',
+  },
   { key: 'taskStatus', title: 'TASK상태', align: 'center' },
   { key: 'timeOverStatus', title: '시간초과', align: 'center' },
   { key: 'customer', title: '고객사', align: 'left' },
@@ -259,7 +277,11 @@ const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
     <tr className="hover:bg-gray-50">
       <td className="px-3 py-2 text-center text-sm">{item.id}</td>
       <td className="px-3 py-2 text-center text-sm">
-        {item?.scheduleStatus ? (
+        {item?.isClosed ? (
+          <span className="text-xs font-medium text-gray-700">
+            {item.projectClosure?.closureType?.name || '-'}
+          </span>
+        ) : item?.scheduleStatus ? (
           <Badge
             label={item.scheduleStatus}
             color={
@@ -277,7 +299,17 @@ const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
         )}
       </td>
       <td className="px-3 py-2 text-center text-sm">
-        {formatRemainingDays(item)}
+        {item?.isClosed ? (
+          item.projectClosure?.closureDate ? (
+            <span className="text-xs text-gray-600">
+              {item.projectClosure.closureDate}
+            </span>
+          ) : (
+            '-'
+          )
+        ) : (
+          formatRemainingDays(item)
+        )}
       </td>
       <td className="px-3 py-2 text-center text-sm">
         {item?.taskStatus ? (
