@@ -46,6 +46,7 @@ export const buildProjectListQuery = (params) => {
       'total_project_hours',
       'total_project_non_billable_hours',
       'createdAt',
+      'is_closed',
     ],
     populate: {
       customer: {

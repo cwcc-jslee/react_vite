@@ -90,30 +90,33 @@ export const useProjectUpdate = (initialData) => {
 
   const validateProjectTasks = useCallback(
     (nextStatus, closureType) => {
-      // 검수 상태일 때는 모든 task가 100% 완료되어야 함
+      const projectTasks = selectedItem?.data?.projectTasks || [];
+
+      // 검수 상태일 때 검증
+      // - isProgress가 true인 TASK는 isCompleted가 true여야 함
+      // - isProgress가 false인 TASK는 검증 통과
       if (nextStatus === '검수') {
-        const projectTasks = selectedItem?.data?.projectTasks || [];
         const hasIncompleteTasks = projectTasks.some(
-          (task) => task.taskProgress?.name !== '100%',
+          (task) => task.isProgress === true && task.isCompleted !== true,
         );
 
         if (hasIncompleteTasks) {
           throw new Error(
-            '모든 테스트가 100% 완료되어야 상태를 변경할 수 있습니다.',
+            '진행 중인 모든 태스크가 완료되어야 검수 상태로 변경할 수 있습니다.',
           );
         }
       }
 
       // 종료 상태일 때는 pjtClosureType이 '완료'인 경우에만 task 체크
+      // - 모든 TASK의 isCompleted가 true여야 함
       if (nextStatus === '종료' && closureType?.name === '완료') {
-        const projectTasks = selectedItem?.data?.projectTasks || [];
         const hasIncompleteTasks = projectTasks.some(
-          (task) => task.taskProgress?.name !== '100%',
+          (task) => task.isCompleted !== true,
         );
 
         if (hasIncompleteTasks) {
           throw new Error(
-            '완료로 종료할 경우 모든 테스트가 100% 완료되어야 합니다.',
+            '완료로 종료할 경우 모든 태스크가 완료되어야 합니다.',
           );
         }
       }
@@ -153,9 +156,9 @@ export const useProjectUpdate = (initialData) => {
         // 키 정보 스네이크케이스로 변환
         const snakeCaseData = convertKeysToSnakeCase(processedData);
 
-        // 종료 상태일 경우 is_completed를 true로 설정
+        // 종료 상태일 경우 is_closed를 true로 설정
         if (formData.pjtStatus?.name === '종료') {
-          snakeCaseData.is_completed = true;
+          snakeCaseData.is_closed = true;
         }
 
         console.log(`>>>> snakeCaseData`, snakeCaseData);

@@ -83,6 +83,9 @@ const TableErrorState = ({ columnsCount, message }) => {
 
 // 잔여일정 계산 함수
 const formatRemainingDays = (item) => {
+  // isClosed가 true이면 잔여일정 표시 안함
+  if (item?.isClosed) return <span>-</span>;
+
   // endDate가 없으면 planEndDate 사용
   const planEndDate = item?.endDate || item?.planEndDate;
 
