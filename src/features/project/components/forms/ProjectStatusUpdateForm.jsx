@@ -49,10 +49,6 @@ const ProjectStatusUpdateForm = ({ data }) => {
   const prevClosureTypeName = data.pjtClosureType?.name;
   const nextClosureTypeName = formData.pjtClosureType?.name;
 
-  console.log('>>> isClosureStatus:', isClosureStatus);
-  console.log('>>> formData.pjtStatus:', formData.pjtStatus);
-  console.log('>>> formData.closureDate:', formData.closureDate);
-
   // 제출 처리 함수
   const handleFormSubmit = async (e) => {
     e.preventDefault();

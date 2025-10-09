@@ -10,6 +10,7 @@ import ProjectScheduleDonutChart from '../components/charts/ProjectScheduleDonut
 import ProjectProgressChart from '../components/charts/ProjectProgressChart';
 import ProjectTaskDelayChart from '../components/charts/ProjectTaskDelayChart';
 import ProjectRemainingPeriodChart from '../components/charts/ProjectRemainingPeriodChart';
+import WorkTypeFilter from '../components/filters/WorkTypeFilter';
 import { useProjectSearch } from '../hooks/useProjectSearch';
 import { useProjectStore } from '../hooks/useProjectStore';
 
@@ -44,6 +45,9 @@ const ProjectChartsSection = () => {
 
   return (
     <>
+      {/* 작업 유형 필터 */}
+      <WorkTypeFilter />
+
       {/* 첫 번째 행 - 4개 차트 */}
       <Row gutter={[16, 16]}>
         {/* 프로젝트 타입 도넛 차트 */}

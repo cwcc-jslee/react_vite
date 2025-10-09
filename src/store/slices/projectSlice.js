@@ -342,6 +342,7 @@ const initialState = {
   },
   // 차트 필터링 상태
   chartFilters: {
+    selectedWorkType: null, // null, 'project', 'task', 'maintenance'
     selectedProjectType: null, // null, 'revenue', 'investment'
     selectedTeam: null, // null, '팀이름'
     selectedService: null, // null, '서비스이름'
@@ -512,6 +513,7 @@ const projectSlice = createSlice({
     // 모든 차트 필터 초기화
     clearChartFilters: (state) => {
       state.chartFilters = {
+        selectedWorkType: null,
         selectedProjectType: null,
         selectedTeam: null,
         selectedService: null,

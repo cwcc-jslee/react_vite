@@ -36,12 +36,12 @@ export const buildProjectListQuery = (params) => {
     fields: [
       'name',
       'project_type',
+      'work_type',
       'plan_start_date',
       'plan_end_date',
       'start_date',
       'end_date',
       'last_workupdate_date',
-      'work_type',
       'project_progress',
       'total_project_hours',
       'total_project_non_billable_hours',
@@ -229,7 +229,13 @@ export const buildProjectScheduleStatusQuery = (params) => {
   // 쿼리 구성
   const query = {
     filters: combinedFilters,
-    fields: ['project_type', 'plan_end_date', 'end_date', 'project_progress'],
+    fields: [
+      'project_type',
+      'work_type',
+      'plan_end_date',
+      'end_date',
+      'project_progress',
+    ],
     populate: {
       pjt_status: {
         fields: ['name'],

@@ -102,9 +102,16 @@ export const useProjectStore = () => {
     return serviceName === selectedService;
   };
 
+  const matchesWorkType = (project, selectedWorkType) => {
+    if (!selectedWorkType) return true;
+    const workType = project.workType || project.work_type;
+    return workType === selectedWorkType;
+  };
+
   // 필터링된 대시보드 데이터 계산 함수 (하이브리드 방식)
   const getFilteredDashboardData = () => {
     const hasActiveFilters = !!(
+      chartFilters.selectedWorkType ||
       chartFilters.selectedProjectType ||
       chartFilters.selectedTeam ||
       chartFilters.selectedService ||
@@ -132,12 +139,17 @@ export const useProjectStore = () => {
     // 2. 필터가 있는 경우: 계층적 필터링 적용
     // 전체 프로젝트 데이터 사용 (dashboard.allProjectsList)
     const allProjectsList = dashboard.allProjectsList || [];
-    
+
+
+    // 계층 0: 작업 유형 필터 적용 (최상위 필터)
+    const workTypeFiltered = chartFilters.selectedWorkType
+      ? allProjectsList.filter(project => matchesWorkType(project, chartFilters.selectedWorkType))
+      : allProjectsList;
 
     // 계층 1: 프로젝트 타입 필터 적용 (프로젝트 상태용)
-    const projectTypeFiltered = chartFilters.selectedProjectType 
-      ? allProjectsList.filter(project => matchesProjectType(project, chartFilters.selectedProjectType))
-      : allProjectsList;
+    const projectTypeFiltered = chartFilters.selectedProjectType
+      ? workTypeFiltered.filter(project => matchesProjectType(project, chartFilters.selectedProjectType))
+      : workTypeFiltered;
     
     // 계층 2: 프로젝트 타입 + 상태 필터 적용 (팀별 현황용)
     const statusFiltered = chartFilters.selectedStatus
@@ -232,10 +244,10 @@ export const useProjectStore = () => {
     };
 
     // 계층별 계산 실행
-    // 1. 프로젝트 타입: 항상 원본 데이터 (필터 선택만 표시)
-    const calculatedProjectType = dashboard.projectTypeCount || {};
-    
-    // 2. 프로젝트 상태: 프로젝트 타입 필터 적용
+    // 1. 프로젝트 타입: workType 필터 적용
+    const calculatedProjectType = calculateProjectTypeCount(workTypeFiltered);
+
+    // 2. 프로젝트 상태: workType + 프로젝트 타입 필터 적용
     const calculatedProjectStatus = calculateProjectStatusCount(projectTypeFiltered);
     
     // 3. 팀별 현황: 프로젝트 타입 + 상태 필터 적용  
@@ -254,11 +266,11 @@ export const useProjectStore = () => {
     const inProgressWithCalculatedProgress = updateProjectsWithProgress(inProgressServiceFiltered);
 
     const filteredData = {
-      // 1. 프로젝트 타입: 항상 원본 데이터 (필터 선택만 표시, 35개 유지)
+      // 1. 프로젝트 타입: workType 필터 적용
       projectType: calculatedProjectType,
-      // 2. 프로젝트 상태: 프로젝트 타입 필터 적용 (매출 선택시 33개)
+      // 2. 프로젝트 상태: workType + 프로젝트 타입 필터 적용
       projectStatus: calculatedProjectStatus,
-      // 3. 팀별 현황: 상위 필터들 적용
+      // 3. 팀별 현황: workType + 프로젝트 타입 + 상태 필터 적용
       team: calculatedTeam,
       // 4. 서비스별 현황: 모든 상위 필터들 적용
       service: calculatedService,
@@ -477,6 +489,7 @@ export const useProjectStore = () => {
     form,
     dashboard,
     dashboardData, // 추가: 데이터만 추출한 대시보드 상태
+    chartFilters, // 차트 필터 상태
     chartFilteredItems, // 차트 필터링된 프로젝트 목록
     inProgressFilteredProjects: dashboardData.inProgressFilteredProjects || [], // 두 번째 행 차트용: 진행중 프로젝트만
 
