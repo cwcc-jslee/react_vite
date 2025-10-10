@@ -58,6 +58,7 @@ const ProjectAddFormSection = () => {
     // editingId,
     // isDirty,
     formProgress,
+    isRequiredFieldsFilled,
     updateField,
     updateFields,
     setErrors,
@@ -216,9 +217,9 @@ const ProjectAddFormSection = () => {
                   onClick={onFormSubmit}
                   variant="primary"
                   size="md"
-                  disabled={isSubmitting || formProgress < 50}
+                  disabled={isSubmitting || !isRequiredFieldsFilled}
                   className={
-                    isSubmitting || formProgress < 50
+                    isSubmitting || !isRequiredFieldsFilled
                       ? 'opacity-50 cursor-not-allowed'
                       : ''
                   }

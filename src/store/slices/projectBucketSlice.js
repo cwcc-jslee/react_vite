@@ -56,7 +56,7 @@ const projectBucketSlice = createSlice({
         isEditing: true,
         bucketIndex,
         taskIndex: null,
-        field: 'columnTitle',
+        field: 'bucketTitle',
         value: columnTitle,
       };
     },
@@ -71,7 +71,7 @@ const projectBucketSlice = createSlice({
 
       if (!isEditing) return;
 
-      if (field === 'columnTitle') {
+      if (field === 'bucketTitle') {
         // 컬럼 제목 업데이트
         if (
           bucketIndex !== null &&

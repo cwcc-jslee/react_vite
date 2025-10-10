@@ -457,8 +457,14 @@ const projectSlice = createSlice({
       const newValue = state.chartFilters[filterType] === value ? null : value;
       state.chartFilters[filterType] = newValue;
 
-      // 상위 필터 변경 시 하위 필터들 초기화 (계층 구조: 프로젝트 타입 > 프로젝트 상태 > 팀별/서비스별)
-      if (filterType === 'selectedProjectType') {
+      // 상위 필터 변경 시 하위 필터들 초기화 (계층 구조: workType > 프로젝트 타입 > 프로젝트 상태 > 팀별/서비스별)
+      if (filterType === 'selectedWorkType') {
+        // 작업 유형 변경 시 모든 하위 필터 초기화
+        state.chartFilters.selectedProjectType = null;
+        state.chartFilters.selectedStatus = null;
+        state.chartFilters.selectedTeam = null;
+        state.chartFilters.selectedService = null;
+      } else if (filterType === 'selectedProjectType') {
         // 프로젝트 타입 변경 시 모든 하위 필터 초기화
         state.chartFilters.selectedStatus = null;
         state.chartFilters.selectedTeam = null;
@@ -474,6 +480,11 @@ const projectSlice = createSlice({
 
       // chartFilters → project.filters 동기화
       state.filters = { ...DEFAULT_FILTERS };
+
+      // 작업 유형 필터 적용
+      if (state.chartFilters.selectedWorkType) {
+        state.filters.work_type = { $eq: state.chartFilters.selectedWorkType };
+      }
 
       // 프로젝트 타입 필터 적용
       if (state.chartFilters.selectedProjectType) {

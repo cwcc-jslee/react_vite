@@ -286,6 +286,33 @@ export const useProjectForm = () => {
       : 'bg-green-500';
   }, [formProgress]);
 
+  // 필수 필드 입력 완료 여부 확인
+  const checkRequiredFields = useCallback(() => {
+    const requiredFields = [
+      'name',
+      'customer',
+      'planStartDate',
+      'planEndDate',
+      'service',
+      'team',
+      'fy',
+    ];
+
+    // 모든 필수 필드가 값을 가지고 있는지 확인
+    return requiredFields.every((field) => {
+      const value = formData[field];
+      // 값이 존재하고, 문자열인 경우 공백이 아닌지 확인
+      if (typeof value === 'string') {
+        return value.trim() !== '';
+      }
+      // 객체나 다른 타입의 경우 null/undefined가 아닌지 확인
+      return value != null;
+    });
+  }, [formData]);
+
+  // 필수 필드 입력 완료 상태
+  const isRequiredFieldsFilled = checkRequiredFields();
+
   return {
     // 상태
     formData,
@@ -296,6 +323,7 @@ export const useProjectForm = () => {
     editingId,
     isDirty,
     formProgress,
+    isRequiredFieldsFilled,
 
     // 액션 메서드
     initForm: initializeForm, // 저수준 API (이름 충돌 방지를 위해 별칭 사용)
