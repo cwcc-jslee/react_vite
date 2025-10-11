@@ -80,7 +80,7 @@ export const buildUtilizationQuery = (params) => {
  * 사용자 목록 조회 쿼리 (팀 정보 포함)
  */
 export const buildUsersQuery = (params = {}) => {
-  const { teamId = null, blocked = false } = params;
+  const { teamId = null, blocked = false, includeNonTrackedTeams = false } = params;
 
   const filters = {
     blocked: { $eq: blocked },
@@ -90,13 +90,21 @@ export const buildUsersQuery = (params = {}) => {
     filters.team = { id: { $eq: teamId } };
   }
 
+  // work tracking 팀만 조회 (includeNonTrackedTeams가 false인 경우)
+  if (!includeNonTrackedTeams) {
+    filters.team = {
+      ...(filters.team || {}),
+      is_work_tracked: { $eq: true },
+    };
+  }
+
   const query = {
     filters,
     // fields: ['username', 'email', 'status', 'join_date', 'leave_date'],
     fields: ['*'],
     populate: {
       team: {
-        fields: ['id', 'name', 'code'],
+        fields: ['id', 'name', 'code', 'is_work_tracked'],
       },
     },
     pagination: {
@@ -112,9 +120,19 @@ export const buildUsersQuery = (params = {}) => {
 /**
  * 팀 목록 조회 쿼리
  */
-export const buildTeamsQuery = () => {
+export const buildTeamsQuery = (params = {}) => {
+  const { includeNonTrackedTeams = false } = params;
+
+  const filters = {};
+
+  // work tracking 팀만 조회 (includeNonTrackedTeams가 false인 경우)
+  if (!includeNonTrackedTeams) {
+    filters.is_work_tracked = { $eq: true };
+  }
+
   const query = {
-    fields: ['id', 'name', 'code'],
+    filters: Object.keys(filters).length > 0 ? filters : undefined,
+    fields: ['id', 'name', 'code', 'is_work_tracked'],
     pagination: {
       start: 0,
       limit: 100,

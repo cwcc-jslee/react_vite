@@ -6,6 +6,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { utilizationApiService } from '../services/utilizationApiService';
+import { utilizationWeeklyService } from '../services/utilizationWeeklyService';
 import dayjs from 'dayjs';
 
 /**
@@ -79,16 +80,58 @@ export const useUtilization = (filters = {}) => {
 /**
  * 팀 목록 조회 훅
  */
-export const useTeamList = () => {
+export const useTeamList = (includeNonTrackedTeams = false) => {
   const query = useQuery({
-    queryKey: ['teams'],
-    queryFn: () => utilizationApiService.getTeamList(),
+    queryKey: ['teams', includeNonTrackedTeams],
+    queryFn: async () => {
+      const { apiService } = await import('@shared/api/apiService');
+      const { convertKeysToCamelCase } = await import('@shared/utils/transformUtils');
+      const { buildTeamsQuery } = await import('../api/utilizationQueries');
+
+      const teamQuery = buildTeamsQuery({ includeNonTrackedTeams });
+      const response = await apiService.get(`/teams?${teamQuery}`);
+      const normalized = response.data?.data || response.data || [];
+      return convertKeysToCamelCase(normalized);
+    },
     staleTime: 1000 * 60 * 10, // 10분간 fresh 상태 유지
     cacheTime: 1000 * 60 * 60, // 1시간 캐시 유지
   });
 
   return {
     teams: query.data || [],
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+  };
+};
+
+/**
+ * 사용자 목록 조회 훅
+ */
+export const useUserList = (includeNonTrackedTeams = false) => {
+  const query = useQuery({
+    queryKey: ['users', 'all', includeNonTrackedTeams],
+    queryFn: async () => {
+      const { apiService } = await import('@shared/api/apiService');
+      const { convertKeysToCamelCase } = await import('@shared/utils/transformUtils');
+      const { buildUsersQuery } = await import('../api/utilizationQueries');
+
+      const userQuery = buildUsersQuery({
+        blocked: false,
+        includeNonTrackedTeams
+      });
+      const response = await apiService.get(`/users?${userQuery}`);
+      const rawUsers = response.data || [];
+      return Array.isArray(rawUsers)
+        ? convertKeysToCamelCase(rawUsers)
+        : convertKeysToCamelCase(rawUsers.data || []);
+    },
+    staleTime: 1000 * 60 * 10, // 10분간 fresh 상태 유지
+    cacheTime: 1000 * 60 * 60, // 1시간 캐시 유지
+  });
+
+  return {
+    users: query.data || [],
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,
@@ -108,5 +151,58 @@ export const useUtilizationWithTeams = (filters = {}) => {
     isLoading: utilization.isLoading || teamList.isLoading,
     isError: utilization.isError || teamList.isError,
     error: utilization.error || teamList.error,
+  };
+};
+
+/**
+ * 주별 투입률 데이터 조회 훅
+ */
+export const useWeeklyUtilization = (filters = {}) => {
+  const { startDate, endDate, teamId, userId, includeNonTrackedTeams = false } = filters;
+
+  // React Query를 사용한 주별 데이터 조회
+  const query = useQuery({
+    queryKey: ['utilization', 'weekly', startDate, endDate, teamId, userId, includeNonTrackedTeams],
+    queryFn: () =>
+      utilizationWeeklyService.getWeeklyUtilizationData({
+        startDate,
+        endDate,
+        teamId,
+        userId,
+        includeNonTrackedTeams,
+      }),
+    enabled: !!(startDate && endDate), // startDate와 endDate가 있을 때만 쿼리 실행
+    staleTime: 1000 * 60 * 5, // 5분간 fresh 상태 유지
+    cacheTime: 1000 * 60 * 30, // 30분간 캐시 유지
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
+  return {
+    data: query.data || null,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    refetch: query.refetch,
+  };
+};
+
+/**
+ * 주별 투입률 통합 훅 (주별 데이터 + 팀 목록 + 사용자 목록)
+ */
+export const useWeeklyUtilizationWithTeams = (filters = {}) => {
+  const { includeNonTrackedTeams = false } = filters;
+
+  const weeklyUtilization = useWeeklyUtilization(filters);
+  const teamList = useTeamList(includeNonTrackedTeams);
+  const userList = useUserList(includeNonTrackedTeams);
+
+  return {
+    weeklyUtilization,
+    teams: teamList.teams,
+    users: userList.users,
+    isLoading: weeklyUtilization.isLoading || teamList.isLoading || userList.isLoading,
+    isError: weeklyUtilization.isError || teamList.isError || userList.isError,
+    error: weeklyUtilization.error || teamList.error || userList.error,
   };
 };
