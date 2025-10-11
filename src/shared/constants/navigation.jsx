@@ -221,6 +221,28 @@ export const PAGE_MENUS = {
           },
         },
       },
+      utilization: {
+        label: '투입률',
+        permissions: ['user'],
+        visible: true,
+        config: {
+          layout: 'utilization',
+          sections: {
+            projectCharts: false,
+            projectListTable: false,
+            projectAddForm: false,
+            projectDetailTable: false,
+            projectTaskBoard: false,
+            utilizationCharts: true,
+          },
+          components: {
+            utilizationDashboard: true,
+          },
+          drawer: {
+            visible: false,
+          },
+        },
+      },
 
       detail: {
         label: '상세정보',
