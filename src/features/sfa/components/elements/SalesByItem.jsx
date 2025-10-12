@@ -35,6 +35,8 @@ const SalesByItemForm = ({
   errors = {},
   itemsData,
   isItemsLoading,
+  isMultiTeam = false,
+  hasPayments = false,
 }) => {
   // React Query를 사용하여 팀 데이터와 매출품목 데이터 조회
   const { data: teamsData, isLoading: isTeamsLoading } = useTeam();
@@ -73,7 +75,7 @@ const SalesByItemForm = ({
                   });
                 }
               }}
-              disabled={isSubmitting}
+              disabled={isSubmitting || hasPayments}
               className={
                 hasFieldError(index, 'itemName') ? 'border-red-300' : ''
               }
@@ -105,7 +107,7 @@ const SalesByItemForm = ({
                   });
                 }
               }}
-              disabled={isSubmitting}
+              disabled={isSubmitting || hasPayments}
               className={
                 hasFieldError(index, 'teamName') ? 'border-red-300' : ''
               }
@@ -127,7 +129,7 @@ const SalesByItemForm = ({
                 onChange(index, 'amount', numericValue);
               }}
               placeholder="금액"
-              disabled={isSubmitting}
+              disabled={isSubmitting || hasPayments}
               className={`text-right ${
                 hasFieldError(index, 'amount') ? 'border-red-300' : ''
               }`}
@@ -137,13 +139,42 @@ const SalesByItemForm = ({
             <button
               type="button"
               onClick={() => onRemove(index)}
-              disabled={isSubmitting}
+              disabled={
+                isSubmitting ||
+                hasPayments ||
+                (!isMultiTeam && items.length === 1) ||
+                (isMultiTeam && items.length <= 2)
+              }
               className={`flex items-center justify-center p-2 rounded hover:bg-gray-100 transition-colors
                 ${
-                  isSubmitting ? 'opacity-50 cursor-not-allowed' : 'opacity-100'
+                  isSubmitting ||
+                  hasPayments ||
+                  (!isMultiTeam && items.length === 1) ||
+                  (isMultiTeam && items.length <= 2)
+                    ? 'opacity-30 cursor-not-allowed'
+                    : 'opacity-100 hover:bg-red-50'
                 }`}
+              title={
+                hasPayments
+                  ? '결제매출이 생성된 후에는 사업부 매출 정보를 수정할 수 없습니다'
+                  : !isMultiTeam && items.length === 1
+                    ? '단일 사업부 모드에서는 최소 1개 항목이 필요합니다'
+                    : isMultiTeam && items.length <= 2
+                      ? '다중 사업부 모드에서는 최소 2개 항목이 필요합니다'
+                      : ''
+              }
             >
-              <Trash2 size={20} className="text-gray-500" />
+              <Trash2
+                size={20}
+                className={
+                  isSubmitting ||
+                  hasPayments ||
+                  (!isMultiTeam && items.length === 1) ||
+                  (isMultiTeam && items.length <= 2)
+                    ? 'text-gray-300'
+                    : 'text-gray-500'
+                }
+              />
             </button>
           </div>
 

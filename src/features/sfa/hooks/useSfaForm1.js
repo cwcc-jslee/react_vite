@@ -13,6 +13,12 @@ import {
   initialSfaByPayment,
   INITIAL_PAYMENT_ID_STATE,
 } from '../constants/formInitialState';
+import {
+  createTeamAllocationTemplate,
+  autoAllocateByRatio,
+  autoAllocateEqually,
+} from '../utils/teamAllocationUtils';
+import { notification } from '@shared/services/notification';
 
 /**
  * useSfaForm1: SFA 폼 관리를 위한 통합 커스텀 훅
@@ -305,6 +311,207 @@ export const useSfaForm1 = () => {
     actions.form.updateField('sfaByPayments', []);
   }, [actions.form]);
 
+  // === 팀 모드 관련 핸들러 ===
+  /**
+   * 단일/다중 사업부 모드 토글
+   */
+  const handleTeamModeToggle = useCallback(
+    (isMulti) => {
+      console.log('🔄 [handleTeamModeToggle] 호출됨:', { isMulti });
+      const currentItems = form.data.sfaByItems || [];
+
+      if (isMulti) {
+        // 단일 → 다중: 2개 항목 자동 생성
+        if (currentItems.length === 0) {
+          // 처음부터 다중 선택: 2개 빈 항목 생성
+          actions.form.updateField('sfaByItems', [
+            { ...initialSalesByItem },
+            { ...initialSalesByItem },
+          ]);
+        } else if (currentItems.length === 1) {
+          // 단일에서 다중으로 전환: 기존 1개 + 새로운 1개
+          actions.form.updateField('sfaByItems', [
+            currentItems[0],
+            { ...initialSalesByItem },
+          ]);
+        }
+        // 이미 2개 이상이면 유지
+      } else {
+        // 다중 → 단일: 1개 항목만 유지
+        if (currentItems.length === 0) {
+          // 빈 상태: 1개 빈 항목 생성
+          actions.form.updateField('sfaByItems', [{ ...initialSalesByItem }]);
+        } else {
+          // 첫 번째 항목만 유지
+          actions.form.updateField('sfaByItems', [currentItems[0]]);
+        }
+      }
+
+      // 결제 매출 초기화 (팀 구성 변경)
+      actions.form.updateField('sfaByPayments', []);
+      actions.form.updateField('isMultiTeam', isMulti);
+
+      console.log('✅ [handleTeamModeToggle] 완료:', {
+        isMulti,
+        itemsCount: form.data.sfaByItems?.length,
+      });
+    },
+    [actions.form, form.data.sfaByItems],
+  );
+
+  /**
+   * 결제 추가 시 팀 할당 자동 생성 (개선)
+   */
+  const handleAddPaymentWithAllocation = useCallback(
+    (isSameBilling, customer) => {
+      const isMultiTeam = form.data.isMultiTeam;
+      const sfaByItems = form.data.sfaByItems || [];
+
+      // 사업부 매출 정보 입력 확인
+      const hasValidItems =
+        sfaByItems.length > 0 &&
+        sfaByItems.every(
+          (item) => item.teamId && item.itemId && item.amount > 0,
+        );
+
+      if (!hasValidItems) {
+        notification.warning({
+          message: '알림',
+          description: '사업부 매출 정보를 먼저 입력해주세요.',
+        });
+        return;
+      }
+
+      const fieldName = 'sfaByPayments';
+      const currentPayments = form.data[fieldName] || [];
+
+      if (currentPayments.length >= FORM_LIMITS.MAX_PAYMENTS) return;
+
+      const newPayment = { ...initialSfaByPayment };
+
+      if (isSameBilling && customer?.id) {
+        newPayment.revenueSource = customer;
+      }
+
+      // 팀 할당 자동 생성
+      if (isMultiTeam) {
+        // 다중 사업부: 템플릿 생성 (금액은 0)
+        newPayment.teamAllocations = createTeamAllocationTemplate(sfaByItems);
+      } else {
+        // 단일 사업부: 단일 할당
+        if (sfaByItems[0]) {
+          newPayment.teamAllocations = [
+            {
+              teamId: sfaByItems[0].teamId,
+              teamName: sfaByItems[0].teamName,
+              itemId: sfaByItems[0].itemId,
+              itemName: sfaByItems[0].itemName,
+              allocatedAmount: 0,
+            },
+          ];
+        }
+      }
+
+      const newPayments = [...currentPayments, newPayment];
+      actions.form.updateField(fieldName, newPayments);
+    },
+    [actions.form, form.data],
+  );
+
+  /**
+   * 결제 금액 변경 시 처리
+   */
+  const handlePaymentAmountChange = useCallback(
+    (paymentIndex, newAmount) => {
+      console.log('🔄 [handlePaymentAmountChange] 호출됨:', { paymentIndex, newAmount });
+
+      const isMultiTeam = form.data.isMultiTeam;
+      const sfaByItems = form.data.sfaByItems || [];
+      const currentPayments = [...(form.data.sfaByPayments || [])];
+      const payment = { ...currentPayments[paymentIndex] }; // 깊은 복사
+
+      payment.amount = newAmount;
+
+      if (!isMultiTeam) {
+        // 단일 사업부: 자동 동기화
+        if (payment.teamAllocations && payment.teamAllocations[0]) {
+          payment.teamAllocations = [
+            {
+              ...payment.teamAllocations[0],
+              allocatedAmount: parseFloat(newAmount || 0),
+            },
+          ];
+        }
+      }
+      // 다중 사업부는 사용자가 직접 배분하거나 버튼 클릭
+
+      currentPayments[paymentIndex] = payment; // 업데이트된 객체로 교체
+
+      console.log('✅ [handlePaymentAmountChange] Redux 업데이트:', currentPayments[paymentIndex]);
+      actions.form.updateField('sfaByPayments', currentPayments);
+    },
+    [actions.form, form.data],
+  );
+
+  /**
+   * 팀 할당 수동 변경
+   */
+  const handleAllocationChange = useCallback(
+    (paymentIndex, teamIndex, amount) => {
+      const currentPayments = [...(form.data.sfaByPayments || [])];
+      const payment = currentPayments[paymentIndex];
+
+      if (!payment.teamAllocations || !payment.teamAllocations[teamIndex]) {
+        return;
+      }
+
+      payment.teamAllocations[teamIndex].allocatedAmount = parseFloat(
+        amount || 0,
+      );
+
+      actions.form.updateField('sfaByPayments', currentPayments);
+    },
+    [actions.form, form.data.sfaByPayments],
+  );
+
+  /**
+   * 자동 비율 배분
+   */
+  const handleAutoAllocateByRatio = useCallback(
+    (paymentIndex) => {
+      const currentPayments = [...(form.data.sfaByPayments || [])];
+      const payment = currentPayments[paymentIndex];
+      const sfaByItems = form.data.sfaByItems || [];
+
+      payment.teamAllocations = autoAllocateByRatio(
+        parseFloat(payment.amount || 0),
+        sfaByItems,
+      );
+
+      actions.form.updateField('sfaByPayments', currentPayments);
+    },
+    [actions.form, form.data],
+  );
+
+  /**
+   * 균등 배분
+   */
+  const handleEqualDistribute = useCallback(
+    (paymentIndex) => {
+      const currentPayments = [...(form.data.sfaByPayments || [])];
+      const payment = currentPayments[paymentIndex];
+      const sfaByItems = form.data.sfaByItems || [];
+
+      payment.teamAllocations = autoAllocateEqually(
+        parseFloat(payment.amount || 0),
+        sfaByItems,
+      );
+
+      actions.form.updateField('sfaByPayments', currentPayments);
+    },
+    [actions.form, form.data],
+  );
+
   // === 검증 함수들 ===
   const validateFormData = useCallback((formData, hasPartner) => {
     return validateForm(formData, hasPartner);
@@ -349,6 +556,14 @@ export const useSfaForm1 = () => {
     // 결제매출 수정 관련
     selectPaymentForEdit,
     resetPaymentForm,
+
+    // 팀 모드 및 할당 관련 핸들러
+    handleTeamModeToggle,
+    handleAddPaymentWithAllocation,
+    handlePaymentAmountChange,
+    handleAllocationChange,
+    handleAutoAllocateByRatio,
+    handleEqualDistribute,
 
     // 검증 함수
     validateForm: validateFormData,

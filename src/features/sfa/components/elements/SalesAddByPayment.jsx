@@ -38,6 +38,12 @@ const SalesAddByPayment = ({
   savedRevenueSources,
   codebooks,
   isLoadingCodebook,
+  isMultiTeam = false,
+  sfaByItems = [],
+  onPaymentAmountChange,
+  onAllocationChange,
+  onAutoAllocateByRatio,
+  onEqualDistribute,
 }) => {
   const [displayValue, setDisplayValue] = useState('');
   const [isRevenueSearch, setIsRevenueSearch] = useState(false);
@@ -45,7 +51,6 @@ const SalesAddByPayment = ({
   console.log('>>payment : ', payment);
   console.log('>>index : ', index);
   console.log('>>isSameBilling : ', isSameBilling);
-  // console.log(`>>formData : `, formData);
 
   // payment 변경 감지
   useEffect(() => {
@@ -56,14 +61,39 @@ const SalesAddByPayment = ({
     });
   }, [payment.isConfirmed, payment, index]);
 
+  // payment.amount 변경 시 displayValue 동기화
+  useEffect(() => {
+    // 포커스가 없을 때만 동기화 (입력 중이 아닐 때)
+    if (document.activeElement?.name !== `amount-${index}`) {
+      setDisplayValue('');
+    }
+  }, [payment.amount, index]);
+
   // 금액 입력 처리
   const handleAmountChange = (value) => {
     const sanitizedValue = value.replace(/[^\d,]/g, '');
     setDisplayValue(sanitizedValue);
 
     const numericValue = sanitizedValue.replace(/,/g, '');
+    console.log('💰 [handleAmountChange] 매출액 변경:', {
+      index,
+      numericValue,
+      currentAmount: payment.amount,
+      hasTeamAllocations: !!payment.teamAllocations,
+      teamAllocationsLength: payment.teamAllocations?.length,
+      hasOnPaymentAmountChange: !!onPaymentAmountChange,
+    });
+
     if (numericValue !== payment.amount) {
-      onChange(index, 'amount', numericValue);
+      // 팀 할당이 있고 핸들러가 제공된 경우 onPaymentAmountChange 사용
+      if (onPaymentAmountChange && payment.teamAllocations && payment.teamAllocations.length > 0) {
+        console.log('✅ [handleAmountChange] onPaymentAmountChange 호출');
+        onPaymentAmountChange(index, numericValue);
+      } else {
+        // 팀 할당이 없거나 핸들러가 없으면 기본 onChange
+        console.log('✅ [handleAmountChange] onChange 호출');
+        onChange(index, 'amount', numericValue);
+      }
     }
   };
 
@@ -275,6 +305,7 @@ const SalesAddByPayment = ({
           </span>
           <Input
             type="text"
+            name={`amount-${index}`}
             value={displayValue || formatDisplayNumber(payment.amount || '')}
             onChange={(e) => handleAmountChange(e.target.value)}
             onFocus={handleAmountFocus}
@@ -416,6 +447,110 @@ const SalesAddByPayment = ({
           </button>
         </div>
       </div>
+
+      {/* 팀 할당 섹션 - 사업부 매출이 있을 때만 표시 */}
+      {sfaByItems.length > 0 && payment.teamAllocations && payment.teamAllocations.length > 0 && (
+        <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-sm font-medium text-gray-700">
+              사업부별 매출 할당
+              {!isMultiTeam && <span className="ml-2 text-xs text-gray-500">(단일 사업부 - 자동 할당)</span>}
+            </h4>
+            {isMultiTeam && (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => onAutoAllocateByRatio && onAutoAllocateByRatio(index)}
+                  disabled={isSubmitting || !payment.amount}
+                  className="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  비율 배분
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onEqualDistribute && onEqualDistribute(index)}
+                  disabled={isSubmitting || !payment.amount}
+                  className="text-xs px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  균등 배분
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* 단일 사업부 - 읽기 전용 표시 */}
+          {!isMultiTeam && payment.teamAllocations[0] && (
+            <div className="grid grid-cols-[1.5fr,1.5fr,1fr] gap-2 items-center bg-white p-2 rounded">
+              <div className="text-sm">
+                <span className="text-gray-500">사업부:</span>{' '}
+                <span className="font-medium">{payment.teamAllocations[0].teamName}</span>
+              </div>
+              <div className="text-sm">
+                <span className="text-gray-500">매출품목:</span>{' '}
+                <span className="font-medium">{payment.teamAllocations[0].itemName}</span>
+              </div>
+              <div className="text-sm text-right">
+                <span className="text-gray-500">할당액:</span>{' '}
+                <span className="font-medium text-blue-600">
+                  {formatDisplayNumber(payment.teamAllocations[0].allocatedAmount || 0)}원
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* 다중 사업부 - 수동 입력 (1라인, 매출품목과 할당액만 표시) */}
+          {isMultiTeam && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 bg-white p-2 rounded">
+                {payment.teamAllocations.map((allocation, teamIndex) => (
+                  <React.Fragment key={teamIndex}>
+                    <div className="flex items-center gap-2 flex-1">
+                      <span className="text-xs text-gray-500 whitespace-nowrap">
+                        {allocation.itemName}
+                      </span>
+                      <Input
+                        type="text"
+                        value={formatDisplayNumber(allocation.allocatedAmount || 0)}
+                        onChange={(e) => {
+                          const numericValue = ensureNumericAmount(e.target.value);
+                          onAllocationChange && onAllocationChange(index, teamIndex, numericValue);
+                        }}
+                        placeholder="할당액"
+                        disabled={isSubmitting}
+                        className="text-right h-8 flex-1"
+                      />
+                    </div>
+                    {teamIndex < payment.teamAllocations.length - 1 && (
+                      <span className="text-gray-300">|</span>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+
+              {/* 할당 합계 표시 */}
+              <div className="flex justify-between items-center pt-2 border-t border-blue-200">
+                <span className="text-sm text-gray-600">할당 합계:</span>
+                <span className={`text-sm font-medium ${
+                  payment.teamAllocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || 0), 0) === parseFloat(payment.amount || 0)
+                    ? 'text-green-600'
+                    : 'text-red-600'
+                }`}>
+                  {formatDisplayNumber(
+                    payment.teamAllocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || 0), 0)
+                  )}원
+                  {payment.amount && payment.teamAllocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || 0), 0) !== parseFloat(payment.amount || 0) && (
+                    <span className="ml-2 text-xs">
+                      (차이: {formatDisplayNumber(
+                        Math.abs(parseFloat(payment.amount || 0) - payment.teamAllocations.reduce((sum, a) => sum + parseFloat(a.allocatedAmount || 0), 0))
+                      )}원)
+                    </span>
+                  )}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

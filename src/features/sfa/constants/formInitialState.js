@@ -25,6 +25,8 @@ export const initialSfaByPayment = {
   recognitionDate: '',
   scheduledDate: '',
   memo: '',
+  paymentLabel: '',
+  teamAllocations: [], // 팀별 할당 정보
 };
 
 // 🎯 폼 기본값 상태 (add 모드 진입 시 사용)
@@ -41,6 +43,7 @@ export const DEFAULT_FORM_STATE = {
   sfaDraftItems: [], // 편집 모드에서 사용하는 임시 사업부 매출 정보
   isProject: false,
   isSameBilling: true,
+  isMultiTeam: false, // 다중 사업부 여부
 };
 
 // 🗑️ 완전 빈값 상태 (레이아웃 종료 시 사용)

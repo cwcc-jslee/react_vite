@@ -5,6 +5,7 @@ import { formatDisplayNumber } from '@shared/utils/format/number';
 import SalesByItem from '../elements/SalesByItem.jsx';
 import SalesAddByPayment from '../elements/SalesAddByPayment.jsx';
 import RevenueSource from '../elements/RevenueSource.jsx';
+import SalesItemSection from '../sections/SalesItemSection.jsx';
 import { useSfaForm1 } from '../../hooks/useSfaForm1.js';
 import { useSfaStore } from '../../hooks/useSfaStore.js';
 import { useSfaOperations } from '../../hooks/useSfaSubmit.js';
@@ -51,6 +52,7 @@ const SfaAddForm = () => {
     handleRemoveSalesItem,
     handleSalesItemChange,
     handleAddPayment,
+    handleAddPaymentWithAllocation,
     handleRemovePayment,
     handlePaymentChange,
     handleCustomerSelect,
@@ -59,6 +61,11 @@ const SfaAddForm = () => {
     handleProjectToggle,
     handleCustomerTypeChange,
     handleRevenueSourceSelect,
+    handleTeamModeToggle,
+    handlePaymentAmountChange,
+    handleAllocationChange,
+    handleAutoAllocateByRatio,
+    handleEqualDistribute,
     validateForm,
     checkAmounts,
   } = useSfaForm1();
@@ -314,17 +321,33 @@ const SfaAddForm = () => {
           </Group>
         </div>
 
-        {/* 매출처 관리 */}
+        {/* 사업부 매출 정보 */}
+        <SalesItemSection
+          isMultiTeam={form.data.isMultiTeam || false}
+          onTeamModeToggle={handleTeamModeToggle}
+          sfaByItems={form.data.sfaByItems || []}
+          onAddSalesItem={handleAddSalesItem}
+          onRemoveSalesItem={handleRemoveSalesItem}
+          onSalesItemChange={handleSalesItemChange}
+          isSubmitting={isSubmitting}
+          errors={errors}
+          itemsData={itemsData}
+          isItemsLoading={isItemsLoading}
+          hasPayments={hasPayments}
+        />
+
+        {/* 매출 정보 (결제 구분) */}
         <div className="rounded-lg border border-gray-200 p-4">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-medium text-gray-900">매출 정보</h3>
             <button
               type="button"
               onClick={() =>
-                handleAddPayment(form.data.isSameBilling, form.data.customer)
+                handleAddPaymentWithAllocation(form.data.isSameBilling, form.data.customer)
               }
               className="flex items-center rounded-lg bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-              disabled={!hasCustomer || isSubmitting}
+              disabled={!hasCustomer || !hasItems || isSubmitting}
+              title={!hasItems ? '사업부 매출 정보를 먼저 입력해주세요' : ''}
             >
               <Plus className="mr-1 h-4 w-4" />
               {form.data.isSameBilling ? '결제매출 추가' : '매출처 추가'}
@@ -336,6 +359,16 @@ const SfaAddForm = () => {
               <Users className="mx-auto mb-2 h-8 w-8 text-gray-400" />
               <p className="text-sm text-gray-600">
                 먼저 고객사를 선택해주세요
+              </p>
+            </div>
+          ) : !hasItems ? (
+            <div className="rounded-lg bg-yellow-50 p-4 text-center border border-yellow-200">
+              <Briefcase className="mx-auto mb-2 h-8 w-8 text-yellow-500" />
+              <p className="text-sm text-yellow-700 font-medium">
+                사업부 매출 정보를 먼저 입력해주세요
+              </p>
+              <p className="text-xs text-yellow-600 mt-1">
+                결제 매출을 추가하려면 사업부 매출 정보가 필요합니다
               </p>
             </div>
           ) : !hasPayments ? (
@@ -362,6 +395,12 @@ const SfaAddForm = () => {
                   savedRevenueSources={uniqueRevenueSources}
                   codebooks={codebooks}
                   isLoadingCodebook={isLoadingCodebook}
+                  isMultiTeam={form.data.isMultiTeam || false}
+                  sfaByItems={form.data.sfaByItems || []}
+                  onPaymentAmountChange={handlePaymentAmountChange}
+                  onAllocationChange={handleAllocationChange}
+                  onAutoAllocateByRatio={handleAutoAllocateByRatio}
+                  onEqualDistribute={handleEqualDistribute}
                 />
               ))}
             </div>
@@ -381,68 +420,6 @@ const SfaAddForm = () => {
                         .reduce((sum, payment) => {
                           const amount = parseFloat(
                             String(payment.amount || 0).replace(/,/g, ''),
-                          );
-                          return sum + amount;
-                        }, 0)
-                        .toLocaleString()}
-                      원
-                    </span>
-                  )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* {사업부 매출} */}
-        <div className="rounded-lg border border-gray-200 p-4">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-medium text-gray-900">사업부 매출 정보</h3>
-            <button
-              type="button"
-              onClick={handleAddSalesItem}
-              className="flex items-center rounded-lg bg-green-600 px-3 py-1.5 text-sm text-white hover:bg-green-700"
-            >
-              <Plus className="mr-1 h-4 w-4" />
-              사업부매출 추가
-            </button>
-          </div>
-
-          {!hasItems ? (
-            <div className="rounded-lg bg-gray-50 p-4 text-center">
-              <Briefcase className="mx-auto mb-2 h-8 w-8 text-gray-400" />
-              <p className="text-sm text-gray-600">
-                사업부 매출을 추가해주세요
-              </p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <SalesByItem
-                items={form.data.sfaByItems || []}
-                onChange={handleSalesItemChange}
-                onRemove={handleRemoveSalesItem}
-                isSubmitting={isSubmitting}
-                errors={errors}
-                itemsData={itemsData}
-                isItemsLoading={isItemsLoading}
-              />
-            </div>
-          )}
-
-          {/* 사업부 매출 요약 */}
-          {hasItems && (
-            <div className="mt-3 rounded-lg bg-blue-50 p-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-green-700">
-                  {`총 사업부매출 : ${form.data.sfaByItems?.length || 0}건`}
-                </span>
-                {form.data.sfaByItems &&
-                  Array.isArray(form.data.sfaByItems) && (
-                    <span className="text-blue-700">
-                      총 금액:{' '}
-                      {form.data.sfaByItems
-                        .reduce((sum, item) => {
-                          const amount = parseFloat(
-                            String(item.amount || 0).replace(/,/g, ''),
                           );
                           return sum + amount;
                         }, 0)
