@@ -7,8 +7,9 @@
 import { apiService } from '@shared/api/apiService';
 import { handleApiError } from '@shared/api/errorHandlers';
 import { normalizeResponse } from '@shared/api/normalize';
-import { buildUtilizationQuery, buildUsersQuery, buildTeamsQuery } from '../api/utilizationQueries';
+import { buildUtilizationQuery, buildUsersQuery, buildTeamsQuery, buildUserTeamHistoriesQuery } from '../api/utilizationQueries';
 import { convertKeysToCamelCase } from '@shared/utils/transformUtils';
+import { getUserMembershipDays } from '../utils/teamHistoryUtils';
 
 /**
  * 근무일수 계산 (주말 제외, 공휴일 미적용)
@@ -109,7 +110,7 @@ const getUserStatus = (utilization, workHours) => {
 /**
  * 투입률 데이터 계산
  */
-const processUtilizationData = (works, users, startDate, endDate) => {
+const processUtilizationData = (works, users, startDate, endDate, teamHistories = []) => {
   const workingDays = calculateWorkingDays(startDate, endDate);
   const dailyHours = 8;
 
@@ -187,8 +188,17 @@ const processUtilizationData = (works, users, startDate, endDate) => {
       };
     }
 
-    // 사용자 기본 시간 계산
-    const baseHours = workingDays * dailyHours;
+    // 팀 이력 기반 소속 일수 계산 (팀 이력이 없으면 전체 근무일 사용)
+    const membershipDays = getUserMembershipDays(
+      teamHistories,
+      userId,
+      teamId,
+      startDate,
+      endDate,
+      workingDays
+    );
+
+    const baseHours = membershipDays * dailyHours;
     const userWork = userWorksMap[userId] || { totalWorkHours: 0, workDays: new Set() };
     const workHours = userWork.totalWorkHours;
     const utilization = calculateUtilization(workHours, baseHours);
@@ -196,6 +206,7 @@ const processUtilizationData = (works, users, startDate, endDate) => {
     if (index === 0) {
       console.log('첫 사용자 계산:', {
         userId,
+        membershipDays,
         baseHours,
         workHours,
         utilization,
@@ -299,8 +310,20 @@ export const utilizationApiService = {
       console.log('User 변환 후 샘플 (첫 번째):', users[0]);
       console.log('User 총 개수:', users.length);
 
-      // 3. 투입률 계산
-      const utilizationData = processUtilizationData(works, users, startDate, endDate);
+      // 3. 팀 이력 조회
+      const historyQuery = buildUserTeamHistoriesQuery({
+        teamId,
+        startDate,
+        endDate,
+      });
+      const historyResponse = await apiService.get(`/user-team-histories?${historyQuery}`);
+      const normalizedHistory = normalizeResponse(historyResponse);
+      const teamHistories = convertKeysToCamelCase(normalizedHistory.data || []);
+
+      console.log('팀 이력 조회:', teamHistories.length, '건');
+
+      // 4. 투입률 계산 (팀 이력 포함)
+      const utilizationData = processUtilizationData(works, users, startDate, endDate, teamHistories);
 
       console.log('계산 완료 - 팀 수:', utilizationData.byTeam.length);
       console.log('계산 완료 - 전체 투입률:', utilizationData.summary.totalUtilization, '%');

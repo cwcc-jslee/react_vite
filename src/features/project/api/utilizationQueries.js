@@ -142,3 +142,58 @@ export const buildTeamsQuery = (params = {}) => {
 
   return qs.stringify(query, { encodeValuesOnly: true });
 };
+
+/**
+ * 사용자 팀 이력 조회 쿼리
+ * 특정 기간 내 팀 변경 이력 조회
+ */
+export const buildUserTeamHistoriesQuery = (params = {}) => {
+  const { userId = null, teamId = null, startDate = null, endDate = null } = params;
+
+  const filters = {};
+
+  // 사용자 필터
+  if (userId) {
+    filters.user = { id: { $eq: userId } };
+  }
+
+  // 팀 필터
+  if (teamId) {
+    filters.team = { id: { $eq: teamId } };
+  }
+
+  // 기간 필터: 해당 기간과 겹치는 이력
+  if (startDate && endDate) {
+    filters.$and = [
+      {
+        start_date: { $lte: endDate }, // 시작일이 조회 종료일 이전
+      },
+      {
+        $or: [
+          { end_date: { $gte: startDate } }, // 종료일이 조회 시작일 이후
+          { end_date: { $null: true } }, // 또는 현재 소속 (end_date가 null)
+        ],
+      },
+    ];
+  }
+
+  const query = {
+    filters: Object.keys(filters).length > 0 ? filters : undefined,
+    fields: ['start_date', 'end_date'],
+    populate: {
+      user: {
+        fields: ['id', 'username', 'email'],
+      },
+      team: {
+        fields: ['id', 'name', 'code', 'is_work_tracked'],
+      },
+    },
+    pagination: {
+      start: 0,
+      limit: 1000,
+    },
+    sort: ['start_date:asc'],
+  };
+
+  return qs.stringify(query, { encodeValuesOnly: true });
+};

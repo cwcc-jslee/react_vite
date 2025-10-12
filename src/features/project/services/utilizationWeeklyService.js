@@ -7,8 +7,9 @@
 import { apiService } from '@shared/api/apiService';
 import { handleApiError } from '@shared/api/errorHandlers';
 import { normalizeResponse } from '@shared/api/normalize';
-import { buildUtilizationQuery, buildUsersQuery } from '../api/utilizationQueries';
+import { buildUtilizationQuery, buildUsersQuery, buildUserTeamHistoriesQuery } from '../api/utilizationQueries';
 import { convertKeysToCamelCase } from '@shared/utils/transformUtils';
+import { getUserMembershipDays } from '../utils/teamHistoryUtils';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 
@@ -93,8 +94,8 @@ const getUserStatus = (utilization, workHours) => {
 /**
  * 특정 주의 투입률 계산
  */
-const processWeekUtilization = (works, users, weekInfo, userId = null) => {
-  const { workingDays } = weekInfo;
+const processWeekUtilization = (works, users, weekInfo, userId = null, teamHistories = []) => {
+  const { workingDays, startDate, endDate } = weekInfo;
   const dailyHours = 8;
 
   // userId 필터가 있으면 해당 사용자만 필터링
@@ -146,7 +147,17 @@ const processWeekUtilization = (works, users, weekInfo, userId = null) => {
       };
     }
 
-    const baseHours = workingDays * dailyHours;
+    // 팀 이력 기반 소속 일수 계산 (팀 이력이 없으면 전체 근무일 사용)
+    const membershipDays = getUserMembershipDays(
+      teamHistories,
+      userId,
+      teamId,
+      startDate,
+      endDate,
+      workingDays
+    );
+
+    const baseHours = membershipDays * dailyHours;
     const userWork = userWorksMap[userId] || { totalWorkHours: 0, workDays: new Set() };
     const workHours = userWork.totalWorkHours;
     const utilization = calculateUtilization(workHours, baseHours);
@@ -157,7 +168,7 @@ const processWeekUtilization = (works, users, weekInfo, userId = null) => {
     teamMap[teamId].members.push({
       userId,
       userName: user.username,
-      membershipDays: workingDays,
+      membershipDays,
       baseHours,
       workHours: Math.round(workHours * 10) / 10,
       utilization,
@@ -225,7 +236,20 @@ export const utilizationWeeklyService = {
 
       console.log('사용자 목록 조회:', users.length, '명');
 
-      // 3. 각 주별로 Work 데이터 조회 및 투입률 계산
+      // 3. 팀 이력 조회 (전체 기간 기준)
+      const historyQuery = buildUserTeamHistoriesQuery({
+        teamId,
+        userId,
+        startDate,
+        endDate,
+      });
+      const historyResponse = await apiService.get(`/user-team-histories?${historyQuery}`);
+      const normalizedHistory = normalizeResponse(historyResponse);
+      const teamHistories = convertKeysToCamelCase(normalizedHistory.data || []);
+
+      console.log('팀 이력 조회:', teamHistories.length, '건');
+
+      // 4. 각 주별로 Work 데이터 조회 및 투입률 계산
       const weeklyData = await Promise.all(
         weeks.map(async (weekInfo, index) => {
           const workQuery = buildUtilizationQuery({
@@ -239,8 +263,8 @@ export const utilizationWeeklyService = {
           const normalizedWork = normalizeResponse(workResponse);
           const works = convertKeysToCamelCase(normalizedWork.data || []);
 
-          // 해당 주의 투입률 계산
-          const utilization = processWeekUtilization(works, users, weekInfo, userId);
+          // 해당 주의 투입률 계산 (팀 이력 포함)
+          const utilization = processWeekUtilization(works, users, weekInfo, userId, teamHistories);
 
           // 이전 주 대비 변화율 계산 (2주차부터)
           let trend = 'stable';
