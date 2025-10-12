@@ -123,6 +123,102 @@ export const sfaApi = {
   },
 
   /**
+   * 팀별 년간 통계 조회 (매출 분석용)
+   * @param {number} year - 조회 년도
+   * @returns {Promise} 팀별 매출 데이터
+   */
+  getTeamYearlyStats: async (year) => {
+    try {
+      const currentMonth = dayjs().format('YYYY-MM');
+      const startDate = dayjs(`${year}-01-01`).format('YYYY-MM-DD');
+      const endDate = dayjs(`${year}-12-31`).format('YYYY-MM-DD');
+
+      console.log('>>>Fetching team yearly stats:', { year, startDate, endDate });
+
+      // SFA 목록 조회 (팀 정보 포함)
+      const query = qs.stringify({
+        filters: {
+          $and: [
+            { is_deleted: { $eq: false } },
+            { sfa: { is_deleted: { $eq: false } } },
+            { sfa: { is_failed: { $eq: false } } },
+            {
+              recognition_date: {
+                $gte: startDate,
+                $lte: endDate,
+              },
+            },
+          ],
+        },
+        fields: [
+          'billing_type',
+          'is_confirmed',
+          'probability',
+          'amount',
+          'profit_amount',
+          'recognition_date',
+        ],
+        populate: {
+          sfa: {
+            fields: ['sfa_by_items'],
+          },
+        },
+        pagination: {
+          start: 0,
+          limit: 10000, // 충분히 큰 값
+        },
+      }, { encodeValuesOnly: true });
+
+      const response = await apiClient.get(`/sfa-by-payments?${query}`);
+
+      if (!response.data || !response.data.data) {
+        console.log('No team data returned from API');
+        return [];
+      }
+
+      // 팀별로 데이터 집계
+      const teamData = {};
+
+      response.data.data.forEach((payment) => {
+        const teamName = payment.sfa?.sfa_by_items || '기타';
+        const amount = Number(payment.amount) || 0;
+        const recognitionDate = payment.recognition_date;
+        const isConfirmed = payment.is_confirmed;
+        const probability = payment.probability;
+
+        // 팀 데이터 초기화
+        if (!teamData[teamName]) {
+          teamData[teamName] = {
+            confirmedRevenue: 0,
+            probableRevenue: 0,
+            totalRevenue: 0,
+          };
+        }
+
+        // 현재 월 이전: confirmed만 합계
+        // 현재 월 이후: confirmed + 100%
+        const isPastMonth = dayjs(recognitionDate).isBefore(currentMonth, 'month');
+
+        if (isConfirmed) {
+          teamData[teamName].confirmedRevenue += amount;
+          teamData[teamName].totalRevenue += amount;
+        } else if (probability === 100) {
+          teamData[teamName].probableRevenue += amount;
+          if (!isPastMonth) {
+            teamData[teamName].totalRevenue += amount;
+          }
+        }
+      });
+
+      console.log('Processed team data:', teamData);
+      return teamData;
+    } catch (error) {
+      console.error(`Failed to fetch team yearly stats for ${year}:`, error);
+      throw new Error(`Failed to fetch team yearly stats: ${error.message}`);
+    }
+  },
+
+  /**
    * 아이템 목록을 조회합니다
    * @param {string} classificationId - 분류 ID
    */

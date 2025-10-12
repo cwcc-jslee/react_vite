@@ -19,6 +19,7 @@ import SfaAnnualOverview from '../components/tables/SfaAnnualOverview';
 import SfaTable from '../components/tables/SfaTable';
 // import SfaSubMenu from '../components/SfaSubMenu';
 import SfaSearchForm from '../components/forms/SfaSearchForm';
+import SfaAnalyticsLayout from '../layouts/SfaAnalyticsLayout';
 
 /**
  * SFA 메인 컨테이너 컴포넌트
@@ -62,6 +63,7 @@ const SfaContainer = React.memo(() => {
         {components.forecastTable && <SfaAnnualOverview />}
         {components.monthlyStatus && <SfaQuarterlyOverview />}
         {components.sfaTable && <SfaTable />}
+        {components.analyticsLayout && <SfaAnalyticsLayout />}
       </Section>
 
       {/* 💡 조건부 마운트 방식 - 컨테이너에서 조건 검사 */}

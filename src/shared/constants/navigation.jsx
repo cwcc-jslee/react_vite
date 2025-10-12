@@ -123,6 +123,29 @@ export const PAGE_MENUS = {
           },
         },
       },
+      analytics: {
+        label: '매출분석',
+        permissions: ['user'],
+        visible: true,
+        config: {
+          layout: 'analytics',
+          sections: {
+            sfaHeader: true,
+            sfaAnalytics: true,
+            sfaContent: true,
+          },
+          components: {
+            monthlyStatus: false,
+            sfaTable: false,
+            searchForm: false,
+            forecastTable: false,
+            analyticsLayout: true,
+          },
+          drawer: {
+            visible: false, // 드로어 표시 여부
+          },
+        },
+      },
     },
   },
   //
