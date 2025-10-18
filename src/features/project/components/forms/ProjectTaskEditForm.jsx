@@ -164,10 +164,9 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
       // 일정관리 비활성화 시 시간관리도 자동 비활성화
       setIsProgress(false);
     }
-    
+
     setFormData((prev) => ({
       ...prev,
-      taskScheduleType: isScheduled ? 'scheduled' : 'ongoing',
       isScheduled,
     }));
   }, [isScheduled]);

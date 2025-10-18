@@ -52,14 +52,14 @@ export const projectTaskInitialState = [
       {
         name: '행정 업무',
         // days: '65',
-        taskScheduleType: false,
+        isScheduled: false,
       },
       {
         name: '내부 조율',
-        taskScheduleType: false,
+        isScheduled: false,
       },
-      { name: '미팅 및 보고', taskScheduleType: false },
-      { name: '품질 관리', taskScheduleType: false },
+      { name: '미팅 및 보고', isScheduled: false },
+      { name: '품질 관리', isScheduled: false },
     ],
   },
 ];

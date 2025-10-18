@@ -80,8 +80,8 @@ export const useProjectTaskSubmit = () => {
       cleanTask.priorityLevel = cleanTask.priorityLevel.id;
     }
 
-    // taskScheduleType이 'ongoing'인 경우 관련 필드 제거
-    if (cleanTask.taskScheduleType === 'ongoing') {
+    // isScheduled가 false인 경우 관련 필드 제거
+    if (!cleanTask.isScheduled) {
       delete cleanTask.planStartDate;
       delete cleanTask.planEndDate;
       delete cleanTask.planningTimeData;

@@ -18,7 +18,7 @@ const useProjectTaskEditForm = (
   // 작업 데이터 상태
   const [formData, setFormData] = useState({
     name: '',
-    taskScheduleType: 'scheduled',
+    isScheduled: true,
     taskProgress: {
       id: 91,
       code: '0',
@@ -65,7 +65,7 @@ const useProjectTaskEditForm = (
     if (initialTask) {
       setFormData({
         name: initialTask.name || '',
-        taskScheduleType: initialTask?.taskScheduleType || 'scheduled',
+        isScheduled: initialTask?.isScheduled !== false,
         taskProgress: initialTask?.taskProgress || {
           id: 91,
           code: '0',
@@ -184,8 +184,7 @@ const useProjectTaskEditForm = (
   const handleSwitchChange = () => {
     setFormData((prev) => ({
       ...prev,
-      taskScheduleType:
-        prev.taskScheduleType === 'scheduled' ? 'ongoing' : 'scheduled',
+      isScheduled: !prev.isScheduled,
     }));
   };
 

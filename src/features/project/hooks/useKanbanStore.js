@@ -47,7 +47,7 @@ const useKanbanStore = (projectTaskBuckets = [], projectTasks = []) => {
             position: taskIndex,
             // 기본 필드가 없는 경우 기본값 설정
             name: task.name || task.title || '무제',
-            task_schedule_type: task.task_schedule_type || 'ongoing',
+            isScheduled: task.isScheduled !== false,
           };
         });
 

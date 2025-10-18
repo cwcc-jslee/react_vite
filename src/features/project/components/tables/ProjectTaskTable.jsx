@@ -86,7 +86,7 @@ const ProjectTaskTable = ({
     { key: 'project', title: '프로젝트', align: 'center', width: '100px' },
     { key: 'name', title: '작업명', align: 'left' },
     // { key: 'bucket', title: '버킷', align: 'center' },
-    { key: 'taskScheduleType', title: '일정구분', align: 'center' },
+    { key: 'isScheduled', title: '일정구분', align: 'center' },
     { key: 'checklistProgress', title: '체크리스트', align: 'center' },
     { key: 'assignee', title: '할당대상', align: 'center' },
     { key: 'startDate', title: '시작일', align: 'center' },
@@ -240,16 +240,14 @@ const ProjectTaskTable = ({
 
                 {/* 스케줄 타입 */}
                 <td className="px-3 py-2 text-center text-sm">
-                  {task.taskScheduleType === 'ongoing' ? (
-                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs">
-                      ONGOING
-                    </span>
-                  ) : task.taskScheduleType === 'scheduled' ? (
+                  {task.isScheduled ? (
                     <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs">
                       SCHEDULED
                     </span>
                   ) : (
-                    '-'
+                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs">
+                      ONGOING
+                    </span>
                   )}
                 </td>
 

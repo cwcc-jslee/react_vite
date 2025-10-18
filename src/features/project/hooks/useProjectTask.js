@@ -63,7 +63,7 @@ export const convertProjectDataToKanbanFormat = (
           position: taskIndex,
           // 기본 필드가 없는 경우 기본값 설정
           name: task.name || task.title || '무제',
-          task_schedule_type: task.task_schedule_type || 'ongoing',
+          isScheduled: task.isScheduled !== false,
         };
       });
 
@@ -314,12 +314,9 @@ const useProjectTask = (initialColumns = []) => {
               }
             });
 
-            // 특수 처리: taskScheduleType 값에 따른 처리
-            if (
-              !('taskScheduleType' in newTask) ||
-              newTask.taskScheduleType !== 'ongoing'
-            ) {
-              newTask.taskScheduleType = 'scheduled';
+            // 특수 처리: isScheduled 값 설정
+            if (!('isScheduled' in newTask)) {
+              newTask.isScheduled = true;
               // 인원, 투입률, 작업일 초기화
               if (!('priorityLevel' in newTask)) {
                 newTask.planningTimeData = {};

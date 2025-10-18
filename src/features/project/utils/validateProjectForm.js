@@ -97,7 +97,7 @@ export const validateProjectTaskForm = (projectBuckets) => {
           isValid = false;
         }
 
-        // taskScheduleType이 'scheduled'인 경우에만 검사
+        // isScheduled가 true인 경우에만 검사
         if (task.isScheduled) {
           // 계획 시작일, 종료일 필수
           if (!task.planStartDate || !task.planEndDate) {

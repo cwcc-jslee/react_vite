@@ -77,7 +77,6 @@ const ProjectBucket = ({
   const handleAddTaskClick = () => {
     const newTask = {
       name: '새 작업',
-      taskScheduleType: 'scheduled',
     };
 
     onAddTask(bucketIndex, newTask);

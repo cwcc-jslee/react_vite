@@ -88,8 +88,8 @@ export const useProjectBucketStore = () => {
                 users: task.users,
               };
 
-              // taskScheduleType이 "scheduled"인 경우에만 추가 필드 포함
-              if (task.taskScheduleType === 'scheduled') {
+              // isScheduled가 true인 경우에만 추가 필드 포함
+              if (task.isScheduled) {
                 return {
                   ...baseFields,
                   planStartDate: task.planStartDate,

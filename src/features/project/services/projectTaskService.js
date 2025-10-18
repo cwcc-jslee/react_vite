@@ -33,24 +33,13 @@ export const projectTaskService = {
 
   /**
    * 새 태스크 생성
-   * taskScheduleType: true -> 'scheduled', false -> 'ongoing' 변환 처리
    *
    * @param {Object} taskData - 태스크 데이터 (project_id, bucket_id 포함)
    * @returns {Promise<Object>} 생성된 태스크 객체
    */
   createTask: async (taskData) => {
     try {
-      // taskScheduleType 변환 처리 (boolean -> string)
-      let processedData = { ...taskData };
-
-      // 문자열이 아닌 boolean 값이 들어온 경우 처리
-      if (typeof processedData.task_schedule_type === 'boolean') {
-        processedData.task_schedule_type = processedData.task_schedule_type
-          ? 'scheduled'
-          : 'ongoing';
-      }
-
-      const response = await apiService.post('/project-tasks', processedData);
+      const response = await apiService.post('/project-tasks', taskData);
       return response.data;
     } catch (error) {
       console.error('Task creation error:', error);
@@ -134,7 +123,6 @@ export const projectTaskService = {
 
   /**
    * 태스크 수정
-   * taskScheduleType: true -> 'scheduled', false -> 'ongoing' 변환 처리
    *
    * @param {string|number} taskId - 태스크 ID
    * @param {Object} taskData - 수정할 태스크 데이터
@@ -142,20 +130,7 @@ export const projectTaskService = {
    */
   updateTask: async (taskId, taskData) => {
     try {
-      // taskScheduleType 변환 처리 (boolean -> string)
-      let processedData = { ...taskData };
-
-      // 문자열이 아닌 boolean 값이 들어온 경우 처리
-      // if (typeof processedData.task_schedule_type === 'boolean') {
-      //   processedData.task_schedule_type = processedData.task_schedule_type
-      //     ? 'scheduled'
-      //     : 'ongoing';
-      // }
-
-      const response = await apiService.put(
-        `/project-tasks/${taskId}`,
-        processedData,
-      );
+      const response = await apiService.put(`/project-tasks/${taskId}`, taskData);
       return response.data;
     } catch (error) {
       console.error('Task update error:', error);

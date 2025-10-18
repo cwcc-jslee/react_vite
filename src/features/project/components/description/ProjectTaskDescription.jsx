@@ -79,7 +79,7 @@ const ProjectTaskDescription = ({ data }) => {
         <DescriptionItem label width="w-[140px]">
           작업일정 구분
         </DescriptionItem>
-        <DescriptionItem>{data.taskScheduleType}</DescriptionItem>
+        <DescriptionItem>{data.isScheduled ? 'SCHEDULED' : 'ONGOING'}</DescriptionItem>
         <DescriptionItem label width="w-[140px]">
           버킷
         </DescriptionItem>
@@ -136,7 +136,7 @@ const ProjectTaskDescription = ({ data }) => {
           계획(인원/투입)
         </DescriptionItem>
         <DescriptionItem>
-          {data.taskScheduleType === 'scheduled'
+          {data.isScheduled
             ? formatPlanningTimeData(data.planningTimeData)
             : '-'}
         </DescriptionItem>

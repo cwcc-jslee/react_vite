@@ -496,11 +496,7 @@ export const useProjectSubmit = () => {
             }
           }
 
-          // 2. task_schedule_type 변환 (boolean -> string)
-          if (task.task_schedule_type !== undefined) {
-            task.task_schedule_type =
-              task.task_schedule_type === true ? 'scheduled' : 'ongoing';
-          }
+          // isScheduled는 boolean 값으로 그대로 유지
 
           // 3. 필요없는 필드 정리 및 데이터 형식 준비
           // planning_time_data, plan_start_date, plan_end_date, due_date 등은 그대로 유지

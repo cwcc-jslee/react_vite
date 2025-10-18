@@ -49,9 +49,7 @@ const useTaskEditor = (
     if (initialTask) {
       setTaskFormData({
         name: initialTask.name || '',
-        taskScheduleType: initialTask?.taskScheduleType || 'scheduled', // 기본값은 'scheduled'
-        // days: initialTask.days || '',
-        // dueDate: initialTask.dueDate || '',
+        isScheduled: initialTask?.isScheduled !== false,
         taskProgress: initialTask?.taskProgress || {
           id: 91,
           code: '0',
@@ -172,8 +170,7 @@ const useTaskEditor = (
   const handleSwitchChange = () => {
     setTaskFormData((prev) => ({
       ...prev,
-      taskScheduleType:
-        prev.taskScheduleType === 'scheduled' ? 'ongoing' : 'scheduled',
+      isScheduled: !prev.isScheduled,
     }));
   };
 
