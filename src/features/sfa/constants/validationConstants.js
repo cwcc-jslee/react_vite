@@ -28,6 +28,7 @@ export const SECTION_TITLES = {
 
 // 필수 필드 정의
 export const REQUIRED_FIELDS = {
+  fy: 'FY',
   sfaSalesType: '매출유형',
   sfaClassification: '매출구분',
   // customer: '고객사',

@@ -129,10 +129,13 @@ const SalesAddByPayment = ({
         ? marginProfitValue
         : (amount * marginProfitValue) / 100;
 
+      // 정수로 반올림하여 저장
+      const roundedProfitAmount = Math.round(calculatedProfitAmount);
+
       // 한 번에 여러 필드 업데이트
       const updates = {
         [field]: value,
-        profitAmount: calculatedProfitAmount.toString(),
+        profitAmount: roundedProfitAmount.toString(),
       };
 
       console.log('🔧 [SalesAddByPayment] Entry updates:', updates);

@@ -87,8 +87,8 @@ export const useSfaOperations = () => {
         }
 
         // 각 결제 정보에서 {id, name} 형태의 객체에서 id만 추출
-        const extractedPaymentsData = rawPaymentsData.map((payment) =>
-          extractIdsFromObject(payment, [
+        const extractedPaymentsData = rawPaymentsData.map((payment, index) => {
+          const extracted = extractIdsFromObject(payment, [
             'amount',
             'profitAmount',
             'marginProfitValue',
@@ -100,10 +100,25 @@ export const useSfaOperations = () => {
             'scheduledDate',
             'memo',
             'paymentLabel',
-          ]),
-        );
+            'teamAllocations', // teamAllocations는 그대로 유지
+          ]);
 
-        // profit_config 부분만 별도 처리
+          // profitAmount 정수 여부 검증
+          const profitAmount = parseFloat(extracted.profitAmount || 0);
+          if (!Number.isInteger(profitAmount)) {
+            console.warn(`⚠️ [결제 ${index + 1}] profitAmount가 정수가 아닙니다. 반올림 처리합니다:`, {
+              original: extracted.profitAmount,
+              float: profitAmount,
+              rounded: Math.round(profitAmount),
+            });
+            // 정수로 반올림하여 저장
+            extracted.profitAmount = Math.round(profitAmount).toString();
+          }
+
+          return extracted;
+        });
+
+        // profit_config, team_allocations 처리
         const paymentsData = extractedPaymentsData.map((payment) => {
           // profit_config JSON 생성
           const profitConfig = {
@@ -111,12 +126,27 @@ export const useSfaOperations = () => {
             margin_profit_value: parseFloat(payment.marginProfitValue || 0),
           };
 
-          // isProfit, marginProfitValue 키 제외한 새로운 객체 생성
-          const { isProfit, marginProfitValue, ...cleanedPayment } = payment;
+          // team_allocations JSON 생성 (있는 경우)
+          let teamAllocationsJson = null;
+          if (payment.teamAllocations && Array.isArray(payment.teamAllocations)) {
+            const snakeCaseAllocations = payment.teamAllocations.map(allocation => ({
+              team_id: allocation.teamId,
+              team_name: allocation.teamName,
+              item_id: allocation.itemId,
+              item_name: allocation.itemName,
+              allocated_amount: parseFloat(allocation.allocatedAmount || 0),
+              allocated_profit_amount: parseFloat(allocation.allocatedProfitAmount || 0),
+            }));
+            teamAllocationsJson = JSON.stringify(snakeCaseAllocations);
+          }
+
+          // isProfit, marginProfitValue, teamAllocations 키 제외한 새로운 객체 생성
+          const { isProfit, marginProfitValue, teamAllocations, ...cleanedPayment } = payment;
 
           return {
             ...cleanedPayment,
             profitConfig: JSON.stringify(profitConfig),
+            teamAllocations: teamAllocationsJson,
             // scheduled_date 빈 문자열 처리
             scheduledDate:
               payment.scheduledDate && payment.scheduledDate.trim() !== ''

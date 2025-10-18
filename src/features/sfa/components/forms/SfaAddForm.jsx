@@ -86,6 +86,7 @@ const SfaAddForm = () => {
     'sfaClassification',
     'rePaymentMethod',
     'sfaPercentage',
+    'fy', // 회계년도
   ]);
 
   // revenueSource 데이터 중복 제거 및 정렬
@@ -159,7 +160,42 @@ const SfaAddForm = () => {
                 </Select>
               </FormItem>
 
-              <FormItem className="flex-1"></FormItem>
+              <FormItem className="flex-1">
+                <Label required>FY</Label>
+                <Select
+                  name="fy"
+                  value={form.data.fy?.id || ''}
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+
+                    if (selectedId) {
+                      const selectedItem = codebooks?.fy?.find(
+                        (item) =>
+                          item.id === selectedId ||
+                          item.id === Number(selectedId),
+                      );
+
+                      if (selectedItem) {
+                        updateFormField('fy', {
+                          id: selectedItem.id,
+                          name: selectedItem.name,
+                        });
+                      }
+                    } else {
+                      updateFormField('fy', null);
+                    }
+                  }}
+                  disabled={isSubmitting}
+                  error={errors.fy}
+                >
+                  <option value="">선택하세요</option>
+                  {codebooks?.fy?.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </Select>
+              </FormItem>
             </Group>
 
             <Group direction="horizontal" className="gap-6">
