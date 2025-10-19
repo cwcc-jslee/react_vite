@@ -57,8 +57,8 @@ const EditableSfaDetail = ({ data, featureMode }) => {
   const paymentTotals = calculatePaymentTotals(data.sfaByPayments);
 
   // 사업부 매출 데이터를 Badge로 렌더링
-  const renderSfaByItems = (itemsData) => {
-    const formattedItems = formatSfaByItems(itemsData);
+  const renderSfaByItems = (itemsData, isMultiTeam, paymentsData) => {
+    const formattedItems = formatSfaByItems(itemsData, isMultiTeam, paymentsData);
 
     if (!formattedItems) return '-';
 
@@ -67,7 +67,7 @@ const EditableSfaDetail = ({ data, featureMode }) => {
         {formattedItems.map((item) => (
           <Badge
             key={item.key}
-            className="mr-1 mb-1 bg-blue-100 text-blue-800 px-2 py-1 text-xs"
+            className={`mr-1 mb-1 px-2 py-1 text-xs ${item.badgeClass || 'bg-blue-500 text-white'}`}
           >
             {item.text}
           </Badge>
@@ -323,9 +323,18 @@ const EditableSfaDetail = ({ data, featureMode }) => {
     // 특수 필드 처리 (프로젝트여부, 매출처)
     if (fieldName === 'isProject') {
       return (
-        <div className="group relative flex items-center justify-between w-full h-8">
+        <div
+          className={`
+            group relative flex items-center justify-between w-full h-8
+            ${
+              !isEditing && featureMode === 'editBase'
+                ? 'hover:bg-blue-50 rounded px-2 -mx-2 cursor-pointer transition-colors'
+                : ''
+            }
+          `}
+        >
           {isEditing ? (
-            <div className="flex items-center w-full gap-1">
+            <div className="flex items-center w-full gap-1 bg-yellow-50 border border-yellow-300 rounded p-2 -m-2">
               <div className="flex items-center flex-grow">
                 <Switch
                   checked={editState.newValue === true}
@@ -341,19 +350,23 @@ const EditableSfaDetail = ({ data, featureMode }) => {
               {renderEditButtons()}
             </div>
           ) : (
-            <div className="flex items-center w-full h-8">
+            <div
+              className="flex items-center w-full h-8"
+              onClick={() =>
+                featureMode === 'editBase' &&
+                startEditing(fieldName, editableFields)
+              }
+            >
               <span className="flex-grow truncate">{content}</span>
-              <button
-                type="button"
-                onClick={() => startEditing(fieldName, editableFields)}
-                className="invisible group-hover:visible flex items-center justify-center 
-                          h-7 w-7 rounded-sm hover:bg-blue-100"
-              >
-                <Icons.Edit
-                  className="h-4 w-4 text-blue-600"
-                  strokeWidth={2.5}
-                />
-              </button>
+              {featureMode === 'editBase' && (
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-xs text-gray-400">클릭하여 수정</span>
+                  <Icons.Edit
+                    className="h-4 w-4 text-blue-500"
+                    strokeWidth={2.5}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -362,9 +375,18 @@ const EditableSfaDetail = ({ data, featureMode }) => {
 
     if (fieldName === 'isSameBilling') {
       return (
-        <div className="group relative flex items-center justify-between w-full h-8">
+        <div
+          className={`
+            group relative flex items-center justify-between w-full h-8
+            ${
+              !isEditing && featureMode === 'editBase'
+                ? 'hover:bg-blue-50 rounded px-2 -mx-2 cursor-pointer transition-colors'
+                : ''
+            }
+          `}
+        >
           {isEditing ? (
-            <div className="flex items-center w-full gap-1">
+            <div className="flex items-center w-full gap-1 bg-yellow-50 border border-yellow-300 rounded p-2 -m-2">
               <div className="flex space-x-4 flex-grow">
                 <label className="flex items-center">
                   <input
@@ -396,19 +418,23 @@ const EditableSfaDetail = ({ data, featureMode }) => {
               {renderEditButtons()}
             </div>
           ) : (
-            <div className="flex items-center w-full h-8">
+            <div
+              className="flex items-center w-full h-8"
+              onClick={() =>
+                featureMode === 'editBase' &&
+                startEditing(fieldName, editableFields)
+              }
+            >
               <span className="flex-grow truncate">{content}</span>
-              <button
-                type="button"
-                onClick={() => startEditing(fieldName, editableFields)}
-                className="invisible group-hover:visible flex items-center justify-center 
-                          h-7 w-7 rounded-sm hover:bg-blue-100"
-              >
-                <Icons.Edit
-                  className="h-4 w-4 text-blue-600"
-                  strokeWidth={2.5}
-                />
-              </button>
+              {featureMode === 'editBase' && (
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-xs text-gray-400">클릭하여 수정</span>
+                  <Icons.Edit
+                    className="h-4 w-4 text-blue-500"
+                    strokeWidth={2.5}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -457,9 +483,18 @@ const EditableSfaDetail = ({ data, featureMode }) => {
     if (!field?.editable) return content;
 
     return (
-      <div className="group relative flex items-center justify-between w-full h-8">
+      <div
+        className={`
+          group relative flex items-center justify-between w-full h-8
+          ${
+            !isEditing && featureMode === 'editBase'
+              ? 'hover:bg-blue-50 rounded px-2 -mx-2 cursor-pointer transition-colors'
+              : ''
+          }
+        `}
+      >
         {isEditing ? (
-          <div className="flex items-center w-full gap-1">
+          <div className="flex items-center w-full gap-1 bg-yellow-50 border border-yellow-300 rounded p-2 -m-2">
             <div className="flex-grow">
               {field.type === 'select' && field.label === '매출유형' ? (
                 <Select
@@ -513,16 +548,23 @@ const EditableSfaDetail = ({ data, featureMode }) => {
             {renderEditButtons()}
           </div>
         ) : (
-          <div className="flex items-center w-full h-8">
+          <div
+            className="flex items-center w-full h-8"
+            onClick={() =>
+              featureMode === 'editBase' &&
+              startEditing(fieldName, editableFields)
+            }
+          >
             <span className="flex-grow truncate">{content}</span>
-            <button
-              type="button"
-              onClick={() => startEditing(fieldName, editableFields)}
-              className="invisible group-hover:visible flex items-center justify-center 
-                          h-7 w-7 rounded-sm hover:bg-blue-100"
-            >
-              <Icons.Edit className="h-4 w-4 text-blue-600" strokeWidth={2.5} />
-            </button>
+            {featureMode === 'editBase' && (
+              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-xs text-gray-400">클릭하여 수정</span>
+                <Icons.Edit
+                  className="h-4 w-4 text-blue-500"
+                  strokeWidth={2.5}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -621,9 +663,15 @@ const EditableSfaDetail = ({ data, featureMode }) => {
             : '-'}
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
-          _
+          사업부 구성
         </DescriptionItem>
-        <DescriptionItem></DescriptionItem>
+        <DescriptionItem>
+          {data.isMultiTeam === true
+            ? '다중 사업부'
+            : data.isMultiTeam === false
+            ? '단일 사업부'
+            : '-'}
+        </DescriptionItem>
       </DescriptionRow>
 
       {/* 5행: 사업부 매출 */}
@@ -633,10 +681,10 @@ const EditableSfaDetail = ({ data, featureMode }) => {
         </DescriptionItem>
         <DescriptionItem className="px-0.5">
           {featureMode !== 'editBase'
-            ? renderSfaByItems(data.sfaByItems)
+            ? renderSfaByItems(data.sfaByItems, data.isMultiTeam, data.sfaByPayments)
             : renderEditableField(
                 'sfaByItems',
-                renderSfaByItems(data.sfaByItems),
+                renderSfaByItems(data.sfaByItems, data.isMultiTeam, data.sfaByPayments),
               )}
         </DescriptionItem>
       </DescriptionRow>

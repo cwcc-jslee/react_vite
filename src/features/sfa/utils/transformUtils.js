@@ -110,6 +110,20 @@ export const transformToDBFields = {
       value: payment,
     });
 
+    // team_allocations JSON 생성 (있는 경우)
+    let teamAllocationsJson = null;
+    if (payment.teamAllocations && Array.isArray(payment.teamAllocations)) {
+      const snakeCaseAllocations = payment.teamAllocations.map(allocation => ({
+        team_id: allocation.teamId,
+        team_name: allocation.teamName,
+        item_id: allocation.itemId,
+        item_name: allocation.itemName,
+        allocated_amount: parseNumber(allocation.allocatedAmount || 0),
+        allocated_profit_amount: parseNumber(allocation.allocatedProfitAmount || 0),
+      }));
+      teamAllocationsJson = JSON.stringify(snakeCaseAllocations);
+    }
+
     const transformed = {
       revenue_source: payment.revenueSource.id,
       billing_type: payment.billingType,
@@ -128,7 +142,7 @@ export const transformToDBFields = {
       recognition_date: payment.recognitionDate,
       payment_label: payment.paymentLabel,
       memo: payment.memo,
-      // 추가 필드가 있다면 여기에 작성
+      team_allocations: teamAllocationsJson,
     };
 
     // 출력값 로깅
@@ -153,6 +167,20 @@ export const transformToDBFields = {
       value: payment,
     });
 
+    // team_allocations JSON 생성 (있는 경우)
+    let teamAllocationsJson = null;
+    if (payment.teamAllocations && Array.isArray(payment.teamAllocations)) {
+      const snakeCaseAllocations = payment.teamAllocations.map(allocation => ({
+        team_id: allocation.teamId,
+        team_name: allocation.teamName,
+        item_id: allocation.itemId,
+        item_name: allocation.itemName,
+        allocated_amount: parseNumber(allocation.allocatedAmount || 0),
+        allocated_profit_amount: parseNumber(allocation.allocatedProfitAmount || 0),
+      }));
+      teamAllocationsJson = JSON.stringify(snakeCaseAllocations);
+    }
+
     const transformed = {
       // revenue_source: payment.revenueSource.id,
       billing_type: payment.billingType,
@@ -171,7 +199,7 @@ export const transformToDBFields = {
       recognition_date: payment.recognitionDate,
       payment_label: payment.paymentLabel,
       memo: payment.memo,
-      // 추가 필드가 있다면 여기에 작성
+      team_allocations: teamAllocationsJson,
     };
 
     // 출력값 로깅

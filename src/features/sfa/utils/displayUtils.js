@@ -49,29 +49,62 @@ export const calculatePaymentTotals = (paymentsData) => {
 /**
  * 사업부 매출 데이터를 포맷팅
  * @param {Array} itemsData - 사업부 항목 데이터 배열
+ * @param {boolean} isMultiTeam - 다중 사업부 여부
+ * @param {Array} paymentsData - 결제 데이터 배열 (다중 사업부일 때 팀별 매출액 계산용)
  * @returns {Array|null} 포맷팅된 데이터 배열 또는 null
  */
-export const formatSfaByItems = (itemsData) => {
+export const formatSfaByItems = (itemsData, isMultiTeam = false, paymentsData = []) => {
   if (!itemsData || !Array.isArray(itemsData)) return null;
+
+  // 다중 사업부일 때 팀별 매출액 합산
+  const teamTotalAmounts = {};
+  if (isMultiTeam && paymentsData && Array.isArray(paymentsData)) {
+    paymentsData.forEach((payment) => {
+      if (payment.teamAllocations && Array.isArray(payment.teamAllocations)) {
+        payment.teamAllocations.forEach((allocation) => {
+          const teamId = allocation.teamId;
+          const allocatedAmount = Number(allocation.allocatedAmount) || 0;
+
+          if (!teamTotalAmounts[teamId]) {
+            teamTotalAmounts[teamId] = {
+              teamName: allocation.teamName,
+              totalAmount: 0,
+            };
+          }
+          teamTotalAmounts[teamId].totalAmount += allocatedAmount;
+        });
+      }
+    });
+  }
 
   return itemsData.map((item, index) => {
     const teamName = item.teamName || '-';
     const itemName = item.itemName || '-';
+    const teamId = item.teamId;
 
-    // amount 또는 itemPrice 사용, null/undefined/빈 문자열인 경우만 '-' 표시
-    const amount = item.amount ?? item.itemPrice;
-    const price =
-      amount != null && amount !== '' ? Number(amount).toLocaleString() : '-';
+    let badgeText;
+    let badgeClass;
 
-    // '항목명-팀명(가격)' 형태로 변경
-    const badgeText = `${itemName}-${teamName}(${price})`;
+    if (isMultiTeam) {
+      // 다중 사업부: 팀명-항목명(팀별 합산 매출액)
+      const teamTotal = teamTotalAmounts[teamId]?.totalAmount || 0;
+      const formattedAmount = teamTotal > 0 ? teamTotal.toLocaleString() : '0';
+      badgeText = `${teamName}-${itemName}(${formattedAmount})`;
+      badgeClass = 'bg-blue-500 text-white';
+    } else {
+      // 단일 사업부: 팀명-항목명 (매출액 표시 안 함)
+      badgeText = `${teamName}-${itemName}`;
+      badgeClass = 'bg-blue-500 text-white';
+    }
 
     return {
       key: index,
       text: badgeText,
+      badgeClass,
       teamName,
       itemName,
-      price,
+      teamId,
+      amount: isMultiTeam ? (teamTotalAmounts[teamId]?.totalAmount || 0) : null,
     };
   });
 };

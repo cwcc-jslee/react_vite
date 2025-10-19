@@ -458,17 +458,25 @@ export const useSfaForm1 = () => {
    */
   const handleAllocationChange = useCallback(
     (paymentIndex, teamIndex, amount) => {
+      console.log('🔄 [handleAllocationChange] 호출됨:', { paymentIndex, teamIndex, amount });
+
       const currentPayments = [...(form.data.sfaByPayments || [])];
-      const payment = currentPayments[paymentIndex];
+      const payment = { ...currentPayments[paymentIndex] }; // 깊은 복사
 
       if (!payment.teamAllocations || !payment.teamAllocations[teamIndex]) {
         return;
       }
 
-      payment.teamAllocations[teamIndex].allocatedAmount = parseFloat(
-        amount || 0,
-      );
+      // teamAllocations 배열도 깊은 복사
+      payment.teamAllocations = [...payment.teamAllocations];
+      payment.teamAllocations[teamIndex] = {
+        ...payment.teamAllocations[teamIndex],
+        allocatedAmount: parseFloat(amount || 0),
+      };
 
+      currentPayments[paymentIndex] = payment; // 업데이트된 객체로 교체
+
+      console.log('✅ [handleAllocationChange] Redux 업데이트:', currentPayments[paymentIndex]);
       actions.form.updateField('sfaByPayments', currentPayments);
     },
     [actions.form, form.data.sfaByPayments],

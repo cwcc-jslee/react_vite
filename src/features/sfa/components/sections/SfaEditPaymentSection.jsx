@@ -12,6 +12,7 @@ import SalesAddByPayment from '../elements/SalesAddByPayment.jsx';
 import { useCodebook } from '../../../../shared/hooks/useCodebook';
 import { getUniqueRevenueSources } from '../../utils/transformUtils';
 import { useUiStore } from '../../../../shared/hooks/useUiStore';
+import { AlertCircle, AlertTriangle } from 'lucide-react';
 import {
   Form,
   Group,
@@ -59,43 +60,59 @@ const SfaEditPaymentSection = ({ data, controlMode, featureMode }) => {
     actions.form.updateField('sfaDraftPayments', []);
   };
 
-  // 컴포넌트 최초 실행 시 초안 결제매출 초기화
+  // 컴포넌트 최초 실행 시 기본 데이터만 설정 (초안은 부모에서 관리)
   useEffect(() => {
-    if (data) {
-      // 기존 데이터를 설정하고, 초안 배열은 빈 배열로 초기화
+    if (data && !form.data.id) {
+      // 기존 데이터를 설정 (초안 배열은 유지)
       const updatedData = {
         ...data,
-        sfaDraftPayments: [], // 초안 결제매출 초기화
+        sfaDraftPayments: form.data.sfaDraftPayments || [], // 기존 초안 유지
       };
       actions.form.reset(updatedData);
     }
-    // 컴포넌트 종료 시 초안 결제매출만 초기화
-    return () => {
-      actions.form.updateField('sfaDraftPayments', []);
-    };
-  }, [featureMode]);
+  }, [data?.id]);
 
   // sfaDraftPayments 전용 핸들러들
 
   const handleNewPaymentChange = useCallback(
     (index, fieldOrFields, value) => {
-      const currentPayments = [...(form.data.sfaDraftPayments || [])];
+      const currentPayments = form.data.sfaDraftPayments || [];
+      const isMultiTeam = data?.isMultiTeam || false;
 
-      if (typeof fieldOrFields === 'object') {
-        currentPayments[index] = {
-          ...currentPayments[index],
-          ...fieldOrFields,
-        };
-      } else {
-        currentPayments[index] = {
-          ...currentPayments[index],
-          [fieldOrFields]: value,
-        };
-      }
+      // 불변성을 유지하면서 해당 인덱스의 payment만 업데이트
+      const updatedPayments = currentPayments.map((payment, idx) => {
+        if (idx !== index) return payment;
 
-      actions.form.updateField('sfaDraftPayments', currentPayments);
+        let updatedPayment;
+        if (typeof fieldOrFields === 'object') {
+          updatedPayment = {
+            ...payment,
+            ...fieldOrFields,
+          };
+        } else {
+          updatedPayment = {
+            ...payment,
+            [fieldOrFields]: value,
+          };
+        }
+
+        // 단일 사업부일 때: 매출액 변경 시 teamAllocations의 allocatedAmount 자동 동기화
+        if (!isMultiTeam && updatedPayment.teamAllocations && updatedPayment.teamAllocations.length === 1) {
+          if (fieldOrFields === 'amount' || (typeof fieldOrFields === 'object' && fieldOrFields.amount !== undefined)) {
+            const newAmount = fieldOrFields === 'amount' ? value : fieldOrFields.amount;
+            updatedPayment.teamAllocations = [{
+              ...updatedPayment.teamAllocations[0],
+              allocatedAmount: newAmount,
+            }];
+          }
+        }
+
+        return updatedPayment;
+      });
+
+      actions.form.updateField('sfaDraftPayments', updatedPayments);
     },
-    [form.data.sfaDraftPayments, actions.form],
+    [form.data.sfaDraftPayments, data?.isMultiTeam, actions.form],
   );
 
   const handleRemoveNewPayment = useCallback(
@@ -119,13 +136,57 @@ const SfaEditPaymentSection = ({ data, controlMode, featureMode }) => {
     [form.data.sfaDraftPayments, actions.form],
   );
 
+  // 팀 할당액 변경 핸들러
+  const handleAllocationChange = useCallback(
+    (paymentIndex, teamIndex, value) => {
+      const currentPayments = form.data.sfaDraftPayments || [];
+      const payment = currentPayments[paymentIndex];
+
+      if (!payment || !payment.teamAllocations || !payment.teamAllocations[teamIndex]) {
+        return;
+      }
+
+      const numericValue = value.replace(/,/g, '');
+
+      // 팀 할당 배열 업데이트
+      const updatedAllocations = payment.teamAllocations.map((allocation, idx) => {
+        if (idx !== teamIndex) return allocation;
+
+        return {
+          ...allocation,
+          allocatedAmount: numericValue,
+        };
+      });
+
+      // payment 업데이트
+      const updatedPayments = currentPayments.map((p, idx) => {
+        if (idx !== paymentIndex) return p;
+
+        return {
+          ...p,
+          teamAllocations: updatedAllocations,
+        };
+      });
+
+      actions.form.updateField('sfaDraftPayments', updatedPayments);
+    },
+    [form.data.sfaDraftPayments, actions.form],
+  );
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const sfaId = data.id;
 
     // 초안 결제매출만 유효성 검사
     const isValid = validatePaymentForm(form.data.sfaDraftPayments || []);
-    if (!isValid) return;
+    if (!isValid) {
+      // 에러가 있을 경우 스크롤하여 에러 메시지 표시
+      const errorElement = document.querySelector('[data-validation-error]');
+      if (errorElement) {
+        errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
 
     // featureMode에 따른 processMode 결정 (명시적 정의만 처리)
     let processMode;
@@ -163,30 +224,8 @@ const SfaEditPaymentSection = ({ data, controlMode, featureMode }) => {
     resetPaymentForm();
   };
 
-  // 수정 모드일 때 결제매출 선택 UI 렌더링
+  // 수정 모드일 때 결제매출 선택 UI 렌더링 (editPayment 모드만)
   const renderPaymentSelection = () => {
-    if (controlMode === 'edit' && featureMode === 'addPayment') {
-      return (
-        <Button
-          type="button"
-          variant="primary"
-          onClick={() => handleAddPayment(data?.isSameBilling, data?.customer)}
-          disabled={
-            isSubmitting || (form.data.sfaDraftPayments?.length || 0) >= 3
-          }
-          className={`
-            w-full mb-6 px-4 h-8 text-base font-medium
-            ${
-              (form.data.sfaDraftPayments?.length || 0) >= 3
-                ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
-                : 'bg-cyan-500 border-blue-300 text-gray-600 hover:bg-blue-100 hover:border-blue-400 hover:text-white'
-            }
-          `}
-        >
-          + 결제매출추가
-        </Button>
-      );
-    }
     if (controlMode === 'edit' && featureMode === 'editPayment') {
       return (
         <div>
@@ -205,24 +244,66 @@ const SfaEditPaymentSection = ({ data, controlMode, featureMode }) => {
 
       {/* 초안 결제매출 목록 */}
       <div className="flex flex-col gap-2">
-        {(form.data.sfaDraftPayments || []).map((payment, index) => (
-          <div key={`draft-payment-${index}`}>
-            <SalesAddByPayment
-              payment={payment}
-              index={index}
-              isSameBilling={form.data.isSameBilling}
-              onChange={handleNewPaymentChange}
-              onRemove={handleRemoveNewPayment}
-              isSubmitting={isSubmitting}
-              handleRevenueSourceSelect={handleNewRevenueSourceSelect}
-              savedRevenueSources={uniqueRevenueSources}
-              codebooks={paymentCodebooks}
-              isLoadingCodebook={isLoadingCodebook}
-              isExisting={false}
-              dataType="sfaDraftPayments"
-            />
-          </div>
-        ))}
+        {(form.data.sfaDraftPayments || []).map((payment, index) => {
+          // 각 결제매출의 에러 체크
+          const paymentErrors = [];
+          if (!payment.revenueSource?.id) {
+            paymentErrors.push('매출처를 선택해주세요');
+          }
+          if (!payment.billingType) {
+            paymentErrors.push('결제구분을 선택해주세요');
+          }
+          if (!payment.amount || payment.amount === '0') {
+            paymentErrors.push('매출액을 입력해주세요');
+          }
+          if (!payment.probability && !payment.isConfirmed) {
+            paymentErrors.push('매출확률을 선택하거나 확정여부를 체크해주세요');
+          }
+
+          return (
+            <div key={`draft-payment-${index}`}>
+              <SalesAddByPayment
+                payment={payment}
+                index={index}
+                isSameBilling={form.data.isSameBilling}
+                onChange={handleNewPaymentChange}
+                onRemove={handleRemoveNewPayment}
+                isSubmitting={isSubmitting}
+                handleRevenueSourceSelect={handleNewRevenueSourceSelect}
+                savedRevenueSources={uniqueRevenueSources}
+                codebooks={paymentCodebooks}
+                isLoadingCodebook={isLoadingCodebook}
+                isExisting={false}
+                dataType="sfaDraftPayments"
+                isMultiTeam={data.isMultiTeam || false}
+                sfaByItems={data.sfaByItems || []}
+                onAllocationChange={handleAllocationChange}
+              />
+
+              {/* 에러 메시지 표시 */}
+              {errors && paymentErrors.length > 0 && (
+                <div
+                  className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md"
+                  data-validation-error
+                >
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-red-800">
+                        입력 오류
+                      </p>
+                      <ul className="mt-1 text-sm text-red-700 list-disc list-inside">
+                        {paymentErrors.map((err, i) => (
+                          <li key={i}>{err}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Submit Button */}

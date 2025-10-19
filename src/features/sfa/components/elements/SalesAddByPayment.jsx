@@ -46,7 +46,13 @@ const SalesAddByPayment = ({
   onEqualDistribute,
 }) => {
   const [displayValue, setDisplayValue] = useState('');
+  const [allocationDisplayValues, setAllocationDisplayValues] = useState({});
   const [isRevenueSearch, setIsRevenueSearch] = useState(false);
+
+  // 로컬 입력 상태 관리 (연속 입력을 위해)
+  const [localMarginProfit, setLocalMarginProfit] = useState('');
+  const [localPaymentLabel, setLocalPaymentLabel] = useState('');
+  const [localMemo, setLocalMemo] = useState('');
 
   console.log('>>payment : ', payment);
   console.log('>>index : ', index);
@@ -69,13 +75,62 @@ const SalesAddByPayment = ({
     }
   }, [payment.amount, index]);
 
-  // 금액 입력 처리
+  // 할당액 입력 필드 포커스 처리
+  const handleAllocationFocus = (teamIndex) => {
+    const allocation = payment.teamAllocations[teamIndex];
+    setAllocationDisplayValues((prev) => ({
+      ...prev,
+      [teamIndex]: String(allocation.allocatedAmount || ''),
+    }));
+  };
+
+  // 할당액 입력 필드 블러 처리 (부모로 전달)
+  const handleAllocationBlur = (teamIndex) => {
+    const currentValue = allocationDisplayValues[teamIndex];
+    const sanitizedValue = currentValue?.replace(/[^\d]/g, '') || '';
+
+    // 값이 변경되었으면 부모로 전달
+    const currentAllocation = payment.teamAllocations[teamIndex];
+    if (sanitizedValue !== String(currentAllocation?.allocatedAmount || '')) {
+      if (onAllocationChange) {
+        onAllocationChange(index, teamIndex, sanitizedValue);
+      }
+    }
+
+    // displayValue를 삭제하여 포맷된 값을 표시하도록 함
+    setAllocationDisplayValues((prev) => {
+      const newValues = { ...prev };
+      delete newValues[teamIndex];
+      return newValues;
+    });
+  };
+
+  // 할당액 변경 처리 (로컬 상태만 업데이트)
+  const handleAllocationInputChange = (teamIndex, value) => {
+    const sanitizedValue = value.replace(/[^\d]/g, '');
+
+    setAllocationDisplayValues((prev) => ({
+      ...prev,
+      [teamIndex]: sanitizedValue,
+    }));
+  };
+
+  // 금액 입력 처리 (로컬 상태만 업데이트)
   const handleAmountChange = (value) => {
     const sanitizedValue = value.replace(/[^\d,]/g, '');
     setDisplayValue(sanitizedValue);
+  };
 
-    const numericValue = sanitizedValue.replace(/,/g, '');
-    console.log('💰 [handleAmountChange] 매출액 변경:', {
+  // 금액 입력 필드 포커스 처리
+  const handleAmountFocus = () => {
+    setDisplayValue(payment.amount || '');
+  };
+
+  // 금액 입력 필드 블러 처리 (부모로 전달)
+  const handleAmountBlur = () => {
+    const numericValue = displayValue.replace(/,/g, '');
+
+    console.log('💰 [handleAmountBlur] 매출액 blur:', {
       index,
       numericValue,
       currentAmount: payment.amount,
@@ -87,28 +142,21 @@ const SalesAddByPayment = ({
     if (numericValue !== payment.amount) {
       // 팀 할당이 있고 핸들러가 제공된 경우 onPaymentAmountChange 사용
       if (onPaymentAmountChange && payment.teamAllocations && payment.teamAllocations.length > 0) {
-        console.log('✅ [handleAmountChange] onPaymentAmountChange 호출');
+        console.log('✅ [handleAmountBlur] onPaymentAmountChange 호출');
         onPaymentAmountChange(index, numericValue);
       } else {
         // 팀 할당이 없거나 핸들러가 없으면 기본 onChange
-        console.log('✅ [handleAmountChange] onChange 호출');
+        console.log('✅ [handleAmountBlur] onChange 호출');
         onChange(index, 'amount', numericValue);
       }
     }
-  };
 
-  // 금액 입력 필드 포커스 처리
-  const handleAmountFocus = () => {
-    setDisplayValue(payment.amount);
-  };
-
-  // 금액 입력 필드 블러 처리
-  const handleAmountBlur = () => {
-    const formattedValue = formatDisplayNumber(payment.amount);
+    // 포맷된 값으로 표시
+    const formattedValue = formatDisplayNumber(numericValue);
     setDisplayValue(formattedValue);
   };
 
-  // 이익/마진 값 변경 처리
+  // 이익/마진 값 변경 처리 (로컬 상태로 관리)
   const handleEntryChange = (field, value) => {
     console.log('🔧 [SalesAddByPayment] handleEntryChange called:', {
       index,
@@ -117,11 +165,14 @@ const SalesAddByPayment = ({
       currentPayment: payment,
     });
 
-    if (['amount', 'marginProfitValue', 'isProfit'].includes(field)) {
+    if (field === 'marginProfitValue') {
+      // 로컬 상태에 저장만
+      setLocalMarginProfit(value);
+    } else if (['amount', 'isProfit'].includes(field)) {
       const amount = Number(field === 'amount' ? value : payment.amount) || 0;
       const marginProfitValue =
         Number(
-          field === 'marginProfitValue' ? value : payment.marginProfitValue,
+          field === 'marginProfitValue' ? value : (localMarginProfit || payment.marginProfitValue),
         ) || 0;
       const isProfit = field === 'isProfit' ? value : payment.isProfit;
 
@@ -147,6 +198,28 @@ const SalesAddByPayment = ({
     }
   };
 
+  // 마진율/이익 필드 블러 처리
+  const handleMarginProfitBlur = () => {
+    if (localMarginProfit !== payment.marginProfitValue) {
+      const amount = Number(payment.amount) || 0;
+      const marginProfitValue = Number(localMarginProfit) || 0;
+      const isProfit = payment.isProfit;
+
+      const calculatedProfitAmount = isProfit
+        ? marginProfitValue
+        : (amount * marginProfitValue) / 100;
+
+      const roundedProfitAmount = Math.round(calculatedProfitAmount);
+
+      const updates = {
+        marginProfitValue: localMarginProfit,
+        profitAmount: roundedProfitAmount.toString(),
+      };
+
+      onChange(index, updates);
+    }
+  };
+
   // 확정여부 변경 처리 - 한 번에 여러 필드 업데이트
   const handleConfirmedChange = (checked) => {
     console.log('🔧 [SalesAddByPayment] handleConfirmedChange called:', {
@@ -168,8 +241,27 @@ const SalesAddByPayment = ({
   };
 
   return (
-    <div className="flex flex-col gap-3 p-4 bg-gray-50 rounded-md">
-      <div className="grid grid-cols-[1.2fr,0.8fr,0.4fr,0.7fr,1fr,0.4fr,1fr] gap-3 items-center">
+    <div className="flex flex-col gap-4 p-5 bg-white border border-gray-200 rounded-lg shadow-sm">
+      {/* 헤더 */}
+      <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-gray-700 bg-gray-100 rounded-full border border-gray-300">
+            #{index + 1}
+          </span>
+          <h4 className="text-sm font-medium text-gray-700">결제매출 정보</h4>
+        </div>
+        <button
+          type="button"
+          onClick={() => onRemove(index)}
+          className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-red-50 transition-colors"
+          disabled={isSubmitting}
+        >
+          <Trash2 className="h-4 w-4 text-gray-400 hover:text-red-500" />
+        </button>
+      </div>
+
+      {/* 섹션 1: 기본 정보 */}
+      <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col">
           <span className="text-xs text-gray-500 mb-1 h-4 flex items-center">
             매출처
@@ -232,8 +324,8 @@ const SalesAddByPayment = ({
         </div>
 
         <div className="flex flex-col">
-          <span className="text-xs text-gray-500 mb-1 h-4 flex items-center">
-            결제구분
+          <span className="text-xs font-medium text-gray-600 mb-1.5">
+            결제구분 <span className="text-red-500">*</span>
           </span>
           <Select
             value={payment.billingType}
@@ -242,7 +334,7 @@ const SalesAddByPayment = ({
             required
             className="h-9"
           >
-            <option value="">결제구분</option>
+            <option value="">선택하세요</option>
             {codebooks?.rePaymentMethod?.map((method) => (
               <option key={method.id} value={method.code}>
                 {method.name}
@@ -250,204 +342,210 @@ const SalesAddByPayment = ({
             ))}
           </Select>
         </div>
+      </div>
 
+      {/* 섹션 2: 금액 정보 */}
+      <div className="bg-blue-50 rounded-lg p-4 space-y-3">
+        <h5 className="text-xs font-semibold text-blue-900 uppercase tracking-wide">
+          금액 정보
+        </h5>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="flex flex-col">
+            <span className="text-xs font-medium text-gray-700 mb-1.5">
+              매출액 <span className="text-red-500">*</span>
+            </span>
+            <Input
+              type="text"
+              name={`amount-${index}`}
+              value={displayValue || formatDisplayNumber(payment.amount || '')}
+              onChange={(e) => handleAmountChange(e.target.value)}
+              onFocus={handleAmountFocus}
+              onBlur={handleAmountBlur}
+              placeholder="0"
+              disabled={isSubmitting}
+              className="text-right h-9 bg-white"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <span className="text-xs font-medium text-gray-700 mb-1.5">
+              이익/마진 구분
+            </span>
+            <div className="flex gap-4 pt-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  checked={payment.isProfit}
+                  onChange={() => handleEntryChange('isProfit', true)}
+                  disabled={isSubmitting}
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                />
+                <span className="text-xs text-gray-700">이익</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  checked={!payment.isProfit}
+                  onChange={() => handleEntryChange('isProfit', false)}
+                  disabled={isSubmitting}
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                />
+                <span className="text-xs text-gray-700">마진</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="flex flex-col">
+            <span className="text-xs font-medium text-gray-700 mb-1.5">
+              {payment.isProfit ? '매출이익' : '마진율'}
+            </span>
+            <Input
+              type="text"
+              name={`marginProfit-${index}`}
+              value={localMarginProfit !== '' ? localMarginProfit : payment.marginProfitValue}
+              onChange={(e) =>
+                handleEntryChange('marginProfitValue', e.target.value)
+              }
+              onFocus={() => setLocalMarginProfit(payment.marginProfitValue || '')}
+              onBlur={handleMarginProfitBlur}
+              disabled={isSubmitting}
+              className="h-9 bg-white"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end pt-2 border-t border-blue-200">
+          <span className="text-xs text-gray-600 mr-2">매출이익:</span>
+          <span className="text-sm font-semibold text-gray-800">
+            {Math.round(payment.profitAmount).toLocaleString()}원
+          </span>
+        </div>
+      </div>
+
+      {/* 섹션 3: 확정 및 확률 정보 */}
+      <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col">
-          <span className="text-xs text-gray-500 mb-1 h-4 flex items-left">
+          <span className="text-xs font-medium text-gray-600 mb-1.5">
             확정여부
           </span>
-          <div className="flex items-center gap-2 h-9">
+          <div className="flex items-center gap-3 h-9">
             <input
               type="checkbox"
               checked={Boolean(payment.isConfirmed)}
-              onChange={(e) => {
-                console.log('🔧 [SalesAddByPayment] Checkbox changed:', {
-                  index,
-                  oldValue: payment.isConfirmed,
-                  newValue: e.target.checked,
-                  payment: payment,
-                });
-                handleConfirmedChange(e.target.checked);
-              }}
+              onChange={(e) => handleConfirmedChange(e.target.checked)}
               disabled={isSubmitting}
-              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+              className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
             />
-            {payment.isConfirmed ? (
-              <CheckCircle2 className="text-green-500" size={16} />
-            ) : (
-              <XCircle className="text-gray-400" size={16} />
-            )}
+            <div className="flex items-center gap-2">
+              {payment.isConfirmed ? (
+                <>
+                  <CheckCircle2 className="text-green-500" size={18} />
+                  <span className="text-sm font-medium text-green-700">
+                    확정
+                  </span>
+                </>
+              ) : (
+                <>
+                  <XCircle className="text-gray-400" size={18} />
+                  <span className="text-sm text-gray-500">미확정</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
         <div className="flex flex-col">
-          <span className="text-xs text-gray-500 mb-1 h-4 flex items-center">
-            매출확률
+          <span className="text-xs font-medium text-gray-600 mb-1.5">
+            매출확률 {!payment.isConfirmed && <span className="text-red-500">*</span>}
           </span>
-          <div className="relative h-9">
-            <Select
-              value={payment.probability}
-              onChange={(e) => onChange(index, 'probability', e.target.value)}
-              disabled={
-                isSubmitting || isLoadingCodebook || payment.isConfirmed
-              }
-              className="h-9"
-            >
-              <option value="">매출확률 선택</option>
-              {codebooks?.sfaPercentage?.map((percent) => (
-                <option key={percent.id} value={percent.code}>
-                  {percent.name}
-                </option>
-              ))}
-            </Select>
-          </div>
+          <Select
+            value={payment.probability}
+            onChange={(e) => onChange(index, 'probability', e.target.value)}
+            disabled={isSubmitting || isLoadingCodebook || payment.isConfirmed}
+            className="h-9"
+          >
+            <option value="">선택하세요</option>
+            {codebooks?.sfaPercentage?.map((percent) => (
+              <option key={percent.id} value={percent.code}>
+                {percent.name}
+              </option>
+            ))}
+          </Select>
         </div>
+      </div>
 
+      {/* 섹션 4: 일정 및 부가정보 */}
+      <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col">
-          <span className="text-xs text-gray-500 mb-1 h-4 flex items-center">
-            매출액
-          </span>
-          <Input
-            type="text"
-            name={`amount-${index}`}
-            value={displayValue || formatDisplayNumber(payment.amount || '')}
-            onChange={(e) => handleAmountChange(e.target.value)}
-            onFocus={handleAmountFocus}
-            onBlur={handleAmountBlur}
-            placeholder="매출액"
-            disabled={isSubmitting}
-            className="text-right h-9"
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <div className="flex flex-col gap-1 h-9 pt-2">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                checked={payment.isProfit}
-                onChange={() => handleEntryChange('isProfit', true)}
-                disabled={isSubmitting}
-                className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-              />
-              <span className="text-xs">이익</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                checked={!payment.isProfit}
-                onChange={() => handleEntryChange('isProfit', false)}
-                disabled={isSubmitting}
-                className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
-              />
-              <span className="text-xs">마진</span>
-            </label>
-          </div>
-        </div>
-
-        <div className="flex flex-col">
-          <span className="text-xs text-gray-500 mb-1 h-4 flex items-center">
-            {payment.isProfit ? '매출이익' : '마진율'}
+          <span className="text-xs font-medium text-gray-600 mb-1.5 flex items-center gap-1">
+            <Calendar size={12} />
+            매출인식일자
           </span>
           <Input
-            type="text"
-            value={payment.marginProfitValue}
+            type="date"
+            value={payment.recognitionDate}
             onChange={(e) =>
-              handleEntryChange('marginProfitValue', e.target.value)
+              onChange(index, 'recognitionDate', e.target.value)
             }
             disabled={isSubmitting}
             className="h-9"
           />
         </div>
-      </div>
-
-      {/* 두 번째 행 - 날짜 및 메모 */}
-      <div className="grid grid-cols-[0.8fr,0.8fr,1fr,1fr,0.8fr] gap-3">
-        <div className="flex flex-col">
-          <span className="text-xs text-gray-500 mb-1 h-4 flex items-center">
-            매출인식일자
-          </span>
-          <div className="relative h-9">
-            <Input
-              type="date"
-              value={payment.recognitionDate}
-              onChange={(e) =>
-                onChange(index, 'recognitionDate', e.target.value)
-              }
-              disabled={isSubmitting}
-              className="[&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:w-8 [&::-webkit-calendar-picker-indicator]:h-8 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-            />
-            <Calendar
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
-              size={16}
-            />
-          </div>
-        </div>
 
         <div className="flex flex-col">
-          <span className="text-xs text-gray-500 mb-1 h-4 flex items-center">
+          <span className="text-xs font-medium text-gray-600 mb-1.5 flex items-center gap-1">
+            <Calendar size={12} />
             결제일자
           </span>
-          <div className="relative h-9">
-            <Input
-              type="date"
-              value={payment.scheduledDate}
-              onChange={(e) => onChange(index, 'scheduledDate', e.target.value)}
-              disabled={isSubmitting}
-              className="[&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:w-8 [&::-webkit-calendar-picker-indicator]:h-8 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-            />
-            <Calendar
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none"
-              size={16}
-            />
-          </div>
+          <Input
+            type="date"
+            value={payment.scheduledDate}
+            onChange={(e) => onChange(index, 'scheduledDate', e.target.value)}
+            disabled={isSubmitting}
+            className="h-9"
+          />
         </div>
 
         <div className="flex flex-col">
-          <span className="text-xs text-gray-500 mb-1 h-4 flex items-center">
+          <span className="text-xs font-medium text-gray-600 mb-1.5">
             라벨
           </span>
           <Input
             type="text"
-            value={payment.paymentLabel}
-            onChange={(e) => onChange(index, 'paymentLabel', e.target.value)}
+            name={`paymentLabel-${index}`}
+            value={localPaymentLabel !== '' ? localPaymentLabel : payment.paymentLabel}
+            onChange={(e) => setLocalPaymentLabel(e.target.value)}
+            onFocus={() => setLocalPaymentLabel(payment.paymentLabel || '')}
+            onBlur={() => {
+              if (localPaymentLabel !== payment.paymentLabel) {
+                onChange(index, 'paymentLabel', localPaymentLabel);
+              }
+            }}
             disabled={isSubmitting}
+            placeholder="예: 1차 계약금"
             className="h-9"
           />
         </div>
 
         <div className="flex flex-col">
-          <span className="text-xs text-gray-500 mb-1 h-4 flex items-center">
+          <span className="text-xs font-medium text-gray-600 mb-1.5">
             메모
           </span>
           <Input
             type="text"
-            value={payment.memo}
-            onChange={(e) => onChange(index, 'memo', e.target.value)}
+            name={`memo-${index}`}
+            value={localMemo !== '' ? localMemo : payment.memo}
+            onChange={(e) => setLocalMemo(e.target.value)}
+            onFocus={() => setLocalMemo(payment.memo || '')}
+            onBlur={() => {
+              if (localMemo !== payment.memo) {
+                onChange(index, 'memo', localMemo);
+              }
+            }}
             disabled={isSubmitting}
+            placeholder="메모를 입력하세요"
             className="h-9"
           />
-        </div>
-
-        <div className="grid grid-cols-[1fr,auto] gap-2 items-end">
-          <div className="flex flex-col">
-            <span className="text-xs text-gray-500 mb-1 h-4 flex items-center">
-              매출이익
-            </span>
-            <Input
-              type="text"
-              value={Math.round(payment.profitAmount)}
-              readOnly
-              disabled={true}
-              className="bg-gray-100 text-right h-9"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => onRemove(index)}
-            className="h-9 flex items-center justify-center"
-          >
-            <Trash2 size={20} className="text-gray-500 cursor-pointer" />
-          </button>
         </div>
       </div>
 
@@ -464,16 +562,18 @@ const SalesAddByPayment = ({
                 <button
                   type="button"
                   onClick={() => onAutoAllocateByRatio && onAutoAllocateByRatio(index)}
-                  disabled={isSubmitting || !payment.amount}
-                  className="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={true}
+                  className="text-xs px-2 py-1 bg-gray-400 text-white rounded cursor-not-allowed opacity-50"
+                  title="향후 구현 예정"
                 >
                   비율 배분
                 </button>
                 <button
                   type="button"
                   onClick={() => onEqualDistribute && onEqualDistribute(index)}
-                  disabled={isSubmitting || !payment.amount}
-                  className="text-xs px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={true}
+                  className="text-xs px-2 py-1 bg-gray-400 text-white rounded cursor-not-allowed opacity-50"
+                  title="향후 구현 예정"
                 >
                   균등 배분
                 </button>
@@ -513,11 +613,15 @@ const SalesAddByPayment = ({
                       </span>
                       <Input
                         type="text"
-                        value={formatDisplayNumber(allocation.allocatedAmount || 0)}
-                        onChange={(e) => {
-                          const numericValue = ensureNumericAmount(e.target.value);
-                          onAllocationChange && onAllocationChange(index, teamIndex, numericValue);
-                        }}
+                        name={`allocation-${index}-${teamIndex}`}
+                        value={
+                          allocationDisplayValues[teamIndex] !== undefined
+                            ? formatDisplayNumber(allocationDisplayValues[teamIndex])
+                            : formatDisplayNumber(allocation.allocatedAmount || 0)
+                        }
+                        onChange={(e) => handleAllocationInputChange(teamIndex, e.target.value)}
+                        onFocus={() => handleAllocationFocus(teamIndex)}
+                        onBlur={() => handleAllocationBlur(teamIndex)}
                         placeholder="할당액"
                         disabled={isSubmitting}
                         className="text-right h-8 flex-1"

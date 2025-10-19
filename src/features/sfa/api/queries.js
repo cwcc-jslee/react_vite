@@ -173,8 +173,9 @@ export const buildSfaDetailQuery = (id) => {
         'name',
         'is_project',
         'total_price',
-        'sfa_by_items',
         'is_same_billing',
+        'is_multi_team',
+        'sfa_by_items',
         'description',
       ],
       populate: {
@@ -190,9 +191,9 @@ export const buildSfaDetailQuery = (id) => {
         //   },
         //   sort: ['is_revenue_source:desc'],
         // },
-        // selling_partner: {
-        //   fields: ['name'],
-        // },
+        fy: {
+          fields: ['name'],
+        },
         sfa_classification: {
           fields: ['name'],
         },
@@ -216,6 +217,7 @@ export const buildSfaDetailQuery = (id) => {
             'scheduled_date',
             'profit_config',
             'payment_label',
+            'team_allocations',
             'memo',
           ],
           // populate: '*',

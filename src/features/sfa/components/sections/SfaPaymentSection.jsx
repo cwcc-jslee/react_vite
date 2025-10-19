@@ -148,6 +148,7 @@ const SfaPaymentSection = ({ data, controlMode, featureMode }) => {
         {/* 매출 내역 테이블 */}
         <SfaDetailPaymentTable
           data={data.sfaByPayments || []}
+          isMultiTeam={data.isMultiTeam || false}
           controlMode={controlMode}
           featureMode={featureMode}
           onView={handleViewAction}

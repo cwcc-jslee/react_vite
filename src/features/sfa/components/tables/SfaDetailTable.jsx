@@ -23,8 +23,8 @@ const SfaDetail = ({ data }) => {
   const paymentTotals = calculatePaymentTotals(data.sfaByPayments);
 
   // 사업부 매출 데이터를 Badge로 렌더링
-  const renderSfaByItems = (itemsData) => {
-    const formattedItems = formatSfaByItems(itemsData);
+  const renderSfaByItems = (itemsData, isMultiTeam, paymentsData) => {
+    const formattedItems = formatSfaByItems(itemsData, isMultiTeam, paymentsData);
 
     if (!formattedItems) return '-';
 
@@ -33,7 +33,7 @@ const SfaDetail = ({ data }) => {
         {formattedItems.map((item) => (
           <Badge
             key={item.key}
-            className="mr-1 mb-1 bg-blue-100 text-blue-800 px-2 py-1 text-xs"
+            className={`mr-1 mb-1 px-2 py-1 text-xs ${item.badgeClass || 'bg-blue-500 text-white'}`}
           >
             {item.text}
           </Badge>
@@ -87,7 +87,7 @@ const SfaDetail = ({ data }) => {
         <DescriptionItem>{data.isProject ? 'YES' : 'NO'}</DescriptionItem>
       </DescriptionRow>
 
-      {/* 4행: 매출, 매출이익 */}
+      {/* 4행: 매출, 매출이익, FY */}
       <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
           결제 매출/이익
@@ -98,17 +98,29 @@ const SfaDetail = ({ data }) => {
             : '-'}
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
-          _
+          FY
         </DescriptionItem>
-        <DescriptionItem></DescriptionItem>
+        <DescriptionItem>{data.fy?.name || '-'}</DescriptionItem>
       </DescriptionRow>
 
-      {/* 6행: 비고 */}
-      <DescriptionRow>
+      {/* 5행: 사업부 매출 */}
+      <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
           사업부 매출
         </DescriptionItem>
-        <DescriptionItem>{renderSfaByItems(data.sfaByItems)}</DescriptionItem>
+        <DescriptionItem>
+          {renderSfaByItems(data.sfaByItems, data.isMultiTeam, data.sfaByPayments)}
+        </DescriptionItem>
+        <DescriptionItem label width="w-[140px]">
+          사업부 구성
+        </DescriptionItem>
+        <DescriptionItem>
+          {data.isMultiTeam === true
+            ? '다중 사업부'
+            : data.isMultiTeam === false
+            ? '단일 사업부'
+            : '-'}
+        </DescriptionItem>
       </DescriptionRow>
 
       {/* 6행: 비고 */}

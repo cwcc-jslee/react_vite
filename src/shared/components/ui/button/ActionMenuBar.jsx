@@ -82,6 +82,8 @@ const ActionMenuBar = ({ controlMenus, functionMenus, className = '' }) => {
               ${
                 item.active
                   ? 'bg-blue-100 text-gray-900 border-gray-400'
+                  : item.variant === 'primary'
+                  ? 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100 hover:border-blue-400'
                   : 'bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100 hover:text-gray-900'
               }
             `}

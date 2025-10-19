@@ -225,6 +225,7 @@ export const Button = ({
     secondary: 'bg-gray-600 text-white hover:bg-gray-700 disabled:bg-gray-300',
     outline:
       'border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:bg-gray-50',
+    ghost: 'text-gray-700 hover:bg-gray-100 disabled:bg-transparent',
   };
 
   const sizeStyles = {
@@ -792,3 +793,12 @@ export const Dropdown = ({
 };
 
 export { default as Spinner } from './Spinner';
+
+// DropdownMenu 컴포넌트
+export {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from './dropdown/DropdownMenu';
