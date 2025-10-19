@@ -13,6 +13,7 @@ import ProjectAddLayout from '../layouts/ProjectAddLayout';
 import ProjectDetailLayout from '../layouts/ProjectDetailLayout';
 import ProjectTaskLayout from '../layouts/ProjectTaskLayout';
 import ProjectUtilizationLayout from '../layouts/ProjectUtilizationLayout';
+import TeamWeeklyUtilizationLayout from '../layouts/TeamWeeklyUtilizationLayout';
 // Components
 import ProjectDrawer from '../components/drawer/ProjectDrawer';
 
@@ -54,6 +55,7 @@ const ProjectContainer = () => {
         {layout === 'work' && <ProjectWorkLayout />}
         {layout === 'task' && <ProjectTaskLayout />}
         {layout === 'utilization' && <ProjectUtilizationLayout />}
+        {layout === 'teamWeekly' && <TeamWeeklyUtilizationLayout />}
         {layout === 'add' && <ProjectAddLayout />}
       </Section>
 

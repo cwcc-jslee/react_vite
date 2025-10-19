@@ -197,6 +197,29 @@ export const PAGE_MENUS = {
           },
         },
       },
+      teamWeekly: {
+        label: '팀별실적',
+        permissions: ['user'],
+        visible: true,
+        config: {
+          layout: 'teamWeekly',
+          sections: {
+            projectCharts: false,
+            projectListTable: false,
+            projectAddForm: false,
+            projectDetailTable: false,
+            projectTaskBoard: false,
+            utilizationCharts: false,
+            teamWeeklyUtilization: true,
+          },
+          components: {
+            teamWeeklyUtilizationLayout: true,
+          },
+          drawer: {
+            visible: false,
+          },
+        },
+      },
       search: {
         label: '상세조회',
         permissions: ['user'],
@@ -220,52 +243,52 @@ export const PAGE_MENUS = {
           },
         },
       },
-      task: {
-        label: 'TASK',
-        permissions: ['user'],
-        visible: true,
-        config: {
-          layout: 'task',
-          sections: {
-            projectCharts: true,
-            projectListTable: true,
-            projectAddForm: false,
-            projectDetailTable: false,
-            projectTaskBoard: false,
-          },
-          components: {
-            projectChart: true,
-            projectTable: true,
-            projectAddSection: false,
-          },
-          drawer: {
-            visible: false, // 드로어 표시 여부
-          },
-        },
-      },
-      work: {
-        label: 'WORK',
-        permissions: ['user'],
-        visible: true,
-        config: {
-          layout: 'work',
-          sections: {
-            projectCharts: true,
-            projectListTable: true,
-            projectAddForm: false,
-            projectDetailTable: false,
-            projectTaskBoard: false,
-          },
-          components: {
-            // projectChart: true,
-            // projectTable: true,
-            // projectAddSection: false,
-          },
-          drawer: {
-            visible: false, // 드로어 표시 여부
-          },
-        },
-      },
+      // task: {
+      //   label: 'TASK',
+      //   permissions: ['user'],
+      //   visible: true,
+      //   config: {
+      //     layout: 'task',
+      //     sections: {
+      //       projectCharts: true,
+      //       projectListTable: true,
+      //       projectAddForm: false,
+      //       projectDetailTable: false,
+      //       projectTaskBoard: false,
+      //     },
+      //     components: {
+      //       projectChart: true,
+      //       projectTable: true,
+      //       projectAddSection: false,
+      //     },
+      //     drawer: {
+      //       visible: false, // 드로어 표시 여부
+      //     },
+      //   },
+      // },
+      // work: {
+      //   label: 'WORK',
+      //   permissions: ['user'],
+      //   visible: true,
+      //   config: {
+      //     layout: 'work',
+      //     sections: {
+      //       projectCharts: true,
+      //       projectListTable: true,
+      //       projectAddForm: false,
+      //       projectDetailTable: false,
+      //       projectTaskBoard: false,
+      //     },
+      //     components: {
+      //       // projectChart: true,
+      //       // projectTable: true,
+      //       // projectAddSection: false,
+      //     },
+      //     drawer: {
+      //       visible: false, // 드로어 표시 여부
+      //     },
+      //   },
+      // },
 
       detail: {
         label: '상세정보',
