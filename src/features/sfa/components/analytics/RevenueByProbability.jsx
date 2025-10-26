@@ -14,46 +14,55 @@ const RevenueByProbability = ({ selectedYear }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 선택된 년도의 12개월 생성
-  const months = Array.from({ length: 12 }, (_, i) => {
-    const month = i + 1;
-    return {
-      month: String(month).padStart(2, '0'),
-      startDate: dayjs(`${selectedYear}-${month}-01`).startOf('month').format('YYYY-MM-DD'),
-      endDate: dayjs(`${selectedYear}-${month}-01`).endOf('month').format('YYYY-MM-DD'),
-    };
-  });
-
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        // 모든 월의 데이터를 병렬로 요청
-        const promises = months.map(({ month, startDate, endDate }) =>
-          sfaApi
-            .getSfaMonthStats(startDate, endDate)
-            .then((response) => ({ month, data: response }))
-            .catch((error) => {
-              console.error(`Error fetching data for ${startDate}:`, error);
-              return { month, data: {} };
-            })
-        );
+        // 신규 API 사용: 확률별 그룹핑으로 모든 매출 조회
+        const yearlyData = await sfaApi.getYearlyStats(selectedYear, {
+          groupBy: 'probability',
+          confirmStatus: 'all', // 모든 확률 포함
+          includeMonthly: true,
+        });
 
-        const results = await Promise.all(promises);
+        console.log('Probability Data:', yearlyData);
 
-        // 차트 데이터 구조화
-        const formattedData = results.map(({ month, data }) => ({
-          month: `${parseInt(month)}월`,
-          confirmed: data.confirmed?.revenue || 0,
-          prob100: data['100']?.revenue || 0,
-          prob90: data['90']?.revenue || 0,
-          prob70: data['70']?.revenue || 0,
-          prob50: data['50']?.revenue || 0,
-        }));
+        // 월별 확률별 데이터 구조 생성
+        const monthlyProbabilityData = Array.from({ length: 12 }, (_, i) => {
+          const month = i + 1;
+          const monthData = yearlyData.monthlyData?.find((m) => m.month === month);
 
-        setChartData(formattedData);
+          if (!monthData || !monthData.probabilities) {
+            return {
+              month: `${month}월`,
+              confirmed: 0,
+              prob100: 0,
+              prob90: 0,
+              prob70: 0,
+              prob50: 0,
+            };
+          }
+
+          // probabilities 배열에서 각 확률별 매출 추출
+          const confirmedItem = monthData.probabilities.find((p) => p.probabilityGroup === 'confirmed');
+          const prob100Item = monthData.probabilities.find((p) => p.probabilityGroup === '100');
+          const prob90Item = monthData.probabilities.find((p) => p.probabilityGroup === '90');
+          const prob70Item = monthData.probabilities.find((p) => p.probabilityGroup === '70');
+          const prob50Item = monthData.probabilities.find((p) => p.probabilityGroup === '50');
+
+          return {
+            month: `${month}월`,
+            confirmed: confirmedItem?.sales?.amount || 0,
+            prob100: prob100Item?.sales?.amount || 0,
+            prob90: prob90Item?.sales?.amount || 0,
+            prob70: prob70Item?.sales?.amount || 0,
+            prob50: prob50Item?.sales?.amount || 0,
+          };
+        });
+
+        setChartData(monthlyProbabilityData);
       } catch (error) {
         console.error('Failed to fetch probability data:', error);
         setError('확률별 매출 데이터를 불러오는데 실패했습니다.');

@@ -14,45 +14,60 @@ const RevenueComparison = ({ selectedYear }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 선택된 년도의 12개월 생성
-  const months = Array.from({ length: 12 }, (_, i) => {
-    const month = i + 1;
-    return {
-      month: String(month).padStart(2, '0'),
-      startDate: dayjs(`${selectedYear}-${month}-01`).startOf('month').format('YYYY-MM-DD'),
-      endDate: dayjs(`${selectedYear}-${month}-01`).endOf('month').format('YYYY-MM-DD'),
-    };
-  });
-
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        // 모든 월의 데이터를 병렬로 요청
-        const promises = months.map(({ month, startDate, endDate }) =>
-          sfaApi
-            .getSfaMonthStats(startDate, endDate)
-            .then((response) => ({ month, data: response }))
-            .catch((error) => {
-              console.error(`Error fetching data for ${startDate}:`, error);
-              return { month, data: {} };
-            })
-        );
+        // 신규 API 사용: confirmed와 probability100 데이터를 각각 조회
+        const [confirmedData, probability100Data] = await Promise.all([
+          sfaApi.getYearlyStats(selectedYear, {
+            groupBy: 'probability',
+            confirmStatus: 'confirmed',
+            includeMonthly: true,
+          }),
+          sfaApi.getYearlyStats(selectedYear, {
+            groupBy: 'probability',
+            confirmStatus: 'probability100',
+            includeMonthly: true,
+          }),
+        ]);
 
-        const results = await Promise.all(promises);
+        console.log('Confirmed Data:', confirmedData);
+        console.log('Probability100 Data:', probability100Data);
+
+        // 월별 데이터 매핑
+        const confirmedMonthlyMap = {};
+        const probability100MonthlyMap = {};
+
+        confirmedData.monthlyData?.forEach((monthData) => {
+          const confirmedItem = monthData.probabilities?.find(
+            (p) => p.probabilityGroup === 'confirmed'
+          );
+          confirmedMonthlyMap[monthData.month] = confirmedItem?.sales?.amount || 0;
+        });
+
+        probability100Data.monthlyData?.forEach((monthData) => {
+          // probability100 API는 confirmedAmount + probability100Amount 모두 포함
+          const prob100Item = monthData.probabilities?.find(
+            (p) => p.probabilityGroup === '100'
+          );
+          probability100MonthlyMap[monthData.month] = prob100Item?.sales?.amount || 0;
+        });
 
         // 차트 데이터 구조화
-        const formattedData = results.map(({ month, data }) => {
-          const confirmed = data.confirmed?.revenue || 0;
-          const probable = data['100']?.revenue || 0;
+        const formattedData = Array.from({ length: 12 }, (_, i) => {
+          const month = i + 1;
+          const confirmed = confirmedMonthlyMap[month] || 0;
+          const probable = probability100MonthlyMap[month] || 0;
+          const total = confirmed + probable;
 
           return {
-            month: `${parseInt(month)}월`,
+            month: `${month}월`,
             confirmed,
             probable,
-            total: confirmed + probable,
+            total,
           };
         });
 

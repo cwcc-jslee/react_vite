@@ -19,43 +19,44 @@ const AchievementRate = ({ selectedYear }) => {
   // 임시 목표 매출 (실제로는 API나 설정에서 가져와야 함)
   const MONTHLY_TARGET = 50000000; // 5천만원
 
-  // 선택된 년도의 12개월 생성
-  const months = Array.from({ length: 12 }, (_, i) => {
-    const month = i + 1;
-    return {
-      month: String(month).padStart(2, '0'),
-      startDate: dayjs(`${selectedYear}-${month}-01`).startOf('month').format('YYYY-MM-DD'),
-      endDate: dayjs(`${selectedYear}-${month}-01`).endOf('month').format('YYYY-MM-DD'),
-    };
-  });
-
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        // 모든 월의 데이터를 병렬로 요청
-        const promises = months.map(({ month, startDate, endDate }) =>
-          sfaApi
-            .getSfaMonthStats(startDate, endDate)
-            .then((response) => ({ month, data: response }))
-            .catch((error) => {
-              console.error(`Error fetching data for ${startDate}:`, error);
-              return { month, data: {} };
-            })
-        );
+        // 신규 API 사용: 년간 데이터를 1회 호출로 조회
+        const yearlyData = await sfaApi.getYearlyStats(selectedYear, {
+          groupBy: 'probability',
+          confirmStatus: 'probability100', // confirmed + 100%
+          includeMonthly: true,
+        });
 
-        const results = await Promise.all(promises);
+        console.log('Yearly Data for Achievement:', yearlyData);
+
+        // 월별 데이터 매핑
+        const monthlyMap = {};
+        yearlyData.monthlyData?.forEach((monthData) => {
+          // probabilities 배열에서 confirmed와 100 찾기
+          const confirmedItem = monthData.probabilities?.find(
+            (p) => p.probabilityGroup === 'confirmed'
+          );
+          const prob100Item = monthData.probabilities?.find(
+            (p) => p.probabilityGroup === '100'
+          );
+
+          const confirmed = confirmedItem?.sales?.amount || 0;
+          const prob100 = prob100Item?.sales?.amount || 0;
+          monthlyMap[monthData.month] = confirmed + prob100;
+        });
 
         // 차트 데이터 구조화
         let totalRevenue = 0;
         let totalTarget = 0;
 
-        const formattedData = results.map(({ month, data }) => {
-          const confirmed = data.confirmed?.revenue || 0;
-          const prob100 = data['100']?.revenue || 0;
-          const actualRevenue = confirmed + prob100;
+        const formattedData = Array.from({ length: 12 }, (_, i) => {
+          const month = i + 1;
+          const actualRevenue = monthlyMap[month] || 0;
           const achievementRate = MONTHLY_TARGET > 0
             ? Math.round((actualRevenue / MONTHLY_TARGET) * 100)
             : 0;
@@ -64,7 +65,7 @@ const AchievementRate = ({ selectedYear }) => {
           totalTarget += MONTHLY_TARGET;
 
           return {
-            month: `${parseInt(month)}월`,
+            month: `${month}월`,
             revenue: actualRevenue,
             target: MONTHLY_TARGET,
             achievementRate,

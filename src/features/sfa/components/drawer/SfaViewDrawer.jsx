@@ -37,6 +37,9 @@ const SfaViewDrawer = React.memo(
     // 섹션별 편집 상태 관리
     const [editingSection, setEditingSection] = React.useState(null); // 'base' | 'payment' | null
 
+    // 기존 매출 수정 중인 항목 ID (SfaPaymentSection에서 전달받음)
+    const [editingPaymentId, setEditingPaymentId] = React.useState(null);
+
     // 섹션 편집 시작
     const handleStartEdit = (section) => {
       // 다른 섹션을 편집 중이면 경고
@@ -203,24 +206,14 @@ const SfaViewDrawer = React.memo(
             <h2 className="text-base font-semibold text-gray-800">기본 정보</h2>
             <div className="flex items-center gap-2">
               {editingSection === 'base' ? (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCancelEdit}
-                    className="h-8 px-3 text-gray-600 hover:text-gray-900"
-                  >
-                    취소
-                  </Button>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={handleFinishEdit}
-                    className="h-8 px-3"
-                  >
-                    저장
-                  </Button>
-                </>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleFinishEdit}
+                  className="h-8 px-3 text-gray-600 hover:text-gray-900"
+                >
+                  완료
+                </Button>
               ) : (
                 <Button
                   variant="outline"
@@ -258,7 +251,7 @@ const SfaViewDrawer = React.memo(
                     variant="primary"
                     size="sm"
                     onClick={handleAddPaymentClick}
-                    disabled={form.isSubmitting || (form.data.sfaDraftPayments?.length || 0) >= 3}
+                    disabled={form.isSubmitting || (form.data.sfaDraftPayments?.length || 0) >= 3 || editingPaymentId !== null}
                     className="h-8 px-3"
                   >
                     + 결제매출 추가
@@ -285,20 +278,53 @@ const SfaViewDrawer = React.memo(
             </div>
           </div>
           <div className="p-4 space-y-4">
-            {/* 결제매출 추가 폼 - 편집 모드이고 초안이 있을 때만 표시 */}
-            {editingSection === 'payment' && (form.data.sfaDraftPayments?.length || 0) > 0 && (
-              <SfaEditPaymentSection
-                data={data}
-                controlMode="edit"
-                featureMode="addPayment"
-              />
+            {/* 편집 모드일 때: 추가할 매출 섹션 */}
+            {editingSection === 'payment' && (
+              <>
+                {/* 추가할 매출 영역 */}
+                {(form.data.sfaDraftPayments?.length || 0) > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-px bg-blue-300"></div>
+                      <h3 className="text-sm font-semibold text-blue-700 px-3">
+                        ━━━━━ 추가할 매출 ━━━━━
+                      </h3>
+                      <div className="flex-1 h-px bg-blue-300"></div>
+                    </div>
+
+                    <SfaEditPaymentSection
+                      data={data}
+                      controlMode="edit"
+                      featureMode="addPayment"
+                    />
+                  </div>
+                )}
+
+                {/* 구분선 - 추가할 매출이 있을 때만 표시 */}
+                {(form.data.sfaDraftPayments?.length || 0) > 0 && (
+                  <div className="my-6"></div>
+                )}
+
+                {/* 기존 매출 내역 구분선 */}
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="flex-1 h-px bg-gray-300"></div>
+                  <h3 className="text-sm font-semibold text-gray-700 px-3">
+                    ━━━━━ 기존 매출 내역 ━━━━━
+                  </h3>
+                  <div className="flex-1 h-px bg-gray-300"></div>
+                </div>
+              </>
             )}
 
-            {/* 결제매출 내역 테이블 */}
+            {/* 결제매출 내역 */}
             <SfaPaymentSection
               data={data}
-              editMode={editingSection === 'payment'}
+              controlMode={editingSection === 'payment' ? 'edit' : 'view'}
+              featureMode={editingSection === 'payment' ? 'editPayment' : 'viewPayment'}
               onEditComplete={handleFinishEdit}
+              hasAddingPayments={(form.data.sfaDraftPayments?.length || 0) > 0}
+              editingPaymentId={editingPaymentId}
+              setEditingPaymentId={setEditingPaymentId}
             />
           </div>
         </section>

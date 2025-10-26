@@ -123,7 +123,88 @@ export const sfaApi = {
   },
 
   /**
-   * 팀별 년간 통계 조회 (매출 분석용)
+   * 월간 매출 통계 조회 (신규 API)
+   * @param {number} year - 조회 년도
+   * @param {number} month - 조회 월 (1-12)
+   * @param {Object} options - 옵션 { groupBy, confirmStatus, teamIds }
+   * @returns {Promise} 월간 통계 데이터
+   */
+  getMonthlyStats: async (year, month, options = {}) => {
+    try {
+      const { groupBy = 'team', confirmStatus = 'confirmed', teamIds } = options;
+
+      const params = {
+        year,
+        month,
+        groupBy,
+        confirmStatus,
+      };
+
+      if (teamIds) {
+        params.teamIds = teamIds;
+      }
+
+      console.log('>>>Fetching monthly stats:', params);
+
+      const response = await apiClient.get('/sfa-api/monthly-stats', { params });
+
+      if (!response.data || !response.data.data) {
+        console.log('No monthly stats data returned from API');
+        return null;
+      }
+
+      return response.data.data;
+    } catch (error) {
+      console.error(`Failed to fetch monthly stats for ${year}-${month}:`, error);
+      throw new Error(`Failed to fetch monthly stats: ${error.message}`);
+    }
+  },
+
+  /**
+   * 년간 매출 통계 조회 (신규 API)
+   * @param {number} year - 조회 년도
+   * @param {Object} options - 옵션 { groupBy, confirmStatus, includeMonthly, teamIds }
+   * @returns {Promise} 년간 통계 데이터
+   */
+  getYearlyStats: async (year, options = {}) => {
+    try {
+      const {
+        groupBy = 'team',
+        confirmStatus = 'confirmed',
+        includeMonthly = true,
+        teamIds,
+      } = options;
+
+      const params = {
+        year,
+        groupBy,
+        confirmStatus,
+        includeMonthly,
+      };
+
+      if (teamIds) {
+        params.teamIds = teamIds;
+      }
+
+      console.log('>>>Fetching yearly stats:', params);
+
+      const response = await apiClient.get('/sfa-api/yearly-stats', { params });
+
+      if (!response.data || !response.data.data) {
+        console.log('No yearly stats data returned from API');
+        return null;
+      }
+
+      return response.data.data;
+    } catch (error) {
+      console.error(`Failed to fetch yearly stats for ${year}:`, error);
+      throw new Error(`Failed to fetch yearly stats: ${error.message}`);
+    }
+  },
+
+  /**
+   * 팀별 년간 통계 조회 (매출 분석용) - DEPRECATED
+   * @deprecated getYearlyStats 사용 권장
    * @param {number} year - 조회 년도
    * @returns {Promise} 팀별 매출 데이터
    */

@@ -15,61 +15,86 @@ const RevenueTrend = ({ selectedYear }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 선택된 년도와 전년도의 12개월 생성
-  const getCurrentYearMonths = (year) =>
-    Array.from({ length: 12 }, (_, i) => {
-      const month = i + 1;
-      return {
-        month: String(month).padStart(2, '0'),
-        startDate: dayjs(`${year}-${month}-01`).startOf('month').format('YYYY-MM-DD'),
-        endDate: dayjs(`${year}-${month}-01`).endOf('month').format('YYYY-MM-DD'),
-      };
-    });
-
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        const currentYearMonths = getCurrentYearMonths(selectedYear);
-        const prevYearMonths = getCurrentYearMonths(selectedYear - 1);
+        // 현재 년월 정보
+        const today = dayjs();
+        const currentYear = today.year();
+        const currentMonth = today.month() + 1; // dayjs month는 0-based
 
-        // 현재 년도 데이터 조회
-        const currentPromises = currentYearMonths.map(({ month, startDate, endDate }) =>
-          sfaApi
-            .getSfaMonthStats(startDate, endDate)
-            .then((response) => ({ month, data: response }))
-            .catch((error) => {
-              console.error(`Error fetching current year data for ${startDate}:`, error);
-              return { month, data: {} };
-            })
-        );
-
-        // 전년도 데이터 조회
-        const prevPromises = prevYearMonths.map(({ month, startDate, endDate }) =>
-          sfaApi
-            .getSfaMonthStats(startDate, endDate)
-            .then((response) => ({ month, data: response }))
-            .catch((error) => {
-              console.error(`Error fetching previous year data for ${startDate}:`, error);
-              return { month, data: {} };
-            })
-        );
-
-        const [currentResults, prevResults] = await Promise.all([
-          Promise.all(currentPromises),
-          Promise.all(prevPromises),
+        // 신규 API 사용
+        // 1. 전년도: 확정 매출만
+        // 2. 당해: probability100 (confirmed + 100%)
+        const [currentYearData, prevYearData] = await Promise.all([
+          sfaApi.getYearlyStats(selectedYear, {
+            groupBy: 'probability',
+            confirmStatus: 'probability100', // confirmed + 100%
+            includeMonthly: true,
+          }),
+          sfaApi.getYearlyStats(selectedYear - 1, {
+            groupBy: 'probability',
+            confirmStatus: 'confirmed', // 전년도는 확정만
+            includeMonthly: true,
+          }),
         ]);
+
+        console.log('Current Year Data:', currentYearData);
+        console.log('Previous Year Data:', prevYearData);
+
+        // 월별 데이터 매핑
+        const currentMonthlyMap = {};
+        const prevMonthlyMap = {};
+
+        // 당해 년도 데이터 처리
+        currentYearData.monthlyData?.forEach((monthData) => {
+          const month = monthData.month;
+
+          // probabilities 배열에서 confirmed와 100 찾기
+          const confirmedItem = monthData.probabilities?.find(
+            (p) => p.probabilityGroup === 'confirmed'
+          );
+          const prob100Item = monthData.probabilities?.find(
+            (p) => p.probabilityGroup === '100'
+          );
+
+          const confirmed = confirmedItem?.sales?.amount || 0;
+          const prob100 = prob100Item?.sales?.amount || 0;
+
+          // 현재 년도인 경우에만 월 기준 분기 처리
+          if (selectedYear === currentYear) {
+            if (month < currentMonth) {
+              // 전월까지: 확정만
+              currentMonthlyMap[month] = confirmed;
+            } else {
+              // 현재월 포함 이후: 확정 + 예정(100%)
+              currentMonthlyMap[month] = confirmed + prob100;
+            }
+          } else {
+            // 과거 년도 또는 미래 년도: 전체 데이터 사용
+            currentMonthlyMap[month] = confirmed + prob100;
+          }
+        });
+
+        // 전년도 데이터 처리: 확정만 (API에서 이미 confirmed만 조회)
+        prevYearData.monthlyData?.forEach((monthData) => {
+          const confirmedItem = monthData.probabilities?.find(
+            (p) => p.probabilityGroup === 'confirmed'
+          );
+          prevMonthlyMap[monthData.month] = confirmedItem?.sales?.amount || 0;
+        });
 
         // 차트 데이터 구조화
         let currentCumulative = 0;
         let prevCumulative = 0;
 
-        const formattedData = currentResults.map(({ month, data }, index) => {
-          const currentRevenue = (data.confirmed?.revenue || 0) + (data['100']?.revenue || 0);
-          const prevData = prevResults[index].data;
-          const prevRevenue = (prevData.confirmed?.revenue || 0) + (prevData['100']?.revenue || 0);
+        const formattedData = Array.from({ length: 12 }, (_, i) => {
+          const month = i + 1;
+          const currentRevenue = currentMonthlyMap[month] || 0;
+          const prevRevenue = prevMonthlyMap[month] || 0;
 
           currentCumulative += currentRevenue;
           prevCumulative += prevRevenue;
@@ -79,7 +104,7 @@ const RevenueTrend = ({ selectedYear }) => {
             : 0;
 
           return {
-            month: `${parseInt(month)}월`,
+            month: `${month}월`,
             currentYear: currentRevenue,
             prevYear: prevRevenue,
             currentCumulative,
@@ -200,11 +225,20 @@ const RevenueTrend = ({ selectedYear }) => {
             name={`${selectedYear}년 누적`}
             dot={false}
           />
+          <Line
+            type="monotone"
+            dataKey="prevCumulative"
+            stroke="#d97706"
+            strokeWidth={2}
+            strokeDasharray="5 5"
+            name={`${selectedYear - 1}년 누적`}
+            dot={false}
+          />
         </LineChart>
       </ResponsiveContainer>
 
       <div className="text-xs text-gray-500 mt-2">
-        * 전년도 대비 매출 추이 및 누적 매출 비교
+        * 전년도 대비 매출 추이 및 누적 매출 비교 (실선: 당해, 점선: 전년)
       </div>
     </div>
   );
