@@ -32,10 +32,13 @@ const SfaPaymentSection = ({
   editingPaymentId: externalEditingPaymentId,
   setEditingPaymentId: externalSetEditingPaymentId,
 }) => {
-  // useSfaStore에서 form과 actions 직접 가져오기
-  const { form, actions } = useSfaStore();
+  // useSfaStore에서 form, actions, selectedItem 가져오기
+  const { form, actions, selectedItem } = useSfaStore();
   const errors = form.errors || {};
   const isSubmitting = form.isSubmitting;
+
+  // Redux store의 selectedItem 데이터 사용 (갱신된 데이터)
+  const currentData = selectedItem?.data || data;
 
   // 부모에서 전달받은 상태 사용 (prop이 있으면 사용, 없으면 로컬 상태)
   const [localEditingPaymentId, setLocalEditingPaymentId] = useState(null);
@@ -111,7 +114,7 @@ const SfaPaymentSection = ({
   const handleDeletePayment = async (paymentInfo) => {
     console.log(`>> handlepayment delete : `, paymentInfo);
 
-    const sfaId = data.id;
+    const sfaId = currentData.id;
     // 결제매출 삭제
     const result = await processPaymentOperation(
       'delete',
@@ -184,21 +187,21 @@ const SfaPaymentSection = ({
       const { documentId, id: paymentId, ...rawUpdateData } = editingPaymentData;
 
       // DB 필드로 변환
-      const { transformSalesByPaymentsEdit } = await import('../../utils/transformUtils');
-      const processedData = transformSalesByPaymentsEdit(rawUpdateData);
+      const { transformToDBFields } = await import('../../utils/transformUtils');
+      const processedData = transformToDBFields.transformSalesByPaymentsEdit(rawUpdateData);
 
       console.log('💾 [handleEditSave] 변환된 데이터:', processedData);
       console.log('💾 [handleEditSave] paymentId:', paymentId);
 
       // API 호출
-      const apiService = await import('@shared/api/apiService').then(m => m.default);
+      const { apiService } = await import('@shared/api/apiService');
       await apiService.put(
         `/sfa-by-payment-withhistory/${paymentId}`,
         processedData,
       );
 
       // 성공 후 데이터 갱신
-      const sfaId = data.id;
+      const sfaId = currentData.id;
       await actions.data.fetchSfaDetail(sfaId);
       setEditingPaymentId(null);
       setEditingPaymentData(null);
@@ -242,8 +245,10 @@ const SfaPaymentSection = ({
   console.log(`controlmode ${controlMode}, feturemode ${featureMode}`);
   console.log(`editingPaymentId:`, editingPaymentId);
   console.log(`editingPaymentData:`, editingPaymentData);
+  console.log(`>>currentData (selectedItem):`, currentData);
 
-  const payments = data.sfaByPayments || [];
+  // Redux store의 갱신된 데이터 사용
+  const payments = currentData.sfaByPayments || [];
   console.log(`>> payments at render:`, payments);
 
   return (
@@ -255,64 +260,103 @@ const SfaPaymentSection = ({
             <div key={payment.documentId} className="space-y-2">
               {/* 매출 항목 카드 */}
               <div className="bg-white border border-gray-200 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 grid grid-cols-4 gap-4">
-                    <div>
-                      <span className="text-xs text-gray-500">ID</span>
-                      <p className="text-sm font-medium">{payment.id}</p>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      {/* ID - 좁은 폭 */}
+                      <div className="w-16">
+                        <span className="text-xs text-gray-500">ID</span>
+                        <p className="text-sm font-medium">{payment.id}</p>
+                      </div>
+
+                      {/* 나머지 정보들 */}
+                      <div className="flex-1 grid grid-cols-6 gap-4">
+                        <div>
+                          <span className="text-xs text-gray-500">매출처</span>
+                          <p className="text-sm font-medium">
+                            {payment.revenueSource?.name || '-'}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs text-gray-500">빌링타입</span>
+                          <p className="text-sm">
+                            {payment.billingType || '-'}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs text-gray-500">매출액</span>
+                          <p className="text-sm font-medium">
+                            {payment.amount?.toLocaleString() || 0}원
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs text-gray-500">매출인식일</span>
+                          <p className="text-sm">
+                            {payment.recognitionDate || '-'}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs text-gray-500">확정여부</span>
+                          <p className="text-sm">
+                            {payment.isConfirmed ? '✓ 확정' : '미확정'}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs text-gray-500">확률</span>
+                          <p className="text-sm">{payment.probability || 0}%</p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-xs text-gray-500">매출액</span>
-                      <p className="text-sm font-medium">
-                        {payment.amount?.toLocaleString() || 0}원
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-xs text-gray-500">확정여부</span>
-                      <p className="text-sm">
-                        {payment.isConfirmed ? '✓ 확정' : '미확정'}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-xs text-gray-500">확률</span>
-                      <p className="text-sm">{payment.probability || 0}%</p>
+
+                    {/* Action 버튼 */}
+                    <div className="flex gap-2 flex-shrink-0">
+                      {controlMode === 'view' ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleViewAction({ documentId: payment.documentId, id: payment.id })}
+                          className="text-gray-600 hover:text-gray-900"
+                        >
+                          view
+                        </Button>
+                      ) : featureMode === 'editPayment' ? (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handlePaymentSelection(payment.documentId)}
+                            disabled={hasAddingPayments || editingPaymentId === payment.documentId}
+                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                          >
+                            {editingPaymentId === payment.documentId ? '수정중...' : '수정'}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => confirmDeletePayment({ documentId: payment.documentId, id: payment.id })}
+                            disabled={hasAddingPayments || editingPaymentId === payment.documentId}
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                          >
+                            삭제
+                          </Button>
+                        </>
+                      ) : null}
                     </div>
                   </div>
 
-                  {/* Action 버튼 */}
-                  <div className="ml-4 flex gap-2">
-                    {controlMode === 'view' ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleViewAction({ documentId: payment.documentId, id: payment.id })}
-                        className="text-gray-600 hover:text-gray-900"
-                      >
-                        view
-                      </Button>
-                    ) : featureMode === 'editPayment' ? (
-                      <>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handlePaymentSelection(payment.documentId)}
-                          disabled={hasAddingPayments || editingPaymentId === payment.documentId}
-                          className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                  {/* 팀별 매출액 표시 (단일/다중 사업부 모두) */}
+                  {payment.teamAllocations && payment.teamAllocations.length > 0 && (
+                    <div className="ml-20 flex flex-wrap gap-2">
+                      {payment.teamAllocations.map((allocation, idx) => (
+                        <span
+                          key={idx}
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
                         >
-                          {editingPaymentId === payment.documentId ? '수정중...' : '수정'}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => confirmDeletePayment({ documentId: payment.documentId, id: payment.id })}
-                          disabled={hasAddingPayments || editingPaymentId === payment.documentId}
-                          className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                        >
-                          삭제
-                        </Button>
-                      </>
-                    ) : null}
-                  </div>
+                          {allocation.itemName || allocation.teamName}: {Number(allocation.allocatedAmount || 0).toLocaleString()}원
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -352,12 +396,12 @@ const SfaPaymentSection = ({
                     <SalesAddByPayment
                       payment={currentEditData}
                       index={0}
-                      isSameBilling={data.isSameBilling}
+                      isSameBilling={currentData.isSameBilling}
                       onChange={(idx, field, value) => {
                         // 로컬 상태 업데이트
                         setEditingPaymentData(prev => {
                           const base = prev || currentEditData;
-                          const isMultiTeam = data.isMultiTeam || false;
+                          const isMultiTeam = currentData.isMultiTeam || false;
 
                           // field가 객체인 경우 (여러 필드 한번에 업데이트)
                           if (typeof field === 'object' && field !== null) {
@@ -407,8 +451,8 @@ const SfaPaymentSection = ({
                       codebooks={paymentCodebooks}
                       isLoadingCodebook={isLoadingCodebook}
                       isExisting={true}
-                      isMultiTeam={data.isMultiTeam || false}
-                      sfaByItems={data.sfaByItems || []}
+                      isMultiTeam={currentData.isMultiTeam || false}
+                      sfaByItems={currentData.sfaByItems || []}
                       onAllocationChange={(paymentIndex, teamIndex, value) => {
                         // 팀 할당액 업데이트
                         setEditingPaymentData(prev => {
