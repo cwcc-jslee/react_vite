@@ -21,11 +21,14 @@ const WeeklyUtilizationTable = ({ weeklyData = [] }) => {
     );
   }
 
+  // 최신 주차가 앞으로 오도록 역순 정렬
+  const sortedWeeklyData = [...weeklyData].reverse();
+
   // 페이지네이션 계산
-  const totalPages = Math.ceil(weeklyData.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedWeeklyData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentData = weeklyData.slice(startIndex, endIndex);
+  const currentData = sortedWeeklyData.slice(startIndex, endIndex);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -220,7 +223,7 @@ const WeeklyUtilizationTable = ({ weeklyData = [] }) => {
         {totalPages > 1 && (
           <div className="mt-4 flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              {startIndex + 1}-{Math.min(endIndex, weeklyData.length)} / {weeklyData.length}주
+              {startIndex + 1}-{Math.min(endIndex, sortedWeeklyData.length)} / {sortedWeeklyData.length}주
             </div>
             <div className="flex items-center gap-2">
               <button

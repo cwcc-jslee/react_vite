@@ -1,7 +1,16 @@
 // src/features/sfa/components/analytics/AchievementRate.jsx
 import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 import { sfaApi } from '../../api/sfaApi';
 import { StateDisplay } from '../../../../shared/components/ui/state/StateDisplay';
 
@@ -17,7 +26,7 @@ const AchievementRate = ({ selectedYear }) => {
   const [error, setError] = useState(null);
 
   // 임시 목표 매출 (실제로는 API나 설정에서 가져와야 함)
-  const MONTHLY_TARGET = 50000000; // 5천만원
+  const MONTHLY_TARGET = 140000000; // 1.4억원
 
   useEffect(() => {
     const fetchData = async () => {
@@ -39,10 +48,10 @@ const AchievementRate = ({ selectedYear }) => {
         yearlyData.monthlyData?.forEach((monthData) => {
           // probabilities 배열에서 confirmed와 100 찾기
           const confirmedItem = monthData.probabilities?.find(
-            (p) => p.probabilityGroup === 'confirmed'
+            (p) => p.probabilityGroup === 'confirmed',
           );
           const prob100Item = monthData.probabilities?.find(
-            (p) => p.probabilityGroup === '100'
+            (p) => p.probabilityGroup === '100',
           );
 
           const confirmed = confirmedItem?.sales?.amount || 0;
@@ -57,9 +66,10 @@ const AchievementRate = ({ selectedYear }) => {
         const formattedData = Array.from({ length: 12 }, (_, i) => {
           const month = i + 1;
           const actualRevenue = monthlyMap[month] || 0;
-          const achievementRate = MONTHLY_TARGET > 0
-            ? Math.round((actualRevenue / MONTHLY_TARGET) * 100)
-            : 0;
+          const achievementRate =
+            MONTHLY_TARGET > 0
+              ? Math.round((actualRevenue / MONTHLY_TARGET) * 100)
+              : 0;
 
           totalRevenue += actualRevenue;
           totalTarget += MONTHLY_TARGET;
@@ -75,7 +85,8 @@ const AchievementRate = ({ selectedYear }) => {
         setChartData(formattedData);
 
         // 전체 달성률 계산
-        const rate = totalTarget > 0 ? Math.round((totalRevenue / totalTarget) * 100) : 0;
+        const rate =
+          totalTarget > 0 ? Math.round((totalRevenue / totalTarget) * 100) : 0;
         setOverallRate(rate);
       } catch (error) {
         console.error('Failed to fetch achievement data:', error);
@@ -135,9 +146,15 @@ const AchievementRate = ({ selectedYear }) => {
         </h2>
 
         {/* 전체 달성률 게이지 */}
-        <div className={`flex flex-col items-center p-4 rounded-lg ${getBgColor(overallRate)}`}>
+        <div
+          className={`flex flex-col items-center p-4 rounded-lg ${getBgColor(
+            overallRate,
+          )}`}
+        >
           <div className="text-xs text-gray-600 mb-1">연간 달성률</div>
-          <div className={`text-4xl font-bold ${getAchievementColor(overallRate)}`}>
+          <div
+            className={`text-4xl font-bold ${getAchievementColor(overallRate)}`}
+          >
             {overallRate}%
           </div>
         </div>
@@ -193,7 +210,8 @@ const AchievementRate = ({ selectedYear }) => {
       </ResponsiveContainer>
 
       <div className="text-xs text-gray-500 mt-2">
-        * 목표 매출: 월 {(MONTHLY_TARGET / 10000).toLocaleString()}만원 (설정 가능)
+        * 목표 매출: 월 {(MONTHLY_TARGET / 10000).toLocaleString()}만원 (설정
+        가능)
       </div>
     </div>
   );

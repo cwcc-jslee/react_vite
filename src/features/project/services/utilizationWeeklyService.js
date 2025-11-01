@@ -250,6 +250,8 @@ export const utilizationWeeklyService = {
       console.log('팀 이력 조회:', teamHistories.length, '건');
 
       // 4. 각 주별로 Work 데이터 조회 및 투입률 계산
+      const allWorks = []; // 전체 work 데이터 수집
+
       const weeklyData = await Promise.all(
         weeks.map(async (weekInfo, index) => {
           const workQuery = buildUtilizationQuery({
@@ -262,6 +264,9 @@ export const utilizationWeeklyService = {
           const workResponse = await apiService.get(`/works?${workQuery}`);
           const normalizedWork = normalizeResponse(workResponse);
           const works = convertKeysToCamelCase(normalizedWork.data || []);
+
+          // 전체 work 데이터에 추가
+          allWorks.push(...works);
 
           // 해당 주의 투입률 계산 (팀 이력 포함)
           const utilization = processWeekUtilization(works, users, weekInfo, userId, teamHistories);
@@ -328,11 +333,13 @@ export const utilizationWeeklyService = {
       console.log('주별 투입률 계산 완료');
       console.log('평균 투입률:', averageUtilization, '%');
       console.log('추세:', statistics.trend);
+      console.log('전체 work 데이터:', allWorks.length, '건');
 
       return {
         period: { start: startDate, end: endDate },
         weeks: weeklyData,
         statistics,
+        rawWorks: allWorks, // 전체 work 데이터 추가
       };
     } catch (error) {
       handleApiError(error, '주별 투입률 데이터를 불러오는 중 오류가 발생했습니다.');

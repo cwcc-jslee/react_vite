@@ -58,6 +58,11 @@ export const buildUtilizationQuery = (params) => {
         populate: {
           project: {
             fields: ['name'],
+            populate: {
+              customer: {
+                fields: ['name'],
+              },
+            },
           },
         },
       },
@@ -80,7 +85,11 @@ export const buildUtilizationQuery = (params) => {
  * 사용자 목록 조회 쿼리 (팀 정보 포함)
  */
 export const buildUsersQuery = (params = {}) => {
-  const { teamId = null, blocked = false, includeNonTrackedTeams = false } = params;
+  const {
+    teamId = null,
+    blocked = false,
+    includeNonTrackedTeams = false,
+  } = params;
 
   const filters = {
     blocked: { $eq: blocked },
@@ -148,7 +157,12 @@ export const buildTeamsQuery = (params = {}) => {
  * 특정 기간 내 팀 변경 이력 조회
  */
 export const buildUserTeamHistoriesQuery = (params = {}) => {
-  const { userId = null, teamId = null, startDate = null, endDate = null } = params;
+  const {
+    userId = null,
+    teamId = null,
+    startDate = null,
+    endDate = null,
+  } = params;
 
   const filters = {};
 

@@ -5,6 +5,7 @@ import { Card } from '@shared/components/ui/card/Card';
 import UtilizationTrendChart from '../components/charts/UtilizationTrendChart';
 import TeamComparisonChart from '../components/charts/TeamComparisonChart';
 import WeeklyUtilizationTable from '../components/tables/WeeklyUtilizationTable';
+import WorkDetailTable from '../components/tables/WorkDetailTable';
 import UtilizationPeriodFilter from '../components/filters/UtilizationPeriodFilter';
 import { useWeeklyUtilizationWithTeams } from '../hooks/useUtilization';
 import dayjs from 'dayjs';
@@ -15,8 +16,8 @@ import dayjs from 'dayjs';
  */
 const WeeklyUtilizationDashboardSection = () => {
   const [filters, setFilters] = useState({
-    periodPreset: '3months', // 기본값: 최근 3개월
-    startDate: dayjs().subtract(3, 'month').format('YYYY-MM-DD'),
+    periodPreset: '1month', // 기본값: 최근 1개월
+    startDate: dayjs().subtract(1, 'month').format('YYYY-MM-DD'),
     endDate: dayjs().format('YYYY-MM-DD'),
     teamId: null,
     userId: null,
@@ -33,6 +34,7 @@ const WeeklyUtilizationDashboardSection = () => {
   // 데이터 추출
   const weeklyData = weeklyUtilization?.data?.weeks || [];
   const statistics = weeklyUtilization?.data?.statistics || null;
+  const workData = weeklyUtilization?.data?.rawWorks || [];
 
   // 로딩 상태
   if (isLoading) {
@@ -175,6 +177,9 @@ const WeeklyUtilizationDashboardSection = () => {
 
       {/* 주별 데이터 테이블 */}
       <WeeklyUtilizationTable weeklyData={weeklyData} />
+
+      {/* 작업 상세 데이터 테이블 */}
+      <WorkDetailTable workData={workData} filters={filters} />
     </div>
   );
 };
