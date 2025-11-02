@@ -289,3 +289,198 @@ export const buildSfaStatsQuery = (dateRanges, { pagination } = {}) => {
 
   return qs.stringify(queryObj, { encodeValuesOnly: true });
 };
+
+/**
+ * 매출정보 페이지 목록 조회를 위한 쿼리 파라미터 생성
+ * @param {Object} params - { fiscalYear, keyword, divisionIds, itemIds, typeIds, sortBy, sortOrder, page, pageSize }
+ */
+export const buildSalesInformationQuery = (params) => {
+  const {
+    fiscalYear = 114, // 기본값: 25년 (id: 114)
+    keyword = '',
+    divisionIds = [],
+    itemIds = [],
+    typeIds = [],
+    sortBy = 'created_at',
+    sortOrder = 'desc',
+    page = 1,
+    pageSize = 20,
+  } = params;
+
+  // 기본 필터 구성
+  const baseFilters = [
+    { is_deleted: { $eq: false } },
+    { is_failed: { $eq: false } },
+  ];
+
+  // FY 필터 (fiscalYear가 있을 때만 추가)
+  if (fiscalYear) {
+    baseFilters.push({
+      fy: { id: { $eq: fiscalYear } },
+    });
+  }
+
+  // 키워드 검색 (고객명 또는 매출건명)
+  if (keyword) {
+    baseFilters.push({
+      $or: [
+        { name: { $containsi: keyword } },
+        { customer: { name: { $containsi: keyword } } },
+      ],
+    });
+  }
+
+  // 사업부 필터
+  if (divisionIds.length > 0) {
+    baseFilters.push({
+      division: { id: { $in: divisionIds } },
+    });
+  }
+
+  // 매출품목 필터
+  if (itemIds.length > 0) {
+    baseFilters.push({
+      sfa_item: { id: { $in: itemIds } },
+    });
+  }
+
+  // 매출유형 필터
+  if (typeIds.length > 0) {
+    baseFilters.push({
+      sfa_type: { id: { $in: typeIds } },
+    });
+  }
+
+  // 쿼리 구성
+  const query = {
+    filters: {
+      $and: baseFilters,
+    },
+    fields: ['name', 'total_amount', 'created_at'],
+    populate: {
+      customer: { fields: ['name'] },
+      division: { fields: ['name'] },
+      sfa_item: { fields: ['name'] },
+      sfa_type: { fields: ['name'] },
+      sfa_by_payments: {
+        fields: [
+          'payment_date',
+          'expected_date',
+          'amount',
+          'payment_method',
+          'note',
+        ],
+      },
+    },
+    sort: [`${sortBy}:${sortOrder}`],
+    pagination: {
+      page,
+      pageSize,
+    },
+  };
+
+  return qs.stringify(query, { encodeValuesOnly: true });
+};
+
+/**
+ * 매출정보 요약 통계 조회를 위한 쿼리 파라미터 생성
+ * @param {number} fiscalYear - FY id (기본값: 114 = 25년)
+ */
+export const buildSalesInformationSummaryQuery = (fiscalYear = 114) => {
+  // 기본 필터 구성
+  const baseFilters = [
+    { is_deleted: { $eq: false } },
+    { is_failed: { $eq: false } },
+  ];
+
+  // FY 필터 (fiscalYear가 있을 때만 추가)
+  if (fiscalYear) {
+    baseFilters.push({
+      fy: { id: { $eq: fiscalYear } },
+    });
+  }
+
+  const query = {
+    filters: {
+      $and: baseFilters,
+    },
+    fields: ['total_amount'],
+    populate: {
+      sfa_by_payments: {
+        fields: ['id'],
+      },
+    },
+    pagination: {
+      start: 0,
+      limit: 10000,
+    },
+  };
+
+  return qs.stringify(query, { encodeValuesOnly: true });
+};
+
+/**
+ * 최근 N일 신규등록 매출 조회를 위한 쿼리 파라미터 생성
+ * @param {number} days - 최근 며칠 (기본값: 30)
+ */
+export const buildRecentSalesQuery = (days = 30) => {
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  const formattedStartDate = startDate.toISOString().split('T')[0];
+
+  const query = {
+    filters: {
+      $and: [
+        { is_deleted: { $eq: false } },
+        { is_failed: { $eq: false } },
+        {
+          created_at: {
+            $gte: formattedStartDate,
+          },
+        },
+      ],
+    },
+    fields: ['id'],
+    pagination: {
+      start: 0,
+      limit: 10000,
+    },
+  };
+
+  return qs.stringify(query, { encodeValuesOnly: true });
+};
+
+/**
+ * 상위 N개 고객사별 매출액 조회를 위한 쿼리 파라미터 생성
+ * @param {number} fiscalYear - FY id (기본값: 114 = 25년)
+ */
+export const buildTopCustomersQuery = (fiscalYear = 114) => {
+  // 기본 필터 구성
+  const baseFilters = [
+    { is_deleted: { $eq: false } },
+    { is_failed: { $eq: false } },
+  ];
+
+  // FY 필터 (fiscalYear가 있을 때만 추가)
+  if (fiscalYear) {
+    baseFilters.push({
+      fy: { id: { $eq: fiscalYear } },
+    });
+  }
+
+  const query = {
+    filters: {
+      $and: baseFilters,
+    },
+    fields: ['total_amount'],
+    populate: {
+      customer: { fields: ['name'] },
+    },
+    pagination: {
+      start: 0,
+      limit: 10000,
+    },
+  };
+
+  return qs.stringify(query, { encodeValuesOnly: true });
+};

@@ -20,12 +20,14 @@ import SfaTable from '../components/tables/SfaTable';
 // import SfaSubMenu from '../components/SfaSubMenu';
 import SfaSearchForm from '../components/forms/SfaSearchForm';
 import SfaAnalyticsLayout from '../layouts/SfaAnalyticsLayout';
+import SalesInformationLayout from '../layouts/SalesInformationLayout';
 
 /**
  * SFA 메인 컨테이너 컴포넌트
  * 페이지 레이아웃과 주요 컴포넌트들을 관리
  * - SfaAddLayout: 신규등록 모드 (add)
  * - SfaViewEditLayout: 상세보기/수정 모드 (view/edit)
+ * - SalesInformationLayout: 매출정보 페이지
  */
 const SfaContainer = React.memo(() => {
   const dispatch = useDispatch();
@@ -64,6 +66,7 @@ const SfaContainer = React.memo(() => {
         {components.monthlyStatus && <SfaQuarterlyOverview />}
         {components.sfaTable && <SfaTable />}
         {components.analyticsLayout && <SfaAnalyticsLayout />}
+        {components.salesInformationLayout && <SalesInformationLayout />}
       </Section>
 
       {/* 💡 조건부 마운트 방식 - 컨테이너에서 조건 검사 */}

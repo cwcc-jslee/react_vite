@@ -140,16 +140,18 @@ export const useCodebook = (codeTypes) => {
     codeTypes,
   );
 
-  // 데이터가 없을 때 자동으로 API 호출
-  if (!isLoading && !isDataComplete) {
-    console.log(
-      '🔥 [useCodebook] fetchData 호출됨 - isLoading:',
-      isLoading,
-      'isDataComplete:',
-      isDataComplete,
-    );
-    fetchData();
-  }
+  // 데이터가 없을 때 자동으로 API 호출 - useEffect로 감싸서 렌더링 중 상태 업데이트 방지
+  React.useEffect(() => {
+    if (!isLoading && !isDataComplete) {
+      console.log(
+        '🔥 [useCodebook] fetchData 호출됨 - isLoading:',
+        isLoading,
+        'isDataComplete:',
+        isDataComplete,
+      );
+      fetchData();
+    }
+  }, [isLoading, isDataComplete, fetchData]);
 
   // 상태 변경 추적
   React.useEffect(() => {

@@ -146,6 +146,30 @@ export const PAGE_MENUS = {
           },
         },
       },
+      salesInformation: {
+        label: '매출정보',
+        permissions: ['user'],
+        visible: true,
+        config: {
+          layout: 'salesInformation',
+          sections: {
+            sfaHeader: true,
+            salesInformation: true,
+            sfaContent: true,
+          },
+          components: {
+            monthlyStatus: false,
+            sfaTable: false,
+            searchForm: false,
+            forecastTable: false,
+            analyticsLayout: false,
+            salesInformationLayout: true,
+          },
+          drawer: {
+            visible: false,
+          },
+        },
+      },
     },
   },
   //
