@@ -79,15 +79,39 @@ const TeamProjectTable = ({ projects }) => {
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-gray-50 border-b border-gray-200">
-            <th className="px-4 py-3 text-left font-semibold text-gray-700">프로젝트명</th>
-            <th className="px-4 py-3 text-center font-semibold text-gray-700">전주</th>
-            <th className="px-4 py-3 text-center font-semibold text-gray-700">금주</th>
-            <th className="px-4 py-3 text-center font-semibold text-gray-700">증감</th>
-            <th className="px-4 py-3 text-center font-semibold text-gray-700">투입인원</th>
-            <th className="px-4 py-3 text-center font-semibold text-gray-700">평균h</th>
-            <th className="px-4 py-3 text-center font-semibold text-gray-700">Task</th>
-            <th className="px-4 py-3 text-center font-semibold text-gray-700">Work</th>
-            <th className="px-4 py-3 text-center font-semibold text-gray-700">상태</th>
+            <th className="px-4 py-3 text-left font-semibold text-gray-700">
+              고객사
+            </th>
+            <th className="px-4 py-3 text-left font-semibold text-gray-700">
+              프로젝트명
+            </th>
+            <th className="px-4 py-3 text-center font-semibold text-gray-700">
+              전주
+            </th>
+            <th className="px-4 py-3 text-center font-semibold text-gray-700">
+              금주
+            </th>
+            <th className="px-4 py-3 text-center font-semibold text-gray-700">
+              증감
+            </th>
+            <th className="px-4 py-3 text-center font-semibold text-gray-700">
+              투입인원
+            </th>
+            <th className="px-4 py-3 text-center font-semibold text-gray-700">
+              평균h
+            </th>
+            <th className="px-4 py-3 text-center font-semibold text-gray-700">
+              Task
+            </th>
+            <th className="px-4 py-3 text-center font-semibold text-gray-700">
+              Work
+            </th>
+            <th className="px-4 py-3 text-center font-semibold text-gray-700">
+              진행률
+            </th>
+            <th className="px-4 py-3 text-center font-semibold text-gray-700">
+              상태
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -96,9 +120,16 @@ const TeamProjectTable = ({ projects }) => {
               key={project.projectId}
               className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
             >
+              {/* 고객사 */}
+              <td className="px-4 py-3">
+                <div className="text-gray-700">{project.customerName}</div>
+              </td>
+
               {/* 프로젝트명 */}
               <td className="px-4 py-3">
-                <div className="font-medium text-gray-800">{project.projectName}</div>
+                <div className="font-medium text-gray-800">
+                  {project.projectName}
+                </div>
               </td>
 
               {/* 전주 */}
@@ -108,7 +139,9 @@ const TeamProjectTable = ({ projects }) => {
 
               {/* 금주 */}
               <td className="px-4 py-3 text-center">
-                <div className="font-semibold text-gray-800">{project.hours.thisWeek}h</div>
+                <div className="font-semibold text-gray-800">
+                  {project.hours.thisWeek}h
+                </div>
               </td>
 
               {/* 증감 */}
@@ -129,23 +162,26 @@ const TeamProjectTable = ({ projects }) => {
                         ? getTrendText(project.hours.trend)
                         : project.hours.trend === 'end'
                         ? getTrendText(project.hours.trend)
-                        : `${project.hours.change > 0 ? '+' : ''}${project.hours.change}h`}
+                        : `${project.hours.change > 0 ? '+' : ''}${
+                            project.hours.change
+                          }h`}
                     </span>
                   </div>
-                  {project.hours.trend !== 'new' && project.hours.trend !== 'end' && (
-                    <span
-                      className={`text-xs ${
-                        project.hours.changeRate > 0
-                          ? 'text-red-500'
-                          : project.hours.changeRate < 0
-                          ? 'text-blue-500'
-                          : 'text-gray-500'
-                      }`}
-                    >
-                      {project.hours.changeRate > 0 ? '+' : ''}
-                      {project.hours.changeRate}%
-                    </span>
-                  )}
+                  {project.hours.trend !== 'new' &&
+                    project.hours.trend !== 'end' && (
+                      <span
+                        className={`text-xs ${
+                          project.hours.changeRate > 0
+                            ? 'text-red-500'
+                            : project.hours.changeRate < 0
+                            ? 'text-blue-500'
+                            : 'text-gray-500'
+                        }`}
+                      >
+                        {project.hours.changeRate > 0 ? '+' : ''}
+                        {project.hours.changeRate}%
+                      </span>
+                    )}
                 </div>
               </td>
 
@@ -158,10 +194,13 @@ const TeamProjectTable = ({ projects }) => {
                   {project.users.change !== 0 && (
                     <span
                       className={`text-xs ${
-                        project.users.change > 0 ? 'text-red-500' : 'text-blue-500'
+                        project.users.change > 0
+                          ? 'text-red-500'
+                          : 'text-blue-500'
                       }`}
                     >
-                      {project.users.change > 0 ? '+' : ''}{project.users.change}
+                      {project.users.change > 0 ? '+' : ''}
+                      {project.users.change}
                     </span>
                   )}
                 </div>
@@ -174,45 +213,47 @@ const TeamProjectTable = ({ projects }) => {
                 </div>
               </td>
 
-              {/* Task 진행 */}
-              <td className="px-4 py-3">
-                <div className="flex flex-col items-center gap-1">
-                  <div className="text-xs text-gray-600">
-                    {project.taskProgress.completed}/{project.taskProgress.total}
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full ${getProgressBarColor(project.taskProgress.rate)}`}
-                      style={{ width: `${project.taskProgress.rate}%` }}
-                    />
-                  </div>
-                  <div className="text-xs font-medium text-gray-700">
-                    {project.taskProgress.rate}%
-                  </div>
+              {/* Task (금주 기준 작업이 등록된 task 수량) */}
+              <td className="px-4 py-3 text-center">
+                <div className="font-medium text-gray-800">
+                  {project.taskProgress.total}
                 </div>
               </td>
 
-              {/* Work 완료 */}
+              {/* Work (금주 기준 등록된 Work 수량) */}
+              <td className="px-4 py-3 text-center">
+                <div className="font-medium text-gray-800">
+                  {project.workProgress.total}
+                </div>
+              </td>
+
+              {/* 프로젝트 진행률 (가중평균) */}
               <td className="px-4 py-3">
                 <div className="flex flex-col items-center gap-1">
-                  <div className="text-xs text-gray-600">
-                    {project.workProgress.completed}/{project.workProgress.total}
+                  <div className="text-xs text-gray-500">
+                    가중평균
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
-                      className={`h-2 rounded-full ${getProgressBarColor(project.workProgress.rate)}`}
-                      style={{ width: `${project.workProgress.rate}%` }}
+                      className={`h-2 rounded-full ${getProgressBarColor(
+                        project.projectProgress || 0,
+                      )}`}
+                      style={{ width: `${project.projectProgress || 0}%` }}
                     />
                   </div>
-                  <div className="text-xs font-medium text-gray-700">
-                    {project.workProgress.rate}%
+                  <div className="text-xs font-medium text-blue-700">
+                    {project.projectProgress || 0}%
                   </div>
                 </div>
               </td>
 
               {/* 상태 */}
               <td className="px-4 py-3 text-center">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                    project.status,
+                  )}`}
+                >
                   {getStatusText(project.status)}
                 </span>
               </td>

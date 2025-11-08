@@ -7,6 +7,8 @@ import { apiService } from '@shared/api/apiService';
 import { handleApiError } from '@shared/api/errorHandlers';
 import { normalizeResponse } from '@shared/api/normalize';
 import { convertKeysToCamelCase } from '@shared/utils/transformUtils';
+import { calculateProjectProgress } from '../utils/projectProgressUtils';
+import { buildTeamWeeklyProgressQuery } from '../api/queries';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import weekOfYear from 'dayjs/plugin/weekOfYear';
@@ -131,7 +133,59 @@ const groupWorksByProject = (works) => {
 };
 
 /**
- * Task 진행률 계산
+ * 여러 프로젝트의 진행률을 한 번에 조회 (개선된 방식)
+ * @param {Array<number>} projectIds - 프로젝트 ID 배열
+ * @returns {Object} - 프로젝트별 진행률 맵 { projectId: { completed, total, rate, projectProgress } }
+ */
+const fetchProjectsProgress = async (projectIds) => {
+  if (!projectIds || projectIds.length === 0) {
+    return {};
+  }
+
+  try {
+    // api/queries.js의 쿼리 빌더 사용
+    const query = buildTeamWeeklyProgressQuery(projectIds);
+
+    console.log('📡 /projects API 호출');
+    console.log('  - 요청 프로젝트 ID 수:', projectIds.length);
+    console.log('  - 요청 프로젝트 IDs:', projectIds);
+
+    const response = await apiService.get(`/projects?${query}`);
+    const normalized = normalizeResponse(response);
+    const projects = convertKeysToCamelCase(normalized.data || []);
+
+    console.log('  - 응답 프로젝트 수:', projects.length);
+    console.log('  - 응답 프로젝트 IDs:', projects.map(p => p.id));
+    console.log('  - 응답 프로젝트 목록:', projects.map(p => ({ id: p.id, name: p.name, taskCount: p.projectTasks?.length || 0 })));
+
+    const progressMap = {};
+    projects.forEach((project) => {
+      const tasks = project.projectTasks || [];
+      const total = tasks.length;
+      const completed = tasks.filter(
+        (t) => t.status === 'completed' || t.status === 'done'
+      ).length;
+      const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+      const projectProgress = calculateProjectProgress(tasks);
+
+      progressMap[project.id] = {
+        completed,
+        total,
+        rate: completionRate,
+        projectProgress,
+      };
+    });
+
+    return progressMap;
+  } catch (error) {
+    console.error('프로젝트 진행률 일괄 조회 실패:', error);
+    console.error('에러 상세:', error.response?.data || error.message);
+    return {};
+  }
+};
+
+/**
+ * Task 진행률 계산 (개별 프로젝트 - deprecated, fetchProjectsProgress 사용 권장)
  */
 const calculateTaskProgress = async (projectId) => {
   try {
@@ -208,6 +262,19 @@ export const teamWeeklyUtilizationService = {
             populate: {
               project: {
                 fields: ['name'],
+                populate: {
+                  customer: {
+                    fields: ['name'],
+                  },
+                  sfa: {
+                    fields: ['name'],
+                    populate: {
+                      customer: {
+                        fields: ['name'],
+                      },
+                    },
+                  },
+                },
               },
             },
           },
@@ -257,6 +324,19 @@ export const teamWeeklyUtilizationService = {
             populate: {
               project: {
                 fields: ['name'],
+                populate: {
+                  customer: {
+                    fields: ['name'],
+                  },
+                  sfa: {
+                    fields: ['name'],
+                    populate: {
+                      customer: {
+                        fields: ['name'],
+                      },
+                    },
+                  },
+                },
               },
             },
           },
@@ -331,9 +411,13 @@ export const teamWeeklyUtilizationService = {
         const projectId = work.projectTask?.project?.id;
         if (projectId) {
           if (!teamMap[teamId].thisWeek.projects[projectId]) {
+            const project = work.projectTask.project;
+            const customerName = project.sfa?.customer?.name || project.customer?.name || '-';
+
             teamMap[teamId].thisWeek.projects[projectId] = {
               projectId,
-              projectName: work.projectTask.project.name,
+              projectName: project.name,
+              customerName,
               hours: 0,
               users: new Set(),
               works: [],
@@ -383,9 +467,13 @@ export const teamWeeklyUtilizationService = {
         const projectId = work.projectTask?.project?.id;
         if (projectId) {
           if (!teamMap[teamId].lastWeek.projects[projectId]) {
+            const project = work.projectTask.project;
+            const customerName = project.sfa?.customer?.name || project.customer?.name || '-';
+
             teamMap[teamId].lastWeek.projects[projectId] = {
               projectId,
-              projectName: work.projectTask.project.name,
+              projectName: project.name,
+              customerName,
               hours: 0,
               users: new Set(),
               works: [],
@@ -396,65 +484,132 @@ export const teamWeeklyUtilizationService = {
         }
       });
 
-      // 4. 팀 정보 조회 (총 인원 수)
-      for (const teamId in teamMap) {
+      // 4. 모든 고유 프로젝트 ID 추출 (금주 + 전주)
+      const allProjectIds = new Set();
+      Object.values(teamMap).forEach((team) => {
+        // 금주 프로젝트 ID 추가
+        Object.keys(team.thisWeek.projects).forEach((projectId) => {
+          allProjectIds.add(Number(projectId));
+        });
+        // 전주 프로젝트 ID 추가
+        Object.keys(team.lastWeek.projects).forEach((projectId) => {
+          allProjectIds.add(Number(projectId));
+        });
+      });
+
+      console.log('===== 프로젝트 진행률 조회 디버깅 =====');
+      console.log('추출된 고유 프로젝트 ID 수:', allProjectIds.size);
+      console.log('프로젝트 ID 목록:', Array.from(allProjectIds));
+
+      // 5. 프로젝트 진행률 일괄 조회 (1회 API 호출로 최적화)
+      const progressMap = await fetchProjectsProgress(Array.from(allProjectIds));
+      console.log('API 응답으로 받은 프로젝트 수:', Object.keys(progressMap).length);
+      console.log('API 응답 프로젝트 ID 목록:', Object.keys(progressMap));
+
+      // 누락된 프로젝트 확인
+      const missingProjectIds = Array.from(allProjectIds).filter(
+        id => !progressMap[id]
+      );
+      if (missingProjectIds.length > 0) {
+        console.warn('⚠️ API 응답에서 누락된 프로젝트 ID:', missingProjectIds);
+      }
+      console.log('=====================================');
+
+      // 6. 팀 정보 조회 (총 인원 수) - 병렬 처리
+      const teamIds = Object.keys(teamMap);
+      const teamUserPromises = teamIds.map(async (teamId) => {
         try {
           const userQuery = `filters[team][id][$eq]=${teamId}&filters[blocked][$eq]=false`;
           const userResponse = await apiService.get(`/users?${userQuery}`);
           const users = userResponse.data || [];
-          teamMap[teamId].totalMembers = users.length;
-          teamMap[teamId].availableMembers = users.length;
+          return { teamId, userCount: users.length };
         } catch (error) {
           console.warn('팀 인원 조회 실패:', teamId, error);
+          return { teamId, userCount: 0 };
         }
-      }
+      });
 
-      // 5. 프로젝트별 상세 데이터 구성 (Task/Work 진행률 포함)
-      const teams = await Promise.all(
-        Object.values(teamMap).map(async (team) => {
-          const thisWeekProjects = Object.values(team.thisWeek.projects);
-          const lastWeekProjects = team.lastWeek.projects;
+      const teamUserResults = await Promise.all(teamUserPromises);
+      teamUserResults.forEach(({ teamId, userCount }) => {
+        teamMap[teamId].totalMembers = userCount;
+        teamMap[teamId].availableMembers = userCount;
+      });
 
-          const projects = await Promise.all(
-            thisWeekProjects.map(async (project) => {
-              const lastWeekProject = lastWeekProjects[project.projectId];
-              const lastWeekHours = lastWeekProject?.hours || 0;
-              const lastWeekUserCount = lastWeekProject?.users.size || 0;
+      // 7. 프로젝트별 상세 데이터 구성 (Task/Work 진행률 포함)
+      const teams = Object.values(teamMap).map((team) => {
+        const thisWeekProjects = Object.values(team.thisWeek.projects);
+        const lastWeekProjects = team.lastWeek.projects;
 
-              const taskProgress = await calculateTaskProgress(project.projectId);
-              const workProgress = calculateWorkProgress(project.works);
+        const projects = thisWeekProjects.map((project) => {
+          const lastWeekProject = lastWeekProjects[project.projectId];
+          const lastWeekHours = lastWeekProject?.hours || 0;
+          const lastWeekUserCount = lastWeekProject?.users.size || 0;
 
-              return {
-                projectId: project.projectId,
-                projectName: project.projectName,
-                hours: {
-                  lastWeek: Math.round(lastWeekHours * 10) / 10,
-                  thisWeek: Math.round(project.hours * 10) / 10,
-                  change: Math.round((project.hours - lastWeekHours) * 10) / 10,
-                  changeRate: calculateChangeRate(project.hours, lastWeekHours),
-                  trend: getTrend(project.hours, lastWeekHours),
-                },
-                users: {
-                  lastWeek: lastWeekUserCount,
-                  thisWeek: project.users.size,
-                  change: project.users.size - lastWeekUserCount,
-                },
-                averageHoursPerUser: project.users.size > 0
-                  ? Math.round((project.hours / project.users.size) * 10) / 10
-                  : 0,
-                taskProgress,
-                workProgress,
-                status: taskProgress.rate >= 60 ? 'normal' : taskProgress.rate >= 30 ? 'warning' : 'critical',
-              };
-            })
-          );
+          // 일괄 조회한 진행률 맵에서 데이터 가져오기 (프로젝트 진행률용)
+          const progressData = progressMap[project.projectId] || {
+            completed: 0,
+            total: 0,
+            rate: 0,
+            projectProgress: 0,
+          };
 
-          // 전주에만 있고 금주에 없는 프로젝트 추가 (종료된 프로젝트)
-          const endedProjects = Object.values(lastWeekProjects)
-            .filter((lastProject) => !team.thisWeek.projects[lastProject.projectId])
-            .map((lastProject) => ({
+          // 금주 기준 works에 등록된 고유 project_task 수 계산
+          const uniqueTaskIds = new Set();
+          project.works.forEach((work) => {
+            if (work.projectTask?.id) {
+              uniqueTaskIds.add(work.projectTask.id);
+            }
+          });
+          const thisWeekTaskCount = uniqueTaskIds.size;
+
+          const workProgress = calculateWorkProgress(project.works);
+
+          return {
+            projectId: project.projectId,
+            projectName: project.projectName,
+            customerName: project.customerName,
+            hours: {
+              lastWeek: Math.round(lastWeekHours * 10) / 10,
+              thisWeek: Math.round(project.hours * 10) / 10,
+              change: Math.round((project.hours - lastWeekHours) * 10) / 10,
+              changeRate: calculateChangeRate(project.hours, lastWeekHours),
+              trend: getTrend(project.hours, lastWeekHours),
+            },
+            users: {
+              lastWeek: lastWeekUserCount,
+              thisWeek: project.users.size,
+              change: project.users.size - lastWeekUserCount,
+            },
+            averageHoursPerUser: project.users.size > 0
+              ? Math.round((project.hours / project.users.size) * 10) / 10
+              : 0,
+            taskProgress: {
+              completed: progressData.completed,
+              total: thisWeekTaskCount, // 금주 works 기준 고유 task 수
+              rate: progressData.rate,
+            },
+            projectProgress: progressData.projectProgress,
+            workProgress,
+            status: progressData.rate >= 60 ? 'normal' : progressData.rate >= 30 ? 'warning' : 'critical',
+          };
+        });
+
+        // 전주에만 있고 금주에 없는 프로젝트 추가 (종료된 프로젝트)
+        const endedProjects = Object.values(lastWeekProjects)
+          .filter((lastProject) => !team.thisWeek.projects[lastProject.projectId])
+          .map((lastProject) => {
+            // 종료된 프로젝트도 실제 진행률 데이터 사용
+            const progressData = progressMap[lastProject.projectId] || {
+              completed: 0,
+              total: 0,
+              rate: 0,
+              projectProgress: 0,
+            };
+
+            return {
               projectId: lastProject.projectId,
               projectName: lastProject.projectName,
+              customerName: lastProject.customerName,
               hours: {
                 lastWeek: Math.round(lastProject.hours * 10) / 10,
                 thisWeek: 0,
@@ -468,41 +623,46 @@ export const teamWeeklyUtilizationService = {
                 change: -lastProject.users.size,
               },
               averageHoursPerUser: 0,
-              taskProgress: { completed: 0, total: 0, rate: 0 },
-              workProgress: { completed: 0, total: 0, rate: 0 },
-              status: 'normal',
-            }));
-
-          const allProjects = [...projects, ...endedProjects];
-
-          const thisWeekHours = Math.round(team.thisWeek.totalHours * 10) / 10;
-          const lastWeekHours = Math.round(team.lastWeek.totalHours * 10) / 10;
-
-          return {
-            teamId: team.teamId,
-            teamName: team.teamName,
-            totalMembers: team.totalMembers,
-            availableMembers: team.availableMembers,
-            weeklyStats: {
-              projectCount: thisWeekProjects.length,
-              hours: {
-                lastWeek: lastWeekHours,
-                thisWeek: thisWeekHours,
-                change: Math.round((thisWeekHours - lastWeekHours) * 10) / 10,
-                changeRate: calculateChangeRate(thisWeekHours, lastWeekHours),
+              taskProgress: {
+                completed: progressData.completed,
+                total: 0, // 금주 works가 없으므로 0
+                rate: progressData.rate,
               },
-              activeUsers: team.thisWeek.users.size,
-              averageHoursPerUser: team.thisWeek.users.size > 0
-                ? Math.round((thisWeekHours / team.thisWeek.users.size) * 10) / 10
-                : 0,
-              utilizationRate: team.availableMembers > 0
-                ? Math.round((thisWeekHours / (team.availableMembers * 40)) * 100)
-                : 0,
+              projectProgress: progressData.projectProgress,
+              workProgress: { completed: 0, total: 0, rate: 0 },
+              status: progressData.rate >= 60 ? 'normal' : progressData.rate >= 30 ? 'warning' : 'critical',
+            };
+          });
+
+        const allProjects = [...projects, ...endedProjects];
+
+        const thisWeekHours = Math.round(team.thisWeek.totalHours * 10) / 10;
+        const lastWeekHours = Math.round(team.lastWeek.totalHours * 10) / 10;
+
+        return {
+          teamId: team.teamId,
+          teamName: team.teamName,
+          totalMembers: team.totalMembers,
+          availableMembers: team.availableMembers,
+          weeklyStats: {
+            projectCount: thisWeekProjects.length,
+            hours: {
+              lastWeek: lastWeekHours,
+              thisWeek: thisWeekHours,
+              change: Math.round((thisWeekHours - lastWeekHours) * 10) / 10,
+              changeRate: calculateChangeRate(thisWeekHours, lastWeekHours),
             },
-            projects: allProjects.sort((a, b) => b.hours.thisWeek - a.hours.thisWeek),
-          };
-        })
-      );
+            activeUsers: team.thisWeek.users.size,
+            averageHoursPerUser: team.thisWeek.users.size > 0
+              ? Math.round((thisWeekHours / team.thisWeek.users.size) * 10) / 10
+              : 0,
+            utilizationRate: team.availableMembers > 0
+              ? Math.round((thisWeekHours / (team.availableMembers * 40)) * 100)
+              : 0,
+          },
+          projects: allProjects.sort((a, b) => b.hours.thisWeek - a.hours.thisWeek),
+        };
+      });
 
       // 6. 전체 요약 계산
       const totalProjects = new Set();

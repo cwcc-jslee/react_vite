@@ -63,10 +63,84 @@ src/features/{feature}/
 ├── context/       # React Context providers
 ├── hooks/         # Custom hooks
 ├── pages/         # Page components
+├── containers/    # Layout orchestrators (read Redux state, render layouts)
+├── layouts/       # Page layout components (one per menu)
+├── sections/      # Page sections (composed into layouts)
 ├── services/      # Business logic
 ├── store/         # Redux slices (if feature-specific)
 └── utils/         # Utility functions
 ```
+
+### Layout and Navigation Structure
+
+#### File Organization
+```
+src/
+├── app/
+│   └── App.jsx                          # Main routing configuration
+├── shared/
+│   ├── components/ui/layout/
+│   │   ├── DefaultLayout.jsx            # Root layout (header, sidebar, content)
+│   │   └── BreadcrumbWithMenu.jsx       # Menu & sub-menu renderer
+│   └── constants/
+│       └── navigation.jsx               # Navigation config (sidebar, page menus, sub-menus)
+├── store/slices/
+│   └── uiSlice.js                       # UI state (page, menu, layout)
+└── features/{feature}/
+    ├── pages/{Feature}Page.jsx          # Feature entry point
+    ├── containers/{Feature}Container.jsx # Conditional layout rendering
+    └── layouts/{Feature}*Layout.jsx     # Specific layouts per menu
+```
+
+#### Navigation Hierarchy (3 levels)
+
+**Level 1: Sidebar Menu** (`navigation.jsx:SIDEBAR_ITEMS`)
+- SFA, PROJECT, ToDo, CUSTOMER, CONTACT
+
+**Level 2: Page Menus** (`navigation.jsx:PAGE_MENUS` → horizontal tabs)
+- **SFA**: 현황, 상세조회, 매출예측, 매출분석, 매출정보
+- **Project**: 프로젝트, 투입률, 팀별실적, 상세조회
+- **Customer**: 현황
+- **Todo**: 오늘할일, 할일검색, 최근작업
+
+**Level 3: Sub-Menus** (`navigation.jsx:PAGE_SUB_MENUS` → right-aligned)
+- **Project Detail**: 테이블, 보드, 작업, 타임라인, 차트
+
+#### Component Flow Pattern
+```
+User clicks menu
+    ↓
+BreadcrumbWithMenu.jsx → handleMenuClick()
+    ↓
+Redux uiSlice → changePageMenu() action
+    ↓
+Update state: { page, menu, layout }
+    ↓
+FeatureContainer reads Redux state
+    ↓
+Conditional render: {layout === 'list' && <ListLayout />}
+```
+
+**Example: Project Container** (`ProjectContainer.jsx`)
+```jsx
+const { layout } = useSelector(state => state.ui.pageLayout);
+return (
+  <>
+    {layout === 'list' && <ProjectListLayout />}
+    {layout === 'detail' && <ProjectDetailLayout />}
+    {layout === 'utilization' && <ProjectUtilizationLayout />}
+    {layout === 'teamWeekly' && <TeamWeeklyUtilizationLayout />}
+  </>
+);
+```
+
+#### Key Files
+- `DefaultLayout.jsx`: Wraps all authenticated pages
+- `BreadcrumbWithMenu.jsx`: Renders breadcrumb, page menus, sub-menus
+- `navigation.jsx`: Defines all menu configurations
+- `uiSlice.js`: Manages page/menu/layout state
+- Feature Container: Orchestrates layout rendering based on Redux state
+- Feature Layouts: Implement specific UI for each menu
 
 ### Path Aliases (Vite Config)
 - `@` → `./src`

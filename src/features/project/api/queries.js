@@ -326,3 +326,42 @@ export const buildProjectTaskListQuery = (params) => {
 
   return qs.stringify(query, { encodeValuesOnly: true });
 };
+
+/**
+ * 팀별 주간 실적 - 프로젝트 진행률 일괄 조회를 위한 쿼리 파라미터 생성
+ * @param {Array<number>} projectIds - 프로젝트 ID 배열
+ * @returns {string} - qs로 인코딩된 쿼리 스트링
+ */
+export const buildTeamWeeklyProgressQuery = (projectIds) => {
+  if (!projectIds || projectIds.length === 0) {
+    return '';
+  }
+
+  const query = {
+    filters: {
+      id: { $in: projectIds },
+    },
+    fields: ['id', 'name'],
+    populate: {
+      project_tasks: {
+        // 팀별실적에서는 모든 태스크 조회 (is_scheduled 필터 제거)
+        fields: [
+          // 'status',
+          'is_progress',
+          'planning_time_data',
+        ],
+        populate: {
+          task_progress: {
+            fields: ['code'],
+          },
+        },
+      },
+    },
+    pagination: {
+      start: 0,
+      limit: 100,
+    },
+  };
+
+  return qs.stringify(query, { encodeValuesOnly: true });
+};

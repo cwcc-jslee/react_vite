@@ -17,7 +17,11 @@ const SalesInformationLayout = () => {
   const [summary, setSummary] = useState({
     totalSfaCount: 0,
     totalPaymentCount: 0,
+    confirmedPaymentCount: 0,
+    scheduledPaymentCount: 0,
     totalAmount: 0,
+    confirmedAmount: 0,
+    scheduledAmount: 0,
     newSfaCountLast30Days: 0,
   });
   const [topCustomers, setTopCustomers] = useState([]);
@@ -33,7 +37,7 @@ const SalesInformationLayout = () => {
     fiscalYear: 114, // 기본값: 25년 (id: 114)
     keyword: '',
     salesTypeIds: [],
-    sortBy: 'created_at',
+    sortBy: 'createdAt',
     sortOrder: 'desc',
   });
 
@@ -244,20 +248,30 @@ const SalesInformationLayout = () => {
       <SalesInformationFilter onSearch={handleSearch} onReset={handleReset} />
 
       {/* 요약 카드 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <SummaryCard
           title="총 매출건수"
           value={`${summary.totalSfaCount}건`}
           subtitle={`(${getFyName(filters.fiscalYear)})`}
         />
         <SummaryCard
-          title="총 결제건수"
-          value={`${summary.totalPaymentCount}건`}
+          title="확정결제건수"
+          value={`${summary.confirmedPaymentCount}건`}
           subtitle={`(${getFyName(filters.fiscalYear)})`}
         />
         <SummaryCard
-          title="총 매출액"
-          value={`${formatAmount(summary.totalAmount)}천원`}
+          title="예정결제건수"
+          value={`${summary.scheduledPaymentCount}건`}
+          subtitle={`(${getFyName(filters.fiscalYear)})`}
+        />
+        <SummaryCard
+          title="확정매출액"
+          value={`${formatAmount(summary.confirmedAmount)}천원`}
+          subtitle={`(${getFyName(filters.fiscalYear)})`}
+        />
+        <SummaryCard
+          title="예정매출액"
+          value={`${formatAmount(summary.scheduledAmount)}천원`}
           subtitle={`(${getFyName(filters.fiscalYear)})`}
         />
         <SummaryCard

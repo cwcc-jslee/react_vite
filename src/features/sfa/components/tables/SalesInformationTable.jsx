@@ -29,22 +29,42 @@ const SalesInformationTable = ({ data = [], onSort }) => {
   // 결제 정보 계산
   const calculatePaymentInfo = (payments = []) => {
     const total = payments.length;
-    const completed = payments.filter((p) => p.payment_date).length;
-    const completedAmount = payments
-      .filter((p) => p.payment_date)
+
+    // 확정결제건수: is_confirmed가 true
+    const confirmed = payments.filter((p) => p.is_confirmed === true).length;
+
+    // 예정결제건수: is_confirmed가 false이고 probability가 100
+    const scheduled = payments.filter(
+      (p) => p.is_confirmed === false && p.probability === 100
+    ).length;
+
+    const confirmedAmount = payments
+      .filter((p) => p.is_confirmed === true)
       .reduce((sum, p) => sum + (p.amount || 0), 0);
     const totalAmount = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
-    const rate = totalAmount > 0 ? (completedAmount / totalAmount) * 100 : 0;
+    const rate = totalAmount > 0 ? (confirmedAmount / totalAmount) * 100 : 0;
 
-    return { total, completed, completedAmount, totalAmount, rate };
+    return { total, confirmed, scheduled, confirmedAmount, totalAmount, rate };
+  };
+
+  // 사업부 정보 추출 (team_allocations에서 team_id 추출)
+  const extractTeamIds = (payments = []) => {
+    const teamIds = new Set();
+    payments.forEach((payment) => {
+      if (payment.team_allocations && Array.isArray(payment.team_allocations)) {
+        payment.team_allocations.forEach((allocation) => {
+          if (allocation.team_id) {
+            teamIds.add(allocation.team_id);
+          }
+        });
+      }
+    });
+    return Array.from(teamIds);
   };
 
   // 결제 상태 계산
   const getPaymentStatus = (payment) => {
-    if (payment.payment_date) return 'completed';
-    const expectedDate = dayjs(payment.expected_date);
-    const now = dayjs();
-    if (expectedDate.isBefore(now)) return 'delayed';
+    if (payment.is_confirmed) return 'completed';
     return 'pending';
   };
 
@@ -52,13 +72,11 @@ const SalesInformationTable = ({ data = [], onSort }) => {
   const statusStyles = {
     completed: 'text-green-700 bg-green-100',
     pending: 'text-gray-700 bg-gray-100',
-    delayed: 'text-red-700 bg-red-100',
   };
 
   const statusLabels = {
-    completed: '완료 ✓',
-    pending: '예정 ⏱',
-    delayed: '지연 ⚠',
+    completed: '확정',
+    pending: '미확정',
   };
 
   return (
@@ -72,7 +90,7 @@ const SalesInformationTable = ({ data = [], onSort }) => {
               </th>
               <th
                 className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
-                onClick={() => onSort && onSort('project_name')}
+                onClick={() => onSort && onSort('name')}
               >
                 매출건명
               </th>
@@ -100,12 +118,9 @@ const SalesInformationTable = ({ data = [], onSort }) => {
               <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                 결제건수
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                진행률
-              </th>
               <th
                 className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase cursor-pointer hover:bg-gray-100"
-                onClick={() => onSort && onSort('created_at')}
+                onClick={() => onSort && onSort('createdAt')}
               >
                 등록일
               </th>
@@ -115,7 +130,7 @@ const SalesInformationTable = ({ data = [], onSort }) => {
             {data.length === 0 ? (
               <tr>
                 <td
-                  colSpan="10"
+                  colSpan="9"
                   className="px-4 py-8 text-center text-gray-500"
                 >
                   데이터가 없습니다.
@@ -125,6 +140,7 @@ const SalesInformationTable = ({ data = [], onSort }) => {
               data.map((sfa) => {
                 const isExpanded = expandedRows.has(sfa.id);
                 const paymentInfo = calculatePaymentInfo(sfa.sfa_by_payments);
+                const teamIds = extractTeamIds(sfa.sfa_by_payments);
 
                 return (
                   <React.Fragment key={sfa.id}>
@@ -143,62 +159,61 @@ const SalesInformationTable = ({ data = [], onSort }) => {
                         </button>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900">
-                        {sfa.project_name}
+                        {sfa.name}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-700">
                         {sfa.customer?.name || '-'}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                          {sfa.division?.name || '-'}
-                        </span>
+                        <div className="flex flex-wrap gap-1 justify-center">
+                          {teamIds.length === 0 ? (
+                            <span className="inline-flex px-2 py-1 text-xs font-medium text-gray-500">
+                              정보없음
+                            </span>
+                          ) : (
+                            teamIds.map((teamId) => (
+                              <span
+                                key={teamId}
+                                className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800"
+                              >
+                                {teamId}
+                              </span>
+                            ))
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
-                          {sfa.sfa_item?.name || '-'}
+                          {sfa.sfa_classification?.name || '-'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                          {sfa.sfa_type?.name || '-'}
+                          {sfa.sfa_sales_type?.name || '-'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-right font-medium text-gray-900">
-                        {formatAmount(sfa.total_amount)}천원
+                        {formatAmount(sfa.total_price)}천원
                       </td>
                       <td className="px-4 py-3 text-sm text-center text-gray-700">
-                        {paymentInfo.completed}/{paymentInfo.total}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-col items-center space-y-1">
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div
-                              className={`h-2 rounded-full ${
-                                paymentInfo.rate === 100
-                                  ? 'bg-green-500'
-                                  : paymentInfo.rate > 70
-                                    ? 'bg-blue-500'
-                                    : paymentInfo.rate > 30
-                                      ? 'bg-yellow-500'
-                                      : 'bg-red-500'
-                              }`}
-                              style={{ width: `${paymentInfo.rate}%` }}
-                            />
-                          </div>
-                          <span className="text-xs text-gray-600">
-                            {paymentInfo.rate.toFixed(0)}%
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-xs text-green-600 font-medium">
+                            확정: {paymentInfo.confirmed}
+                          </span>
+                          <span className="text-xs text-blue-600 font-medium">
+                            예정: {paymentInfo.scheduled}
                           </span>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-sm text-center text-gray-700">
-                        {dayjs(sfa.created_at).format('YYYY.MM.DD')}
+                        {dayjs(sfa.createdAt).format('YYYY.MM.DD')}
                       </td>
                     </tr>
 
                     {/* 확장 행 - 결제 상세 내역 */}
                     {isExpanded && (
                       <tr>
-                        <td colSpan="10" className="px-4 py-4 bg-gray-50">
+                        <td colSpan="9" className="px-4 py-4 bg-gray-50">
                           <div className="ml-8">
                             <h4 className="text-sm font-semibold text-gray-700 mb-3">
                               결제 상세 내역 (sfaByPayments)
@@ -216,23 +231,14 @@ const SalesInformationTable = ({ data = [], onSort }) => {
                                       <th className="px-3 py-2 text-xs font-medium text-gray-600 border-b text-center">
                                         회차
                                       </th>
-                                      <th className="px-3 py-2 text-xs font-medium text-gray-600 border-b text-center">
-                                        결제예정일
-                                      </th>
                                       <th className="px-3 py-2 text-xs font-medium text-gray-600 border-b text-right">
                                         결제금액
-                                      </th>
-                                      <th className="px-3 py-2 text-xs font-medium text-gray-600 border-b text-center">
-                                        결제일
-                                      </th>
-                                      <th className="px-3 py-2 text-xs font-medium text-gray-600 border-b text-center">
-                                        결제방법
                                       </th>
                                       <th className="px-3 py-2 text-xs font-medium text-gray-600 border-b text-center">
                                         상태
                                       </th>
                                       <th className="px-3 py-2 text-xs font-medium text-gray-600 border-b text-left">
-                                        비고
+                                        팀별 배분
                                       </th>
                                     </tr>
                                   </thead>
@@ -248,25 +254,8 @@ const SalesInformationTable = ({ data = [], onSort }) => {
                                             <td className="px-3 py-2 text-sm text-center text-gray-700">
                                               {index + 1}차
                                             </td>
-                                            <td className="px-3 py-2 text-sm text-center text-gray-700">
-                                              {payment.expected_date
-                                                ? dayjs(
-                                                    payment.expected_date,
-                                                  ).format('YYYY.MM.DD')
-                                                : '-'}
-                                            </td>
                                             <td className="px-3 py-2 text-sm text-right text-gray-900">
                                               {formatAmount(payment.amount)}천원
-                                            </td>
-                                            <td className="px-3 py-2 text-sm text-center text-gray-700">
-                                              {payment.payment_date
-                                                ? dayjs(
-                                                    payment.payment_date,
-                                                  ).format('YYYY.MM.DD')
-                                                : '-'}
-                                            </td>
-                                            <td className="px-3 py-2 text-sm text-center text-gray-700">
-                                              {payment.payment_method || '-'}
                                             </td>
                                             <td className="px-3 py-2 text-center">
                                               <span
@@ -276,7 +265,17 @@ const SalesInformationTable = ({ data = [], onSort }) => {
                                               </span>
                                             </td>
                                             <td className="px-3 py-2 text-sm text-gray-700">
-                                              {payment.note || '-'}
+                                              {payment.team_allocations && payment.team_allocations.length > 0 ? (
+                                                <div className="space-y-1">
+                                                  {payment.team_allocations.map((allocation, idx) => (
+                                                    <div key={idx} className="text-xs">
+                                                      팀 {allocation.team_id}: {allocation.item_name} ({formatAmount(allocation.allocated_amount)}천원)
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              ) : (
+                                                '-'
+                                              )}
                                             </td>
                                           </tr>
                                         );
@@ -291,16 +290,8 @@ const SalesInformationTable = ({ data = [], onSort }) => {
                                     <span className="font-semibold">
                                       결제 요약:
                                     </span>{' '}
-                                    완료{' '}
-                                    {formatAmount(paymentInfo.completedAmount)}
-                                    천원 ({paymentInfo.rate.toFixed(0)}%) |
-                                    예정{' '}
-                                    {formatAmount(
-                                      paymentInfo.totalAmount -
-                                        paymentInfo.completedAmount,
-                                    )}
-                                    천원 (
-                                    {(100 - paymentInfo.rate).toFixed(0)}%)
+                                    확정 {paymentInfo.confirmed}건 ({formatAmount(paymentInfo.confirmedAmount)}천원, {paymentInfo.rate.toFixed(0)}%) |
+                                    예정 {paymentInfo.scheduled}건 ({formatAmount(paymentInfo.totalAmount - paymentInfo.confirmedAmount)}천원, {(100 - paymentInfo.rate).toFixed(0)}%)
                                   </p>
                                 </div>
                               </>
@@ -324,22 +315,27 @@ SalesInformationTable.propTypes = {
   data: PropTypes.arrayOf(
     PropTypes.shape({
       id: PropTypes.number.isRequired,
-      project_name: PropTypes.string,
+      name: PropTypes.string,
       customer: PropTypes.shape({
         name: PropTypes.string,
       }),
-      division: PropTypes.shape({
+      sfa_classification: PropTypes.shape({
         name: PropTypes.string,
       }),
-      sfa_item: PropTypes.shape({
+      sfa_sales_type: PropTypes.shape({
         name: PropTypes.string,
       }),
-      sfa_type: PropTypes.shape({
-        name: PropTypes.string,
-      }),
-      total_amount: PropTypes.number,
-      created_at: PropTypes.string,
-      sfa_by_payments: PropTypes.array,
+      total_price: PropTypes.number,
+      createdAt: PropTypes.string,
+      sfa_by_payments: PropTypes.arrayOf(
+        PropTypes.shape({
+          id: PropTypes.number,
+          amount: PropTypes.number,
+          is_confirmed: PropTypes.bool,
+          probability: PropTypes.number,
+          team_allocations: PropTypes.array,
+        }),
+      ),
     }),
   ),
   onSort: PropTypes.func,

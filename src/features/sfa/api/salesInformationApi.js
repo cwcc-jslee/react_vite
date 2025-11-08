@@ -22,7 +22,7 @@ export const salesInformationApi = {
         divisionIds = [],
         itemIds = [],
         typeIds = [],
-        sortBy = 'created_at',
+        sortBy = 'createdAt',
         sortOrder = 'desc',
         page = 1,
         pageSize = 20,
@@ -136,12 +136,24 @@ export const salesInformationApi = {
           filters: {
             $and: totalFilters,
           },
-          fields: ['name', 'total_price', 'sfa_by_items'],
+          fields: ['name', 'total_price', 'sfa_by_items', 'createdAt'],
           populate: {
             customer: { fields: ['name'] },
+            sfa_classification: { fields: ['name'] },
             sfa_sales_type: { fields: ['name'] },
             sfa_by_payments: {
-              fields: ['is_confirmed', 'amount', 'team_allocations'],
+              fields: ['is_confirmed', 'probability', 'amount', 'team_allocations'],
+              filters: {
+                $or: [
+                  { is_confirmed: { $eq: true } }, // 확정매출
+                  {
+                    $and: [
+                      { is_confirmed: { $eq: false } },
+                      { probability: { $eq: 100 } }, // 예정매출
+                    ],
+                  },
+                ],
+              },
             },
           },
           pagination: {
@@ -156,20 +168,42 @@ export const salesInformationApi = {
 
       const sfaData = totalResponse.data.data;
       const totalSfaCount = sfaData.length;
-      const totalAmount = sfaData.reduce(
-        (sum, sfa) => sum + (sfa.total_amount || 0),
-        0,
-      );
-      const totalPaymentCount = sfaData.reduce(
-        (sum, sfa) => sum + (sfa.sfa_by_payments?.length || 0),
-        0,
-      );
+
+      // 확정결제건수, 예정결제건수, 확정매출액, 예정매출액 계산
+      let confirmedPaymentCount = 0;
+      let scheduledPaymentCount = 0;
+      let confirmedAmount = 0;
+      let scheduledAmount = 0;
+
+      sfaData.forEach((sfa) => {
+        if (sfa.sfa_by_payments) {
+          sfa.sfa_by_payments.forEach((payment) => {
+            // 확정매출: is_confirmed가 true
+            if (payment.is_confirmed === true) {
+              confirmedPaymentCount++;
+              confirmedAmount += payment.amount || 0;
+            }
+            // 예정매출: is_confirmed가 false이고 probability가 100
+            else if (payment.is_confirmed === false && payment.probability === 100) {
+              scheduledPaymentCount++;
+              scheduledAmount += payment.amount || 0;
+            }
+          });
+        }
+      });
+
+      const totalPaymentCount = confirmedPaymentCount + scheduledPaymentCount;
+      const totalAmount = confirmedAmount + scheduledAmount;
 
       return {
         summary: {
           totalSfaCount,
           totalPaymentCount,
+          confirmedPaymentCount, // 확정결제건수
+          scheduledPaymentCount, // 예정결제건수
           totalAmount,
+          confirmedAmount, // 확정매출액
+          scheduledAmount, // 예정매출액
           newSfaCountLast30Days: 0, // 기능 비활성화 - 항상 0 반환
         },
         allSalesData: sfaData, // 전체 매출 데이터 반환
