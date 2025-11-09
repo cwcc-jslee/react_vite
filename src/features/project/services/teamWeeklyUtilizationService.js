@@ -168,11 +168,29 @@ const fetchProjectsProgress = async (projectIds) => {
       const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
       const projectProgress = calculateProjectProgress(tasks);
 
+      // Task 상세 정보 맵 생성 (taskId -> task 상세)
+      const taskDetailsMap = {};
+      tasks.forEach((task) => {
+        taskDetailsMap[task.id] = {
+          taskId: task.id,
+          taskName: task.name || '-',
+          startDate: task.startDate || null,
+          planEndDate: task.planEndDate || null,
+          planningHours: task.planningTimeData?.totalPlannedHours || 0,
+          totalWorkHours: task.totalWorkHours || 0,
+          totalNonBillableHours: task.totalNonBillableHours || 0,
+          accumulatedHours: (task.totalWorkHours || 0) + (task.totalNonBillableHours || 0),
+          taskProgressCode: task.taskProgress?.code || null,
+          taskProgressName: task.taskProgress?.name || '-',
+        };
+      });
+
       progressMap[project.id] = {
         completed,
         total,
         rate: completionRate,
         projectProgress,
+        taskDetailsMap, // Task ID별 상세 정보
       };
     });
 
@@ -551,6 +569,7 @@ export const teamWeeklyUtilizationService = {
             total: 0,
             rate: 0,
             projectProgress: 0,
+            taskDetailsMap: {},
           };
 
           // 금주 기준 works에 등록된 고유 project_task 수 계산 및 상세 정보 수집
@@ -558,39 +577,49 @@ export const teamWeeklyUtilizationService = {
           project.works.forEach((work) => {
             if (work.projectTask?.id) {
               const taskId = work.projectTask.id;
-              const taskName = work.projectTask.name || '-';
               const userName = work.user?.username || work.user?.name || '-';
               const workHours = parseFloat(work.workHours || 0);
-              const planningHours = parseFloat(work.projectTask.planningTimeData || 0);
+
+              // progressMap에서 Task 기본 정보 가져오기
+              const taskInfo = progressData.taskDetailsMap?.[taskId] || {
+                taskName: work.projectTask.name || '-',
+                planningHours: 0,
+                startDate: null,
+                planEndDate: null,
+                accumulatedHours: 0,
+                taskProgressCode: work.projectTask.taskProgress?.code || null,
+                taskProgressName: work.projectTask.taskProgress?.name || '-',
+              };
 
               if (!taskDetailsMap.has(taskId)) {
                 taskDetailsMap.set(taskId, {
                   taskId,
-                  taskName,
-                  status: work.projectTask.taskProgress?.code || 'pending',
+                  taskName: taskInfo.taskName,
+                  startDate: taskInfo.startDate,
+                  planEndDate: taskInfo.planEndDate,
+                  taskProgressCode: taskInfo.taskProgressCode,
+                  taskProgressName: taskInfo.taskProgressName,
                   users: new Set(),
-                  actualHours: 0,
-                  planningHours,
-                  progress: 0,
+                  thisWeekHours: 0, // 금주 투입시간
+                  planningHours: taskInfo.planningHours,
+                  accumulatedHours: taskInfo.accumulatedHours, // 누적 투입시간
                 });
               }
 
               const taskDetail = taskDetailsMap.get(taskId);
               taskDetail.users.add(userName);
-              taskDetail.actualHours += workHours;
+              taskDetail.thisWeekHours += workHours;
             }
           });
 
-          // Task 상세 정보 배열로 변환 및 진행률 계산
+          // Task 상세 정보 배열로 변환
           const taskDetails = Array.from(taskDetailsMap.values()).map((task) => ({
             ...task,
             users: Array.from(task.users),
             userCount: task.users.size,
-            actualHours: Math.round(task.actualHours * 10) / 10,
+            thisWeekHours: Math.round(task.thisWeekHours * 10) / 10,
             planningHours: Math.round(task.planningHours * 10) / 10,
-            progress: task.planningHours > 0
-              ? Math.min(100, Math.round((task.actualHours / task.planningHours) * 100))
-              : 0,
+            accumulatedHours: Math.round(task.accumulatedHours * 10) / 10,
           }));
 
           const thisWeekTaskCount = taskDetailsMap.size;

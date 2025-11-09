@@ -4,36 +4,23 @@
  */
 
 import React from 'react';
-import { X, CheckCircle, Circle, Clock, User } from 'lucide-react';
+import { X, Clock, User, Calendar } from 'lucide-react';
 
 const ProjectTaskDetailModal = ({ isOpen, onClose, projectName, tasks }) => {
   if (!isOpen) return null;
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      completed: { label: '완료', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-      done: { label: '완료', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-      in_progress: { label: '진행중', color: 'bg-blue-100 text-blue-800', icon: Circle },
-      pending: { label: '대기', color: 'bg-gray-100 text-gray-800', icon: Circle },
-      default: { label: status || '-', color: 'bg-gray-100 text-gray-800', icon: Circle },
-    };
-
-    const config = statusConfig[status] || statusConfig.default;
-    const Icon = config.icon;
-
-    return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
-        <Icon className="w-3 h-3" />
-        {config.label}
-      </span>
-    );
-  };
-
-  const getProgressBarColor = (rate) => {
-    if (rate >= 80) return 'bg-green-500';
-    if (rate >= 60) return 'bg-blue-500';
-    if (rate >= 40) return 'bg-yellow-500';
-    return 'bg-red-500';
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      });
+    } catch {
+      return dateStr;
+    }
   };
 
   return (
@@ -75,7 +62,10 @@ const ProjectTaskDetailModal = ({ isOpen, onClose, projectName, tasks }) => {
                       Task 이름
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      상태
+                      시작일
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      종료 예정일
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       작업 인원
@@ -85,6 +75,9 @@ const ProjectTaskDetailModal = ({ isOpen, onClose, projectName, tasks }) => {
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       금주 투입
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      누적 투입시간
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       진행률
@@ -97,14 +90,22 @@ const ProjectTaskDetailModal = ({ isOpen, onClose, projectName, tasks }) => {
                       {/* Task 이름 */}
                       <td className="px-4 py-4">
                         <div className="font-medium text-gray-900">{task.taskName}</div>
-                        {task.description && (
-                          <div className="text-xs text-gray-500 mt-1">{task.description}</div>
-                        )}
                       </td>
 
-                      {/* 상태 */}
+                      {/* 시작일 */}
                       <td className="px-4 py-4 text-center">
-                        {getStatusBadge(task.status)}
+                        <div className="flex items-center justify-center gap-1">
+                          <Calendar className="w-4 h-4 text-gray-400" />
+                          <span className="text-sm text-gray-700">{formatDate(task.startDate)}</span>
+                        </div>
+                      </td>
+
+                      {/* 종료 예정일 */}
+                      <td className="px-4 py-4 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Calendar className="w-4 h-4 text-gray-400" />
+                          <span className="text-sm text-gray-700">{formatDate(task.planEndDate)}</span>
+                        </div>
                       </td>
 
                       {/* 작업 인원 */}
@@ -130,27 +131,34 @@ const ProjectTaskDetailModal = ({ isOpen, onClose, projectName, tasks }) => {
 
                       {/* 금주 투입 */}
                       <td className="px-4 py-4 text-center">
-                        <div className="font-semibold text-blue-700">{task.actualHours}h</div>
+                        <div className="font-semibold text-blue-700">{task.thisWeekHours}h</div>
                         {task.planningHours > 0 && (
                           <div className="text-xs text-gray-500 mt-1">
-                            ({Math.round((task.actualHours / task.planningHours) * 100)}%)
+                            ({Math.round((task.thisWeekHours / task.planningHours) * 100)}%)
                           </div>
                         )}
                       </td>
 
-                      {/* 진행률 */}
-                      <td className="px-4 py-4">
-                        <div className="flex flex-col items-center gap-1">
-                          <div className="w-full max-w-[120px] bg-gray-200 rounded-full h-2">
-                            <div
-                              className={`h-2 rounded-full ${getProgressBarColor(task.progress)}`}
-                              style={{ width: `${task.progress}%` }}
-                            />
+                      {/* 누적 투입시간 */}
+                      <td className="px-4 py-4 text-center">
+                        <div className="font-semibold text-purple-700">{task.accumulatedHours}h</div>
+                        {task.planningHours > 0 && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            ({Math.round((task.accumulatedHours / task.planningHours) * 100)}%)
                           </div>
-                          <div className="text-xs font-medium text-gray-700">
-                            {task.progress}%
-                          </div>
+                        )}
+                      </td>
+
+                      {/* 진행률 (task_progress.code 기반) */}
+                      <td className="px-4 py-4 text-center">
+                        <div className="text-sm font-medium text-gray-700">
+                          {task.taskProgressName}
                         </div>
+                        {task.taskProgressCode && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            ({task.taskProgressCode})
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -164,8 +172,9 @@ const ProjectTaskDetailModal = ({ isOpen, onClose, projectName, tasks }) => {
         <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
           <div className="text-sm text-gray-600">
             총 {tasks.length}개 Task |
-            총 계획: {tasks.reduce((sum, t) => sum + (t.planningHours || 0), 0)}h |
-            총 투입: {tasks.reduce((sum, t) => sum + (t.actualHours || 0), 0)}h
+            총 계획: {tasks.reduce((sum, t) => sum + (t.planningHours || 0), 0).toFixed(1)}h |
+            금주 투입: {tasks.reduce((sum, t) => sum + (t.thisWeekHours || 0), 0).toFixed(1)}h |
+            누적 투입: {tasks.reduce((sum, t) => sum + (t.accumulatedHours || 0), 0).toFixed(1)}h
           </div>
           <button
             onClick={onClose}

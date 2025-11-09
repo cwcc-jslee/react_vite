@@ -346,13 +346,17 @@ export const buildTeamWeeklyProgressQuery = (projectIds) => {
       project_tasks: {
         // 팀별실적에서는 모든 태스크 조회 (is_scheduled 필터 제거)
         fields: [
-          // 'status',
+          'name',
           'is_progress',
           'planning_time_data',
+          'total_work_hours',
+          'total_non_billable_hours',
+          'start_date',
+          'plan_end_date',
         ],
         populate: {
           task_progress: {
-            fields: ['code'],
+            fields: ['code', 'name'],
           },
         },
       },
