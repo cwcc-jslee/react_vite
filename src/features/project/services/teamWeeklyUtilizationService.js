@@ -553,14 +553,47 @@ export const teamWeeklyUtilizationService = {
             projectProgress: 0,
           };
 
-          // 금주 기준 works에 등록된 고유 project_task 수 계산
-          const uniqueTaskIds = new Set();
+          // 금주 기준 works에 등록된 고유 project_task 수 계산 및 상세 정보 수집
+          const taskDetailsMap = new Map();
           project.works.forEach((work) => {
             if (work.projectTask?.id) {
-              uniqueTaskIds.add(work.projectTask.id);
+              const taskId = work.projectTask.id;
+              const taskName = work.projectTask.name || '-';
+              const userName = work.user?.username || work.user?.name || '-';
+              const workHours = parseFloat(work.workHours || 0);
+              const planningHours = parseFloat(work.projectTask.planningTimeData || 0);
+
+              if (!taskDetailsMap.has(taskId)) {
+                taskDetailsMap.set(taskId, {
+                  taskId,
+                  taskName,
+                  status: work.projectTask.taskProgress?.code || 'pending',
+                  users: new Set(),
+                  actualHours: 0,
+                  planningHours,
+                  progress: 0,
+                });
+              }
+
+              const taskDetail = taskDetailsMap.get(taskId);
+              taskDetail.users.add(userName);
+              taskDetail.actualHours += workHours;
             }
           });
-          const thisWeekTaskCount = uniqueTaskIds.size;
+
+          // Task 상세 정보 배열로 변환 및 진행률 계산
+          const taskDetails = Array.from(taskDetailsMap.values()).map((task) => ({
+            ...task,
+            users: Array.from(task.users),
+            userCount: task.users.size,
+            actualHours: Math.round(task.actualHours * 10) / 10,
+            planningHours: Math.round(task.planningHours * 10) / 10,
+            progress: task.planningHours > 0
+              ? Math.min(100, Math.round((task.actualHours / task.planningHours) * 100))
+              : 0,
+          }));
+
+          const thisWeekTaskCount = taskDetailsMap.size;
 
           const workProgress = calculateWorkProgress(project.works);
 
@@ -591,6 +624,7 @@ export const teamWeeklyUtilizationService = {
             projectProgress: progressData.projectProgress,
             workProgress,
             status: progressData.rate >= 60 ? 'normal' : progressData.rate >= 30 ? 'warning' : 'critical',
+            taskDetails, // 금주 작업된 Task 상세 정보
           };
         });
 
@@ -631,6 +665,7 @@ export const teamWeeklyUtilizationService = {
               projectProgress: progressData.projectProgress,
               workProgress: { completed: 0, total: 0, rate: 0 },
               status: progressData.rate >= 60 ? 'normal' : progressData.rate >= 30 ? 'warning' : 'critical',
+              taskDetails: [], // 종료된 프로젝트는 금주 Task 없음
             };
           });
 
@@ -639,13 +674,19 @@ export const teamWeeklyUtilizationService = {
         const thisWeekHours = Math.round(team.thisWeek.totalHours * 10) / 10;
         const lastWeekHours = Math.round(team.lastWeek.totalHours * 10) / 10;
 
+        // 전주 프로젝트 수 계산
+        const lastWeekProjectCount = Object.keys(lastWeekProjects).length;
+
         return {
           teamId: team.teamId,
           teamName: team.teamName,
           totalMembers: team.totalMembers,
           availableMembers: team.availableMembers,
           weeklyStats: {
-            projectCount: thisWeekProjects.length,
+            projectCount: {
+              thisWeek: thisWeekProjects.length,
+              lastWeek: lastWeekProjectCount,
+            },
             hours: {
               lastWeek: lastWeekHours,
               thisWeek: thisWeekHours,
@@ -665,9 +706,17 @@ export const teamWeeklyUtilizationService = {
       });
 
       // 6. 전체 요약 계산
-      const totalProjects = new Set();
+      const thisWeekProjects = new Set();
+      const lastWeekProjects = new Set();
       const totalThisWeekHours = teams.reduce((sum, team) => {
-        team.projects.forEach((p) => totalProjects.add(p.projectId));
+        team.projects.forEach((p) => {
+          if (p.hours.thisWeek > 0) {
+            thisWeekProjects.add(p.projectId);
+          }
+          if (p.hours.lastWeek > 0) {
+            lastWeekProjects.add(p.projectId);
+          }
+        });
         return sum + team.weeklyStats.hours.thisWeek;
       }, 0);
       const totalLastWeekHours = teams.reduce((sum, team) => sum + team.weeklyStats.hours.lastWeek, 0);
@@ -675,7 +724,10 @@ export const teamWeeklyUtilizationService = {
 
       const summary = {
         totalTeams: teams.length,
-        totalProjects: totalProjects.size,
+        totalProjects: {
+          thisWeek: thisWeekProjects.size,
+          lastWeek: lastWeekProjects.size,
+        },
         totalHours: {
           lastWeek: Math.round(totalLastWeekHours * 10) / 10,
           thisWeek: Math.round(totalThisWeekHours * 10) / 10,
@@ -690,7 +742,7 @@ export const teamWeeklyUtilizationService = {
 
       console.log('팀별 주간 실적 계산 완료');
       console.log('총 팀 수:', teams.length);
-      console.log('총 프로젝트 수:', totalProjects.size);
+      console.log('총 프로젝트 수 (금주/전주):', thisWeekProjects.size, '/', lastWeekProjects.size);
       console.log('총 투입시간:', totalThisWeekHours, 'h');
 
       return {

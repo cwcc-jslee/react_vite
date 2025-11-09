@@ -47,7 +47,8 @@ const TeamWeeklySummaryCard = ({ summary }) => {
               <Briefcase className="w-4 h-4 text-green-600" />
               <div className="text-sm text-green-700 font-medium">총 프로젝트</div>
             </div>
-            <div className="text-2xl font-bold text-green-900">{totalProjects}개</div>
+            <div className="text-2xl font-bold text-green-900">{totalProjects.thisWeek}개</div>
+            <div className="text-xs text-green-600 mt-1">전주: {totalProjects.lastWeek}개</div>
           </div>
 
           {/* 총 투입시간 */}

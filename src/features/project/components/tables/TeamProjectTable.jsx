@@ -3,10 +3,23 @@
  * 팀별 프로젝트 투입 현황 테이블
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { TrendingUp, TrendingDown, Plus, XCircle, Minus } from 'lucide-react';
+import ProjectTaskDetailModal from '../modals/ProjectTaskDetailModal';
 
 const TeamProjectTable = ({ projects }) => {
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleTaskClick = (project) => {
+    setSelectedProject(project);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedProject(null);
+  };
   if (!projects || projects.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
@@ -214,8 +227,12 @@ const TeamProjectTable = ({ projects }) => {
               </td>
 
               {/* Task (금주 기준 작업이 등록된 task 수량) */}
-              <td className="px-4 py-3 text-center">
-                <div className="font-medium text-gray-800">
+              <td
+                className="px-4 py-3 text-center cursor-pointer hover:bg-blue-50 transition-colors"
+                onClick={() => handleTaskClick(project)}
+                title="클릭하여 Task 상세 보기"
+              >
+                <div className="font-medium text-blue-600 hover:text-blue-800 underline">
                   {project.taskProgress.total}
                 </div>
               </td>
@@ -261,6 +278,16 @@ const TeamProjectTable = ({ projects }) => {
           ))}
         </tbody>
       </table>
+
+      {/* Task 상세 모달 */}
+      {selectedProject && (
+        <ProjectTaskDetailModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          projectName={selectedProject.projectName}
+          tasks={selectedProject.taskDetails || []}
+        />
+      )}
     </div>
   );
 };
