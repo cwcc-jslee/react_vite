@@ -73,6 +73,8 @@ export const PAGE_MENUS = {
             sfaTable: true,
             searchForm: false,
             forecastTable: false,
+            analyticsLayout: false,
+            salesInformationLayout: false,
           },
           drawer: {
             visible: false, // 드로어 표시 여부
@@ -95,6 +97,8 @@ export const PAGE_MENUS = {
             sfaTable: true,
             searchForm: true,
             forecastTable: false,
+            analyticsLayout: false,
+            salesInformationLayout: false,
           },
           drawer: {
             visible: false, // 드로어 표시 여부
@@ -117,6 +121,8 @@ export const PAGE_MENUS = {
             sfaTable: true,
             searchForm: false,
             forecastTable: true,
+            analyticsLayout: false,
+            salesInformationLayout: false,
           },
           drawer: {
             visible: false, // 드로어 표시 여부
@@ -140,6 +146,7 @@ export const PAGE_MENUS = {
             searchForm: false,
             forecastTable: false,
             analyticsLayout: true,
+            salesInformationLayout: false,
           },
           drawer: {
             visible: false, // 드로어 표시 여부

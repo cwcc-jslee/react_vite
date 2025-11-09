@@ -175,20 +175,14 @@ const uiSlice = createSlice({
         state.pageLayout.layout = config.layout;
       }
 
-      // 섹션 업데이트
+      // 섹션 업데이트 (메뉴 전환 시 이전 섹션 상태를 유지하지 않고 완전히 교체)
       if (config.sections) {
-        state.pageLayout.sections = {
-          ...state.pageLayout.sections,
-          ...config.sections,
-        };
+        state.pageLayout.sections = config.sections;
       }
 
-      // 컴포넌트 업데이트
+      // 컴포넌트 업데이트 (메뉴 전환 시 이전 컴포넌트 상태를 유지하지 않고 완전히 교체)
       if (config.components) {
-        state.pageLayout.components = {
-          ...state.pageLayout.components,
-          ...config.components,
-        };
+        state.pageLayout.components = config.components;
       }
 
       // 드로어 상태 업데이트
