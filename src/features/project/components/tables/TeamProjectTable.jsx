@@ -6,18 +6,30 @@
 import React, { useState } from 'react';
 import { TrendingUp, TrendingDown, Plus, XCircle, Minus } from 'lucide-react';
 import ProjectTaskDetailModal from '../modals/ProjectTaskDetailModal';
+import ProjectWorkDetailModal from '../modals/ProjectWorkDetailModal';
 
 const TeamProjectTable = ({ projects }) => {
   const [selectedProject, setSelectedProject] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isWorkModalOpen, setIsWorkModalOpen] = useState(false);
 
   const handleTaskClick = (project) => {
     setSelectedProject(project);
-    setIsModalOpen(true);
+    setIsTaskModalOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const handleWorkClick = (project) => {
+    setSelectedProject(project);
+    setIsWorkModalOpen(true);
+  };
+
+  const handleCloseTaskModal = () => {
+    setIsTaskModalOpen(false);
+    setSelectedProject(null);
+  };
+
+  const handleCloseWorkModal = () => {
+    setIsWorkModalOpen(false);
     setSelectedProject(null);
   };
   if (!projects || projects.length === 0) {
@@ -238,8 +250,12 @@ const TeamProjectTable = ({ projects }) => {
               </td>
 
               {/* Work (금주 기준 등록된 Work 수량) */}
-              <td className="px-4 py-3 text-center">
-                <div className="font-medium text-gray-800">
+              <td
+                className="px-4 py-3 text-center cursor-pointer hover:bg-purple-50 transition-colors"
+                onClick={() => handleWorkClick(project)}
+                title="클릭하여 Work 상세 보기"
+              >
+                <div className="font-medium text-purple-600 hover:text-purple-800 underline">
                   {project.workProgress.total}
                 </div>
               </td>
@@ -282,10 +298,20 @@ const TeamProjectTable = ({ projects }) => {
       {/* Task 상세 모달 */}
       {selectedProject && (
         <ProjectTaskDetailModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
+          isOpen={isTaskModalOpen}
+          onClose={handleCloseTaskModal}
           projectName={selectedProject.projectName}
           tasks={selectedProject.taskDetails || []}
+        />
+      )}
+
+      {/* Work 상세 모달 */}
+      {selectedProject && (
+        <ProjectWorkDetailModal
+          isOpen={isWorkModalOpen}
+          onClose={handleCloseWorkModal}
+          projectName={selectedProject.projectName}
+          works={selectedProject.workDetails || []}
         />
       )}
     </div>

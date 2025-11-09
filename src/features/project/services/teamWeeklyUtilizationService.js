@@ -626,6 +626,24 @@ export const teamWeeklyUtilizationService = {
 
           const workProgress = calculateWorkProgress(project.works);
 
+          // Work 상세 정보 배열 생성
+          const workDetails = project.works.map((work) => ({
+            workId: work.id,
+            workDate: work.workDate,
+            taskName: work.projectTask?.name || '-',
+            userName: work.user?.username || work.user?.name || '-',
+            workHours: Math.round((parseFloat(work.workHours) || 0) * 10) / 10,
+            nonBillableHours: Math.round((parseFloat(work.nonBillableHours) || 0) * 10) / 10,
+            overtimeHours: Math.round((parseFloat(work.overtimeHours) || 0) * 10) / 10,
+            totalHours: Math.round(
+              ((parseFloat(work.workHours) || 0) +
+                (parseFloat(work.nonBillableHours) || 0) +
+                (parseFloat(work.overtimeHours) || 0)) *
+                10
+            ) / 10,
+            description: work.description || '',
+          }));
+
           return {
             projectId: project.projectId,
             projectName: project.projectName,
@@ -654,6 +672,7 @@ export const teamWeeklyUtilizationService = {
             workProgress,
             status: progressData.rate >= 60 ? 'normal' : progressData.rate >= 30 ? 'warning' : 'critical',
             taskDetails, // 금주 작업된 Task 상세 정보
+            workDetails, // 금주 작업된 Work 상세 정보
           };
         });
 
@@ -695,6 +714,7 @@ export const teamWeeklyUtilizationService = {
               workProgress: { completed: 0, total: 0, rate: 0 },
               status: progressData.rate >= 60 ? 'normal' : progressData.rate >= 30 ? 'warning' : 'critical',
               taskDetails: [], // 종료된 프로젝트는 금주 Task 없음
+              workDetails: [], // 종료된 프로젝트는 금주 Work 없음
             };
           });
 
