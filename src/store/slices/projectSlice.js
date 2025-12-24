@@ -17,6 +17,7 @@ import {
   FORM_INITIAL_STATE,
   SELECTED_ITEM_INITIAL_STATE,
 } from '../../features/project/constants/initialState';
+import { PROJECT_STATUS_MAP } from '../../features/project/constants/projectStatusConstants';
 import { getScheduleStatus } from '../../features/project/utils/scheduleStatusUtils';
 import {
   processDashboardData,
@@ -183,14 +184,7 @@ export const updateChartFilteredItems = createAsyncThunk(
 
       // 2단계: 프로젝트 상태 필터 (프로젝트 타입과 AND 조건)
       if (chartFilters.selectedStatus) {
-        const statusMap = {
-          pending: 85, // 보류
-          notStarted: 86, // 시작전
-          waiting: 87, // 대기
-          inProgress: 88, // 진행중
-          review: 89, // 검수
-        };
-        const expectedStatusId = statusMap[chartFilters.selectedStatus];
+        const expectedStatusId = PROJECT_STATUS_MAP[chartFilters.selectedStatus];
         const projectStatusId = item.pjtStatus?.id || item.pjt_status?.id;
         if (projectStatusId !== expectedStatusId) {
           isMatch = false;

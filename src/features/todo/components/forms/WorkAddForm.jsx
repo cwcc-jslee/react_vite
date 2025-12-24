@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import dayjs from 'dayjs';
 import {
@@ -19,11 +19,11 @@ import { useTodoStore } from '@features/todo/hooks/useTodoStore';
 import { useWorkSubmit } from '../../hooks/useWorkSubmit';
 import { closeDrawer } from '../../../../store/slices/uiSlice';
 import { useUiStore } from '@shared/hooks/useUiStore';
+import { todoApiService } from '../../services/todoApiService';
 
 const WorkAddForm = () => {
   const dispatch = useDispatch();
-  const { drawer, actions: uiActions } = useUiStore();
-  // const { form, actions, validateForm, processSubmit } = useWorkStore();
+  const { drawer } = useUiStore();
   const { form, actions } = useTodoStore();
   const { isSubmitting, handleFormSubmit } = useWorkSubmit();
 
@@ -34,26 +34,48 @@ const WorkAddForm = () => {
   const authState = useSelector((state) => state.auth);
   const { user } = authState;
 
-  const { data: codebooks, isLoading: isLoadingCodebook } = useCodebook([
+  const { data: codebooks } = useCodebook([
     'taskProgress', // TASK 진행률
   ]);
 
-  // 현재 진행상태의 인덱스 찾기
-  const getCurrentProgressIndex = () => {
-    const currentProgress = currentTask?.taskProgress?.name || '0%';
-    const progressList = codebooks?.taskProgress || [];
-    return progressList.findIndex((item) => item.name === currentProgress);
-  };
-
-  // 선택 가능한 진행상태 필터링
-  const getAvailableProgressOptions = () => {
-    const currentIndex = getCurrentProgressIndex();
-    const progressList = codebooks?.taskProgress || [];
-    return progressList.filter((item, index) => index >= currentIndex);
-  };
+  // 진행률 범위 상태 관리
+  const [minProgressId, setMinProgressId] = useState(null);
+  const [maxProgressId, setMaxProgressId] = useState(null);
+  const [isLoadingProgressRange, setIsLoadingProgressRange] = useState(false);
 
   // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오기
   const today = dayjs().format('YYYY-MM-DD');
+
+  // 작업일 기준 진행률 범위 조회
+  const fetchProgressRange = useCallback(
+    async (taskId, workDate) => {
+      if (!taskId || !workDate) return;
+
+      try {
+        setIsLoadingProgressRange(true);
+        const response = await todoApiService.getTaskProgressRange(
+          taskId,
+          workDate,
+        );
+
+        const minProgress = response?.data?.minProgress;
+        const maxProgress = response?.data?.maxProgress;
+
+        // minProgress는 있을 수도, 없을 수도 있음
+        setMinProgressId(minProgress ? minProgress.id : null);
+        // maxProgress는 null일 수 있음 (미래 작업 없는 경우)
+        setMaxProgressId(maxProgress ? maxProgress.id : null);
+      } catch (error) {
+        console.error('진행률 범위 조회 실패:', error);
+        // 에러 발생 시 제한 없음으로 설정
+        setMinProgressId(null);
+        setMaxProgressId(null);
+      } finally {
+        setIsLoadingProgressRange(false);
+      }
+    },
+    [],
+  );
 
   // 컴포넌트 마운트 시 폼 데이터 초기화
   useEffect(() => {
@@ -79,6 +101,8 @@ const WorkAddForm = () => {
     const timer = setTimeout(() => {
       // 폼 초기화 액션 사용
       actions.form.initializeForm(initialFormData);
+      // 초기 작업일 기준 진행률 범위 조회
+      fetchProgressRange(currentTask.id, today);
     }, 0);
 
     // cleanup 함수
@@ -86,8 +110,17 @@ const WorkAddForm = () => {
       clearTimeout(timer);
       // 폼 초기화
       actions.form.resetForm();
+      setMinProgressId(null);
+      setMaxProgressId(null);
     };
-  }, [currentTask?.id, user?.user?.id, today]);
+  }, [currentTask?.id, user?.user?.id, today, fetchProgressRange]);
+
+  // 작업일 변경 시 진행률 범위 재조회
+  useEffect(() => {
+    if (form.data.workDate && currentTask?.id) {
+      fetchProgressRange(currentTask.id, form.data.workDate);
+    }
+  }, [form.data.workDate, currentTask?.id, fetchProgressRange]);
 
   // 숫자 입력 검증 핸들러
   const handleNumberInput = (e) => {
@@ -244,20 +277,36 @@ const WorkAddForm = () => {
             name="taskProgress"
             value={form.data.taskProgress?.id || ''}
             onChange={handleTaskProgressChange}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isLoadingProgressRange}
             required
           >
-            <option value="">진행율 선택</option>
+            <option value="">
+              {isLoadingProgressRange ? '조회 중...' : '진행율 선택'}
+            </option>
             {codebooks.taskProgress
               ?.filter((status) => {
-                // 현재 진행률 값 추출 (숫자만)
-                const currentProgress = parseInt(
-                  form.data.taskProgress?.name?.replace('%', '') || '0',
-                );
-                // 비교할 진행률 값 추출 (숫자만)
-                const statusProgress = parseInt(status.name.replace('%', ''));
-                // 현재 진행률보다 크거나 같은 값만 필터링
-                return statusProgress >= currentProgress;
+                // 1. 둘 다 null → 첫 작업이고 이후 작업도 없음 → 모든 진행률 선택 가능
+                if (minProgressId === null && maxProgressId === null) {
+                  return true;
+                }
+
+                // 2. minProgressId만 null → 첫 작업이지만 이후 작업 있음 → 0% ~ maxProgress 이하
+                if (minProgressId === null && maxProgressId !== null) {
+                  return status.id <= maxProgressId;
+                }
+
+                // 3. maxProgressId만 null → 이전 작업 있고 이후 작업 없음 → minProgress 이상 모두
+                if (minProgressId !== null && maxProgressId === null) {
+                  return status.id >= minProgressId;
+                }
+
+                // 4. minProgressId === maxProgressId → 같은 날짜 작업 있음 → 해당 진행률만
+                if (minProgressId === maxProgressId) {
+                  return status.id === minProgressId;
+                }
+
+                // 5. minProgressId < maxProgressId → 날짜 사이 작업 없음 → min 이상 ~ max 이하
+                return status.id >= minProgressId && status.id <= maxProgressId;
               })
               .map((status) => (
                 <option key={status.id} value={status.id}>

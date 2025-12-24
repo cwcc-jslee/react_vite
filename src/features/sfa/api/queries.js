@@ -85,17 +85,25 @@ export const buildSfaListQuery = (params) => {
   }
   // 매출 품목 / 사업부
   if (filters.salesItem || filters.team) {
-    // const conditions = [];
-
-    if (!filters.salesItem || !filters.team) {
+    // 사업부만 선택한 경우
+    if (filters.team && !filters.salesItem) {
       sfaFilters.sfa_by_items = {
-        $contains: filters.salesItem ? filters.salesItem : filters.team,
+        $containsi: `"team_name":"${filters.team}"`,
       };
     }
-    // 두 조건 모두 있는 경우 -> 수정필요..and 시 오류 발생
-    else {
+    // 매출 품목만 선택한 경우
+    else if (filters.salesItem && !filters.team) {
       sfaFilters.sfa_by_items = {
-        $and: [{ $contains: filters.salesItem }, { $contains: filters.team }],
+        $containsi: `"item_name":"${filters.salesItem}"`,
+      };
+    }
+    // 두 조건 모두 선택한 경우 (JSON 배열 내 동일 객체에서 두 조건 모두 만족)
+    else if (filters.salesItem && filters.team) {
+      sfaFilters.sfa_by_items = {
+        $and: [
+          { $containsi: `"item_name":"${filters.salesItem}"` },
+          { $containsi: `"team_name":"${filters.team}"` },
+        ],
       };
     }
   }

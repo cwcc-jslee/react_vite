@@ -342,7 +342,7 @@ const CustomerAddForm = ({ codebooks, isLoadingCodebook }) => {
               disabled={isSubmitting}
             >
               <option value="">선택하세요</option>
-              {codebooks?.region?.data?.map((item) => (
+              {codebooks?.region?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>

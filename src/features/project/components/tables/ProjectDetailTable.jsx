@@ -22,6 +22,10 @@ import {
   getProjectPriceDetails,
 } from '../../utils/projectPriceUtils';
 import { calculateProjectProgress } from '../../utils/projectProgressUtils';
+import {
+  PROJECT_STATUS_FLOW,
+  PROJECT_EXCEPTION_STATUS,
+} from '../../constants/projectStatusConstants';
 
 /**
  * 완료 여부를 표시하는 Status Badge 컴포넌트
@@ -71,9 +75,6 @@ const ProjectDetailTable = ({
     return 'normal';
   };
 
-  // 프로젝트 상태 단계 정의
-  const projectStatuses = ['시작전', '진행중', '검수', '종료'];
-
   // 프로젝트 기간 표시 함수
   const formatProjectDuration = () => {
     const startDate = data.startDate || data.planStartDate || '-';
@@ -92,8 +93,9 @@ const ProjectDetailTable = ({
         <DescriptionItem>
           <div className="w-full h-full cursor-pointer" onClick={onStatusClick}>
             <StatusProgressIndicator
-              statuses={projectStatuses}
+              statuses={PROJECT_STATUS_FLOW}
               currentStatus={data.pjtStatus?.name || '시작전'}
+              exceptionStatus={PROJECT_EXCEPTION_STATUS}
             />
           </div>
         </DescriptionItem>

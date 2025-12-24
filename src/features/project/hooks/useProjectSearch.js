@@ -18,6 +18,7 @@
  */
 import { useState } from 'react';
 import { useProjectStore } from './useProjectStore';
+import { PROJECT_STATUS_CODES } from '../constants/projectStatusConstants';
 
 // 초기 폼 데이터
 const INIT_FORM_DATA = {
@@ -322,8 +323,8 @@ export const useProjectSearch = () => {
 
     switch (filterType) {
       case 'inProgress':
-        // 진행중인 프로젝트 (pjt_status = 88, is_closed = false)
-        quickFilterData.pjtStatus = '88';
+        // 진행중인 프로젝트 (is_closed = false)
+        quickFilterData.pjtStatus = String(PROJECT_STATUS_CODES.IN_PROGRESS);
         quickFilterData.isClosed = 'false';
         break;
       case 'thisMonth':

@@ -1,6 +1,8 @@
 // src/features/project/constants/initialState.js
 // import { getCommonTaskState } from '@/shared/constants/commonState';
 
+import { PROJECT_STATUS_CODES } from './projectStatusConstants';
+
 /**
  * 프로젝트 관련 초기 상태 상수
  * @date 25.04.09
@@ -10,7 +12,7 @@
 // 필터 기본값 상수 정의
 export const DEFAULT_FILTERS = {
   is_closed: { $eq: false },
-  // pjt_status: { $in: [88] }, // 대기(87), 진행중(88), 검수중(89)
+  // pjt_status: { $in: [87, 88, 89] }, // 대기, 진행중, 검수 (상수는 PROJECT_STATUS_CODES 참고)
   // work_type: 'project', // 작업 유형이 'project'인 값
 };
 
@@ -149,7 +151,7 @@ export const initialState = {
   // 폼은 필요할 때만 생성
   form: {
     data: {
-      pjtStatus: { id: 86, code: '시작전', name: '시작전' },
+      pjtStatus: { id: PROJECT_STATUS_CODES.NOT_STARTED, code: '시작전', name: '시작전' },
       importanceLevel: { id: 121, code: 'medium', name: '중간' },
       workType: '',
       fy: { id: 114, code: '25', name: '25년' },

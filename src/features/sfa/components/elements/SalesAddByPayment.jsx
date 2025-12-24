@@ -640,7 +640,7 @@ const SalesAddByPayment = ({
             </div>
           )}
 
-          {/* 다중 사업부 - 수동 입력 (1라인, 매출품목과 할당액만 표시) */}
+          {/* 다중 사업부 - 수동 입력 (1라인, 사업부와 할당액만 표시) */}
           {isMultiTeam && payment.teamAllocations && payment.teamAllocations.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 bg-white p-2 rounded">
@@ -648,7 +648,7 @@ const SalesAddByPayment = ({
                   <React.Fragment key={teamIndex}>
                     <div className="flex items-center gap-2 flex-1">
                       <span className="text-xs text-gray-500 whitespace-nowrap">
-                        {allocation.itemName}
+                        {allocation.teamName}
                       </span>
                       <Input
                         type="text"

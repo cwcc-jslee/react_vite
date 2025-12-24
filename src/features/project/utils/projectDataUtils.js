@@ -9,6 +9,7 @@ import {
   calculateProgressDistribution,
 } from './projectProgressUtils';
 import { calculateRemainingPeriods } from './projectPeriodUtils';
+import { PROJECT_STATUS_CODES } from '../constants/projectStatusConstants';
 
 /**
  * 프로젝트 일정 상태 계산 함수
@@ -50,9 +51,9 @@ export const processDashboardData = (allProjects, getScheduleStatus) => {
     throw new Error('프로젝트 데이터가 배열이 아닙니다.');
   }
 
-  // 진행중(88) 프로젝트만 필터링
+  // 진행중 프로젝트만 필터링
   const inProgressProjects = allProjects.filter(
-    (project) => project.pjtStatus?.id === 88,
+    (project) => project.pjtStatus?.id === PROJECT_STATUS_CODES.IN_PROGRESS,
   );
 
   // 기존 기능들은 진행중 프로젝트만 대상으로 처리
@@ -146,11 +147,11 @@ export const validateApiResponse = (response) => {
  */
 export const calculateProjectStatusCount = (projects) => {
   const statusCount = {
-    pending: 0, // 85: 보류
-    notStarted: 0, // 86: 시작전
-    waiting: 0, // 87: 대기
-    inProgress: 0, // 88: 진행중
-    review: 0, // 89: 검수
+    pending: 0,
+    notStarted: 0,
+    waiting: 0,
+    inProgress: 0,
+    review: 0,
   };
 
   if (!Array.isArray(projects)) {
@@ -161,19 +162,19 @@ export const calculateProjectStatusCount = (projects) => {
     const statusId = project.pjtStatus?.id;
 
     switch (statusId) {
-      case 85:
+      case PROJECT_STATUS_CODES.PENDING:
         statusCount.pending++;
         break;
-      case 86:
+      case PROJECT_STATUS_CODES.NOT_STARTED:
         statusCount.notStarted++;
         break;
-      case 87:
+      case PROJECT_STATUS_CODES.WAITING:
         statusCount.waiting++;
         break;
-      case 88:
+      case PROJECT_STATUS_CODES.IN_PROGRESS:
         statusCount.inProgress++;
         break;
-      case 89:
+      case PROJECT_STATUS_CODES.REVIEW:
         statusCount.review++;
         break;
       default:

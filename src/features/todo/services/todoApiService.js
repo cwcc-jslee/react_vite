@@ -11,7 +11,6 @@ import { handleApiError } from '@shared/api/errorHandlers';
 import { buildWorkListQuery } from '../../work/api/queries';
 import { buildProjectTaskListQuery } from '../api/queries';
 import { normalizeResponse } from '@shared/api/normalize';
-import qs from 'qs';
 
 export const todoApiService = {
   /**
@@ -56,6 +55,23 @@ export const todoApiService = {
       return response.data;
     } catch (error) {
       handleApiError(error, '작업업 생성 중 오류가 발생했습니다.');
+    }
+  },
+
+  /**
+   * Task 진행률 범위 조회
+   * @param {number} taskId - Task ID
+   * @param {string} date - 기준 날짜 (YYYY-MM-DD)
+   * @returns {Promise} API 응답 Promise
+   */
+  getTaskProgressRange: async (taskId, date) => {
+    try {
+      const response = await apiService.get(
+        `/project-api/task-progress?taskId=${taskId}&date=${date}`,
+      );
+      return response.data;
+    } catch (error) {
+      handleApiError(error, 'Task 진행률 범위를 조회하는 중 오류가 발생했습니다.');
     }
   },
 };

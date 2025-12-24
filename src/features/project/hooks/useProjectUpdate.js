@@ -17,6 +17,7 @@ import { useCodebook } from '../../../shared/hooks/useCodebook';
 import { processRelationFields } from '../../../shared/utils/relationFieldUtils';
 import { convertKeysToSnakeCase } from '../../../shared/utils/transformUtils';
 import { useProjectStore } from './useProjectStore';
+import { PROJECT_STATUS_TRANSITIONS } from '../constants/projectStatusConstants';
 import dayjs from 'dayjs';
 
 export const useProjectUpdate = (initialData) => {
@@ -46,7 +47,7 @@ export const useProjectUpdate = (initialData) => {
 
   console.log(`>>>> initialData`, initialData);
 
-  // 현재 상태에 따른 변경 가능한 상태 목록
+  // 현재 상태에 따른 변경 가능한 상태 목록 (상수 사용)
   const availableStatuses = useMemo(() => {
     if (!codebooks?.pjtStatus || !initialData.pjtStatus) return [];
 
@@ -55,29 +56,15 @@ export const useProjectUpdate = (initialData) => {
       (a, b) => a.sort - b.sort,
     );
 
-    // 현재 상태를 포함한 변경 가능한 상태 목록
-    const getAvailableStatuses = (statusList) => {
-      return allStatuses.filter(
-        (status) =>
-          status.name === currentStatus || statusList.includes(status.name),
-      );
-    };
+    // 전환 가능한 상태 목록 가져오기
+    const transitionableStatuses = PROJECT_STATUS_TRANSITIONS[currentStatus] || [];
 
-    switch (currentStatus) {
-      case '진행중':
-        return getAvailableStatuses(['보류', '대기', '검수', '종료']);
-      case '시작전':
-        return getAvailableStatuses(['진행중', '대기', '보류']);
-      case '검수':
-        return getAvailableStatuses(['진행중', '종료']);
-      case '종료':
-        return [allStatuses.find((status) => status.name === currentStatus)];
-      case '보류':
-      case '대기':
-        return getAvailableStatuses(['진행중']);
-      default:
-        return [];
-    }
+    // 현재 상태를 포함한 변경 가능한 상태 목록 반환
+    return allStatuses.filter(
+      (status) =>
+        status.name === currentStatus ||
+        transitionableStatuses.includes(status.name),
+    );
   }, [codebooks?.pjtStatus, initialData.pjtStatus]);
 
   // 종료 상태 여부 확인

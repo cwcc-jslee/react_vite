@@ -35,6 +35,7 @@ import {
 import { changePageMenu, changeSubMenu } from '../../../store/slices/uiSlice';
 import { PAGE_MENUS } from '@shared/constants/navigation';
 import { updateProjectsWithProgress } from '../utils/projectProgressUtils';
+import { PROJECT_STATUS_MAP } from '../constants/projectStatusConstants';
 
 /**
  * 프로젝트 관련 상태와 액션을 관리하는 커스텀 훅
@@ -80,14 +81,7 @@ export const useProjectStore = () => {
   };
 
   const matchesProjectStatus = (project, selectedStatus) => {
-    const statusMap = {
-      'pending': 85,     // 보류
-      'notStarted': 86,  // 시작전
-      'waiting': 87,     // 대기
-      'inProgress': 88,  // 진행중
-      'review': 89,      // 검수
-    };
-    const expectedStatusId = statusMap[selectedStatus];
+    const expectedStatusId = PROJECT_STATUS_MAP[selectedStatus];
     const projectStatusId = project.pjtStatus?.id || project.pjt_status?.id;
     return projectStatusId === expectedStatusId;
   };
