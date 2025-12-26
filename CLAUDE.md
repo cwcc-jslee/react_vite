@@ -211,6 +211,49 @@ return (
 5. **Todo/Work Management** (`features/todo`, `features/work`): Task and work item tracking
 6. **Contact Management** (`features/contact`): Contact data with Excel import functionality
 
+### Project Status Management
+
+**Status Codes** (defined in `src/features/project/constants/projectStatusConstants.js`):
+
+| Code | Status Name | Description | English Key |
+|------|------------|-------------|-------------|
+| 85 | 보류/대기 | Project on hold or waiting to start | `pendingWaiting` |
+| 86 | 시작전 | Project preparation phase | `notStarted` |
+| 87 | 중간검수 | Interim review (internal or agency) | `interimReview` |
+| 88 | 진행중 | Project in progress | `inProgress` |
+| 89 | 고객검수 | Customer review | `finalReview` |
+| 90 | 종료 | Project closed | `closed` |
+
+**Status Transition Rules**:
+- `시작전` → 진행중, 보류/대기, 종료
+- `보류/대기` → 시작전, 진행중, 종료
+- `진행중` → 보류/대기, 중간검수, 고객검수, 종료 (can skip 중간검수)
+- `중간검수` → 진행중, 고객검수, 종료
+- `고객검수` → 진행중, 종료 (can return to 진행중 for revisions)
+- `종료` → (no transitions allowed)
+
+**Key Constants**:
+- `PROJECT_STATUS_CODES`: Maps English keys to status code IDs
+- `PROJECT_STATUS_MAP`: Maps camelCase keys to code IDs
+- `PROJECT_STATUS_LABEL_TO_KEY`: Korean labels → English keys
+- `PROJECT_STATUS_KEY_TO_LABEL`: English keys → Korean labels
+- `PROJECT_STATUS_COLORS`: Chart color mappings for each status
+- `PROJECT_STATUS_TRANSITIONS`: Allowed state transitions
+
+**Usage Example**:
+```javascript
+import {
+  PROJECT_STATUS_CODES,
+  PROJECT_STATUS_KEY_TO_LABEL
+} from '@features/project/constants/projectStatusConstants';
+
+// Get status code
+const inProgressCode = PROJECT_STATUS_CODES.IN_PROGRESS; // 88
+
+// Get Korean label
+const label = PROJECT_STATUS_KEY_TO_LABEL.finalReview; // '고객검수'
+```
+
 ## API Integration
 - Base API URL: `http://192.168.20.101:1337` (configurable via `VITE_API_URL`)
 - Configured with Vite proxy for `/api` routes

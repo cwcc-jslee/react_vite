@@ -5,14 +5,14 @@ import React from 'react';
  * 여러 단계의 상태를 시각적으로 표시하고 현재 상태를 강조합니다.
  *
  * @param {Object} props
- * @param {string[]} props.statuses - 표시할 상태 목록 (예: ['시작전', '대기', '진행중', '검수', '종료'])
+ * @param {string[]} props.statuses - 표시할 상태 목록 (예: ['시작전', '진행중', '기관검수', '고객검수', '종료'])
  * @param {string} props.currentStatus - 현재 상태 (statuses 배열의 값 중 하나)
  * @param {string} [props.defaultStatus] - 기본 상태 (currentStatus가 없을 경우 사용)
- * @param {string} [props.exceptionStatus] - 예외 상태 (예: '보류') - 플로우 외부 분기로 표시
+ * @param {string} [props.exceptionStatus] - 예외 상태 (예: '보류/대기') - 플로우 외부 분기로 표시
  * @returns {JSX.Element} - 상태 진행 표시 UI 요소
  */
 const StatusProgressIndicator = ({
-  statuses = ['시작전', '진행중', '검수', '종료'],
+  statuses = ['시작전', '진행중', '기관검수', '고객검수', '종료'],
   currentStatus,
   defaultStatus = '시작전',
   exceptionStatus = null,

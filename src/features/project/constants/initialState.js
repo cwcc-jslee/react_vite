@@ -31,12 +31,12 @@ export const PROJECT_COST_CONSTANTS = {
 // 프로젝트 상태 초기값
 export const PROJECT_STATUS_INITIAL_STATE = {
   data: {
-    inProgress: 0,
-    pending: 0,
-    waiting: 0,
-    notStarted: 0,
-    review: 0,
-    recentlyCompleted: 0,
+    pendingWaiting: 0,    // 85: 보류/대기
+    notStarted: 0,        // 86: 시작전
+    interimReview: 0,     // 87: 중간검수
+    inProgress: 0,        // 88: 진행중
+    finalReview: 0,       // 89: 고객검수
+    closed: 0,            // 90: 종료
     total: 0,
   },
   status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'

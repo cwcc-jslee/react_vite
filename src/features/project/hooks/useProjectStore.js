@@ -177,11 +177,12 @@ export const useProjectStore = () => {
 
     const calculateProjectStatusCount = (projects) => {
       const statusCount = {
-        pending: 0, // 85: 보류
-        notStarted: 0, // 86: 시작전
-        waiting: 0, // 87: 대기
-        inProgress: 0, // 88: 진행중
-        review: 0, // 89: 검수
+        pendingWaiting: 0,   // 85: 보류/대기
+        notStarted: 0,       // 86: 시작전
+        interimReview: 0,    // 87: 중간검수
+        inProgress: 0,       // 88: 진행중
+        finalReview: 0,      // 89: 고객검수
+        closed: 0,           // 90: 종료
       };
 
       if (!Array.isArray(projects)) {
@@ -192,20 +193,23 @@ export const useProjectStore = () => {
         const statusId = project.pjtStatus?.id;
 
         switch (statusId) {
-          case 85:
-            statusCount.pending++;
+          case PROJECT_STATUS_MAP.pendingWaiting:  // 85
+            statusCount.pendingWaiting++;
             break;
-          case 86:
+          case PROJECT_STATUS_MAP.notStarted:  // 86
             statusCount.notStarted++;
             break;
-          case 87:
-            statusCount.waiting++;
+          case PROJECT_STATUS_MAP.interimReview:  // 87
+            statusCount.interimReview++;
             break;
-          case 88:
+          case PROJECT_STATUS_MAP.inProgress:  // 88
             statusCount.inProgress++;
             break;
-          case 89:
-            statusCount.review++;
+          case PROJECT_STATUS_MAP.finalReview:  // 89
+            statusCount.finalReview++;
+            break;
+          case PROJECT_STATUS_MAP.closed:  // 90
+            statusCount.closed++;
             break;
           default:
             break;

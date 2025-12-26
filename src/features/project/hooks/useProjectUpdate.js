@@ -81,10 +81,10 @@ export const useProjectUpdate = (initialData) => {
     (nextStatus, closureType) => {
       const projectTasks = selectedItem?.data?.projectTasks || [];
 
-      // 검수 상태일 때 검증
+      // 중간검수 또는 고객검수 상태일 때 검증
       // - isProgress가 true인 TASK는 isCompleted가 true여야 함
       // - isProgress가 false인 TASK는 검증 통과
-      if (nextStatus === '검수') {
+      if (nextStatus === '중간검수' || nextStatus === '고객검수') {
         const hasIncompleteTasks = projectTasks.some(
           (task) => task.isProgress === true && task.isCompleted !== true,
         );

@@ -341,12 +341,16 @@ const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
             color={
               item.pjtStatus.name === '진행중'
                 ? 'success'
-                : item.pjtStatus.name === '보류'
+                : item.pjtStatus.name === '보류/대기'
                 ? 'warning'
-                : item.pjtStatus.name === '대기'
+                : item.pjtStatus.name === '시작전'
                 ? 'info'
-                : item.pjtStatus.name === '완료'
+                : item.pjtStatus.name === '중간검수'
                 ? 'primary'
+                : item.pjtStatus.name === '고객검수'
+                ? 'primary'
+                : item.pjtStatus.name === '종료'
+                ? 'default'
                 : 'default'
             }
           />

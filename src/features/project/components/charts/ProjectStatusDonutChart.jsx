@@ -1,5 +1,5 @@
 // src/features/project/components/charts/ProjectStatusDonutChart.jsx
-// 프로젝트 상태별 도넛 차트 (보류, 시작전, 대기, 진행중, 검수)
+// 프로젝트 상태별 도넛 차트 (보류/대기, 시작전, 진행중, 중간검수, 고객검수, 종료)
 
 import React from 'react';
 import BaseDonutChart from '../../../../shared/components/charts/BaseDonutChart';
@@ -12,7 +12,7 @@ import {
 
 /**
  * 프로젝트 상태별 도넛 차트 컴포넌트
- * 보류, 시작전, 대기, 진행중, 검수 상태의 프로젝트 수를 시각화
+ * 보류/대기, 시작전, 진행중, 중간검수, 고객검수, 종료 상태의 프로젝트 수를 시각화
  */
 const ProjectStatusDonutChart = ({ projectStatus = {}, isFiltered = false }) => {
   const { actions, dashboardData } = useProjectStore();
@@ -25,24 +25,29 @@ const ProjectStatusDonutChart = ({ projectStatus = {}, isFiltered = false }) => 
       ...PROJECT_STATUS_COLORS.inProgress
     },
     {
-      label: '대기',
-      value: projectStatus.waiting || 0,
-      ...PROJECT_STATUS_COLORS.waiting
+      label: '중간검수',
+      value: projectStatus.interimReview || 0,
+      ...PROJECT_STATUS_COLORS.interimReview
     },
     {
-      label: '검수',
-      value: projectStatus.review || 0,
-      ...PROJECT_STATUS_COLORS.review
+      label: '고객검수',
+      value: projectStatus.finalReview || 0,
+      ...PROJECT_STATUS_COLORS.finalReview
     },
     {
-      label: '보류',
-      value: projectStatus.pending || 0,
-      ...PROJECT_STATUS_COLORS.pending
+      label: '보류/대기',
+      value: projectStatus.pendingWaiting || 0,
+      ...PROJECT_STATUS_COLORS.pendingWaiting
     },
     {
       label: '시작전',
       value: projectStatus.notStarted || 0,
       ...PROJECT_STATUS_COLORS.notStarted
+    },
+    {
+      label: '종료',
+      value: projectStatus.closed || 0,
+      ...PROJECT_STATUS_COLORS.closed
     },
   ];
 

@@ -5,8 +5,15 @@
  * - 상태 코드, 라벨, 색상 매핑을 중앙에서 관리
  * - 코드 중복 제거 및 유지보수성 향상
  *
- * @date 2025-12-16
- * @version 1.0.0
+ * @date 2025-12-24
+ * @version 4.0.0
+ * @changes 검수 단계 2단계로 통합 (중간검수/최종검수)
+ *   - 85: 보류 → 보류/대기
+ *   - 86: 시작전 → 시작전 (유지)
+ *   - 87: 대기/기관검수 → 중간검수 (내부+기관 통합)
+ *   - 88: 진행중 → 진행중 (유지)
+ *   - 89: 검수/고객검수 → 최종검수 (고객 검수)
+ *   - 90: 종료 (신규 추가)
  */
 
 // ============================================================
@@ -17,11 +24,12 @@
  * 프로젝트 상태 코드 (DB의 실제 ID 값)
  */
 export const PROJECT_STATUS_CODES = {
-  PENDING: 85,      // 보류
-  NOT_STARTED: 86,  // 시작전
-  WAITING: 87,      // 대기
-  IN_PROGRESS: 88,  // 진행중
-  REVIEW: 89,       // 검수
+  PENDING_WAITING: 85,  // 보류/대기
+  NOT_STARTED: 86,      // 시작전
+  INTERIM_REVIEW: 87,   // 중간검수 (내부/기관)
+  IN_PROGRESS: 88,      // 진행중
+  FINAL_REVIEW: 89,     // 최종검수 (고객)
+  CLOSED: 90,           // 종료
 };
 
 // ============================================================
@@ -33,11 +41,12 @@ export const PROJECT_STATUS_CODES = {
  * @example PROJECT_STATUS_MAP.inProgress // 88
  */
 export const PROJECT_STATUS_MAP = {
-  pending: PROJECT_STATUS_CODES.PENDING,          // 85
-  notStarted: PROJECT_STATUS_CODES.NOT_STARTED,   // 86
-  waiting: PROJECT_STATUS_CODES.WAITING,          // 87
-  inProgress: PROJECT_STATUS_CODES.IN_PROGRESS,   // 88
-  review: PROJECT_STATUS_CODES.REVIEW,            // 89
+  pendingWaiting: PROJECT_STATUS_CODES.PENDING_WAITING,    // 85
+  notStarted: PROJECT_STATUS_CODES.NOT_STARTED,            // 86
+  interimReview: PROJECT_STATUS_CODES.INTERIM_REVIEW,      // 87
+  inProgress: PROJECT_STATUS_CODES.IN_PROGRESS,            // 88
+  finalReview: PROJECT_STATUS_CODES.FINAL_REVIEW,          // 89
+  closed: PROJECT_STATUS_CODES.CLOSED,                     // 90
 };
 
 /**
@@ -45,11 +54,12 @@ export const PROJECT_STATUS_MAP = {
  * @example PROJECT_STATUS_CODE_TO_KEY[88] // 'inProgress'
  */
 export const PROJECT_STATUS_CODE_TO_KEY = {
-  [PROJECT_STATUS_CODES.PENDING]: 'pending',
+  [PROJECT_STATUS_CODES.PENDING_WAITING]: 'pendingWaiting',
   [PROJECT_STATUS_CODES.NOT_STARTED]: 'notStarted',
-  [PROJECT_STATUS_CODES.WAITING]: 'waiting',
+  [PROJECT_STATUS_CODES.INTERIM_REVIEW]: 'interimReview',
   [PROJECT_STATUS_CODES.IN_PROGRESS]: 'inProgress',
-  [PROJECT_STATUS_CODES.REVIEW]: 'review',
+  [PROJECT_STATUS_CODES.FINAL_REVIEW]: 'finalReview',
+  [PROJECT_STATUS_CODES.CLOSED]: 'closed',
 };
 
 // ============================================================
@@ -61,11 +71,12 @@ export const PROJECT_STATUS_CODE_TO_KEY = {
  * @example PROJECT_STATUS_LABEL_TO_KEY['진행중'] // 'inProgress'
  */
 export const PROJECT_STATUS_LABEL_TO_KEY = {
-  '보류': 'pending',
+  '보류/대기': 'pendingWaiting',
   '시작전': 'notStarted',
-  '대기': 'waiting',
+  '중간검수': 'interimReview',
   '진행중': 'inProgress',
-  '검수': 'review',
+  '고객검수': 'finalReview',
+  '종료': 'closed',
 };
 
 /**
@@ -73,11 +84,12 @@ export const PROJECT_STATUS_LABEL_TO_KEY = {
  * @example PROJECT_STATUS_KEY_TO_LABEL.inProgress // '진행중'
  */
 export const PROJECT_STATUS_KEY_TO_LABEL = {
-  pending: '보류',
+  pendingWaiting: '보류/대기',
   notStarted: '시작전',
-  waiting: '대기',
+  interimReview: '중간검수',
   inProgress: '진행중',
-  review: '검수',
+  finalReview: '고객검수',
+  closed: '종료',
 };
 
 // ============================================================
@@ -90,25 +102,29 @@ export const PROJECT_STATUS_KEY_TO_LABEL = {
  * - bgColor: 배경색 (투명도 포함)
  */
 export const PROJECT_STATUS_COLORS = {
-  pending: {
-    color: '#EF4444',                    // 빨간색
+  pendingWaiting: {
+    color: '#EF4444',                    // 빨간색 (보류/대기)
     bgColor: 'rgba(239, 68, 68, 0.8)'
   },
   notStarted: {
-    color: '#6B7280',                    // 회색
+    color: '#6B7280',                    // 회색 (시작전)
     bgColor: 'rgba(107, 114, 128, 0.8)'
   },
-  waiting: {
-    color: '#F59E0B',                    // 주황색
-    bgColor: 'rgba(245, 158, 11, 0.8)'
+  interimReview: {
+    color: '#3B82F6',                    // 파란색 (중간검수)
+    bgColor: 'rgba(59, 130, 246, 0.8)'
   },
   inProgress: {
-    color: '#10B981',                    // 초록색
+    color: '#10B981',                    // 초록색 (진행중)
     bgColor: 'rgba(16, 185, 129, 0.8)'
   },
-  review: {
-    color: '#8B5CF6',                    // 보라색
+  finalReview: {
+    color: '#8B5CF6',                    // 보라색 (최종검수)
     bgColor: 'rgba(139, 92, 246, 0.8)'
+  },
+  closed: {
+    color: '#64748B',                    // 슬레이트 (종료)
+    bgColor: 'rgba(100, 116, 139, 0.8)'
   },
 };
 
@@ -171,42 +187,43 @@ export const getStatusCodeByLabel = (label) => {
  *
  * @description
  * - 정상적인 프로젝트 진행 단계를 순서대로 정의
- * - 보류는 예외 상태이므로 별도 처리
+ * - 보류/대기는 예외 상태이므로 별도 처리
  */
 export const PROJECT_STATUS_FLOW = [
   '시작전',
-  '대기',
   '진행중',
-  '검수',
+  '중간검수',
+  '최종검수',
   '종료',
 ];
 
 /**
  * 프로젝트 예외 상태 (플로우 분기)
- * - 보류: 프로젝트가 일시 중단된 상태
+ * - 보류/대기: 프로젝트가 일시 중단되었거나 대기 중인 상태
  */
-export const PROJECT_EXCEPTION_STATUS = '보류';
+export const PROJECT_EXCEPTION_STATUS = '보류/대기';
 
 /**
  * 프로젝트 상태 타입 분류
  */
 export const PROJECT_STATUS_TYPES = {
   // 진행 플로우에 포함되는 상태 (영문 키)
-  FLOW_STATUSES: ['notStarted', 'waiting', 'inProgress', 'review'],
+  FLOW_STATUSES: ['notStarted', 'inProgress', 'interimReview', 'finalReview', 'closed'],
 
   // 예외 상태 (플로우 외부)
-  EXCEPTION_STATUSES: ['pending'],
+  EXCEPTION_STATUSES: ['pendingWaiting'],
 };
 
 /**
  * 프로젝트 상태별 설명
  */
 export const PROJECT_STATUS_DESCRIPTIONS = {
-  pending: '프로젝트가 일시 중단된 상태',
+  pendingWaiting: '프로젝트가 보류되었거나 시작 대기 중인 상태',
   notStarted: '프로젝트 준비 단계',
-  waiting: '프로젝트 시작 대기 중',
+  interimReview: '중간 검수 (내부 또는 발주기관 검수)',
   inProgress: '프로젝트 진행 중',
-  review: '프로젝트 검수 진행 중',
+  finalReview: '고객 검수',
+  closed: '프로젝트 종료',
 };
 
 /**
@@ -214,10 +231,11 @@ export const PROJECT_STATUS_DESCRIPTIONS = {
  * 각 상태에서 전환 가능한 다음 상태 목록
  */
 export const PROJECT_STATUS_TRANSITIONS = {
-  '시작전': ['진행중', '대기', '보류', '종료'],
-  '대기': ['진행중', '보류', '종료'],
-  '진행중': ['보류', '대기', '검수', '종료'],
-  '검수': ['진행중', '종료'],
-  '보류': ['진행중', '대기', '종료'],
+  '시작전': ['진행중', '보류/대기', '종료'],
+  '보류/대기': ['시작전', '진행중', '종료'],
+  '진행중': ['보류/대기', '중간검수', '고객검수', '종료'],  // 중간검수 skip 가능
+  '중간검수': ['진행중', '고객검수', '종료'],
+  '고객검수': ['진행중', '종료'],
   '종료': [], // 종료는 변경 불가
 };
+
