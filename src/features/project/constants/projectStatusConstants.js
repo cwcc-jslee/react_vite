@@ -193,7 +193,7 @@ export const PROJECT_STATUS_FLOW = [
   '시작전',
   '진행중',
   '중간검수',
-  '최종검수',
+  '고객검수',
   '종료',
 ];
 

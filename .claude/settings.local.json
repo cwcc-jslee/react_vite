@@ -11,7 +11,9 @@
       "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\project\\hooks/**)",
       "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\project\\hooks/**)",
       "Read(/D:\\dev\\cwcc-react-vite\\src\\features\\project\\hooks/**)",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(npm run dev:*)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []

@@ -261,6 +261,74 @@ const label = PROJECT_STATUS_KEY_TO_LABEL.finalReview; // '고객검수'
 - Authentication via JWT tokens stored in localStorage
 - Shared API utilities in `src/shared/api/`
 
+### Data Transformation Policy (camelCase ↔ snake_case)
+
+**Naming Convention:**
+- **Frontend (React)**: camelCase (e.g., `userName`, `planStartDate`)
+- **Backend (Database)**: snake_case (e.g., `user_name`, `plan_start_date`)
+
+**Standard Implementation: Axios Interceptors**
+
+All API requests and responses are automatically transformed using Axios interceptors configured in `src/shared/api/apiClient.js` and `src/shared/api/apiService.js`:
+
+```javascript
+import { convertKeysToSnakeCase, convertKeysToCamelCase } from '@shared/utils/transformUtils';
+
+// Request Interceptor: camelCase → snake_case
+apiClient.interceptors.request.use((config) => {
+  if (config.data) {
+    config.data = convertKeysToSnakeCase(config.data);
+  }
+  return config;
+});
+
+// Response Interceptor: snake_case → camelCase
+apiClient.interceptors.response.use((response) => {
+  if (response.data) {
+    response.data = convertKeysToCamelCase(response.data);
+  }
+  return response;
+});
+```
+
+**Development Guidelines:**
+
+1. **Always use camelCase in React components** - The interceptor handles conversion automatically
+2. **Special data processing before API calls**:
+   - Use `processRelationFields()` to convert objects to IDs (e.g., `{ id: 1, name: 'John' }` → `1`)
+   - Remove temporary UI fields (e.g., `__temp`, `templateId`)
+   - Apply business-specific transformations (phone number formatting, etc.)
+3. **Never manually convert field names** - Rely on the interceptor for all case conversions
+4. **Transformation utilities location**: `src/shared/utils/transformUtils.js`
+
+**Example Usage:**
+
+```javascript
+// ✅ Correct approach
+const formData = {
+  planStartDate: '2024-01-01',
+  importanceLevel: { id: 3 },
+  users: [{ id: 1 }, { id: 2 }]
+};
+
+// Process special cases only
+const processed = processRelationFields(formData);
+// → { planStartDate: '2024-01-01', importanceLevel: 3, users: [1, 2] }
+
+// Send directly - interceptor handles snake_case conversion
+await apiService.post('/projects', processed);
+// → API receives: { plan_start_date: '2024-01-01', importance_level: 3, users: [1, 2] }
+
+// ❌ Wrong - manual conversion not needed
+const snakeCase = convertKeysToSnakeCase(processed); // DON'T DO THIS
+await apiService.post('/projects', snakeCase);
+```
+
+**Related Files:**
+- Interceptor configuration: `src/shared/api/apiClient.js`, `src/shared/api/apiService.js`
+- Conversion utilities: `src/shared/utils/transformUtils.js`
+- Relation field processing: `src/shared/utils/relationFieldUtils.js`
+
 ## Environment Configuration
 - **Development host/port**: Configurable via `VITE_HOST` and `VITE_PORT` environment variables
 - **Default development server**: http://192.168.20.101:3001

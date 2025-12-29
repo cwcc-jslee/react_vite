@@ -1,47 +1,82 @@
 // src/features/project/sections/ProjectDetailTableSection.jsx
+// 3단계 정보 계층 구조로 개선된 프로젝트 정보 섹션
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useUiStore } from '../../../shared/hooks/useUiStore';
-import ProjectDetailTable from '../components/tables/ProjectDetailTable';
+import ProjectMetricsSection from '../components/metrics/ProjectMetricsSection';
+import ProjectDetailInfo from '../components/details/ProjectDetailInfo';
+import {
+  calculateProjectTotalPlannedHours,
+  validateProjectPlanningHours,
+} from '../utils/projectTimeUtils';
+import { calculateProjectProgress } from '../utils/projectProgressUtils';
 
 /**
- * 프로젝트 목록 테이블 섹션 컴포넌트
- * 프로젝트 목록과 페이지네이션을 표시
-
+ * 프로젝트 정보 섹션 컴포넌트
+ * Tier 1: 핵심 지표 (카드)
+ * Tier 2: 상세 정보 (Expandable)
  */
 const ProjectDetailTableSection = ({ data, projectTasks }) => {
   const { actions } = useUiStore();
-  // 상태 섹션 클릭 핸들러
+
+  // 상태 섹션 클릭 핸들러 - Drawer 열기
   const handleStatusSectionClick = (e) => {
-    // 이벤트 디버깅 로그
-    console.log('이벤트 발생', e.type);
-    console.log('진행상태 섹션 클릭:', data);
+    console.log('진행상태 변경 클릭:', data);
     actions.drawer.open({
-      mode: 'edit',
+      mode: 'status',
       data: {
         id: data.id,
         documentId: data.documentId,
         pjtStatus: data.pjtStatus,
+        statusHistory: data.statusHistory || [],
+        isClosed: data.isClosed,
+        projectClosure: data.projectClosure,
+        projectTasks: data.projectTasks,
       },
-      width: '600px',
+      width: '900px',
+      activeTab: 'flow', // 기본적으로 '진행 플로우' 탭 활성화
     });
   };
 
+  // 프로젝트 메트릭 계산 (메모이제이션)
+  const projectMetrics = useMemo(() => {
+    const totalPlannedHours = calculateProjectTotalPlannedHours(projectTasks);
+    const calculatedProgress = calculateProjectProgress(projectTasks);
+    const completedTasksCount = projectTasks.filter((task) => {
+      const progressCode = task.taskProgress?.code;
+      return progressCode === '100' || progressCode === 100 || task.isCompleted;
+    }).length;
+    const validation = validateProjectPlanningHours(data, totalPlannedHours);
+
+    return {
+      totalPlannedHours,
+      calculatedProgress,
+      completedTasksCount,
+      validation,
+    };
+  }, [projectTasks, data]);
+
   return (
-    <div className="bg-white rounded-md shadow">
-      {/* 상단 툴바 - 검색, 필터, 뷰 전환 버튼 */}
-      <div className="flex flex-wrap items-center justify-between mb-2 gap-3">
-        <div className="flex items-center gap-3">
-          <h2 className="text-lg font-medium text-gray-800">
-            프로젝트 정보({data.id}) : {data.name}
-          </h2>
-        </div>
+    <div className="space-y-6">
+      {/* 헤더 */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-gray-800">
+          프로젝트 정보
+          <span className="text-sm font-normal text-gray-500 ml-2">
+            ({data.id}) {data.name}
+          </span>
+        </h2>
       </div>
-      <ProjectDetailTable
-        data={data}
-        projectTasks={projectTasks}
+
+      {/* Tier 1: 핵심 지표 카드 */}
+      <ProjectMetricsSection
+        data={{...data, projectTasks}}
+        projectMetrics={projectMetrics}
         onStatusClick={handleStatusSectionClick}
       />
+
+      {/* Tier 2: 상세 정보 (Expandable) */}
+      <ProjectDetailInfo data={data} />
     </div>
   );
 };

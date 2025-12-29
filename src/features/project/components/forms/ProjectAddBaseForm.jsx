@@ -258,6 +258,7 @@ const ProjectAddBaseForm = ({
                 );
                 updateField('pjtStatus', selectedItem);
               }}
+              disabled={true}
             >
               {codebooks?.pjtStatus?.map((item) => (
                 <option key={item.id} value={item.id}>
@@ -271,7 +272,7 @@ const ProjectAddBaseForm = ({
         {/* 3열: 사업년도, 계획시작일, 계획종료일 */}
         <Group direction="horizontal" className="gap-6">
           <FormItem className="flex-1">
-            <Label className="text-left">중요도</Label>
+            <Label className="text-left">중요 도</Label>
             <Select
               name="importanceLevel"
               value={formData.importanceLevel?.id}
