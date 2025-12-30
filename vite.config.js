@@ -50,6 +50,7 @@ export default defineConfig(({ mode }) => {
         '@utils': path.resolve(__dirname, './src/shared/utils'),
         '@hooks': path.resolve(__dirname, './src/shared/hooks'),
         '@components': path.resolve(__dirname, './src/shared/components'),
+        '@layout': path.resolve(__dirname, './src/shared/layout'),
       },
     },
     // 빌드 최적화 설정

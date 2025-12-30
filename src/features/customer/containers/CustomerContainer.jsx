@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { useCustomer } from '../context/CustomerProvider';
-import { Section } from '../../../shared/components/ui/layout/components';
+import { Section } from '../../../shared/layout/components';
 
 // Components
 import CustomerSubMenu from '../components/CustomerSubMenu';

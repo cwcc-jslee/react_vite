@@ -8,7 +8,7 @@ import { updateFilterFields, fetchSfas } from '../../../store/slices/sfaSlice';
 // import { selectCodebookByType } from '../../codebook/store/codebookSlice';
 // import { useSfa } from '../context/SfaProvider';
 // import { useSfaSearchFilter } from '../hooks/useSfaSearchFilter';
-import { Section } from '../../../shared/components/ui/layout/components';
+import { Section } from '../../../shared/layout/components';
 import SfaAddLayout from '../layouts/SfaAddLayout';
 import SfaViewEditLayout from '../layouts/SfaViewEditLayout';
 // import { useSfaStore } from '../hooks/useSfaStore'; // 제거: SFA 상태 구독 방지

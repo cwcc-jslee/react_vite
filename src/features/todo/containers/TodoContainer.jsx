@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Section } from '@shared/components/ui/layout/components';
+import { Section } from '@shared/layout/components';
 
 // 커스텀 훅 사용
 

@@ -1,7 +1,7 @@
 // src/features/project/containers/ProjectContainer.jsx
 
 import React, { useEffect, useRef } from 'react';
-import { Section } from '../../../shared/components/ui/layout/components';
+import { Section } from '../../../shared/layout/components';
 import { useUiStore } from '@shared/hooks/useUiStore';
 import { useProjectStore } from '../hooks/useProjectStore';
 
