@@ -43,12 +43,16 @@ export const Group = ({
 
 /**
  * Form: 전체 폼을 감싸는 컨테이너
- * - maxWidth: 폼의 최대 너비 (default: '2xl')
+ * - maxWidth: 폼의 최대 너비 (default: 'none' - 제한 없음)
  */
-export const Form = ({ children, maxWidth = '2xl', className = '' }) => {
+export const Form = ({ children, maxWidth = 'none', className = '', ...props }) => {
+  const maxWidthClass = maxWidth === 'none' ? '' : `max-w-${maxWidth}`;
+  const centerClass = maxWidth === 'none' ? '' : 'mx-auto';
+
   return (
     <form
-      className={`w-full max-w-${maxWidth} mx-auto px-6 py-8 space-y-6 ${className}`}
+      className={`w-full ${maxWidthClass} ${centerClass} ${className}`}
+      {...props}
     >
       {children}
     </form>

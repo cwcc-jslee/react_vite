@@ -1,55 +1,33 @@
 // src/shared/components/ui/layout/DefaultLayout.jsx
 /**
- * 애플리케이션의 기본 레이아웃 구조를 정의하며 전체 UI 프레임워크를 제공합니다.
- * 헤더, 사이드바, 콘텐츠 영역 및 경로 기반 네비게이션을 통합적으로 관리하며 계층적 UI 구조를 지원합니다.
+ * 애플리케이션의 기본 레이아웃 구조
+ * 리팩토링: 컴포넌트 분리 완료 (Header, Sidebar, Content)
  */
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { logout } from '../../../../features/auth/store/authSlice';
 import { changePage } from '../../../../store/slices/uiSlice';
 import {
   SIDEBAR_ITEMS,
   PAGE_MENUS,
   DEFAULT_LAYOUTS,
 } from '../../../constants/navigation';
-import { Button } from '../index.jsx';
-import {
-  Layout,
-  Header,
-  Content,
-  Sider,
-  Logo,
-  Navigation,
-  NavList,
-  NavItem,
-} from './components.jsx';
 import BreadcrumbWithMenu from './BreadcrumbWithMenu.jsx';
 import SidebarActionButton from './SidebarActionButton.jsx';
 import { hasMenuPermission } from '../../../utils/permissionUtils';
 
-// 현재 경로에 기반한 브레드크럼 생성 함수
-const getBreadcrumbItems = (path) => {
-  const segments = path.split('/').filter(Boolean);
-  const items = [{ label: 'Home', path: '/' }];
-
-  let currentPath = '';
-  segments.forEach((segment) => {
-    currentPath += `/${segment}`;
-    items.push({
-      label: segment.charAt(0).toUpperCase() + segment.slice(1),
-      path: currentPath,
-    });
-  });
-
-  // 마지막 항목은 링크가 아닌 텍스트로 표시
-  if (items.length > 1) {
-    items[items.length - 1] = { label: items[items.length - 1].label };
-  }
-
-  return items;
-};
+// 새로 분리된 컴포넌트 import
+import {
+  Layout,
+  Header,
+  Sidebar,
+  SidebarNav,
+  NavList,
+  NavItem,
+  Content,
+  Footer,
+} from './components/index.js';
 
 // 현재 페이지 식별자 추출 함수
 const getCurrentPageFromPath = (path) => {
@@ -80,9 +58,6 @@ const DefaultLayout = ({ children }) => {
 
   // 사이드바 접힘/펼침 상태
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-
-  // 브레드크럼 아이템
-  const breadcrumbItems = getBreadcrumbItems(location.pathname);
 
   // 페이지 메뉴 관리
   useEffect(() => {
@@ -145,22 +120,6 @@ const DefaultLayout = ({ children }) => {
     };
   }, [dispatch]);
 
-  // if (status === 'loading') {
-  //   return (
-  //     <div className="flex items-center justify-center h-screen bg-slate-50">
-  //       <div className="text-center">
-  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto"></div>
-  //         <p className="mt-3 text-slate-600">Codebook 로딩중...</p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
-
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
-  };
-
   // 사이드바 토글 핸들러
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
@@ -168,28 +127,14 @@ const DefaultLayout = ({ children }) => {
 
   return (
     <Layout>
-      <Header onToggleSidebar={toggleSidebar}>
-        <Logo collapsed={sidebarCollapsed}>CWCC PMS</Logo>
-        <div className="flex items-center gap-4">
-          <span className="text-white font-medium">
-            {user?.user?.username || 'Guest'}
-            {user?.user?.user_access_control?.name &&
-              `(${user.user.user_access_control.name})`}
-          </span>
-          <Button
-            variant="outline"
-            onClick={handleLogout}
-            className="text-white border-white/30 hover:bg-white/10"
-          >
-            로그아웃
-          </Button>
-        </div>
-      </Header>
+      {/* Header - 새로운 컴포넌트 */}
+      <Header onToggleSidebar={toggleSidebar} collapsed={sidebarCollapsed} />
 
       <div className="flex pt-16 min-h-[calc(100vh-64px)]">
-        <Sider collapsed={sidebarCollapsed} onToggle={toggleSidebar}>
+        {/* Sidebar - 새로운 컴포넌트 */}
+        <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar}>
           {/* 메인 네비게이션 - 첫 번째 자식 */}
-          <Navigation>
+          <SidebarNav>
             <NavList>
               {SIDEBAR_ITEMS.map((item) => {
                 // 권한 체크
@@ -204,7 +149,7 @@ const DefaultLayout = ({ children }) => {
                       location.pathname === item.id ||
                       location.pathname.startsWith(item.path)
                     }
-                    onClick={() => navigate(item.id)}
+                    onClick={() => navigate(item.path)}
                     collapsed={sidebarCollapsed}
                     icon={item.icon}
                   >
@@ -213,20 +158,20 @@ const DefaultLayout = ({ children }) => {
                 );
               })}
             </NavList>
-          </Navigation>
+          </SidebarNav>
 
           {/* 액션 버튼 - 두 번째 자식 */}
           <SidebarActionButton collapsed={sidebarCollapsed} />
-        </Sider>
+        </Sidebar>
 
+        {/* Content - 새로운 컴포넌트 */}
         <Content
           sidebarCollapsed={sidebarCollapsed}
           removeContentPadding={true}
         >
-          {/* 상단 영역 (브레드크럼 + 메뉴 + 서브 메뉴) */}
-          <div className="border-b border-gray-200">
+          {/* 상단 영역 (메뉴 + 서브 메뉴) */}
+          <div className="border-b border-gray-200 flex-shrink-0">
             <BreadcrumbWithMenu
-              breadcrumbItems={breadcrumbItems}
               currentPage={currentPage}
               pageMenus={PAGE_MENUS}
               activeMenu={pageLayout.menu}
@@ -234,8 +179,8 @@ const DefaultLayout = ({ children }) => {
             />
           </div>
 
-          {/* 본문 영역 (필터 + 콘텐츠) */}
-          <div className="p-0">
+          {/* 본문 영역 (필터 + 콘텐츠) - flex-1로 남은 공간 차지 */}
+          <div className="p-0 flex-1">
             {/* 현재 레이아웃 정보 디버깅 */}
             {process.env.NODE_ENV === 'development' && (
               <div className="bg-gray-100 p-1 text-xs text-gray-500 border-b">
@@ -246,6 +191,9 @@ const DefaultLayout = ({ children }) => {
 
             {children}
           </div>
+
+          {/* Footer - 새로운 컴포넌트 - flex-shrink-0로 항상 하단 고정 */}
+          <Footer className="flex-shrink-0" />
         </Content>
       </div>
     </Layout>
