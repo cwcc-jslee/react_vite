@@ -8,7 +8,6 @@ import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer.jsx';
 import ActionMenuBar from '../../../../shared/components/ui/button/ActionMenuBar.jsx';
 
 // 컴포넌트
-import ProjectStatusUpdateForm from '../forms/ProjectStatusUpdateForm.jsx';
 import ProjectTaskDescription from '../description/ProjectTaskDescription.jsx';
 import ProjectStatusFlowTab from './tabs/ProjectStatusFlowTab.jsx';
 import ProjectStatusHistoryTab from './tabs/ProjectStatusHistoryTab.jsx';
@@ -16,7 +15,7 @@ import ProjectStatusHistoryTab from './tabs/ProjectStatusHistoryTab.jsx';
 const ProjectDrawer = ({ drawer }) => {
   const { actions } = useUiStore();
   const { visible, mode, data, width = '900px', activeTab: initialTab } = drawer;
-  const [activeTab, setActiveTab] = useState(initialTab || 'edit');
+  const [activeTab, setActiveTab] = useState(initialTab || 'flow');
 
   console.log(`>>> drawer`, drawer);
 
@@ -80,18 +79,6 @@ const ProjectDrawer = ({ drawer }) => {
             진행 플로우
           </button>
           <button
-            onClick={() => setActiveTab('edit')}
-            className={`
-              px-4 py-2 text-sm font-medium rounded-md transition-colors
-              ${activeTab === 'edit'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-              }
-            `}
-          >
-            상태 변경
-          </button>
-          <button
             onClick={() => setActiveTab('history')}
             className={`
               px-4 py-2 text-sm font-medium rounded-md transition-colors
@@ -102,18 +89,12 @@ const ProjectDrawer = ({ drawer }) => {
             `}
           >
             변경 이력
-            {data.statusHistory && data.statusHistory.length > 0 && (
-              <span className="ml-2 px-2 py-0.5 text-xs bg-white bg-opacity-30 rounded-full">
-                {data.statusHistory.length}
-              </span>
-            )}
           </button>
         </div>
 
         {/* 탭 컨텐츠 */}
         <div className="flex-1 overflow-y-auto">
           {activeTab === 'flow' && <ProjectStatusFlowTab data={data} />}
-          {activeTab === 'edit' && <ProjectStatusUpdateForm data={data} />}
           {activeTab === 'history' && <ProjectStatusHistoryTab data={data} />}
         </div>
       </div>

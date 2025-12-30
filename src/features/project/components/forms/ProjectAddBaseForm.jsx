@@ -2,12 +2,13 @@
 // 프로젝트 정보 입력을 위한 폼 컴포넌트
 // 고객사, SFA, 프로젝트명, 서비스, 사업부 정보를 입력 받습니다
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { apiCommon } from '../../../../shared/api/apiCommon';
 import { projectApiService } from '../../services/projectApiService';
 import { CustomerSearchInput } from '../../../../shared/components/customer/CustomerSearchInput';
 import { useSelectData } from '../../../../shared/hooks/useSelectData';
+import { CREATABLE_PROJECT_STATUSES } from '../../constants/projectStatusConstants';
 import {
   Form,
   FormItem,
@@ -95,6 +96,14 @@ const ProjectAddBaseForm = ({
     { value: 'task', label: '단순작업' },
     { value: 'maintenance', label: '유지보수' },
   ];
+
+  // 프로젝트 신규 등록 시 선택 가능한 상태 목록 (필터링)
+  const creatableStatuses = useMemo(() => {
+    if (!codebooks?.pjtStatus) return [];
+    return codebooks.pjtStatus.filter((status) =>
+      CREATABLE_PROJECT_STATUSES.includes(status.name)
+    );
+  }, [codebooks?.pjtStatus]);
 
   return (
     <Row gutter={16} className="w-full">
@@ -252,15 +261,14 @@ const ProjectAddBaseForm = ({
               value={formData.pjtStatus?.id}
               onChange={(e) => {
                 const selectedId = e.target.value;
-                const selectedItem = codebooks?.pjtStatus?.find(
+                const selectedItem = creatableStatuses?.find(
                   (item) =>
                     item.id === selectedId || item.id === Number(selectedId),
                 );
                 updateField('pjtStatus', selectedItem);
               }}
-              disabled={true}
             >
-              {codebooks?.pjtStatus?.map((item) => (
+              {creatableStatuses?.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
                 </option>

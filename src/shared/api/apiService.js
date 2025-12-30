@@ -5,6 +5,10 @@
 import axios from 'axios';
 import { getAuthToken } from '../services/authService';
 import { ENV } from '../config/environment';
+import {
+  convertKeysToSnakeCase,
+  convertKeysToCamelCase,
+} from '../utils/transformUtils';
 
 // const API_URL = import.meta.env.VITE_API_URL;
 
@@ -43,13 +47,18 @@ export const apiClient = axios.create({
 // 요청 인터셉터 설정
 apiClient.interceptors.request.use(
   (config) => {
-    // 토큰 주입
+    // 1. 토큰 주입
     const token = getAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // 로깅
+    // 2. 데이터 변환: camelCase → snake_case
+    if (config.data) {
+      config.data = convertKeysToSnakeCase(config.data);
+    }
+
+    // 3. 로깅
     console.log('API Request:', {
       url: config?.url,
       method: config?.method,
@@ -67,11 +76,18 @@ apiClient.interceptors.request.use(
 // 응답 인터셉터 설정
 apiClient.interceptors.response.use(
   (response) => {
+    // 1. 데이터 변환: snake_case → camelCase
+    if (response.data) {
+      response.data = convertKeysToCamelCase(response.data);
+    }
+
+    // 2. 로깅
     console.log('API Response:', {
       url: response.config.url,
       status: response.status,
       data: response.data,
     });
+
     return response;
   },
   (error) => {

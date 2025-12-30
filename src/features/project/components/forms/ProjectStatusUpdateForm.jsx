@@ -178,6 +178,44 @@ const ProjectStatusUpdateForm = ({ data }) => {
         )}
       </Group>
 
+      {/* 상태 세부 내용 및 변경 사유 (상태가 변경된 경우에만 표시) */}
+      {isStatusChanged && (
+        <>
+          <Group direction="vertical" className="gap-4 mt-4">
+            <FormItem className="flex-1">
+              <Label className="text-left mb-2">상태 세부 내용</Label>
+              <input
+                type="text"
+                name="statusDetail"
+                value={formData.statusDetail || ''}
+                onChange={(e) => updateField('statusDetail', e.target.value)}
+                placeholder="예: 1차 수정반영, 2차 검수"
+                maxLength={100}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <div className="text-xs text-gray-500 mt-1">
+                상태에 대한 추가 설명 (선택사항, 최대 100자)
+              </div>
+            </FormItem>
+
+            <FormItem className="flex-1">
+              <Label className="text-left mb-2">변경 사유</Label>
+              <textarea
+                name="changeDescription"
+                value={formData.changeDescription || ''}
+                onChange={(e) => updateField('changeDescription', e.target.value)}
+                placeholder="상태 변경 사유를 입력하세요"
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              />
+              <div className="text-xs text-gray-500 mt-1">
+                상태 변경 이유에 대한 상세 설명 (선택사항)
+              </div>
+            </FormItem>
+          </Group>
+        </>
+      )}
+
       <Group direction="horizontal" className="gap-6 pt-4">
         <Button
           type="button"

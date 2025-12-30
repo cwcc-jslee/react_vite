@@ -28,31 +28,32 @@ const ProjectMetricsSection = ({
 
   // 상태 이력에서 최신 변경 정보 추출
   const statusMetadata = useMemo(() => {
-    const statusHistory = data.statusHistory || [];
-    const currentStatus = data.pjtStatus?.name || '시작전';
+    const statusChanges = data.projectStatusChanges || [];
 
-    // 최신 이력이 없거나 시작전일 경우
-    if (statusHistory.length === 0 || currentStatus === '시작전') {
+    // 최신 이력이 없으면 기본값
+    if (statusChanges.length === 0) {
       return {
+        currentStatus: data.pjtStatus?.name || '시작전',
         previousStatus: null,
         statusDetail: null,
         approvalStatus: null,
-        timeAgo: null,
+        requestedAt: null,
         changedBy: null,
       };
     }
 
-    // 최신 이력 (첫 번째 항목)
-    const latestHistory = statusHistory[0];
+    // 최신 이력 (첫 번째 항목 - API에서 최신순으로 정렬되어 옴)
+    const latestChange = statusChanges[0];
 
     return {
-      previousStatus: latestHistory.fromStatus || null,
-      statusDetail: latestHistory.statusDetail || null,
-      approvalStatus: latestHistory.approvalStatus || null,
-      timeAgo: latestHistory.changedAt || null,
-      changedBy: latestHistory.changedBy || null,
+      currentStatus: data.pjtStatus?.name || '시작전',
+      previousStatus: latestChange.fromStatus?.name || null,
+      statusDetail: latestChange.statusDetail || null,
+      approvalStatus: latestChange.approvalStatus || null,
+      requestedAt: latestChange.requestedAt || null,
+      changedBy: latestChange.requestedBy?.username || null,
     };
-  }, [data.statusHistory, data.pjtStatus]);
+  }, [data.projectStatusChanges, data.pjtStatus]);
 
   // 프로젝트 기간 포맷
   const formatProjectDuration = () => {
@@ -100,13 +101,13 @@ const ProjectMetricsSection = ({
       <MetricCard title="진행상태" icon="📊">
         <div className="flex flex-col gap-3">
           <CompactStatusBadge
-            currentStatus={data.pjtStatus?.name || '시작전'}
+            currentStatus={statusMetadata.currentStatus}
             previousStatus={statusMetadata.previousStatus}
             statusDetail={statusMetadata.statusDetail}
             approvalStatus={statusMetadata.approvalStatus}
-            isException={data.pjtStatus?.name === PROJECT_EXCEPTION_STATUS}
+            isException={statusMetadata.currentStatus === PROJECT_EXCEPTION_STATUS}
             onClick={onStatusClick}
-            timeAgo={statusMetadata.timeAgo}
+            timeAgo={statusMetadata.requestedAt}
             changedBy={statusMetadata.changedBy}
           />
 

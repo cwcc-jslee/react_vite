@@ -1,15 +1,78 @@
 // src/features/project/components/drawer/tabs/ProjectStatusHistoryTab.jsx
 // 변경 이력 탭 - 상태 변경 이력 타임라인
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/ko';
 import {
   PROJECT_STATUS_LABEL_TO_KEY,
   getStatusColorByKey,
 } from '../../../constants/projectStatusConstants';
+import { projectApiService } from '../../../services/projectApiService';
+import { Spinner } from '../../../../../shared/components/ui';
+
+// dayjs 설정
+dayjs.extend(relativeTime);
+dayjs.locale('ko');
 
 const ProjectStatusHistoryTab = ({ data }) => {
-  const statusHistory = data.statusHistory || [];
+  const [statusHistory, setStatusHistory] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // 상태 변경 이력 조회
+  useEffect(() => {
+    const fetchStatusChanges = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        const response = await projectApiService.getProjectStatusChanges(data.id);
+
+        // API 응답 데이터를 UI용 형식으로 변환
+        const formattedHistory = (response?.data || []).map((change) => ({
+          id: change.id,
+          fromStatus: change.fromStatus?.name || null,
+          toStatus: change.toStatus?.name || '알 수 없음',
+          statusDetail: change.statusDetail || null,
+          approvalStatus: change.approvalStatus || null,
+          changedAt: formatDateTime(change.requestedAt),
+          changedBy: change.requestedBy?.username || '알 수 없음',
+          changeDescription: change.changeDescription || null,
+        }));
+
+        setStatusHistory(formattedHistory);
+      } catch (err) {
+        console.error('상태 변경 이력 조회 실패:', err);
+        setError('상태 변경 이력을 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (data?.id) {
+      fetchStatusChanges();
+    }
+  }, [data?.id]);
+
+  // 시간 포맷팅 함수
+  const formatDateTime = (dateTime) => {
+    if (!dateTime) return '-';
+
+    const now = dayjs();
+    const changeTime = dayjs(dateTime);
+    const diffInHours = now.diff(changeTime, 'hour');
+
+    // 24시간 이내: 상대 시간
+    if (diffInHours < 24) {
+      return changeTime.fromNow();
+    }
+
+    // 24시간 이후: 절대 시간
+    return changeTime.format('YYYY-MM-DD HH:mm');
+  };
 
   // 승인 상태 배지
   const ApprovalStatusBadge = ({ status }) => {
@@ -44,6 +107,34 @@ const ProjectStatusHistoryTab = ({ data }) => {
       </span>
     );
   };
+
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <div className="flex flex-col items-center justify-center py-12">
+          <Spinner size="large" />
+          <p className="text-sm text-gray-500 mt-4">
+            상태 변경 이력을 불러오는 중입니다...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <svg className="w-16 h-16 mx-auto text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-sm text-red-600 mt-4">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   // 빈 상태
   if (statusHistory.length === 0) {

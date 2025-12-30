@@ -239,3 +239,11 @@ export const PROJECT_STATUS_TRANSITIONS = {
   '종료': [], // 종료는 변경 불가
 };
 
+/**
+ * 프로젝트 신규 등록 시 선택 가능한 상태 목록
+ * - 시작전: 프로젝트 준비 단계
+ * - 보류/대기: 일시 보류 또는 시작 대기
+ * - 진행중: 바로 진행 시작
+ */
+export const CREATABLE_PROJECT_STATUSES = ['시작전', '보류/대기', '진행중'];
+

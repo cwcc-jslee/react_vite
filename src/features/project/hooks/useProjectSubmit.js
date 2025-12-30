@@ -18,10 +18,10 @@ import {
   validateProjectForm,
   validateProjectTaskForm,
 } from '../utils/validateProjectForm';
-import { convertKeysToSnakeCase } from '../../../shared/utils/transformUtils';
 import { projectTaskService } from '../services/projectTaskService';
 import { projectApiService } from '../services/projectApiService';
 import { processRelationFields } from '../../../shared/utils/relationFieldUtils';
+import dayjs from 'dayjs';
 
 /**
  * 프로젝트 제출 관련 기능을 제공하는 커스텀 훅
@@ -33,6 +33,7 @@ export const useProjectSubmit = () => {
   const dispatch = useDispatch();
   const formData = useSelector((state) => state.project.form.data || {});
   const buckets = useSelector((state) => state.projectBucket.buckets);
+  const currentUser = useSelector((state) => state.auth.user); // 현재 로그인 사용자
   const [progress, setProgress] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentBucketIndex, setCurrentBucketIndex] = useState(0);
@@ -245,21 +246,12 @@ export const useProjectSubmit = () => {
           processProjectBuckets(cleanProjectBuckets);
 
         setProgress(10);
-
-        // 3. 키 정보 스네이크케이스로 변환
-        const snakeCaseBaseForm = convertKeysToSnakeCase(processedFormData);
-        const snakeCaseProjectBuckets =
-          processedProjectBuckets.length > 0
-            ? convertKeysToSnakeCase(processedProjectBuckets)
-            : [];
-
-        setProgress(15);
         setProcessingStep('프로젝트 생성');
 
-        // 4. 프로젝트 API 제출
+        // 3. 프로젝트 API 제출
         setIsSubmitting(true);
         const resultAction = await projectApiService.createProject(
-          snakeCaseBaseForm,
+          processedFormData,
         );
 
         // 제출 실패 시 종료
@@ -284,10 +276,31 @@ export const useProjectSubmit = () => {
         const createdProject = resultAction.data;
         const projectId = createdProject.id;
 
+        // 3-1. 초기 상태 변경 이력 생성 (프로젝트 생성 시 pjtStatus에 대한 이력)
+        if (processedFormData.pjtStatus) {
+          try {
+            const statusChangeData = {
+              project: projectId,
+              fromStatus: null, // 신규 생성이므로 이전 상태 없음
+              toStatus: processedFormData.pjtStatus,
+              statusDetail: '프로젝트 생성',
+              requestedBy: currentUser?.user?.id || null,
+              requestedAt: dayjs().toISOString(),
+              changeDescription: '프로젝트 신규 등록',
+            };
+
+            await projectApiService.createProjectStatusChange(statusChangeData);
+            console.log('초기 상태 변경 이력 생성 완료:', statusChangeData);
+          } catch (statusChangeError) {
+            // 이력 생성 실패는 로그만 남김 (전체 프로세스를 실패시키지 않음)
+            console.error('초기 상태 변경 이력 생성 실패:', statusChangeError);
+          }
+        }
+
         setProgress(20);
 
-        // 5. 버킷이 없는 경우 종료
-        if (snakeCaseProjectBuckets.length === 0) {
+        // 4. 버킷이 없는 경우 종료
+        if (processedProjectBuckets.length === 0) {
           return {
             success: false,
             project: createdProject,
@@ -304,19 +317,19 @@ export const useProjectSubmit = () => {
           };
         }
 
-        // 6. 각 버킷과 해당 태스크를 순차적으로 처리
+        // 5. 각 버킷과 해당 태스크를 순차적으로 처리
         let finalProject = createdProject;
-        totalBuckets = snakeCaseProjectBuckets.length;
+        totalBuckets = processedProjectBuckets.length;
 
         // 각 버킷당 할당된 진행률 (20%~90% 사이에서 분배)
         const progressPerBucket = 70 / totalBuckets;
 
         try {
           for (let bucketIndex = 0; bucketIndex < totalBuckets; bucketIndex++) {
-            const bucket = snakeCaseProjectBuckets[bucketIndex];
+            const bucket = processedProjectBuckets[bucketIndex];
             setCurrentBucketIndex(bucketIndex);
 
-            // 6-1. 버킷 생성 단계
+            // 5-1. 버킷 생성 단계
             setProcessingStep(`버킷 "${bucket.bucket}" 생성 중`);
             const bucketPayload = {
               project: projectId,
@@ -529,11 +542,11 @@ export const useProjectSubmit = () => {
       throw new Error('버킷 ID가 없어 태스크를 생성할 수 없습니다.');
     }
 
-    // 프로젝트 ID와 버킷 ID 추가 (나머지 필드는 전처리된 상태 그대로 사용)
+    // 프로젝트 ID와 버킷 ID 추가
     return {
       ...task,
       project: projectId,
-      project_task_bucket: bucketId,
+      projectTaskBucket: bucketId,
     };
   };
 

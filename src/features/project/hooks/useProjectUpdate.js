@@ -12,10 +12,10 @@
  */
 
 import { useState, useCallback, useMemo } from 'react';
+import { useSelector } from 'react-redux';
 import { projectApiService } from '../services/projectApiService';
 import { useCodebook } from '../../../shared/hooks/useCodebook';
 import { processRelationFields } from '../../../shared/utils/relationFieldUtils';
-import { convertKeysToSnakeCase } from '../../../shared/utils/transformUtils';
 import { useProjectStore } from './useProjectStore';
 import { PROJECT_STATUS_TRANSITIONS } from '../constants/projectStatusConstants';
 import dayjs from 'dayjs';
@@ -23,6 +23,7 @@ import dayjs from 'dayjs';
 export const useProjectUpdate = (initialData) => {
   const { data: codebooks } = useCodebook(['pjtStatus', 'pjtClosureType']);
   const { selectedItem } = useProjectStore();
+  const currentUser = useSelector((state) => state.auth.user); // 현재 로그인 사용자
 
   const [formData, setFormData] = useState(initialData);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -144,51 +145,64 @@ export const useProjectUpdate = (initialData) => {
         }
 
         // 불필요 필드 제거 및 데이터 정리
-        const { id, documentId, pjtClosureType, closureDate, ...restData } = formData;
+        const { id, documentId, pjtClosureType, closureDate, statusDetail, changeDescription, ...restData } = formData;
         console.log(`>>>> restData`, restData);
+
         // 관계 필드 처리
         const processedData = processRelationFields(restData);
 
-        // 키 정보 스네이크케이스로 변환
-        const snakeCaseData = convertKeysToSnakeCase(processedData);
-
-        // 종료 상태일 경우 is_closed를 true로 설정
+        // 종료 상태일 경우 isClosed를 true로 설정
         if (formData.pjtStatus?.name === '종료') {
-          snakeCaseData.is_closed = true;
+          processedData.isClosed = true;
         }
 
-        console.log(`>>>> snakeCaseData`, snakeCaseData);
+        console.log(`>>>> processedData`, processedData);
 
         // 프로젝트 업데이트
         const result = await projectApiService.updateProject(
           documentId,
-          snakeCaseData,
+          processedData,
         );
+
+        // 상태 변경 이력 생성 (상태가 변경된 경우에만)
+        if (formData.pjtStatus?.id !== initialData.pjtStatus?.id) {
+          try {
+            const statusChangeData = {
+              project: id,
+              fromStatus: initialData.pjtStatus.id,
+              toStatus: formData.pjtStatus.id,
+              statusDetail: statusDetail || null,
+              requestedBy: currentUser?.user?.id || null,
+              requestedAt: dayjs().toISOString(),
+              changeDescription: changeDescription || null,
+            };
+
+            await projectApiService.createProjectStatusChange(statusChangeData);
+            console.log('상태 변경 이력 생성 완료:', statusChangeData);
+          } catch (statusChangeError) {
+            // 상태 변경 이력 생성 실패를 콘솔에 기록하지만 전체 프로세스를 실패시키지는 않음
+            console.error('상태 변경 이력 생성 실패:', statusChangeError);
+          }
+        }
 
         // 프로젝트 상태가 '종료'인 경우에만 project-closures 테이블에 데이터 추가
         if (formData.pjtStatus?.name === '종료') {
           try {
             // 날짜를 YYYY-MM-DD 형식으로 변환 (타임존 이슈 방지)
-            const formattedClosureDate = closureDate
-              ? dayjs(closureDate).format('YYYY-MM-DD')
+            const formattedClosureDate = formData.closureDate
+              ? dayjs(formData.closureDate).format('YYYY-MM-DD')
               : null;
 
             const closureData = {
               project: id,
-              closure_type: pjtClosureType.id,
-              closure_date: formattedClosureDate,
+              closureType: formData.pjtClosureType.id,
+              closureDate: formattedClosureDate,
             };
             await projectApiService.createProjectClosure(closureData);
           } catch (closureError) {
-            // 종료 정보 생성 실패 시 프로젝트 상태 롤백
-            const rollbackData = {
-              ...snakeCaseData,
-              pjt_status: initialData.pjtStatus.id,
-              pjt_closure_type: null,
-            };
-            await projectApiService.updateProject(id, rollbackData);
+            // 종료 정보 생성 실패 시 에러 발생 (상태 이력은 이미 생성됨)
             throw new Error(
-              '프로젝트 종료 정보 생성 중 오류가 발생했습니다. 프로젝트 상태가 이전 상태로 복원되었습니다.',
+              '프로젝트 종료 정보 생성 중 오류가 발생했습니다.',
             );
           }
         }

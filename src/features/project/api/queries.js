@@ -52,9 +52,6 @@ export const buildProjectListQuery = (params) => {
       customer: {
         fields: ['name'],
       },
-      pjt_status: {
-        fields: ['name'],
-      },
       fy: {
         fields: ['name'],
       },
@@ -71,6 +68,9 @@ export const buildProjectListQuery = (params) => {
       },
       importance_level: {
         fields: ['name'],
+      },
+      pjt_status: {
+        fields: ['name', 'code'],
       },
       project_tasks: {
         filters: { is_scheduled: { $eq: true } },
@@ -205,6 +205,21 @@ export const buildProjectDetailQuery = (id) => {
           populate: {
             closure_type: {
               fields: ['name', 'code'],
+            },
+          },
+        },
+        project_status_changes: {
+          sort: ['requested_at:desc'], // 최신순 정렬
+          fields: ['status_detail', 'requested_at', 'approval_status'],
+          populate: {
+            from_status: {
+              fields: ['name', 'code'],
+            },
+            to_status: {
+              fields: ['name', 'code'],
+            },
+            requested_by: {
+              fields: ['username'],
             },
           },
         },

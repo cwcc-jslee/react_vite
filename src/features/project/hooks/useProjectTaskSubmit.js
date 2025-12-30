@@ -11,7 +11,6 @@
 import { useCallback, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { notification } from '@shared/services/notification';
-import { convertKeysToSnakeCase } from '@shared/utils/transformUtils';
 import { projectTaskService } from '../services/projectTaskService';
 
 export const useProjectTaskSubmit = () => {
@@ -117,23 +116,17 @@ export const useProjectTaskSubmit = () => {
         const processedTasks = modifiedTasks.map(prepareTaskData);
         setProgress(40);
 
-        // 3. API 호출을 위한 데이터 변환
-        const snakeCaseTasks = processedTasks.map(({ documentId, data }) => ({
-          documentId,
-          ...convertKeysToSnakeCase(data),
-        }));
-        setProgress(60);
-
-        // 4. API 호출 및 결과 처리
-        const updatePromises = snakeCaseTasks.map(
-          ({ documentId, ...taskData }) =>
-            projectTaskService.updateTask(documentId, taskData),
+        // 3. API 호출 및 결과 처리
+        const updatePromises = processedTasks.map(
+          ({ documentId, data }) =>
+            projectTaskService.updateTask(documentId, data),
         );
+        setProgress(60);
 
         const results = await Promise.all(updatePromises);
         setProgress(80);
 
-        // 5. 성공 메시지 표시
+        // 4. 성공 메시지 표시
         notification.success({
           message: '태스크 업데이트 성공',
           description: `${results.length}개의 태스크가 성공적으로 업데이트되었습니다.`,
