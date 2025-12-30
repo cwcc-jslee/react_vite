@@ -65,7 +65,6 @@ export const PAGE_MENUS = {
     items: {
       list: {
         label: '현황',
-        permissions: ['user'],
         visible: true, // 메뉴 표시 여부
         config: {
           layout: 'list', // 레이아웃 타입
@@ -89,7 +88,6 @@ export const PAGE_MENUS = {
       },
       search: {
         label: '상세조회',
-        permissions: ['user'],
         visible: true,
         config: {
           layout: 'search',
@@ -113,7 +111,6 @@ export const PAGE_MENUS = {
       },
       forecast: {
         label: '매출예측',
-        permissions: ['user'],
         visible: true,
         config: {
           layout: 'forecast',
@@ -137,7 +134,6 @@ export const PAGE_MENUS = {
       },
       analytics: {
         label: '매출분석',
-        permissions: ['user'],
         visible: true,
         config: {
           layout: 'analytics',
@@ -161,7 +157,6 @@ export const PAGE_MENUS = {
       },
       salesInformation: {
         label: '매출정보',
-        permissions: ['user'],
         visible: true,
         config: {
           layout: 'salesInformation',
@@ -191,7 +186,6 @@ export const PAGE_MENUS = {
     items: {
       list: {
         label: '프로젝트',
-        permissions: ['user'],
         visible: true,
         config: {
           layout: 'list',
@@ -214,7 +208,6 @@ export const PAGE_MENUS = {
       },
       teamWeekly: {
         label: '팀별실적',
-        permissions: ['user'],
         visible: true,
         config: {
           layout: 'teamWeekly',
@@ -237,7 +230,6 @@ export const PAGE_MENUS = {
       },
       utilization: {
         label: '투입률',
-        permissions: ['user'],
         visible: true,
         config: {
           layout: 'utilization',
@@ -259,7 +251,6 @@ export const PAGE_MENUS = {
       },
       search: {
         label: '상세조회',
-        permissions: ['user'],
         visible: true,
         config: {
           layout: 'search',
@@ -329,7 +320,6 @@ export const PAGE_MENUS = {
 
       detail: {
         label: '상세정보',
-        permissions: ['user'],
         visible: false,
         config: {
           layout: 'detail',
@@ -359,7 +349,6 @@ export const PAGE_MENUS = {
     items: {
       list: {
         label: '현황',
-        permissions: ['user'],
         visible: true,
         config: {
           layout: 'list',
@@ -405,7 +394,6 @@ export const PAGE_MENUS = {
     items: {
       todayTasks: {
         label: '오늘할일',
-        permissions: ['user'],
         visible: true,
         config: {
           layout: 'todayTasks',
@@ -427,7 +415,6 @@ export const PAGE_MENUS = {
       },
       searchTasks: {
         label: '할일검색',
-        permissions: ['user'],
         visible: true,
         config: {
           layout: 'todayTasks',
@@ -449,7 +436,6 @@ export const PAGE_MENUS = {
       },
       recentWork: {
         label: '최근작업',
-        permissions: ['user'],
         visible: true,
         config: {
           layout: 'recentWork',
@@ -477,7 +463,6 @@ export const PAGE_MENUS = {
     items: {
       list: {
         label: '현황',
-        permissions: ['user'],
         visible: true,
         config: {
           layout: 'list',

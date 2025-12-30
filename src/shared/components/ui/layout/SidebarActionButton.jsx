@@ -9,35 +9,12 @@ import { changePageMenu } from '../../../../store/slices/uiSlice';
 import { setCurrentPath } from '../../../../store/slices/pageStateSlice';
 import { resetForm } from '../../../../store/slices/pageFormSlice';
 import { ActionButton } from './components';
-
-// 권한 체크 유틸리티 함수
-const checkCreatePermission = (user, pageId) => {
-  if (!user?.user?.user_access_control) return false;
-
-  const { permissions } = user.user.user_access_control;
-  if (!permissions) return false;
-
-  // 기본 권한 확인
-  const defaultPermission = permissions.default?.create;
-
-  // 페이지별 권한 확인
-  const pagePermission = permissions.pages?.[pageId]?.create;
-
-  // 페이지별 권한이 명시적으로 false인 경우 접근 불가
-  if (pagePermission === false) return false;
-
-  // 페이지별 권한이 true인 경우 접근 가능
-  if (pagePermission === true) return true;
-
-  // 페이지별 권한이 설정되지 않은 경우 기본 권한 사용
-  return defaultPermission === true;
-};
+import { hasCreatePermission } from '../../../utils/permissionUtils';
 
 const ACTION_CONFIG = {
   sfa: {
     label: '매출등록',
     menuId: 'add',
-    permissions: ['user'],
     config: {
       components: {
         monthlyStatus: true,
@@ -69,7 +46,6 @@ const ACTION_CONFIG = {
   contact: {
     label: '새연락처',
     menuId: 'add',
-    permissions: ['user'],
     config: {
       components: {
         contactSearchForm: true,
@@ -95,7 +71,6 @@ const ACTION_CONFIG = {
   project: {
     label: '새프로젝트',
     menuId: 'add',
-    permissions: ['user'],
     config: {
       layout: 'add',
       sections: {
@@ -132,7 +107,6 @@ const ACTION_CONFIG = {
   customer: {
     label: '고객등록',
     menuId: 'add',
-    permissions: ['user'],
     config: {
       components: {
         customerTable: true,
@@ -192,8 +166,9 @@ const SidebarActionButton = ({ collapsed }) => {
     if (!config) return null;
 
     // create 권한 체크
-    const hasPermission = checkCreatePermission(user, currentPage);
-    if (!hasPermission) return null;
+    if (!hasCreatePermission(user?.user?.user_access_control, currentPage)) {
+      return null;
+    }
 
     return (
       <ActionButton

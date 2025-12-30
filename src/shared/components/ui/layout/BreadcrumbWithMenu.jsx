@@ -1,6 +1,6 @@
 // src/shared/components/ui/layout/BreadcrumbWithMenu.jsx
 import React from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   changePageMenu,
   changeSubMenu,
@@ -10,6 +10,10 @@ import { resetForm } from '../../../../store/slices/pageFormSlice';
 import { resetFilters, clearChartFilters } from '../../../../store/slices/projectSlice';
 import { Breadcrumb } from './components';
 import { PAGE_SUB_MENUS } from '../../../constants/navigation';
+import {
+  hasMenuItemPermission,
+  hasSubMenuPermission,
+} from '../../../utils/permissionUtils';
 
 /**
  * 브레드크럼과 페이지별 메뉴를 포함하는 컴포넌트
@@ -22,32 +26,49 @@ const BreadcrumbWithMenu = ({
   subMenu = {},
 }) => {
   const dispatch = useDispatch();
-  // const { subMenuActive, subMenuKey, subMenu } = useSelector(
-  //   (state) => state.ui.pageLayout,
-  // );
+  const { user } = useSelector((state) => state.auth);
 
-  // 현재 페이지의 메뉴 항목들을 배열로 변환하고 visible 속성으로 필터링
+  // 현재 페이지의 메뉴 항목들을 배열로 변환하고 visible 속성 + 권한으로 필터링
   const currentPageMenus =
     currentPage && pageMenus[currentPage]?.items
       ? Object.entries(pageMenus[currentPage].items)
-          .filter(([_, value]) => value.visible !== false) // visible이 명시적으로 false가 아닌 항목만 포함
+          .filter(([key, value]) => {
+            // UI 레벨 visible 체크
+            if (value.visible === false) return false;
+
+            // 백엔드 권한 체크
+            return hasMenuItemPermission(
+              user?.user?.user_access_control,
+              currentPage,
+              key,
+            );
+          })
           .map(([key, value]) => ({
             key: key,
             label: value.label,
           }))
       : [];
 
-  console.log('표시 가능한 페이지 메뉴 항목:', currentPageMenus);
-
-  // 현재 활성화된 하위 메뉴 그룹 가져오기
+  // 현재 활성화된 하위 메뉴 그룹 가져오기 + 권한 필터링
   let currentSubMenus = [];
   const subMenuActive = subMenu && Object.keys(subMenu).length > 0;
   const subMenuKey = subMenu.key;
-  const activeSubMenu = subMenu.menu; // table, board,
+  const activeSubMenu = subMenu.menu;
+
   if (subMenuActive && subMenuKey && PAGE_SUB_MENUS[subMenuKey]) {
     currentSubMenus = Object.entries(PAGE_SUB_MENUS[subMenuKey].items)
-      .filter(([_, value]) => value.visible !== false)
-      // .sort((a, b) => (a[1].order || 0) - (b[1].order || 0))
+      .filter(([key, value]) => {
+        // UI 레벨 visible 체크
+        if (value.visible === false) return false;
+
+        // 백엔드 권한 체크
+        return hasSubMenuPermission(
+          user?.user?.user_access_control,
+          currentPage,
+          activeMenu,
+          key,
+        );
+      })
       .map(([key, value]) => ({
         key: key,
         label: value.label,

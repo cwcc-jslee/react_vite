@@ -5,6 +5,7 @@ import DefaultLayout from '../shared/components/ui/layout/DefaultLayout';
 import { useSelector } from 'react-redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { hasPagePermission } from '../shared/utils/permissionUtils';
 
 // Lazy load pages
 const LoginPage = React.lazy(() => import('../features/auth/pages/LoginPage'));
@@ -42,26 +43,8 @@ const queryClient = new QueryClient({
 
 // 권한 체크 유틸리티 함수
 const checkPagePermission = (user, path) => {
-  if (!user?.user?.user_access_control) return false;
-
-  const { permissions } = user.user.user_access_control;
-  if (!permissions) return false;
-
-  // 기본 권한 확인
-  const defaultPermission = permissions.default?.view;
-
-  // 페이지별 권한 확인 (path에서 첫 번째 세그먼트 추출)
   const pageId = path.split('/')[1];
-  const pagePermission = permissions.pages?.[pageId]?.view;
-
-  // 페이지별 권한이 명시적으로 false인 경우 접근 불가
-  if (pagePermission === false) return false;
-
-  // 페이지별 권한이 true인 경우 접근 가능
-  if (pagePermission === true) return true;
-
-  // 페이지별 권한이 설정되지 않은 경우 기본 권한 사용
-  return defaultPermission === true;
+  return hasPagePermission(user?.user?.user_access_control, pageId);
 };
 
 // PrivateRoute 컴포넌트 수정
