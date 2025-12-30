@@ -41,6 +41,8 @@ const ProjectStatusHistoryTab = ({ data }) => {
           changedAt: formatDateTime(change.requestedAt),
           changedBy: change.requestedBy?.username || '알 수 없음',
           changeDescription: change.changeDescription || null,
+          approvedBy: change.approvedBy?.username || null,
+          approvalComment: change.approvalComment || null,
         }));
 
         setStatusHistory(formattedHistory);
@@ -287,8 +289,8 @@ const ProjectStatusHistoryTab = ({ data }) => {
                     </div>
                   )}
 
-                  {/* 거부 사유 (거부된 경우) */}
-                  {history.approvalStatus === 'rejected' && history.rejectionReason && (
+                  {/* 반려 사유 (반려된 경우) */}
+                  {history.approvalStatus === 'rejected' && history.approvalComment && (
                     <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded">
                       <div className="flex items-start gap-2">
                         <svg className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -296,16 +298,11 @@ const ProjectStatusHistoryTab = ({ data }) => {
                         </svg>
                         <div className="flex-1">
                           <div className="text-xs font-semibold text-red-900 mb-1">
-                            거부 사유
+                            반려 사유
                           </div>
                           <div className="text-xs text-red-700">
-                            {history.rejectionReason}
+                            {history.approvalComment}
                           </div>
-                          {history.approvalComment && (
-                            <div className="text-xs text-red-600 mt-1">
-                              <span className="font-medium">의견:</span> {history.approvalComment}
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>

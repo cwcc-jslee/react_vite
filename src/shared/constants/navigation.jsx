@@ -11,12 +11,18 @@ import {
   FaChartBar,
   FaThLarge,
 } from 'react-icons/fa';
-import { MdContacts, MdViewKanban, MdTimeline } from 'react-icons/md';
+import { MdContacts, MdViewKanban, MdTimeline, MdDashboard } from 'react-icons/md';
 import { RiTimeLine } from 'react-icons/ri';
 import { LuListTodo } from 'react-icons/lu';
 
 // 사이드바 메뉴 항목
 export const SIDEBAR_ITEMS = [
+  {
+    id: 'dashboard',
+    path: '/dashboard',
+    label: 'DASHBOARD',
+    icon: <MdDashboard className="h-5 w-5" />,
+  },
   {
     id: 'sfa',
     path: '/sfa',

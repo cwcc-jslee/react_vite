@@ -139,7 +139,7 @@ export const projectApiService = {
    */
   createProject: async (projectData) => {
     try {
-      const response = await apiClientV2.post('/projects', projectData);
+      const response = await apiClientV2.post('/projects', { data: projectData });
       return response.data;
     } catch (error) {
       handleApiError(error, '프로젝트 생성 중 오류가 발생했습니다.');
@@ -154,7 +154,7 @@ export const projectApiService = {
    */
   updateProject: async (id, formData) => {
     try {
-      const response = await apiClientV2.put(`/projects/${id}`, formData);
+      const response = await apiClientV2.put(`/projects/${id}`, { data: formData });
       return response.data;
     } catch (error) {
       handleApiError(error, '프로젝트 수정 중 오류가 발생했습니다.');
@@ -168,7 +168,7 @@ export const projectApiService = {
    */
   createProjectClosure: async (closureData) => {
     try {
-      const response = await apiClientV2.post('/project-closures', closureData);
+      const response = await apiClientV2.post('/project-closures', { data: closureData });
       return response.data;
     } catch (error) {
       handleApiError(error, '프로젝트 종료 정보 생성 중 오류가 발생했습니다.');
@@ -202,7 +202,7 @@ export const projectApiService = {
     try {
       const response = await apiClientV2.post(
         '/project-status-changes',
-        statusChangeData,
+        { data: statusChangeData },
       );
       return response.data;
     } catch (error) {
@@ -260,6 +260,63 @@ export const projectApiService = {
         error,
         '프로젝트 상태 변경 이력을 불러오는 중 오류가 발생했습니다.',
       );
+    }
+  },
+
+  /**
+   * 프로젝트 상태 변경 승인/거부 처리
+   * @param {number} projectId - 프로젝트 ID
+   * @param {number} statusChangeId - 상태 변경 이력 ID
+   * @param {string} decision - 'approved' 또는 'rejected'
+   * @param {number} approvedBy - 승인자 ID
+   * @returns {Promise} API 응답 Promise
+   */
+  approveStatusChange: async (projectId, statusChangeId, decision, approvedBy) => {
+    try {
+      // 1. 상태 변경 이력의 승인 상태 업데이트
+      const statusChangeUpdateData = {
+        approvalStatus: decision,
+        approvedAt: new Date().toISOString(),
+        approvedBy: approvedBy,
+      };
+
+      await apiClientV2.put(
+        `/project-status-changes/${statusChangeId}`,
+        { data: statusChangeUpdateData }
+      );
+
+      // 2. 상태 변경 이력 조회 (toStatus 정보 필요)
+      const statusChangeResponse = await apiClientV2.get(
+        `/project-status-changes/${statusChangeId}?populate=toStatus`
+      );
+      const statusChange = statusChangeResponse.data.data;
+
+      // 3. 프로젝트 업데이트
+      if (decision === 'approved') {
+        // 승인: 실제 상태 변경
+        const projectUpdateData = {
+          pjtStatus: statusChange.toStatus.id,
+          currentApprovalStatus: 'approved',
+        };
+
+        // 종료 상태인 경우 isClosed 추가
+        if (statusChange.toStatus.name === '종료') {
+          projectUpdateData.isClosed = true;
+        }
+
+        await apiClientV2.put(`/projects/${projectId}`, { data: projectUpdateData });
+      } else {
+        // 거부: 승인 상태만 초기화
+        const projectUpdateData = {
+          currentApprovalStatus: 'rejected',
+        };
+
+        await apiClientV2.put(`/projects/${projectId}`, { data: projectUpdateData });
+      }
+
+      return { success: true, decision };
+    } catch (error) {
+      handleApiError(error, '승인 처리 중 오류가 발생했습니다.');
     }
   },
 };

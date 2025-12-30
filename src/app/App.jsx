@@ -8,6 +8,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 // Lazy load pages
 const LoginPage = React.lazy(() => import('../features/auth/pages/LoginPage'));
+const DashboardPage = React.lazy(() => import('../features/dashboard/pages/DashboardPage'));
 const SfaPage = React.lazy(() => import('../features/sfa/pages/SfaPage'));
 const CustomerPage = React.lazy(() =>
   import('../features/customer/pages/CustomerPage'),
@@ -115,10 +116,18 @@ const App = () => {
                     <Navigate
                       to={
                         user?.user?.user_access_control?.permissions
-                          ?.initialPage?.path || '/todo'
+                          ?.initialPage?.path || '/dashboard'
                       }
                       replace
                     />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/dashboard"
+                element={
+                  <PrivateRoute path="/dashboard">
+                    <DashboardPage />
                   </PrivateRoute>
                 }
               />

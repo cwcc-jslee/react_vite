@@ -209,7 +209,9 @@ export const buildProjectDetailQuery = (id) => {
           },
         },
         project_status_changes: {
-          sort: ['requested_at:desc'], // 최신순 정렬
+          // Strapi v5의 populate에서는 relation pagination이 동작하지 않음
+          // 모든 데이터를 가져오지만 프론트엔드에서 첫 번째만 사용 (statusChanges[0])
+          sort: ['id:desc'], // 최신순 정렬 (ID 기준)
           fields: ['status_detail', 'requested_at', 'approval_status'],
           populate: {
             from_status: {

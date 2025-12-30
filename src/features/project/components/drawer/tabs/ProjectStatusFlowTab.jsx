@@ -16,7 +16,6 @@ import {
 import { useProjectUpdate } from '../../../hooks/useProjectUpdate';
 import { useProjectStore } from '../../../hooks/useProjectStore';
 import { useUiStore } from '../../../../../shared/hooks/useUiStore';
-import { useCodebook } from '../../../../../shared/hooks/useCodebook';
 import { notification } from '../../../../../shared/services/notification';
 import { projectApiService } from '../../../services/projectApiService';
 import dayjs from 'dayjs';
@@ -25,13 +24,10 @@ const ProjectStatusFlowTab = ({ data }) => {
   const { actions: projectActions } = useProjectStore();
   const { actions: uiActions } = useUiStore();
   const currentUser = useSelector((state) => state.auth.user);
-  const { data: codebooks } = useCodebook(['pjtClosureType']);
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [formData, setFormData] = useState({
     statusDetail: '',
     changeDescription: '',
-    pjtClosureType: null,
-    closureDate: null,
   });
 
   const currentStatus = data.pjtStatus?.name || '시작전';
@@ -49,71 +45,20 @@ const ProjectStatusFlowTab = ({ data }) => {
     if (!canTransition) return;
 
     setSelectedStatus(status);
-
-    // 종료가 아닌 상태로 변경할 때는 종료 관련 필드 초기화
-    if (status !== '종료') {
-      setFormData({
-        statusDetail: '',
-        changeDescription: '',
-        pjtClosureType: null,
-        closureDate: null,
-      });
-    }
+    setFormData({
+      statusDetail: '',
+      changeDescription: '',
+    });
   };
 
   // 빠른 변경 저장
   const handleQuickChange = async () => {
     try {
-      // 종료 상태 검증
-      if (selectedStatus === '종료') {
-        if (!formData.pjtClosureType) {
-          notification.error({
-            message: '입력 오류',
-            description: '종료타입을 선택해주세요.',
-          });
-          return;
-        }
-        if (!formData.closureDate) {
-          notification.error({
-            message: '입력 오류',
-            description: '종료일을 선택해주세요.',
-          });
-          return;
-        }
-
-        // 완료로 종료하는 경우 모든 태스크 완료 확인
-        if (formData.pjtClosureType.name === '완료') {
-          const projectTasks = data.projectTasks || [];
-          const hasIncompleteTasks = projectTasks.some(
-            (task) => task.isCompleted !== true,
-          );
-
-          if (hasIncompleteTasks) {
-            notification.error({
-              message: '태스크 미완료',
-              description: '완료로 종료할 경우 모든 태스크가 완료되어야 합니다.',
-            });
-            return;
-          }
-        }
-      }
-
       const fromStatusCode = getStatusCodeByLabel(currentStatus);
       const toStatusCode = getStatusCodeByLabel(selectedStatus);
 
-      // 1. 프로젝트 상태 업데이트
-      const updateData = {
-        pjtStatus: toStatusCode,
-      };
-
-      // 종료 상태인 경우 isClosed 추가
-      if (selectedStatus === '종료') {
-        updateData.isClosed = true;
-      }
-
-      await projectApiService.updateProject(data.documentId, updateData);
-
-      // 2. 상태 변경 이력 생성
+      // 1. 상태 변경 이력 생성 (승인 대기)
+      let createdStatusChange = null;
       try {
         const statusChangeData = {
           project: data.id,
@@ -123,38 +68,27 @@ const ProjectStatusFlowTab = ({ data }) => {
           requestedBy: currentUser?.user?.id || null,
           requestedAt: dayjs().toISOString(),
           changeDescription: formData.changeDescription || null,
+          reviewStatus: 'pending', // 검토 대기
         };
 
-        await projectApiService.createProjectStatusChange(statusChangeData);
-        console.log('상태 변경 이력 생성 완료:', statusChangeData);
+        createdStatusChange = await projectApiService.createProjectStatusChange(statusChangeData);
+        console.log('상태 변경 이력 생성 완료:', createdStatusChange);
       } catch (statusChangeError) {
-        // 상태 변경 이력 생성 실패는 로그만 남김
         console.error('상태 변경 이력 생성 실패:', statusChangeError);
+        throw new Error('상태 변경 이력 생성 중 오류가 발생했습니다.');
       }
 
-      // 3. 종료 상태인 경우 project-closures 생성
-      if (selectedStatus === '종료') {
-        try {
-          const formattedClosureDate = formData.closureDate
-            ? dayjs(formData.closureDate).format('YYYY-MM-DD')
-            : null;
+      // 2. 프로젝트에 승인 대기 상태만 설정 (실제 상태는 변경하지 않음)
+      const approvalUpdateData = {
+        currentApprovalStatus: 'pending',
+        pendingStatusChange: createdStatusChange?.data?.id || null,
+      };
 
-          const closureData = {
-            project: data.id,
-            closureType: formData.pjtClosureType.id,
-            closureDate: formattedClosureDate,
-          };
-
-          await projectApiService.createProjectClosure(closureData);
-        } catch (closureError) {
-          console.error('프로젝트 종료 정보 생성 실패:', closureError);
-          throw new Error('프로젝트 종료 정보 생성 중 오류가 발생했습니다.');
-        }
-      }
+      await projectApiService.updateProject(data.documentId, approvalUpdateData);
 
       notification.success({
-        message: '상태 변경 완료',
-        description: `${currentStatus} → ${selectedStatus}로 변경되었습니다.`,
+        message: '상태 변경 요청 완료',
+        description: `${currentStatus} → ${selectedStatus} 상태 변경이 승인 대기 중입니다.`,
       });
 
       // 프로젝트 정보 새로고침
@@ -339,86 +273,41 @@ const ProjectStatusFlowTab = ({ data }) => {
           </div>
 
           <div className="space-y-4">
-            {/* 종료 상태인 경우 종료타입 및 종료일 입력 */}
-            {selectedStatus === '종료' ? (
-              <>
-                {/* 종료타입 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    종료타입 <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={formData.pjtClosureType?.id || ''}
-                    onChange={(e) => {
-                      const selectedId = e.target.value;
-                      const selectedItem = codebooks?.pjtClosureType?.find(
-                        (item) => item.id === selectedId || item.id === Number(selectedId),
-                      );
-                      setFormData({...formData, pjtClosureType: selectedItem});
-                    }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">선택하세요</option>
-                    {codebooks?.pjtClosureType?.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            {/* 상태 세부 내용 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                상태 세부 내용 (선택)
+              </label>
+              <input
+                type="text"
+                placeholder="예: 1차 수정반영, 2차 검수"
+                maxLength={100}
+                value={formData.statusDetail}
+                onChange={(e) => setFormData({...formData, statusDetail: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
 
-                {/* 종료일 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    종료일 <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.closureDate || ''}
-                    onChange={(e) => setFormData({...formData, closureDate: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                {/* 상태 세부 내용 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    상태 세부 내용 (선택)
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="예: 1차 수정반영, 2차 검수"
-                    maxLength={100}
-                    value={formData.statusDetail}
-                    onChange={(e) => setFormData({...formData, statusDetail: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                {/* 변경 사유 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    변경 사유 (선택)
-                  </label>
-                  <textarea
-                    placeholder="상태 변경 사유를 입력하세요"
-                    rows={3}
-                    value={formData.changeDescription}
-                    onChange={(e) => setFormData({...formData, changeDescription: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  />
-                </div>
-              </>
-            )}
+            {/* 변경 사유 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                변경 사유 (선택)
+              </label>
+              <textarea
+                placeholder="상태 변경 사유를 입력하세요"
+                rows={3}
+                value={formData.changeDescription}
+                onChange={(e) => setFormData({...formData, changeDescription: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              />
+            </div>
 
             {/* 액션 버튼 */}
             <div className="flex gap-3">
               <button
                 onClick={() => {
                   setSelectedStatus(null);
-                  setFormData({ statusDetail: '', changeDescription: '', pjtClosureType: null, closureDate: null });
+                  setFormData({ statusDetail: '', changeDescription: '' });
                 }}
                 className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
               >
