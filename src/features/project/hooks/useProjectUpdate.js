@@ -126,7 +126,6 @@ export const useProjectUpdate = (initialData) => {
         // 프로젝트에 승인 대기 상태만 설정 (실제 상태는 변경하지 않음)
         const approvalUpdateData = {
           currentApprovalStatus: 'pending',
-          pendingStatusChange: createdStatusChange?.data?.id || null,
         };
 
         console.log(`>>>> approvalUpdateData`, approvalUpdateData);

@@ -28,6 +28,7 @@ dayjs.locale('ko');
  * @param {Function} props.onClick - 클릭 핸들러 (Drawer 열기)
  * @param {string} props.timeAgo - 변경 시간 (ISO 8601 형식 또는 날짜 문자열)
  * @param {string} props.changedBy - 변경자 이름
+ * @param {string} props.requestedStatus - 요청된 상태 (pending일 때 승인 후 상태)
  */
 const CompactStatusBadge = ({
   currentStatus = '시작전',
@@ -38,6 +39,7 @@ const CompactStatusBadge = ({
   onClick,
   timeAgo = null,
   changedBy = null,
+  requestedStatus = null,
 }) => {
   // 영문 키로 변환
   const statusKey = PROJECT_STATUS_LABEL_TO_KEY[currentStatus];
@@ -104,58 +106,81 @@ const CompactStatusBadge = ({
     }
   };
 
+  // pending/rejected일 때는 from_status 강조, approved일 때는 to_status 강조
+  const isFromStatusHighlighted = approvalStatus === 'pending' || approvalStatus === 'rejected';
+  const isToStatusHighlighted = approvalStatus === 'approved';
+
+  // 상태 Badge 렌더링 함수
+  const renderStatusBadge = (status, isHighlighted, isClickable = false) => {
+    if (!status) return null;
+
+    const statusKey = PROJECT_STATUS_LABEL_TO_KEY[status];
+    const statusColorInfo = getStatusColorByKey(statusKey);
+    const statusDescription = PROJECT_STATUS_DESCRIPTIONS[statusKey];
+    const colorClasses = getColorClasses();
+
+    const Badge = isClickable ? 'button' : 'div';
+    const badgeProps = isClickable
+      ? {
+          type: 'button',
+          onClick: handleClick,
+          'aria-label': `현재 상태: ${status}. 클릭하여 상태 관리`,
+          title: statusDescription,
+        }
+      : {};
+
+    return (
+      <Badge
+        {...badgeProps}
+        className={`
+          inline-flex items-center gap-1.5 px-3 py-1.5
+          text-sm font-semibold rounded-md
+          ring-1 transition-all duration-200
+          ${isClickable ? 'cursor-pointer' : 'cursor-default'}
+          ${isHighlighted ? colorClasses : 'bg-gray-50 text-gray-600 ring-gray-300'}
+          ${isException ? 'ring-2' : 'ring-1'}
+        `}
+      >
+        {/* 상태 표시 점 */}
+        <span
+          className={`w-2 h-2 rounded-full ${isHighlighted ? 'animate-pulse' : ''}`}
+          style={{ backgroundColor: statusColorInfo?.color }}
+        />
+
+        {/* 상태 텍스트 */}
+        <span>{status}</span>
+
+        {/* 상태 세부 내용 (강조된 상태에만 표시) */}
+        {isHighlighted && statusDetail && (
+          <span className="text-xs opacity-75">({statusDetail})</span>
+        )}
+
+        {/* 예외 상태 표시 */}
+        {isException && (
+          <span className="text-xs opacity-75">(예외)</span>
+        )}
+      </Badge>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-2">
       {/* 1줄: 상태 전환 + 승인 상태 (우측 배치) */}
       <div className="flex items-center justify-between gap-2">
-        {/* 왼쪽: 상태 전환 */}
+        {/* 왼쪽: 상태 전환 (from_status → to_status) */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* 이전 상태 (시작전이 아닐 때만) */}
-          {previousStatus && (
-            <>
-              <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
-                {previousStatus}
-              </span>
-              <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </>
+          {/* from_status (currentStatus) */}
+          {renderStatusBadge(currentStatus, isFromStatusHighlighted, true)}
+
+          {/* 화살표 (requestedStatus가 있을 때만) */}
+          {requestedStatus && (
+            <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
           )}
 
-          {/* 현재 상태 Badge (클릭 가능) */}
-          <button
-            type="button"
-            onClick={handleClick}
-            className={`
-              inline-flex items-center gap-1.5 px-3 py-1.5
-              text-sm font-semibold rounded-md
-              ring-1 transition-all duration-200
-              cursor-pointer
-              ${getColorClasses()}
-              ${isException ? 'ring-2' : 'ring-1'}
-            `}
-            aria-label={`현재 상태: ${currentStatus}. 클릭하여 상태 관리`}
-            title={description}
-          >
-            {/* 상태 표시 점 */}
-            <span
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ backgroundColor: colorInfo?.color }}
-            />
-
-            {/* 상태 텍스트 */}
-            <span>{currentStatus}</span>
-
-            {/* 상태 세부 내용 */}
-            {statusDetail && (
-              <span className="text-xs opacity-75">({statusDetail})</span>
-            )}
-
-            {/* 예외 상태 표시 */}
-            {isException && (
-              <span className="text-xs opacity-75">(예외)</span>
-            )}
-          </button>
+          {/* to_status (requestedStatus) */}
+          {requestedStatus && renderStatusBadge(requestedStatus, isToStatusHighlighted, false)}
         </div>
 
         {/* 우측: 승인 상태 배지 */}

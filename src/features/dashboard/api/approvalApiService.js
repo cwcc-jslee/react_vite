@@ -27,6 +27,9 @@ export const approvalApiService = {
             pjt_status: {
               fields: ['name', 'code'],
             },
+            customer: {
+              fields: ['name'],
+            },
             project_status_changes: {
               sort: ['id:desc'],
               populate: {

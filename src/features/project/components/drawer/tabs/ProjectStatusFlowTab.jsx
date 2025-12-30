@@ -68,7 +68,7 @@ const ProjectStatusFlowTab = ({ data }) => {
           requestedBy: currentUser?.user?.id || null,
           requestedAt: dayjs().toISOString(),
           changeDescription: formData.changeDescription || null,
-          reviewStatus: 'pending', // 검토 대기
+          approvalStatus: 'pending', // 승인 대기
         };
 
         createdStatusChange = await projectApiService.createProjectStatusChange(statusChangeData);
@@ -81,7 +81,6 @@ const ProjectStatusFlowTab = ({ data }) => {
       // 2. 프로젝트에 승인 대기 상태만 설정 (실제 상태는 변경하지 않음)
       const approvalUpdateData = {
         currentApprovalStatus: 'pending',
-        pendingStatusChange: createdStatusChange?.data?.id || null,
       };
 
       await projectApiService.updateProject(data.documentId, approvalUpdateData);

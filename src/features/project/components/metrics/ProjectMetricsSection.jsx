@@ -29,6 +29,7 @@ const ProjectMetricsSection = ({
   // 상태 이력에서 최신 변경 정보 추출
   const statusMetadata = useMemo(() => {
     const statusChanges = data.projectStatusChanges || [];
+    const currentApprovalStatus = data.currentApprovalStatus;
 
     // 최신 이력이 없으면 기본값
     if (statusChanges.length === 0) {
@@ -39,12 +40,27 @@ const ProjectMetricsSection = ({
         approvalStatus: null,
         requestedAt: null,
         changedBy: null,
+        requestedStatus: null, // 요청된 상태 (pending일 때)
       };
     }
 
     // 최신 이력 (첫 번째 항목 - API에서 최신순으로 정렬되어 옴)
     const latestChange = statusChanges[0];
 
+    // pending 상태일 때는 승인 전/후 상태 표시
+    if (currentApprovalStatus === 'pending') {
+      return {
+        currentStatus: latestChange.fromStatus?.name || data.pjtStatus?.name || '시작전', // 승인 전 상태
+        previousStatus: null,
+        statusDetail: latestChange.statusDetail || null,
+        approvalStatus: latestChange.approvalStatus || null,
+        requestedAt: latestChange.requestedAt || null,
+        changedBy: latestChange.requestedBy?.username || null,
+        requestedStatus: latestChange.toStatus?.name || null, // 승인 후 상태
+      };
+    }
+
+    // approved/rejected 상태일 때는 기존 방식 (전 상태 → 현 상태)
     return {
       currentStatus: data.pjtStatus?.name || '시작전',
       previousStatus: latestChange.fromStatus?.name || null,
@@ -52,8 +68,9 @@ const ProjectMetricsSection = ({
       approvalStatus: latestChange.approvalStatus || null,
       requestedAt: latestChange.requestedAt || null,
       changedBy: latestChange.requestedBy?.username || null,
+      requestedStatus: null,
     };
-  }, [data.projectStatusChanges, data.pjtStatus]);
+  }, [data.projectStatusChanges, data.pjtStatus, data.currentApprovalStatus]);
 
   // 프로젝트 기간 포맷
   const formatProjectDuration = () => {
@@ -109,6 +126,7 @@ const ProjectMetricsSection = ({
             onClick={onStatusClick}
             timeAgo={statusMetadata.requestedAt}
             changedBy={statusMetadata.changedBy}
+            requestedStatus={statusMetadata.requestedStatus}
           />
 
           {/* 종료 상태 표시 */}

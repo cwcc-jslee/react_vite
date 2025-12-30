@@ -17,7 +17,7 @@ dayjs.extend(relativeTime);
 dayjs.locale('ko');
 
 const ApprovalCard = ({ approval, onClick }) => {
-  const { name, pendingStatusChange } = approval;
+  const { name, customer, pendingStatusChange } = approval;
 
   if (!pendingStatusChange) {
     return null;
@@ -30,16 +30,44 @@ const ApprovalCard = ({ approval, onClick }) => {
   const fromColor = getStatusColorByKey(fromStatusKey);
   const toColor = getStatusColorByKey(toStatusKey);
 
+  // 승인 유형 결정
+  const getApprovalType = () => {
+    if (!fromStatus) {
+      return { label: '신규', color: 'bg-green-100 text-green-800' };
+    }
+    if (toStatus?.name === '종료') {
+      return { label: '종료', color: 'bg-gray-100 text-gray-800' };
+    }
+    if (toStatus?.name === '중간검수' || toStatus?.name === '고객검수') {
+      return { label: '검수', color: 'bg-blue-100 text-blue-800' };
+    }
+    return { label: '변경', color: 'bg-yellow-100 text-yellow-800' };
+  };
+
+  const approvalType = getApprovalType();
+
   return (
     <div
       className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition-colors"
       onClick={onClick}
     >
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex-1">
-          <h4 className="text-sm font-semibold text-gray-900 mb-1">{name}</h4>
+      <div className="flex items-center justify-between gap-4">
+        {/* 왼쪽: 프로젝트 정보 */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className={`px-2 py-0.5 text-xs font-medium rounded flex-shrink-0 ${approvalType.color}`}>
+              {approvalType.label}
+            </span>
+            <h4 className="text-sm font-semibold text-gray-900 truncate">{name}</h4>
+            {customer?.name && (
+              <>
+                <span className="text-gray-300">|</span>
+                <span className="text-xs text-gray-600 truncate">{customer.name}</span>
+              </>
+            )}
+          </div>
           <div className="flex items-center gap-2 text-xs text-gray-600">
-            <Clock className="w-3 h-3" />
+            <Clock className="w-3 h-3 flex-shrink-0" />
             <span>{dayjs(requestedAt).fromNow()}</span>
             {requestedBy?.username && (
               <>
@@ -49,29 +77,33 @@ const ApprovalCard = ({ approval, onClick }) => {
             )}
           </div>
         </div>
-      </div>
 
-      {/* 상태 변경 표시 */}
-      <div className="flex items-center gap-2 mb-2">
-        <span
-          className="px-2 py-1 text-xs font-medium rounded"
-          style={{
-            backgroundColor: fromColor?.bgColor,
-            color: fromColor?.color,
-          }}
-        >
-          {fromStatus?.name}
-        </span>
-        <ArrowRight className="w-4 h-4 text-gray-400" />
-        <span
-          className="px-2 py-1 text-xs font-medium rounded"
-          style={{
-            backgroundColor: toColor?.bgColor,
-            color: toColor?.color,
-          }}
-        >
-          {toStatus?.name}
-        </span>
+        {/* 오른쪽: 상태 변경 표시 */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {fromStatus && (
+            <>
+              <span
+                className="px-2 py-1 text-xs font-medium rounded whitespace-nowrap"
+                style={{
+                  backgroundColor: fromColor?.bgColor,
+                  color: fromColor?.color,
+                }}
+              >
+                {fromStatus.name}
+              </span>
+              <ArrowRight className="w-4 h-4 text-gray-400" />
+            </>
+          )}
+          <span
+            className="px-2 py-1 text-xs font-medium rounded whitespace-nowrap"
+            style={{
+              backgroundColor: toColor?.bgColor,
+              color: toColor?.color,
+            }}
+          >
+            {toStatus?.name}
+          </span>
+        </div>
       </div>
 
       {/* 상태 세부 내용 */}
@@ -89,6 +121,10 @@ ApprovalCard.propTypes = {
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     documentId: PropTypes.string,
     name: PropTypes.string.isRequired,
+    customer: PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      name: PropTypes.string,
+    }),
     pendingStatusChange: PropTypes.shape({
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
       fromStatus: PropTypes.shape({

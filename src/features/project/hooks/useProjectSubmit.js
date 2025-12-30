@@ -248,10 +248,16 @@ export const useProjectSubmit = () => {
         setProgress(10);
         setProcessingStep('프로젝트 생성');
 
-        // 3. 프로젝트 API 제출
+        // 3. 프로젝트 API 제출 (초기 상태는 보류/대기로 설정)
+        const initialStatusId = processedFormData.pjtStatus; // 사용자가 선택한 상태
+        const projectDataWithPendingStatus = {
+          ...processedFormData,
+          pjtStatus: 85, // 보류/대기 (PROJECT_STATUS_CODES.PENDING_WAITING)
+        };
+
         setIsSubmitting(true);
         const resultAction = await projectApiService.createProject(
-          processedFormData,
+          projectDataWithPendingStatus,
         );
 
         // 제출 실패 시 종료
@@ -276,17 +282,18 @@ export const useProjectSubmit = () => {
         const createdProject = resultAction.data;
         const projectId = createdProject.id;
 
-        // 3-1. 초기 상태 변경 이력 생성 (프로젝트 생성 시 pjtStatus에 대한 이력)
-        if (processedFormData.pjtStatus) {
+        // 3-1. 초기 상태 변경 이력 생성 (보류/대기 → 사용자 선택 상태)
+        if (initialStatusId) {
           try {
             const statusChangeData = {
               project: projectId,
-              fromStatus: null, // 신규 생성이므로 이전 상태 없음
-              toStatus: processedFormData.pjtStatus,
+              fromStatus: 85, // 보류/대기 (PROJECT_STATUS_CODES.PENDING_WAITING)
+              toStatus: initialStatusId, // 사용자가 선택한 상태
               statusDetail: '프로젝트 생성',
               requestedBy: currentUser?.user?.id || null,
               requestedAt: dayjs().toISOString(),
               changeDescription: '프로젝트 신규 등록',
+              approvalStatus: 'pending', // 승인 대기 상태
             };
 
             await projectApiService.createProjectStatusChange(statusChangeData);
