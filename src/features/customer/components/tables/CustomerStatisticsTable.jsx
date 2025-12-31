@@ -1,6 +1,5 @@
-// src/features/customer/components/CustomerOverview.jsx
+// src/features/customer/components/tables/CustomerStatisticsTable.jsx
 import React, { useEffect, useState } from 'react';
-// import { StateDisplay } from '../../../shared/components/ui/state/StateDisplay';
 import { Table } from '../../../../shared/components/ui/index';
 import dayjs from 'dayjs';
 
@@ -36,7 +35,7 @@ const TableDataCell = ({ children, isTitle = false }) => (
   </Table.Td>
 );
 
-const CustomerStatisticsOverview = ({ api }) => {
+const CustomerStatisticsTable = ({ api }) => {
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -175,4 +174,4 @@ const CustomerStatisticsOverview = ({ api }) => {
   );
 };
 
-export default CustomerStatisticsOverview;
+export default CustomerStatisticsTable;

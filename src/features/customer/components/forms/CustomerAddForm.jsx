@@ -27,7 +27,7 @@ import {
   formatBusinessNumber,
 } from '../../../../shared/services/businessNumberUtils';
 import { notification } from '../../../../shared/services/notification';
-import CoFunnelInput from '../elements/CoFunnelInput';
+import CustomerFunnelInput from '../elements/CustomerFunnelInput';
 
 const CustomerAddForm = ({ codebooks, isLoadingCodebook }) => {
   const { resetFilters } = useCustomer();
@@ -236,7 +236,7 @@ const CustomerAddForm = ({ codebooks, isLoadingCodebook }) => {
                 </option>
               ))}
             </Select> */}
-            <CoFunnelInput
+            <CustomerFunnelInput
               codebooks={codebooks}
               formData={formData}
               updateFormField={updateFormField}

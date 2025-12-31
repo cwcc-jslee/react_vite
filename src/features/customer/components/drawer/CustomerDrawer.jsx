@@ -13,7 +13,7 @@ import { useCustomer } from '../../context/CustomerProvider.jsx';
 // import { useSfaForm } from '../../hooks/useSfaForm.js';
 import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer.jsx';
 import ActionMenuBar from '../../../../shared/components/ui/button/ActionMenuBar.jsx';
-import CustomerAddForm from '../forms/CusotmerAddForm';
+import CustomerAddForm from '../forms/CustomerAddForm';
 import CustomerDetailTable from '../tables/CustomerDetailTable.jsx';
 import EditableCustomerDetailTable from '../tables/EditableCustomerDetailTable.jsx';
 

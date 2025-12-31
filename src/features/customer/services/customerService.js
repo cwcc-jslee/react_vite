@@ -67,4 +67,31 @@ export const customerService = {
       handleError(error, 'Failed to fetch Customer list');
     }
   },
+
+  /**
+   * CUSTOMER 통계용 카운트 조회
+   * @param {Array} filters - 필터 배열
+   * @returns {Object} - 응답 객체 (meta.pagination.total 포함)
+   */
+  getCount: async (filters) => {
+    try {
+      const query = qs.stringify(
+        {
+          filters: {
+            $and: [{ is_deleted: { $eq: false } }, ...filters],
+          },
+          pagination: {
+            start: 0,
+            limit: 1,
+          },
+        },
+        { encodeValuesOnly: true }
+      );
+
+      const response = await apiClient.get(`/customers?${query}`);
+      return normalizeResponse(response);
+    } catch (error) {
+      handleError(error, 'Failed to fetch customer count');
+    }
+  },
 };

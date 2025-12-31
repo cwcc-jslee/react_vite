@@ -1,4 +1,4 @@
-// src/features/customer/components/forms/CoFunnelInput/index.jsx
+// src/features/customer/components/elements/CustomerFunnelInput.jsx
 /**
  * 유입경로 인라인 입력 컴포넌트
  * 유입경로를 선택하고 상세 정보(suffix)를 추가로 입력할 수 있는 컴포넌트
@@ -19,7 +19,7 @@ import { X, AlertCircle } from 'lucide-react';
 // 최대 허용 유입경로 수
 const MAX_FUNNELS = 5;
 
-const CoFunnelInput = ({
+const CustomerFunnelInput = ({
   codebooks,
   formData,
   updateFormField,
@@ -239,4 +239,4 @@ const CoFunnelInput = ({
   );
 };
 
-export default CoFunnelInput;
+export default CustomerFunnelInput;
