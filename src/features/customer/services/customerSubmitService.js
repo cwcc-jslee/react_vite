@@ -1,18 +1,16 @@
 // src/features/customer/services/customerSubmitService.js
 import { apiService } from '../../../shared/api/apiService';
-import { transformToDBFields } from '../utils/transformUtils';
 
 export const customerSubmitService = {
   /**
-   * Customer 기본 정보 생성
+   * Customer 기본 정보 생성 (Interceptor가 자동으로 snake_case 변환)
    */
   async createCustomerBase(formData) {
     console.log('[Customer] Creating base with formData:', formData);
 
     try {
-      const dbData = transformToDBFields.transformCustomerFields(formData);
-      console.log('[Customer] transformToDBFields :', dbData);
-      const response = await apiService.post('/customers', dbData);
+      // Interceptor가 자동으로 camelCase → snake_case 변환
+      const response = await apiService.post('/customers', formData);
 
       return response.data;
     } catch (error) {
@@ -45,8 +43,8 @@ export const customerSubmitService = {
   },
 
   /**
-   * Customer 삭제 기능
-   * is_deleted 필드 업데이트트
+   * Customer 삭제 기능 (Interceptor가 자동으로 snake_case 변환)
+   * isDeleted 필드 업데이트
    * @param {string} customerId - 삭제할 고객 ID
    */
   async deleteCustomer(customerId) {
@@ -55,7 +53,8 @@ export const customerSubmitService = {
     });
 
     try {
-      const dbData = { is_deleted: true };
+      // Interceptor가 is_deleted로 자동 변환
+      const dbData = { isDeleted: true };
 
       const response = await apiService.put(`/customers/${customerId}`, dbData);
 

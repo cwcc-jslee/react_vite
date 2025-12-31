@@ -10,13 +10,14 @@ export const baseSubmitService = (endpoint) => {
   const entityName = endpoint.replace('/', ''); // '/customers' -> 'customers'
 
   /**
-   * 기본 데이터 생성
-   * @param {Object} formData - 폼 데이터 (이미 변환된 상태)
+   * 기본 데이터 생성 (Interceptor가 자동으로 snake_case 변환)
+   * @param {Object} formData - 폼 데이터 (camelCase)
    */
   const createBase = async (formData) => {
     console.log(`[${entityName}] Creating base with formData:`, formData);
 
     try {
+      // Interceptor가 자동으로 camelCase → snake_case 변환
       const response = await apiService.post(endpoint, formData);
       return response.data;
     } catch (error) {
@@ -29,14 +30,15 @@ export const baseSubmitService = (endpoint) => {
   };
 
   /**
-   * 기본 필드 수정
+   * 기본 필드 수정 (Interceptor가 자동으로 snake_case 변환)
    * @param {string} id - 엔티티 ID
-   * @param {Object} formData - 수정할 데이터 (이미 변환된 상태)
+   * @param {Object} formData - 수정할 데이터 (camelCase)
    */
   const updateBase = async (id, formData) => {
     console.log(`[${entityName}] Updating with formData:`, formData);
 
     try {
+      // Interceptor가 자동으로 camelCase → snake_case 변환
       const response = await apiService.put(`${endpoint}/${id}`, formData);
       return response.data;
     } catch (error) {
@@ -49,15 +51,16 @@ export const baseSubmitService = (endpoint) => {
   };
 
   /**
-   * 소프트 삭제 기능 (is_deleted 필드 활용)
+   * 소프트 삭제 기능 (Interceptor가 isDeleted → is_deleted 변환)
    * @param {string} id - 삭제할 엔티티 ID
    */
   const softDelete = async (id) => {
     console.log(`[${entityName}] Soft delete:`, { id });
 
     try {
-      const dbData = { is_deleted: true };
-      const response = await apiService.put(`${endpoint}/${id}`, dbData);
+      // Interceptor가 자동으로 is_deleted로 변환
+      const formData = { isDeleted: true };
+      const response = await apiService.put(`${endpoint}/${id}`, formData);
       return response.data;
     } catch (error) {
       console.error(`[${entityName}] Delete error:`, error);

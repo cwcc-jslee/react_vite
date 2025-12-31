@@ -8,14 +8,10 @@ import {
   baseSubmitService,
   createEntity,
 } from '../../../shared/services/baseSubmitService';
-import { transformToDBFields } from '../../../shared/utils/entityTransformUtils';
 import { notification } from '../../../shared/services/notification';
 
-// Contact 서비스 인스턴스 생성
-const contactService = baseSubmitService(
-  '/contacts',
-  transformToDBFields.transformContact,
-);
+// Contact 서비스 인스턴스 생성 (Interceptor가 자동으로 변환하므로 transform 함수 불필요)
+const contactService = baseSubmitService('/contacts');
 
 /**
  * 담당자 폼 데이터를 서버에 제출하는 함수
@@ -93,9 +89,9 @@ const prepareContactData = (data) => {
 };
 
 /**
- * Contact 생성 함수 (기존 코드)
+ * Contact 생성 함수
  * 내부적으로 baseSubmitService의 createEntity 사용
- * transformToDBFields를 통해 DB 필드 변환 수행
+ * Interceptor가 자동으로 snake_case 변환 수행
  */
 export const createContact = async (formData) => {
   return createEntity(contactService, formData, 'Contact');
