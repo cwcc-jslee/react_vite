@@ -12,6 +12,7 @@ import uiReducer from './slices/uiSlice';
 import sfaReducer from './slices/sfaSlice';
 import projectReducer from './slices/projectSlice';
 import todoReducer from './slices/todoSlice';
+import customerReducer from './slices/customerSlice';
 
 // 변경예정
 import pageStateReducer from './slices/pageStateSlice';
@@ -35,6 +36,7 @@ export const store = configureStore({
     sfa: sfaReducer,
     project: projectReducer,
     todo: todoReducer,
+    customer: customerReducer,
 
     // work 상태 관리 리듀서(다른 페이지에서 사용 필요하여 별도 구성)
     projectBucket: projectBucketReducer,
@@ -42,10 +44,6 @@ export const store = configureStore({
     work: workReducer,
     pageState: pageStateReducer,
     pageForm: pageFormReducer,
-
-    // 삭제, 이동 예정
-    // project: projectReducer, // 삭제 예정..
-    // customer: customerReducer, // 아직 구현되지 않은 경우 주석 처리
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

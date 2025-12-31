@@ -1,6 +1,7 @@
 // src/features/customer/components/table/CustomerTable.jsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useCustomer } from '../../context/CustomerProvider';
+import { useCustomerStore } from '../../hooks/useCustomerStore';
 import { Button } from '../../../../shared/components/ui';
 import { Card } from '../../../../shared/components/ui/card/Card';
 import { StateDisplay } from '../../../../shared/components/ui/state/StateDisplay';
@@ -141,10 +142,15 @@ const TableRow = ({ item, index, pageSize, currentPage }) => {
 };
 
 const CustomerTable = () => {
-  const { fetchData, loading, error, pagination, setPage, setPageSize } =
-    useCustomer();
+  const { fetchCustomerDetail } = useCustomer();
+  const { items, loading, error, pagination, actions } = useCustomerStore();
 
-  console.log(`CustomerTable's fetchData : `, fetchData);
+  // 초기 데이터 로드
+  useEffect(() => {
+    actions.data.fetchCustomers();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  console.log(`CustomerTable's fetchData : `, items);
 
   return (
     <Card>
@@ -170,10 +176,10 @@ const CustomerTable = () => {
               <TableLoadingIndicator columnsCount={COLUMNS.length} />
             ) : error ? (
               <TableErrorState columnsCount={COLUMNS.length} message={error} />
-            ) : !fetchData?.length ? (
+            ) : !items?.length ? (
               <TableEmptyState columnsCount={COLUMNS.length} />
             ) : (
-              fetchData.map((item, index) => (
+              items.map((item, index) => (
                 <TableRow
                   key={item.id}
                   item={item}
@@ -187,13 +193,13 @@ const CustomerTable = () => {
         </table>
       </div>
 
-      {!loading && !error && fetchData?.length > 0 && (
+      {!loading && !error && items?.length > 0 && (
         <Pagination
           current={pagination.current}
           pageSize={pagination.pageSize}
           total={pagination.total}
-          onPageChange={setPage}
-          onPageSizeChange={setPageSize}
+          onPageChange={actions.pagination.setPage}
+          onPageSizeChange={actions.pagination.setPageSize}
         />
       )}
     </Card>
