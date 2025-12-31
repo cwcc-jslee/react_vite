@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { sfaApi } from '../../api/sfaApi';
 import { StateDisplay } from '../../../../shared/components/ui/state/StateDisplay';
+import { useSfaStore } from '../../hooks/useSfaStore';
 import dayjs from 'dayjs';
 
 // Table Header Cell Component
@@ -38,17 +39,18 @@ const TableDataCell = ({ children, isProbability = false }) => (
 );
 
 const SfaAnnualOverview = () => {
+  const { filters } = useSfaStore();
   const [forecastData, setForecastData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 월 계산 함수 (현재 월부터 12개월)
-  const calculateMonths = () => {
-    const now = dayjs();
+  // 월 계산 함수 (기준월부터 12개월)
+  const calculateMonths = (baseDate) => {
+    const base = dayjs(baseDate);
     const months = [];
 
     for (let i = 0; i < 12; i++) {
-      const date = now.add(i, 'month');
+      const date = base.add(i, 'month');
       months.push({
         month: String(date.month() + 1).padStart(2, '0'),
         year: date.year(),
@@ -60,7 +62,9 @@ const SfaAnnualOverview = () => {
     return months;
   };
 
-  const months = calculateMonths();
+  // 기준월: filters.dateRange.startDate 또는 현재 월
+  const baseDate = filters.dateRange?.startDate || dayjs().startOf('month').format('YYYY-MM-DD');
+  const months = calculateMonths(baseDate);
   const probabilities = ['confirmed', '100', '90', '70', '50'];
 
   // API 응답 데이터 검증 및 처리
@@ -121,7 +125,7 @@ const SfaAnnualOverview = () => {
     };
 
     fetchForecastData();
-  }, []);
+  }, [baseDate]); // baseDate 변경 시 데이터 재조회
 
   if (loading) return <StateDisplay type="loading" />;
   if (error) return <StateDisplay type="error" message={error} />;
@@ -151,9 +155,8 @@ const SfaAnnualOverview = () => {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-gray-900">년간 매출예측</h2>
       <div className="w-full overflow-x-auto">
-        <table className="w-full border-collapse text-sm my-5">
+        <table className="w-full border-collapse text-sm">
           <thead>
             <tr>
               <TableHeaderCell>확률</TableHeaderCell>

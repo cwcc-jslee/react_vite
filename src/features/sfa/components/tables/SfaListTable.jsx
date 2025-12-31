@@ -10,22 +10,37 @@ import { StateDisplay } from '../../../../shared/components/ui/state/StateDispla
 import { Pagination } from '../../../../shared/components/ui/pagination/Pagination';
 import { formatCustomerDisplay } from '../../utils/displayUtils';
 import { truncateText } from '../../../../shared/utils/textUtils';
+import ColumnToggleMenu from './ColumnToggleMenu';
 import dayjs from 'dayjs';
 
 const COLUMNS = [
-  { key: 'no', title: 'No', align: 'center' },
-  { key: 'confirmed', title: '확정여부', align: 'center' },
-  { key: 'percentage', title: '확률', align: 'center' },
+  { key: 'no', title: 'No', align: 'center', essential: true },
+  { key: 'confirmed', title: '확정여부', align: 'center', essential: true },
+  { key: 'percentage', title: '확률', align: 'center', essential: true },
   { key: 'customer', title: '매출처', align: 'left' },
-  { key: 'name', title: '건명', align: 'left' },
+  { key: 'name', title: '건명', align: 'left', essential: true },
   { key: 'payment', title: '결제방법', align: 'center' },
   { key: 'classification', title: '매출구분', align: 'center' },
   { key: 'item', title: '매출품목', align: 'center' },
   { key: 'team', title: '사업부', align: 'center' },
-  { key: 'revenue', title: '매출액', align: 'right' },
+  { key: 'revenue', title: '매출액', align: 'right', essential: true },
   { key: 'profit', title: '매출이익', align: 'right' },
   { key: 'date', title: '매출인식일', align: 'center' },
-  { key: 'action', title: 'Action', align: 'center' },
+  { key: 'action', title: 'Action', align: 'center', essential: true },
+];
+
+// 기본적으로 표시할 컬럼 (필수 컬럼 + 기본 선택 컬럼)
+const DEFAULT_VISIBLE_COLUMNS = [
+  'no',
+  'confirmed',
+  'percentage',
+  'customer',
+  'name',
+  'payment',
+  'revenue',
+  'profit',
+  'date',
+  'action',
 ];
 
 const TableRow = ({
@@ -38,7 +53,9 @@ const TableRow = ({
   isCheckboxMode,
   checkedItems,
   onCheckChange,
+  visibleColumns,
 }) => {
+  const isColumnVisible = (key) => visibleColumns.includes(key);
   const actualIndex = (currentPage - 1) * pageSize + index + 1;
   const sfaItemPrice = item.sfa?.sfa_item_price || [];
 
@@ -63,6 +80,95 @@ const TableRow = ({
     onCheckChange(item.id, e.target.checked);
   };
 
+  // 컬럼별 렌더링 데이터 매핑
+  const getCellContent = (columnKey) => {
+    switch (columnKey) {
+      case 'no':
+        return actualIndex;
+      case 'confirmed':
+        return item.isConfirmed ? 'YES' : 'NO';
+      case 'percentage':
+        return item.probability || '-';
+      case 'customer':
+        return item?.revenueSource?.name ? (
+          item?.revenueSource?.name === item?.sfa?.customer?.name ? (
+            <div className="group relative">
+              <span>{truncateText(item.revenueSource.name, 10)}</span>
+              {item.revenueSource.name.length > 10 && (
+                <div className="invisible group-hover:visible absolute bottom-full left-0 mb-1 z-10 p-2 bg-gray-800 text-white text-sm rounded shadow-lg whitespace-normal max-w-xs">
+                  {item.revenueSource.name}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="group relative">
+              <span>
+                {truncateText(
+                  `${item.revenueSource.name} / ${item.sfa.customer.name}`,
+                  10,
+                )}
+              </span>
+              {`${item.revenueSource.name} / ${item.sfa.customer.name}`.length > 10 && (
+                <div className="invisible group-hover:visible absolute bottom-full left-0 mb-1 z-10 p-2 bg-gray-800 text-white text-sm rounded shadow-lg whitespace-normal max-w-xs">
+                  {item.revenueSource.name} / {item.sfa.customer.name}
+                </div>
+              )}
+            </div>
+          )
+        ) : (
+          '-'
+        );
+      case 'name':
+        return (
+          <div className="group relative">
+            <span>
+              {truncateText(
+                item.sfa?.name
+                  ? item.paymentLabel
+                    ? `${item.sfa.name}__${item.paymentLabel}`
+                    : item.sfa.name
+                  : '',
+                40,
+              )}
+            </span>
+            {item.sfa?.name &&
+              (item.paymentLabel
+                ? `${item.sfa.name}__${item.paymentLabel}`
+                : item.sfa.name
+              ).length > 40 && (
+                <div className="invisible group-hover:visible absolute bottom-full left-0 mb-1 z-10 p-2 bg-gray-800 text-white text-sm rounded shadow-lg whitespace-normal max-w-xs">
+                  {item.paymentLabel
+                    ? `${item.sfa.name}__${item.paymentLabel}`
+                    : item.sfa.name}
+                </div>
+              )}
+          </div>
+        );
+      case 'payment':
+        return item.billingType || '-';
+      case 'classification':
+        return item.sfa?.sfaClassification?.name || '-';
+      case 'item':
+        return sfaItemPrice.map((item) => item.sfaItemName).join(', ') || '-';
+      case 'team':
+        return sfaItemPrice.map((item) => item.teamName).join(', ') || '-';
+      case 'revenue':
+        return new Intl.NumberFormat('ko-KR').format(item.amount);
+      case 'profit':
+        return new Intl.NumberFormat('ko-KR').format(item.profitAmount);
+      case 'date':
+        return item.recognitionDate;
+      case 'action':
+        return (
+          <Button variant="outline" size="sm" onClick={handleViewClick}>
+            View
+          </Button>
+        );
+      default:
+        return '-';
+    }
+  };
+
   return (
     <tr className="hover:bg-gray-50">
       {isCheckboxMode && (
@@ -75,84 +181,20 @@ const TableRow = ({
           />
         </td>
       )}
-      <td className="px-3 py-2 text-center text-sm">{actualIndex}</td>
-      <td className="px-3 py-2 text-center text-sm">
-        {item.isConfirmed ? 'YES' : 'NO'}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">
-        {item.probability || '-'}
-      </td>
-      <td className="px-3 py-2 text-sm">
-        {item?.revenueSource?.name ? (
-          item?.revenueSource?.name === item?.sfa?.customer?.name ? (
-            <span title={item.revenueSource.name}>
-              {truncateText(item.revenueSource.name, 10)}
-            </span>
-          ) : (
-            <span
-              title={`${item.revenueSource.name} / ${item.sfa.customer.name}`}
-            >
-              {truncateText(
-                `${item.revenueSource.name} / ${item.sfa.customer.name}`,
-                10,
-              )}
-            </span>
-          )
-        ) : (
-          '-'
-        )}
-      </td>
-      <td className="px-3 py-2 text-sm">
-        <div className="group relative">
-          <span>
-            {truncateText(
-              item.sfa?.name
-                ? item.paymentLabel
-                  ? `${item.sfa.name}__${item.paymentLabel}`
-                  : item.sfa.name
-                : '',
-            )}
-          </span>
-          {item.sfa?.name &&
-            (item.paymentLabel
-              ? `${item.sfa.name}__${item.paymentLabel}`
-              : item.sfa.name
-            ).length > 25 && (
-              <div className="invisible group-hover:visible absolute z-10 p-2 bg-gray-800 text-white text-sm rounded shadow-lg whitespace-normal max-w-xs">
-                {item.paymentLabel
-                  ? `${item.sfa.name}__${item.paymentLabel}`
-                  : item.sfa.name}
-              </div>
-            )}
-        </div>
-      </td>
-      <td className="px-3 py-2 text-center text-sm">
-        {item.billingType || '-'}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">
-        {item.sfa?.sfaClassification?.name || '-'}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">
-        {sfaItemPrice.map((item) => item.sfaItemName).join(', ') || '-'}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">
-        {sfaItemPrice.map((item) => item.teamName).join(', ') || '-'}
-      </td>
-      <td className="px-3 py-2 text-right text-sm font-mono">
-        {new Intl.NumberFormat('ko-KR').format(item.amount)}
-      </td>
-      <td className="px-3 py-2 text-right text-sm font-mono">
-        {new Intl.NumberFormat('ko-KR').format(item.profitAmount)}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">{item.recognitionDate}</td>
-      <td className="px-3 py-2 text-center">
-        <Button variant="outline" size="sm" onClick={handleViewClick}>
-          View
-        </Button>
-      </td>
+      {COLUMNS.filter((col) => isColumnVisible(col.key)).map((column) => (
+        <td
+          key={column.key}
+          className={`px-3 py-2 text-sm ${
+            column.align === 'center' && 'text-center'
+          } ${column.align === 'right' && 'text-right font-mono'}`}
+        >
+          {getCellContent(column.key)}
+        </td>
+      ))}
     </tr>
   );
 };
+
 
 /**
  * SFA 매출 리스트 테이블 컴포넌트
@@ -166,6 +208,9 @@ const SfaListTable = () => {
   const { actions: uiActions } = useUiStore();
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
+
+  // ✅ 컬럼 표시 상태 관리
+  const [visibleColumns, setVisibleColumns] = useState(DEFAULT_VISIBLE_COLUMNS);
 
   // 일괄 업데이트 훅 사용
   const {
@@ -228,6 +273,15 @@ const SfaListTable = () => {
   if (loading) return <StateDisplay type="loading" />;
   if (error) return <StateDisplay type="error" message={error} />;
   if (!items?.length) return <StateDisplay type="empty" />;
+
+  // 컬럼 토글 핸들러
+  const handleToggleColumn = (columnKey) => {
+    setVisibleColumns((prev) =>
+      prev.includes(columnKey)
+        ? prev.filter((key) => key !== columnKey)
+        : [...prev, columnKey]
+    );
+  };
 
   return (
     <Card>
@@ -340,7 +394,7 @@ const SfaListTable = () => {
                   />
                 </th>
               )}
-              {COLUMNS.map((column) => (
+              {COLUMNS.filter((col) => visibleColumns.includes(col.key)).map((column) => (
                 <th
                   key={column.key}
                   className={`px-3 py-2 text-sm font-semibold text-gray-700 whitespace-nowrap
@@ -349,23 +403,25 @@ const SfaListTable = () => {
                   `}
                 >
                   {column.key === 'action' ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <span>{column.title}</span>
-                      <div className="relative" ref={menuRef}>
-                        <Button
-                          variant="outline"
-                          size="sm"
+                    <div className="flex items-center justify-center gap-1">
+                      {/* 햄버거 아이콘 - 일괄수정 메뉴 */}
+                      <div className="relative group" ref={menuRef}>
+                        <button
                           onClick={handleMenuClick}
-                          className="px-2 py-1 h-6"
+                          className="p-1.5 hover:bg-gray-200 rounded transition-colors"
                         >
                           <svg
-                            className="w-3 h-3"
+                            className="w-4 h-4"
                             fill="currentColor"
                             viewBox="0 0 24 24"
                           >
                             <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" />
                           </svg>
-                        </Button>
+                        </button>
+                        {/* 툴팁 */}
+                        <div className="invisible group-hover:visible absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap z-50">
+                          일괄수정
+                        </div>
                         {showMenu && (
                           <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
                             <div className="py-1">
@@ -385,6 +441,15 @@ const SfaListTable = () => {
                           </div>
                         )}
                       </div>
+
+                      {/* 설정 아이콘 - 컬럼 토글 */}
+                      <ColumnToggleMenu
+                        columns={COLUMNS}
+                        visibleColumns={visibleColumns}
+                        onToggleColumn={handleToggleColumn}
+                        essentialColumns={['no', 'confirmed', 'percentage', 'name', 'revenue', 'action']}
+                        defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}
+                      />
                     </div>
                   ) : (
                     column.title
@@ -406,6 +471,7 @@ const SfaListTable = () => {
                 isCheckboxMode={isCheckboxMode}
                 checkedItems={checkedItems}
                 onCheckChange={handleCheckChange}
+                visibleColumns={visibleColumns}
               />
             ))}
           </tbody>

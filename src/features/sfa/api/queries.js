@@ -50,10 +50,15 @@ export const buildSfaListQuery = (params) => {
 
   // 고객사/매출처 필터
   if (filters.customer) {
+    // customer가 객체인 경우 id 추출, 아니면 그대로 사용
+    const customerId = typeof filters.customer === 'object'
+      ? filters.customer.id
+      : filters.customer;
+
     baseFilters.push({
       $or: [
-        { sfa: { customer: { id: { $eq: filters.customer } } } },
-        { revenue_source: { $eq: filters.customer } },
+        { sfa: { customer: { id: { $eq: customerId } } } },
+        { revenue_source: { $eq: customerId } },
       ],
     });
   }

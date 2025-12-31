@@ -22,18 +22,26 @@ const TableHeaderCell = ({ children, onClick, colSpan, rowSpan }) => (
 );
 
 // Table Data Cell Component
-const TableDataCell = ({ children, onClick, isProbability, isHighlighted }) => (
+const TableDataCell = ({
+  children,
+  onClick,
+  isProbability,
+  isHighlighted,
+  isSelected
+}) => (
   <td
     onClick={onClick}
     className={`
-      p-3 border border-gray-200 text-sm cursor-pointer
+      p-3 border text-sm cursor-pointer
       ${isProbability ? 'bg-gray-50 text-center font-medium' : 'text-right'}
       ${
-        isHighlighted
+        isSelected
+          ? 'bg-blue-100 border-blue-500 ring-2 ring-blue-300 font-semibold'
+          : isHighlighted
           ? 'bg-blue-50 font-semibold border-blue-300 hover:bg-blue-100'
-          : 'hover:bg-gray-100'
+          : 'border-gray-200 hover:bg-gray-100'
       }
-      transition-colors
+      transition-all duration-200
     `}
   >
     {children}
@@ -156,6 +164,14 @@ const SfaMonthlyStatsTable = () => {
   if (loading) return <StateDisplay type="loading" />;
   if (error) return <StateDisplay type="error" message={error} />;
 
+  // 셀 선택 상태 확인 함수
+  const isCellSelected = (monthObj, probability) => {
+    const yearMonth = `${monthObj.year}-${monthObj.month.padStart(2, '0')}`;
+    return (
+      lastClick.yearMonth === yearMonth && lastClick.probability === probability
+    );
+  };
+
   // 행 렌더링 함수
   const renderRow = (prob) => {
     return (
@@ -172,6 +188,7 @@ const SfaMonthlyStatsTable = () => {
             revenue: 0,
             profit: 0,
           };
+          const isSelected = isCellSelected(month, prob);
 
           if (index === 0) {
             // 전전월 (매출액만)
@@ -179,6 +196,7 @@ const SfaMonthlyStatsTable = () => {
               <TableDataCell
                 key={`${month.month}-prev-prev`}
                 onClick={() => handleCellClick(month, prob)}
+                isSelected={isSelected}
               >
                 {probData.revenue.toLocaleString()}
               </TableDataCell>
@@ -189,10 +207,16 @@ const SfaMonthlyStatsTable = () => {
             // 전월
             return (
               <React.Fragment key={`${month.month}-prev`}>
-                <TableDataCell onClick={() => handleCellClick(month, prob)}>
+                <TableDataCell
+                  onClick={() => handleCellClick(month, prob)}
+                  isSelected={isSelected}
+                >
                   {probData.revenue.toLocaleString()}
                 </TableDataCell>
-                <TableDataCell onClick={() => handleCellClick(month, prob)}>
+                <TableDataCell
+                  onClick={() => handleCellClick(month, prob)}
+                  isSelected={isSelected}
+                >
                   {probData.profit.toLocaleString()}
                 </TableDataCell>
               </React.Fragment>
@@ -207,12 +231,14 @@ const SfaMonthlyStatsTable = () => {
                 <TableDataCell
                   onClick={() => handleCellClick(month, prob)}
                   isHighlighted={isConfirmed}
+                  isSelected={isSelected}
                 >
                   {probData.revenue.toLocaleString()}
                 </TableDataCell>
                 <TableDataCell
                   onClick={() => handleCellClick(month, prob)}
                   isHighlighted={isConfirmed}
+                  isSelected={isSelected}
                 >
                   {probData.profit.toLocaleString()}
                 </TableDataCell>
@@ -223,10 +249,16 @@ const SfaMonthlyStatsTable = () => {
           return (
             // 익월, 익익월
             <React.Fragment key={`${month.month}-future`}>
-              <TableDataCell onClick={() => handleCellClick(month, prob)}>
+              <TableDataCell
+                onClick={() => handleCellClick(month, prob)}
+                isSelected={isSelected}
+              >
                 {probData.revenue.toLocaleString()}
               </TableDataCell>
-              <TableDataCell onClick={() => handleCellClick(month, prob)}>
+              <TableDataCell
+                onClick={() => handleCellClick(month, prob)}
+                isSelected={isSelected}
+              >
                 {probData.profit.toLocaleString()}
               </TableDataCell>
             </React.Fragment>
