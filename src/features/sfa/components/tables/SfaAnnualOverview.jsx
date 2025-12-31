@@ -6,51 +6,66 @@ import { useSfaStore } from '../../hooks/useSfaStore';
 import dayjs from 'dayjs';
 
 // Table Header Cell Component
-const TableHeaderCell = ({ children }) => (
+const TableHeaderCell = ({ children, onClick }) => (
   <th
-    className="
-    bg-gray-100 
-    p-3 
-    text-center 
-    border 
-    border-gray-200 
-    font-semibold 
-    text-sm 
+    onClick={onClick}
+    className={`
+    bg-gray-100
+    p-3
+    text-center
+    border
+    border-gray-200
+    font-semibold
+    text-sm
     whitespace-nowrap
-  "
+    ${onClick ? 'cursor-pointer hover:bg-gray-200 transition-colors' : ''}
+  `}
   >
     {children}
   </th>
 );
 
 // Table Data Cell Component
-const TableDataCell = ({ children, isProbability = false }) => (
+const TableDataCell = ({ children, onClick, isProbability = false, isSelected = false }) => (
   <td
+    onClick={onClick}
     className={`
-    p-3 
-    border 
-    border-gray-200 
+    p-3
+    border
     text-sm
+    ${onClick ? 'cursor-pointer' : ''}
     ${isProbability ? 'bg-gray-50 text-center font-medium' : 'text-right'}
+    ${
+      isSelected
+        ? 'bg-blue-100 border-blue-500 ring-2 ring-blue-300 font-semibold'
+        : onClick
+        ? 'border-gray-200 hover:bg-gray-100'
+        : 'border-gray-200'
+    }
+    transition-all duration-200
   `}
   >
     {children}
   </td>
 );
 
-const SfaAnnualOverview = () => {
-  const { filters } = useSfaStore();
+const SfaAnnualOverview = ({ baseDate }) => {
+  const { actions } = useSfaStore();
   const [forecastData, setForecastData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastClick, setLastClick] = useState({
+    yearMonth: null,
+    probability: null,
+  });
 
   // 월 계산 함수 (기준월부터 12개월)
-  const calculateMonths = (baseDate) => {
-    const base = dayjs(baseDate);
+  const calculateMonths = (base) => {
+    const baseMonth = dayjs(base);
     const months = [];
 
     for (let i = 0; i < 12; i++) {
-      const date = base.add(i, 'month');
+      const date = baseMonth.add(i, 'month');
       months.push({
         month: String(date.month() + 1).padStart(2, '0'),
         year: date.year(),
@@ -62,9 +77,9 @@ const SfaAnnualOverview = () => {
     return months;
   };
 
-  // 기준월: filters.dateRange.startDate 또는 현재 월
-  const baseDate = filters.dateRange?.startDate || dayjs().startOf('month').format('YYYY-MM-DD');
-  const months = calculateMonths(baseDate);
+  // 기준월: prop으로 전달받은 baseDate 사용 (폴백: 현재 월)
+  const effectiveBaseDate = baseDate || dayjs().startOf('month').format('YYYY-MM-DD');
+  const months = calculateMonths(effectiveBaseDate);
   const probabilities = ['confirmed', '100', '90', '70', '50'];
 
   // API 응답 데이터 검증 및 처리
@@ -125,10 +140,41 @@ const SfaAnnualOverview = () => {
     };
 
     fetchForecastData();
-  }, [baseDate]); // baseDate 변경 시 데이터 재조회
+  }, [effectiveBaseDate]); // effectiveBaseDate 변경 시 데이터 재조회
 
   if (loading) return <StateDisplay type="loading" />;
   if (error) return <StateDisplay type="error" message={error} />;
+
+  // 셀 클릭 이벤트 핸들러
+  const handleCellClick = (month, probability) => {
+    const yearMonth = `${month.year}-${month.month}`;
+    if (
+      lastClick.yearMonth === yearMonth &&
+      lastClick.probability === probability
+    ) {
+      return;
+    }
+    setLastClick({ yearMonth, probability });
+    actions.filter.updateMonthlyFilter(yearMonth, probability);
+  };
+
+  // 헤더 클릭 이벤트 핸들러
+  const handleHeaderClick = (month) => {
+    const yearMonth = `${month.year}-${month.month}`;
+    if (lastClick.yearMonth === yearMonth && lastClick.probability === null) {
+      return;
+    }
+    setLastClick({ yearMonth, probability: null });
+    actions.filter.updateMonthlyFilter(yearMonth, null);
+  };
+
+  // 셀 선택 상태 확인 함수
+  const isCellSelected = (month, probability) => {
+    const yearMonth = `${month.year}-${month.month}`;
+    return (
+      lastClick.yearMonth === yearMonth && lastClick.probability === probability
+    );
+  };
 
   // 행 렌더링 함수
   const renderRow = (prob) => {
@@ -138,9 +184,14 @@ const SfaAnnualOverview = () => {
         {months.map((month) => {
           const monthData = forecastData[month.month] || {};
           const probData = monthData[prob] || { revenue: 0 };
+          const isSelected = isCellSelected(month, prob);
 
           return (
-            <TableDataCell key={`${month.year}-${month.month}`}>
+            <TableDataCell
+              key={`${month.year}-${month.month}`}
+              onClick={() => handleCellClick(month, prob)}
+              isSelected={isSelected}
+            >
               {probData.revenue.toLocaleString()}
             </TableDataCell>
           );
@@ -161,7 +212,10 @@ const SfaAnnualOverview = () => {
             <tr>
               <TableHeaderCell>확률</TableHeaderCell>
               {months.map((month) => (
-                <TableHeaderCell key={`${month.year}-${month.month}`}>
+                <TableHeaderCell
+                  key={`${month.year}-${month.month}`}
+                  onClick={() => handleHeaderClick(month)}
+                >
                   {formatMonthHeader(month.month, month.year)}
                 </TableHeaderCell>
               ))}

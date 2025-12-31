@@ -13,16 +13,28 @@ import dayjs from 'dayjs';
  * @param {string} props.viewMode - 현재 뷰 모드 ('overview' | 'search')
  * @param {Function} props.onViewModeChange - 뷰 모드 변경 핸들러
  * @param {boolean} props.showAnnualRange - 연간 범위 표시 여부 (12개월)
+ * @param {string} props.annualBaseDate - 연간 범위 기준일 (외부 상태로 관리)
+ * @param {Function} props.onAnnualDateChange - 연간 범위 날짜 변경 핸들러
  */
-const QuickDateFilter = ({ viewMode = 'overview', onViewModeChange, showAnnualRange = false }) => {
+const QuickDateFilter = ({
+  viewMode = 'overview',
+  onViewModeChange,
+  showAnnualRange = false,
+  annualBaseDate,
+  onAnnualDateChange
+}) => {
   const { filters, actions } = useSfaStore();
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const monthPickerRef = useRef(null);
   const selectedMonthRef = useRef(null);
 
-  // 현재 선택된 날짜 범위
-  const currentStartDate = filters.dateRange?.startDate || dayjs().startOf('month').format('YYYY-MM-DD');
-  const currentEndDate = filters.dateRange?.endDate || dayjs().endOf('month').format('YYYY-MM-DD');
+  // 현재 선택된 날짜 범위 (연간 범위 모드일 경우 prop 사용, 아니면 전역 필터 사용)
+  const currentStartDate = showAnnualRange && annualBaseDate
+    ? annualBaseDate
+    : filters.dateRange?.startDate || dayjs().startOf('month').format('YYYY-MM-DD');
+  const currentEndDate = showAnnualRange && annualBaseDate
+    ? dayjs(annualBaseDate).endOf('month').format('YYYY-MM-DD')
+    : filters.dateRange?.endDate || dayjs().endOf('month').format('YYYY-MM-DD');
 
   // 프리셋 필터 핸들러
   const handlePresetFilter = (preset) => {
@@ -74,7 +86,12 @@ const QuickDateFilter = ({ viewMode = 'overview', onViewModeChange, showAnnualRa
     const startDate = targetMonth.startOf('month').format('YYYY-MM-DD');
     const endDate = targetMonth.endOf('month').format('YYYY-MM-DD');
 
-    actions.filter.updateDateRange(startDate, endDate);
+    // 연간 범위 모드일 경우 콜백 호출, 아니면 전역 필터 업데이트
+    if (showAnnualRange && onAnnualDateChange) {
+      onAnnualDateChange(startDate, endDate);
+    } else {
+      actions.filter.updateDateRange(startDate, endDate);
+    }
   };
 
   // 현재 기간 포맷
@@ -105,7 +122,13 @@ const QuickDateFilter = ({ viewMode = 'overview', onViewModeChange, showAnnualRa
     const date = dayjs(yearMonth);
     const startDate = date.startOf('month').format('YYYY-MM-DD');
     const endDate = date.endOf('month').format('YYYY-MM-DD');
-    actions.filter.updateDateRange(startDate, endDate);
+
+    // 연간 범위 모드일 경우 콜백 호출, 아니면 전역 필터 업데이트
+    if (showAnnualRange && onAnnualDateChange) {
+      onAnnualDateChange(startDate, endDate);
+    } else {
+      actions.filter.updateDateRange(startDate, endDate);
+    }
     setShowMonthPicker(false);
   };
 

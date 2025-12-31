@@ -11,7 +11,12 @@ import {
   FaChartBar,
   FaThLarge,
 } from 'react-icons/fa';
-import { MdContacts, MdViewKanban, MdTimeline, MdDashboard } from 'react-icons/md';
+import {
+  MdContacts,
+  MdViewKanban,
+  MdTimeline,
+  MdDashboard,
+} from 'react-icons/md';
 import { RiTimeLine } from 'react-icons/ri';
 import { LuListTodo } from 'react-icons/lu';
 
@@ -86,29 +91,29 @@ export const PAGE_MENUS = {
           },
         },
       },
-      search: {
-        label: '상세조회',
-        visible: true,
-        config: {
-          layout: 'search',
-          sections: {
-            sfaHeader: true,
-            sfaSearchForm: true,
-            sfaContent: true,
-          },
-          components: {
-            monthlyStatus: false,
-            sfaTable: true,
-            searchForm: true,
-            forecastTable: false,
-            analyticsLayout: false,
-            salesInformationLayout: false,
-          },
-          drawer: {
-            visible: false, // 드로어 표시 여부
-          },
-        },
-      },
+      // search: {
+      //   label: '상세조회',
+      //   visible: true,
+      //   config: {
+      //     layout: 'search',
+      //     sections: {
+      //       sfaHeader: true,
+      //       sfaSearchForm: true,
+      //       sfaContent: true,
+      //     },
+      //     components: {
+      //       monthlyStatus: false,
+      //       sfaTable: true,
+      //       searchForm: true,
+      //       forecastTable: false,
+      //       analyticsLayout: false,
+      //       salesInformationLayout: false,
+      //     },
+      //     drawer: {
+      //       visible: false, // 드로어 표시 여부
+      //     },
+      //   },
+      // },
       forecast: {
         label: '매출예측',
         visible: true,
