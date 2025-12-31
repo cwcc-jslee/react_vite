@@ -117,6 +117,10 @@ export const approvalApiService = {
    * @param {number} toStatusId - 변경할 상태 ID
    * @param {string} approvedBy - 승인자 ID
    * @param {string} approvalComment - 승인 의견 (선택)
+   * @param {object} closureData - 종료 정보 (종료 상태일 때, 선택)
+   * @param {number} closureData.projectId - 프로젝트 ID
+   * @param {string} closureData.closureDate - 종료 일자
+   * @param {number} closureData.closureType - 종료 유형 ID
    * @returns {Promise}
    */
   approveStatusChange: async (
@@ -125,6 +129,7 @@ export const approvalApiService = {
     toStatusId,
     approvedBy,
     approvalComment = null,
+    closureData = null, // 종료 시 필요한 데이터 (projectId, closureDate, closureType)
   ) => {
     try {
       // 1. 상태 변경 이력 업데이트 (승인 완료)
@@ -141,12 +146,31 @@ export const approvalApiService = {
       );
 
       // 2. 프로젝트 상태 업데이트 (실제 상태 변경)
+      const projectUpdateData = {
+        pjtStatus: toStatusId,
+        currentApprovalStatus: 'approved',
+      };
+
+      // 종료 상태(90)로 전환 시 isClosed 플래그 설정
+      if (toStatusId === 90) {
+        projectUpdateData.isClosed = true;
+      }
+
       await apiClientV2.put(`/projects/${projectDocumentId}`, {
-        data: {
-          pjtStatus: toStatusId,
-          currentApprovalStatus: 'approved',
-        },
+        data: projectUpdateData,
       });
+
+      // 3. 종료 상태일 때 project_closures 테이블에 종료 정보 생성
+      if (toStatusId === 90 && closureData) {
+        await apiClientV2.post('/project-closures', {
+          data: {
+            project: closureData.projectId,
+            closureType: closureData.closureType,
+            closureDate: closureData.closureDate,
+            closureBy: approvedBy,
+          },
+        });
+      }
 
       return {
         success: true,

@@ -20,8 +20,9 @@ export const useApprovalActions = () => {
    * @param {string} statusChangeDocumentId - 상태 변경 이력 documentId
    * @param {number} toStatusId - 변경할 상태 ID
    * @param {string} approvalComment - 승인 의견
+   * @param {object} closureData - 종료 정보 (종료 상태일 때)
    */
-  const handleApprove = async (projectDocumentId, statusChangeDocumentId, toStatusId, approvalComment = null) => {
+  const handleApprove = async (projectDocumentId, statusChangeDocumentId, toStatusId, approvalComment = null, closureData = null) => {
     try {
       setIsProcessing(true);
 
@@ -30,7 +31,8 @@ export const useApprovalActions = () => {
         statusChangeDocumentId,
         toStatusId,
         currentUser?.user?.id,
-        approvalComment
+        approvalComment,
+        closureData
       );
 
       notification.success({

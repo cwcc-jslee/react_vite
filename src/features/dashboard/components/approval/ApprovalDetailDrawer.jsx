@@ -4,7 +4,7 @@
  * - 프로젝트 정보, 상태 변경 내역, 승인/반려 버튼
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { X, Calendar, User } from 'lucide-react';
 import dayjs from 'dayjs';
@@ -12,26 +12,55 @@ import StatusChangeSummary from './StatusChangeSummary';
 import ReviewForm from './ReviewForm';
 import ApprovalActionButtons from './ApprovalActionButtons';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
+import { useCodebook } from '../../../../shared/hooks/useCodebook';
+import { notification } from '../../../../shared/services/notification';
 
 const ApprovalDetailDrawer = ({ approval, onClose }) => {
   const { isProcessing, handleApprove, handleReject } = useApprovalActions();
+  const { data: codebooks } = useCodebook(['pjtClosureType']);
   const [approvalComment, setApprovalComment] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
+
+  // 종료 상태 관련 state
+  const [closureDate, setClosureDate] = useState(dayjs().format('YYYY-MM-DD'));
+  const [pjtClosureType, setPjtClosureType] = useState('');
 
   if (!approval || !approval.pendingStatusChange) {
     return null;
   }
 
-  const { name, documentId, pendingStatusChange } = approval;
+  const { id, name, documentId, pendingStatusChange } = approval;
   const { fromStatus, toStatus, requestedBy, requestedAt, statusDetail, changeDescription } =
     pendingStatusChange;
 
+  // 종료 상태 여부 확인 (toStatus.id === 90)
+  const isClosingStatus = useMemo(() => toStatus?.id === 90, [toStatus]);
+
   const handleApproveClick = async () => {
+    // 종료 상태인데 종료 유형이 없으면 경고
+    if (isClosingStatus && !pjtClosureType) {
+      notification.warning({
+        message: '종료 유형 선택 필요',
+        description: '프로젝트 종료 유형을 선택해주세요.',
+      });
+      return;
+    }
+
+    // 종료 정보 준비
+    const closureData = isClosingStatus
+      ? {
+          projectId: id, // 프로젝트 ID
+          closureDate,
+          closureType: pjtClosureType ? parseInt(pjtClosureType) : null,
+        }
+      : null;
+
     const result = await handleApprove(
       documentId,
       pendingStatusChange.documentId,
       toStatus.id,
-      approvalComment || null
+      approvalComment || null,
+      closureData
     );
 
     if (result.success) {
@@ -112,6 +141,51 @@ const ApprovalDetailDrawer = ({ approval, onClose }) => {
                 </div>
               </div>
             </div>
+
+            {/* 종료 정보 입력 (종료 상태로 전환 시에만 표시) */}
+            {isClosingStatus && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-3">종료 정보</h3>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-4">
+                  {/* 종료 유형 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      종료 유형 <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={pjtClosureType}
+                      onChange={(e) => setPjtClosureType(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    >
+                      <option value="">선택하세요</option>
+                      {codebooks?.pjtClosureType?.map((type) => (
+                        <option key={type.id} value={type.id}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* 종료 일자 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      종료 일자
+                    </label>
+                    <input
+                      type="date"
+                      value={closureDate}
+                      onChange={(e) => setClosureDate(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div className="flex items-start gap-2 text-xs text-red-700">
+                    <span className="font-semibold">⚠</span>
+                    <p>프로젝트를 종료하면 더 이상 상태를 변경할 수 없습니다.</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* 승인 의견 폼 */}
             <div>
