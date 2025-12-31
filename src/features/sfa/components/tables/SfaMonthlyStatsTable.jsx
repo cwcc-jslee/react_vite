@@ -1,7 +1,6 @@
-// src/features/sfa/components/SfaQuarterlyOverview.jsx
+// src/features/sfa/components/tables/SfaMonthlyStatsTable.jsx
 import React, { useEffect, useState } from 'react';
 import { sfaApi } from '../../api/sfaApi';
-// import { useSfa } from '../../context/SfaProvider';
 import { useSfaStore } from '../../hooks/useSfaStore';
 import { StateDisplay } from '../../../../shared/components/ui/state/StateDisplay';
 import dayjs from 'dayjs';
@@ -41,7 +40,14 @@ const TableDataCell = ({ children, onClick, isProbability, isHighlighted }) => (
   </td>
 );
 
-const SfaQuarterlyOverview = () => {
+/**
+ * SFA 월별 통계 테이블 컴포넌트
+ * 5개월 (전전월, 전월, 당월, 익월, 익익월) 동안의 확률별 매출액과 매출이익을 표시
+ *
+ * @component
+ * @description 셀 클릭 시 해당 월/확률 필터로 하단 리스트 업데이트
+ */
+const SfaMonthlyStatsTable = () => {
   const [monthlyStats, setMonthlyStats] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -50,7 +56,6 @@ const SfaQuarterlyOverview = () => {
     probability: null,
   });
 
-  // const { updateMonthlyFilter } = useSfa();
   const { actions } = useSfaStore();
 
   // 월 계산 함수
@@ -286,4 +291,4 @@ const SfaQuarterlyOverview = () => {
   );
 };
 
-export default SfaQuarterlyOverview;
+export default SfaMonthlyStatsTable;

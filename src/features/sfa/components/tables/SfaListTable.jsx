@@ -1,4 +1,4 @@
-// src/features/sfa/components/table/SfaTable.jsx
+// src/features/sfa/components/tables/SfaListTable.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { useSfaStore } from '../../hooks/useSfaStore';
 import { useUiStore } from '../../../../shared/hooks/useUiStore';
@@ -154,13 +154,19 @@ const TableRow = ({
   );
 };
 
-const SfaTable = () => {
+/**
+ * SFA 매출 리스트 테이블 컴포넌트
+ * 매출 데이터를 테이블 형태로 표시하고 일괄 수정 기능 제공
+ *
+ * @component
+ */
+const SfaListTable = () => {
   // SFA 데이터 관련 상태와 함수
   const { items, status, error, pagination, actions } = useSfaStore();
   const { actions: uiActions } = useUiStore();
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef(null);
-  
+
   // 일괄 업데이트 훅 사용
   const {
     isCheckboxMode,
@@ -417,4 +423,4 @@ const SfaTable = () => {
   );
 };
 
-export default SfaTable;
+export default SfaListTable;
