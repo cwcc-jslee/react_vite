@@ -1,24 +1,21 @@
 /**
- * Customer 전용 Drawer 컴포넌트입니다.
+ * Customer 전용 Drawer 컴포넌트 (신규 Drawer 시스템 적용)
+ * - Framer Motion 애니메이션
+ * - useDrawer Hook 사용
+ * - DrawerMenu 통합 메뉴 사용
  */
 
-// src/features/customer/components/drawer/CustomerDrawer.jsx
-import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { closeDrawer, setDrawer } from '../../../../store/slices/uiSlice.js';
-import { selectCodebookByType } from '../../../../store/slices/codebookSlice.js';
+import React from 'react';
+import { Drawer, DrawerMenu, useDrawer, DRAWER_SIZES } from '@shared/components/drawer';
 import { useCodebook } from '../../../../shared/hooks/useCodebook';
-// import { useSfa } from '../../context/SfaProvider.jsx';
-import { useCustomer } from '../../context/CustomerProvider.jsx';
-// import { useSfaForm } from '../../hooks/useSfaForm.js';
-import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer.jsx';
-import ActionMenuBar from '../../../../shared/components/ui/button/ActionMenuBar.jsx';
 import CustomerAddForm from '../forms/CustomerAddForm';
 import CustomerDetailTable from '../tables/CustomerDetailTable.jsx';
 import EditableCustomerDetailTable from '../tables/EditableCustomerDetailTable.jsx';
 
 const CustomerDrawer = ({ drawer }) => {
-  const dispatch = useDispatch();
+  const { close, setMode } = useDrawer();
+  const { visible, mode, data } = drawer;
+
   // Codebook 데이터 조회
   const {
     data: codebooks,
@@ -32,41 +29,12 @@ const CustomerDrawer = ({ drawer }) => {
     'businessType',
     'region',
   ]);
-  //   const { togglePaymentSelection, resetPaymentForm } = useSfaForm(); // Custom hook을 통한 form 관련 로직 분리
 
-  // const { drawerState, setDrawer, setDrawerClose } = useCustomer();
-  const { visible, mode, data } = drawer;
-
-  const setDrawerClose = () => {
-    dispatch(closeDrawer());
-  };
-
-  const handleSetDrawer = (payload) => {
-    dispatch(setDrawer(payload));
-  };
-
-  const controlMenus = [
-    {
-      key: 'view',
-      label: 'View',
-      active: mode === 'view',
-      onClick: () => {
-        // setActiveControl('view');
-        handleSetDrawer({ mode: 'view' });
-      },
-    },
-    {
-      key: 'edit',
-      label: 'Edit',
-      active: mode === 'edit',
-      onClick: () => {
-        // setActiveControl('edit');
-        handleSetDrawer({ mode: 'edit' });
-      },
-    },
+  // Toggle 메뉴 아이템 (View/Edit 전환)
+  const toggleMenuItems = [
+    { key: 'view', label: 'View' },
+    { key: 'edit', label: 'Edit' },
   ];
-
-  const functionMenus = [];
 
   // Drawer 헤더 타이틀 설정
   const getHeaderTitle = () => {
@@ -81,49 +49,54 @@ const CustomerDrawer = ({ drawer }) => {
     return '';
   };
 
-  // ViewContent 컴포넌트 - 조회 모드 UI
-  const AddContent = () => (
-    <CustomerAddForm
-      codebooks={codebooks}
-      isLoadingCodebook={isLoadingCodebook}
-    />
-  );
-  const ViewContent = ({ data }) => (
-    <>
-      <CustomerDetailTable data={data} />
-    </>
-  );
-  const EditContent = ({ data }) => (
-    <>
-      <EditableCustomerDetailTable
-        codebooks={codebooks}
-        isLoadingCodebook={isLoadingCodebook}
-        data={data}
-        editable={true} // 편집 가능 여부 설정
-      />
-    </>
-  );
+  // 컨텐츠 렌더링
+  const renderContent = () => {
+    switch (mode) {
+      case 'add':
+        return (
+          <CustomerAddForm
+            codebooks={codebooks}
+            isLoadingCodebook={isLoadingCodebook}
+          />
+        );
+      case 'view':
+        return <CustomerDetailTable data={data?.data[0]} />;
+      case 'edit':
+        return (
+          <EditableCustomerDetailTable
+            codebooks={codebooks}
+            isLoadingCodebook={isLoadingCodebook}
+            data={data?.data[0]}
+            editable={true}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
-    <BaseDrawer
+    <Drawer
       visible={visible}
       title={getHeaderTitle()}
-      onClose={setDrawerClose}
-      menu={
-        <ActionMenuBar
-          controlMenus={controlMenus}
-          functionMenus={functionMenus}
-        />
-      }
-      width="900px"
+      onClose={close}
+      width={DRAWER_SIZES.XL}
       enableOverlayClick={false}
-      controlMode={mode}
+      mode={mode}
+      animationEnabled={true}
+      menu={
+        mode !== 'add' && (
+          <DrawerMenu
+            type="toggle"
+            items={toggleMenuItems}
+            activeKey={mode}
+            onItemClick={setMode}
+          />
+        )
+      }
     >
-      {/* {renderDrawerContent()} */}
-      {mode === 'add' && <AddContent />}
-      {mode === 'view' && <ViewContent data={data?.data[0]} />}
-      {mode === 'edit' && <EditContent data={data?.data[0]} />}
-    </BaseDrawer>
+      {renderContent()}
+    </Drawer>
   );
 };
 

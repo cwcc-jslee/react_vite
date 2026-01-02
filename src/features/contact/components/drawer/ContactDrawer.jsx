@@ -1,20 +1,20 @@
 /**
- * Contact 전용 Drawer 컴포넌트
+ * Contact 전용 Drawer 컴포넌트 (신규 Drawer 시스템 적용)
+ * - Framer Motion 애니메이션
+ * - useDrawer Hook 사용
+ * - DrawerMenu 통합 메뉴 사용
+ * - 단일 등록 / 일괄 등록 기능
  */
-// src/features/contact/components/drawer/ContactDrawer.jsx
+
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { closeDrawer, setDrawer } from '../../../../store/slices/uiSlice.js';
-import { selectCodebookByType } from '../../../../store/slices/codebookSlice.js';
-import { useContact } from '../../context/ContactProvider.jsx';
-import Drawer from '../../../../shared/components/ui/drawer/Drawer.jsx';
-import DrawerActionMenu from '../../../../shared/components/ui/button/DrawerActionMenu.jsx';
+import { Drawer, DrawerMenu, useDrawer, DRAWER_SIZES } from '@shared/components/drawer';
+import { useCodebook } from '../../../../shared/hooks/useCodebook.js';
 import ContactAddForm from '../forms/ContactAddForm';
 import ContactExcelUpload from '../upload/ContactExcelUpload.jsx';
-import { useCodebook } from '../../../../shared/hooks/useCodebook.js';
 
 const ContactDrawer = ({ drawer }) => {
-  const dispatch = useDispatch();
+  const { close, setMode } = useDrawer();
+  const { visible, mode, data } = drawer;
 
   // Codebook 데이터 조회
   const {
@@ -23,47 +23,18 @@ const ContactDrawer = ({ drawer }) => {
     error,
   } = useCodebook(['sfaSalesType', 'sfaClassification']);
 
-  const { visible, mode, featureMode, data } = drawer;
-
-  const setDrawerClose = () => {
-    dispatch(closeDrawer());
-  };
-
-  const handleSetDrawer = (payload) => {
-    dispatch(setDrawer(payload));
-  };
-
-  // console.log(`ContactDrawer's drawerState: `, drawerState);
-
-  const baseMenus = [
-    {
-      key: 'add',
-      label: '단일 등록',
-      active: mode === 'addSingle',
-      onClick: () => {
-        // setActiveControl('view');
-        handleSetDrawer({ mode: 'addSingle' });
-      },
-    },
-    {
-      key: 'upload',
-      label: '일괄 등록',
-      active: mode === 'addBulk',
-      onClick: () => {
-        // setActiveControl('edit');
-        handleSetDrawer({ mode: 'addBulk' });
-      },
-    },
+  // Toggle 메뉴 아이템 (단일 등록 / 일괄 등록)
+  const toggleMenuItems = [
+    { key: 'addSingle', label: '단일 등록' },
+    { key: 'addBulk', label: '일괄 등록' },
   ];
-
-  const subMenus = [];
 
   // Drawer 헤더 타이틀 설정
   const getHeaderTitle = () => {
     if (mode) {
       const titles = {
         addSingle: '담당자 등록',
-        addBulk: '담당자 일괄괄등록',
+        addBulk: '담당자 일괄등록',
         view: '담당자 상세정보',
         edit: '담당자 수정',
       };
@@ -72,25 +43,39 @@ const ContactDrawer = ({ drawer }) => {
     return '';
   };
 
+  // 컨텐츠 렌더링
+  const renderContent = () => {
+    switch (mode) {
+      case 'addSingle':
+        return <ContactAddForm />;
+      case 'addBulk':
+        return <ContactExcelUpload />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <Drawer
       visible={visible}
       title={getHeaderTitle()}
-      onClose={setDrawerClose}
-      width="900px"
+      onClose={close}
+      width={DRAWER_SIZES.XL}
       enableOverlayClick={false}
+      mode={mode}
+      animationEnabled={true}
+      menu={
+        (mode === 'addSingle' || mode === 'addBulk') && (
+          <DrawerMenu
+            type="toggle"
+            items={toggleMenuItems}
+            activeKey={mode}
+            onItemClick={setMode}
+          />
+        )
+      }
     >
-      {/* 메뉴 영역 */}
-      {(baseMenus.length > 0 || subMode.length > 0) && (
-        <div className="border-b border-gray-200 px-4 py-2">
-          <DrawerActionMenu baseMenus={baseMenus} subMenus={subMenus} />
-        </div>
-      )}
-      {/* {renderDrawerContent()} */}
-      {mode === 'addSingle' && <ContactAddForm />}
-      {mode === 'addBulk' && <ContactExcelUpload />}
-      {/* {controlMode === 'view' && <ViewContent data={data?.data[0]} />}
-      {controlMode === 'edit' && <EditContent data={data?.data[0]} />} */}
+      {renderContent()}
     </Drawer>
   );
 };

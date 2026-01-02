@@ -1,7 +1,7 @@
 {
   "name": "cwcc-react",
   "version": "2.1.2",
-  "type": "module",  
+  "type": "module",
   "private": true,
   "dependencies": {
     "@dnd-kit/core": "^6.2.0",
@@ -20,6 +20,7 @@
     "chart.js": "^4.3.0",
     "dayjs": "^1.11.7",
     "faker": "^5.5.3",
+    "framer-motion": "^12.23.26",
     "lucide-react": "^0.469.0",
     "papaparse": "^5.5.2",
     "prop-types": "^15.8.1",

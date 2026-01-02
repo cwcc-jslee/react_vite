@@ -1,31 +1,28 @@
 /**
- * SFA 신규등록 전용 Drawer 컴포넌트
- * add 모드에만 특화된 단순하고 최적화된 구조를 제공합니다.
+ * SFA 신규등록 전용 Drawer 컴포넌트 (신규 Drawer 시스템 적용)
+ * - Framer Motion 애니메이션 적용
+ * - useDrawer Hook 사용
+ * - 표준화된 크기 시스템
  */
 
 // src/features/sfa/components/drawer/SfaAddDrawer.jsx
 import React from 'react';
-import { useDispatch } from 'react-redux';
-import { setDrawer } from '../../../../store/slices/uiSlice.js';
-import { useUiStore } from '../../../../shared/hooks/useUiStore.js';
-import BaseDrawer from '../../../../shared/components/ui/drawer/BaseDrawer.jsx';
+import { Drawer, useDrawer, DRAWER_SIZES } from '@shared/components/drawer';
 import SfaAddForm from '../forms/SfaAddForm.jsx';
 
 /**
  * SFA 신규등록 전용 Drawer
  * - add 모드에만 특화
- * - 단순한 구조로 성능 최적화
- * - 불필요한 메뉴나 상태 관리 제거
+ * - 신규 Drawer 시스템으로 애니메이션 및 성능 개선
  */
 const SfaAddDrawer = React.memo(
   ({ drawer }) => {
-    const dispatch = useDispatch();
-    const { actions: uiActions } = useUiStore();
+    const { close } = useDrawer();
 
     // drawer 닫기 핸들러
     const handleClose = () => {
       console.log('🆕 [SfaAddDrawer] 신규등록 Drawer 닫기');
-      uiActions.drawer.close();
+      close();
     };
 
     // 렌더링 추적
@@ -39,16 +36,17 @@ const SfaAddDrawer = React.memo(
     });
 
     return (
-      <BaseDrawer
+      <Drawer
         visible={drawer.visible}
         title="SFA 신규등록"
         onClose={handleClose}
-        width="900px"
+        width={DRAWER_SIZES.XL}
         enableOverlayClick={false}
-        controlMode="add"
+        mode="add"
+        animationEnabled={true}
       >
         <SfaAddForm />
-      </BaseDrawer>
+      </Drawer>
     );
   },
   (prevProps, nextProps) => {
