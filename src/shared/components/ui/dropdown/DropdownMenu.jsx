@@ -48,11 +48,21 @@ DropdownMenuContent.propTypes = {
 /**
  * DropdownMenuItem - 드롭다운 메뉴 아이템
  */
-export const DropdownMenuItem = ({ children, onClick, className = '' }) => {
+export const DropdownMenuItem = ({ children, onClick, onClose, className = '' }) => {
+  const handleClick = (e) => {
+    if (onClick) {
+      onClick(e);
+    }
+    // 메뉴 아이템 클릭 후 자동으로 메뉴 닫기
+    if (onClose) {
+      onClose();
+    }
+  };
+
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={handleClick}
       className={`
         w-full px-4 py-2 text-left text-sm
         flex items-center gap-2
@@ -68,6 +78,7 @@ export const DropdownMenuItem = ({ children, onClick, className = '' }) => {
 DropdownMenuItem.propTypes = {
   children: PropTypes.node.isRequired,
   onClick: PropTypes.func,
+  onClose: PropTypes.func,
   className: PropTypes.string,
 };
 
@@ -134,7 +145,24 @@ export const DropdownMenu = ({ children }) => {
     }
 
     if (child.type === DropdownMenuContent) {
-      return isOpen ? child : null;
+      if (!isOpen) return null;
+
+      // DropdownMenuContent의 자식들(DropdownMenuItem)에 closeMenu 전달
+      const contentChildren = React.Children.map(child.props.children, (contentChild) => {
+        if (!React.isValidElement(contentChild)) return contentChild;
+
+        if (contentChild.type === DropdownMenuItem) {
+          return React.cloneElement(contentChild, {
+            onClose: () => setIsOpen(false),
+          });
+        }
+
+        return contentChild;
+      });
+
+      return React.cloneElement(child, {
+        children: contentChildren,
+      });
     }
 
     return child;

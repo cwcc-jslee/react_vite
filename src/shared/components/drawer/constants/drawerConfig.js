@@ -12,7 +12,7 @@ export const DRAWER_SIZES = {
   SM: '400px', // 간단한 폼, 빠른 입력
   MD: '600px', // 기본 상세보기
   LG: '800px', // 복잡한 폼
-  XL: '900px', // 매우 복잡한 폼 (탭, 섹션 포함)
+  XL: '1100px', // 매우 복잡한 폼 (탭, 섹션 포함) - 이익률 표시를 위해 900px→1100px로 확장
   XXL: '1200px', // 매우 큰 폼 (프로젝트 상세 등)
   WIDE: 'calc(100vw - 256px)', // 사이드바 제외 전체 (사이드바 펼침 상태)
   FULL: '100vw', // 전체 화면
@@ -25,7 +25,7 @@ export const DRAWER_SIZE_CLASSES = {
   SM: 'w-[400px]',
   MD: 'w-[600px]',
   LG: 'w-[800px]',
-  XL: 'w-[900px]',
+  XL: 'w-[1000px]',
   XXL: 'w-[1200px]',
   // WIDE: 'w-[calc(100vw-256px)]',
   WIDE: 'w-[calc(100vw-300px)]',
@@ -40,7 +40,8 @@ export const LEGACY_SIZE_MAP = {
   '400px': 'SM',
   '600px': 'MD',
   '800px': 'LG',
-  '900px': 'XL',
+  '900px': 'XL', // 기존 900px도 XL로 매핑 (하위 호환성)
+  '1100px': 'XL',
 };
 
 // ==================== Drawer 모드 ====================

@@ -10,6 +10,8 @@ import {
   calculatePaymentTotals,
   formatSfaByItems,
 } from '../../utils/displayUtils';
+import RevenueSummary from '../elements/RevenueSummary';
+import TeamRevenueBadges from '../elements/TeamRevenueBadges';
 
 /**
  * SFA 상세 정보를 표시하는 컴포넌트
@@ -44,8 +46,7 @@ const SfaDetail = ({ data }) => {
 
   return (
     <Description>
-      {/* 1행: 매출유형, 지원프로그램 */}
-      {/* 기본 4칸 구조 - 너비 지정 */}
+      {/* 1행: 건명, 매출유형 */}
       <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
           건명
@@ -57,7 +58,7 @@ const SfaDetail = ({ data }) => {
         <DescriptionItem>{data.sfaSalesType?.name || '-'}</DescriptionItem>
       </DescriptionRow>
 
-      {/* 2행: 고객사/매출처, 매출확정여부 */}
+      {/* 2행: 고객사, 매출처 */}
       <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
           고객사
@@ -75,7 +76,7 @@ const SfaDetail = ({ data }) => {
         </DescriptionItem>
       </DescriptionRow>
 
-      {/* 3행: 매출구분, 매출품목/사업부 */}
+      {/* 3행: 매출구분, 프로젝트여부 */}
       <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
           매출구분
@@ -87,15 +88,17 @@ const SfaDetail = ({ data }) => {
         <DescriptionItem>{data.isProject ? 'YES' : 'NO'}</DescriptionItem>
       </DescriptionRow>
 
-      {/* 4행: 매출, 매출이익, FY */}
+      {/* 4행: 결제 매출/이익, FY */}
       <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
           결제 매출/이익
         </DescriptionItem>
         <DescriptionItem>
-          {paymentTotals.totalAmount > 0 || paymentTotals.totalProfit > 0
-            ? `${paymentTotals.totalAmount.toLocaleString()} / ${paymentTotals.totalProfit.toLocaleString()}`
-            : '-'}
+          <RevenueSummary
+            totalAmount={paymentTotals.totalAmount}
+            totalProfit={paymentTotals.totalProfit}
+            variant="compact"
+          />
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
           FY
@@ -103,23 +106,36 @@ const SfaDetail = ({ data }) => {
         <DescriptionItem>{data.fy?.name || '-'}</DescriptionItem>
       </DescriptionRow>
 
-      {/* 5행: 사업부 매출 */}
+      {/* 5행: 사업부 매출, 사업부 구성 */}
       <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
           사업부 매출
         </DescriptionItem>
         <DescriptionItem>
-          {renderSfaByItems(data.sfaByItems, data.isMultiTeam, data.sfaByPayments)}
+          <TeamRevenueBadges
+            items={formatSfaByItems(data.sfaByItems, data.isMultiTeam, data.sfaByPayments)}
+            isMultiTeam={data.isMultiTeam}
+          />
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
           사업부 구성
         </DescriptionItem>
         <DescriptionItem>
-          {data.isMultiTeam === true
-            ? '다중 사업부'
-            : data.isMultiTeam === false
-            ? '단일 사업부'
-            : '-'}
+          <span
+            className={`
+              inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border
+              ${data.isMultiTeam
+                ? 'bg-purple-100 text-purple-800 border-purple-200'
+                : 'bg-blue-100 text-blue-800 border-blue-200'
+              }
+            `}
+          >
+            {data.isMultiTeam === true
+              ? '다중 사업부'
+              : data.isMultiTeam === false
+              ? '단일 사업부'
+              : '-'}
+          </span>
         </DescriptionItem>
       </DescriptionRow>
 

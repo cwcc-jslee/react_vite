@@ -6,14 +6,15 @@
  */
 
 import React from 'react';
+import { X } from 'lucide-react';
 import { Drawer, useDrawer, DRAWER_SIZES } from '@shared/components/drawer';
 import { useSfaStore } from '../../hooks/useSfaStore.js';
 import { sfaSubmitService } from '../../services/sfaSubmitService.js';
 
 // 섹션 컴포넌트 import
-import SfaDrawerMenu from './sections/SfaDrawerMenu.jsx';
-import SfaBasicInfoSection from './sections/SfaBasicInfoSection.jsx';
-import SfaPaymentManagementSection from './sections/SfaPaymentManagementSection.jsx';
+import DrawerActionsMenu from './sections/DrawerActionsMenu.jsx';
+import BasicInfoSection from './sections/BasicInfoSection.jsx';
+import PaymentListSection from './sections/PaymentListSection.jsx';
 
 const SfaViewDrawer = React.memo(
   ({ drawer }) => {
@@ -106,36 +107,68 @@ const SfaViewDrawer = React.memo(
       console.log('이력 보기 기능 - 구현 예정');
     };
 
+    // 수정 모드 취소 핸들러
+    const handleCancelEditMode = () => {
+      if (window.confirm('수정을 취소하시겠습니까?\n저장하지 않은 변경사항은 사라집니다.')) {
+        setEditingSection(null);
+      }
+    };
+
     // ==================== 렌더링 ====================
     return (
       <Drawer
         visible={visible}
-        title="SFA 상세정보"
+        title={
+          <div className="flex items-center gap-2">
+            <span>SFA 상세정보</span>
+            {editingSection === 'base' && (
+              <div className="flex items-center gap-1">
+                <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded border border-blue-300">
+                  기본정보 수정중
+                </span>
+                <button
+                  onClick={handleCancelEditMode}
+                  className="p-1 rounded hover:bg-red-50 transition-colors group"
+                  title="수정 취소"
+                >
+                  <X className="h-4 w-4 text-gray-500 group-hover:text-red-600 transition-colors" />
+                </button>
+              </div>
+            )}
+          </div>
+        }
         onClose={close}
         width={DRAWER_SIZES.XL}
         enableOverlayClick={false}
         mode="view"
         animationEnabled={true}
         headerActions={
-          <SfaDrawerMenu
+          <DrawerActionsMenu
             onDelete={handleDelete}
             onCopy={handleCopy}
             onHistory={handleHistory}
+            onEditBase={() => handleStartEdit('base')}
+            isEditingBase={editingSection === 'base'}
           />
         }
       >
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* 기본 정보 섹션 */}
-          <SfaBasicInfoSection
+          <BasicInfoSection
             data={data}
             isEditing={editingSection === 'base'}
             onStartEdit={() => handleStartEdit('base')}
             onFinishEdit={handleFinishEdit}
             onCancelEdit={handleCancelEdit}
+            onSaveField={() => setEditingSection(null)}
+            showBox={false}
           />
 
+          {/* 섹션 구분선 */}
+          <div className="border-t-2 border-gray-200" />
+
           {/* 결제매출 내역 섹션 */}
-          <SfaPaymentManagementSection
+          <PaymentListSection
             data={data}
             isEditing={editingSection === 'payment'}
             onStartEdit={() => handleStartEdit('payment')}
@@ -143,6 +176,7 @@ const SfaViewDrawer = React.memo(
             onCancelEdit={handleCancelEdit}
             editingPaymentId={editingPaymentId}
             setEditingPaymentId={setEditingPaymentId}
+            showBox={false}
           />
         </div>
       </Drawer>

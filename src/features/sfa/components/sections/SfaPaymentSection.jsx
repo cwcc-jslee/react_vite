@@ -4,12 +4,14 @@
  * 매출 내역 테이블과 수정 폼을 상황에 따라 표시하고 관리
  */
 import React, { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import SfaDetailPaymentTable from '../tables/SfaDetailPaymentTable';
 import { useSfaForm1 } from '../../hooks/useSfaForm1';
 import { useSfaStore } from '../../hooks/useSfaStore';
 import { useSfaOperations } from '../../hooks/useSfaSubmit';
 import { useFormValidationEdit } from '../../hooks/useFormValidationEdit';
 import SalesAddByPayment from '../elements/SalesAddByPayment';
+import ProbabilityBadge from '../elements/ProbabilityBadge';
 import { Form, Group, Button } from '../../../../shared/components/ui';
 import ModalRenderer from '../../../../shared/components/ui/modal/ModalRenderer';
 import useModal from '../../../../shared/hooks/useModal';
@@ -251,6 +253,14 @@ const SfaPaymentSection = ({
   const payments = currentData.sfaByPayments || [];
   console.log(`>> payments at render:`, payments);
 
+  // 팀별 색상 매핑 (최대 4개 팀 지원)
+  const TEAM_COLORS = [
+    'bg-blue-100 text-blue-800 border-blue-200',
+    'bg-purple-100 text-purple-800 border-purple-200',
+    'bg-pink-100 text-pink-800 border-pink-200',
+    'bg-indigo-100 text-indigo-800 border-indigo-200',
+  ];
+
   return (
     <>
       <div className="space-y-4">
@@ -259,7 +269,16 @@ const SfaPaymentSection = ({
           payments.map((payment) => (
             <div key={payment.documentId} className="space-y-2">
               {/* 매출 항목 카드 */}
-              <div className="bg-white border border-gray-200 rounded-lg p-4">
+              <div
+                className={`
+                  bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200
+                  ${payment.isConfirmed
+                    ? 'border-l-4 border-green-500 bg-gradient-to-r from-green-50/30 to-white'
+                    : 'border-l-4 border-gray-300 bg-gradient-to-r from-gray-50/30 to-white'
+                  }
+                  p-4
+                `}
+              >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
@@ -297,13 +316,25 @@ const SfaPaymentSection = ({
                         </div>
                         <div>
                           <span className="text-xs text-gray-500">확정여부</span>
-                          <p className="text-sm">
-                            {payment.isConfirmed ? '✓ 확정' : '미확정'}
-                          </p>
+                          <div className="mt-1">
+                            <span
+                              className={`
+                                inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                                ${payment.isConfirmed
+                                  ? 'bg-green-100 text-green-800 border border-green-300'
+                                  : 'bg-gray-100 text-gray-600 border border-gray-300'
+                                }
+                              `}
+                            >
+                              {payment.isConfirmed ? '✓ 확정' : '미확정'}
+                            </span>
+                          </div>
                         </div>
                         <div>
                           <span className="text-xs text-gray-500">확률</span>
-                          <p className="text-sm">{payment.probability || 0}%</p>
+                          <div className="mt-1">
+                            <ProbabilityBadge probability={payment.probability || 0} />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -315,7 +346,7 @@ const SfaPaymentSection = ({
                           size="sm"
                           variant="outline"
                           onClick={() => handleViewAction({ documentId: payment.documentId, id: payment.id })}
-                          className="text-gray-600 hover:text-gray-900"
+                          className="h-9 px-3 min-w-[60px] text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                         >
                           view
                         </Button>
@@ -326,16 +357,33 @@ const SfaPaymentSection = ({
                             variant="outline"
                             onClick={() => handlePaymentSelection(payment.documentId)}
                             disabled={hasAddingPayments || editingPaymentId === payment.documentId}
-                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                            className={`
+                              h-9 px-3 min-w-[60px]
+                              ${editingPaymentId === payment.documentId
+                                ? 'bg-blue-50 text-blue-700 border-blue-300 cursor-not-allowed'
+                                : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200'
+                              }
+                              disabled:opacity-40 disabled:cursor-not-allowed
+                            `}
                           >
-                            {editingPaymentId === payment.documentId ? '수정중...' : '수정'}
+                            {editingPaymentId === payment.documentId ? (
+                              <span className="flex items-center gap-1.5">
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                편집중
+                              </span>
+                            ) : '수정'}
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => confirmDeletePayment({ documentId: payment.documentId, id: payment.id })}
                             disabled={hasAddingPayments || editingPaymentId === payment.documentId}
-                            className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                            className="
+                              h-9 px-3 min-w-[60px]
+                              text-red-600 hover:text-red-700 hover:bg-red-50
+                              border-red-200 hover:border-red-300
+                              disabled:opacity-40 disabled:cursor-not-allowed
+                            "
                           >
                             삭제
                           </Button>
@@ -350,9 +398,19 @@ const SfaPaymentSection = ({
                       {payment.teamAllocations.map((allocation, idx) => (
                         <span
                           key={idx}
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                          className={`
+                            inline-flex items-center gap-1.5
+                            px-3 py-1 rounded-full text-xs font-medium border
+                            ${TEAM_COLORS[idx % TEAM_COLORS.length]}
+                          `}
                         >
-                          {allocation.itemName || allocation.teamName}: {Number(allocation.allocatedAmount || 0).toLocaleString()}원
+                          <span className="font-semibold">
+                            {allocation.itemName || allocation.teamName}
+                          </span>
+                          <span className="text-gray-400">|</span>
+                          <span>
+                            {Number(allocation.allocatedAmount || 0).toLocaleString()}원
+                          </span>
                         </span>
                       ))}
                     </div>

@@ -27,7 +27,7 @@ import SfaEditItemForm from '../forms/SfaEditItemForm';
 /**
  * 수정 가능한 SFA 상세 정보 컴포넌트
  */
-const EditableSfaDetail = ({ data, featureMode }) => {
+const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
   const {
     editState,
     startEditing,
@@ -35,6 +35,14 @@ const EditableSfaDetail = ({ data, featureMode }) => {
     cancelEditing,
     handleValueChange,
   } = useEditableField(data);
+
+  // 저장 완료 후 수정 모드 종료
+  const handleSaveWithExit = async () => {
+    await saveEditing();
+    if (onSaveField) {
+      onSaveField();
+    }
+  };
 
   const { data: codebooks, isLoading: isLoadingCodebook } = useCodebook([
     'sfaSalesType',
@@ -300,7 +308,7 @@ const EditableSfaDetail = ({ data, featureMode }) => {
     <div className="flex shrink-0 items-center gap-0.5">
       <button
         type="button"
-        onClick={() => saveEditing()}
+        onClick={handleSaveWithExit}
         className="flex items-center justify-center h-7 w-7 rounded-sm hover:bg-green-100"
       >
         <Icons.Check className="h-4 w-4 text-green-600" strokeWidth={2.5} />
@@ -328,7 +336,7 @@ const EditableSfaDetail = ({ data, featureMode }) => {
             group relative flex items-center justify-between w-full h-8
             ${
               !isEditing && featureMode === 'editBase'
-                ? 'hover:bg-blue-50 rounded px-2 -mx-2 cursor-pointer transition-colors'
+                ? 'bg-blue-50/30 border-l-2 border-blue-400 hover:bg-blue-100/50 rounded px-2 -mx-2 cursor-pointer transition-all duration-200'
                 : ''
             }
           `}
@@ -359,13 +367,10 @@ const EditableSfaDetail = ({ data, featureMode }) => {
             >
               <span className="flex-grow truncate">{content}</span>
               {featureMode === 'editBase' && (
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-xs text-gray-400">클릭하여 수정</span>
-                  <Icons.Edit
-                    className="h-4 w-4 text-blue-500"
-                    strokeWidth={2.5}
-                  />
-                </div>
+                <Icons.Edit3
+                  className="h-4 w-4 text-blue-600 flex-shrink-0"
+                  strokeWidth={2}
+                />
               )}
             </div>
           )}
@@ -380,7 +385,7 @@ const EditableSfaDetail = ({ data, featureMode }) => {
             group relative flex items-center justify-between w-full h-8
             ${
               !isEditing && featureMode === 'editBase'
-                ? 'hover:bg-blue-50 rounded px-2 -mx-2 cursor-pointer transition-colors'
+                ? 'bg-blue-50/30 border-l-2 border-blue-400 hover:bg-blue-100/50 rounded px-2 -mx-2 cursor-pointer transition-all duration-200'
                 : ''
             }
           `}
@@ -427,13 +432,10 @@ const EditableSfaDetail = ({ data, featureMode }) => {
             >
               <span className="flex-grow truncate">{content}</span>
               {featureMode === 'editBase' && (
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <span className="text-xs text-gray-400">클릭하여 수정</span>
-                  <Icons.Edit
-                    className="h-4 w-4 text-blue-500"
-                    strokeWidth={2.5}
-                  />
-                </div>
+                <Icons.Edit3
+                  className="h-4 w-4 text-blue-600 flex-shrink-0"
+                  strokeWidth={2}
+                />
               )}
             </div>
           )}
@@ -488,7 +490,7 @@ const EditableSfaDetail = ({ data, featureMode }) => {
           group relative flex items-center justify-between w-full h-8
           ${
             !isEditing && featureMode === 'editBase'
-              ? 'hover:bg-blue-50 rounded px-2 -mx-2 cursor-pointer transition-colors'
+              ? 'bg-blue-50/30 border-l-2 border-blue-400 hover:bg-blue-100/50 rounded px-2 -mx-2 cursor-pointer transition-all duration-200'
               : ''
           }
         `}
@@ -557,13 +559,10 @@ const EditableSfaDetail = ({ data, featureMode }) => {
           >
             <span className="flex-grow truncate">{content}</span>
             {featureMode === 'editBase' && (
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-xs text-gray-400">클릭하여 수정</span>
-                <Icons.Edit
-                  className="h-4 w-4 text-blue-500"
-                  strokeWidth={2.5}
-                />
-              </div>
+              <Icons.Edit3
+                className="h-4 w-4 text-blue-600 flex-shrink-0"
+                strokeWidth={2}
+              />
             )}
           </div>
         )}
