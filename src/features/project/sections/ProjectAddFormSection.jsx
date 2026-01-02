@@ -47,7 +47,7 @@ const LoadingOverlay = styled.div`
  * 프로젝트 기본정보 입력 폼 섹션 컴포넌트
  * 프로젝트의 기본 정보를 입력받는 폼 컴포넌트를 포함
  */
-const ProjectAddFormSection = () => {
+const ProjectAddFormSection = ({ onClose }) => {
   const dispatch = useDispatch();
   const {
     formData,
@@ -113,14 +113,19 @@ const ProjectAddFormSection = () => {
       // pageForm 초기화
       resetForm();
 
-      // list 메뉴로 이동 (PAGE_MENUS 사용)
-      const listMenuConfig = PAGE_MENUS.project.items.list;
-      dispatch(
-        changePageMenu({
-          menuId: 'list',
-          config: listMenuConfig.config,
-        }),
-      );
+      // Drawer에서 호출된 경우 닫기
+      if (onClose) {
+        onClose();
+      } else {
+        // Layout에서 호출된 경우 list 메뉴로 이동
+        const listMenuConfig = PAGE_MENUS.project.items.list;
+        dispatch(
+          changePageMenu({
+            menuId: 'list',
+            config: listMenuConfig.config,
+          }),
+        );
+      }
     } else {
       // 프로젝트는 생성되었지만 버킷/태스크 생성에 실패한 경우
       if (result.project && result.error?.code === 'STRUCTURE_CREATION_ERROR') {

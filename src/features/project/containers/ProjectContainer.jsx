@@ -16,6 +16,8 @@ import ProjectUtilizationLayout from '../layouts/ProjectUtilizationLayout';
 import TeamWeeklyUtilizationLayout from '../layouts/TeamWeeklyUtilizationLayout';
 // Components
 import ProjectDrawer from '../components/drawer/ProjectDrawer';
+import ProjectDetailDrawer from '../components/drawer/ProjectDetailDrawer';
+import ProjectAddDrawer from '../components/drawer/ProjectAddDrawer';
 
 /**
  * Project 메인 컨테이너 컴포넌트
@@ -29,7 +31,7 @@ const ProjectContainer = () => {
   const { actions } = useProjectStore();
 
   // 레이아웃 관련 상태 가져오기
-  const { pageLayout, drawer } = useUiStore();
+  const { pageLayout, drawer, actions: uiActions } = useUiStore();
   const { layout } = pageLayout;
 
   // 컴포넌트 마운트 시 프로젝트 목록 조회
@@ -59,8 +61,27 @@ const ProjectContainer = () => {
         {layout === 'add' && <ProjectAddLayout />}
       </Section>
 
-      {/* 프로젝트 드로어 */}
-      {drawer.visible && <ProjectDrawer drawer={drawer} />}
+      {/* 프로젝트 Drawer 분기 처리 */}
+      {drawer.visible && drawer.mode === 'view' && (
+        <ProjectDetailDrawer
+          visible={drawer.visible}
+          data={drawer.data}
+          onClose={() => uiActions.drawer.close()}
+        />
+      )}
+
+      {/* 기존 진행상태 관리 Drawer (status 모드일 때만) */}
+      {drawer.visible && drawer.mode === 'status' && (
+        <ProjectDrawer drawer={drawer} />
+      )}
+
+      {/* 프로젝트 추가 Drawer (add 모드일 때만) */}
+      {drawer.visible && drawer.mode === 'add' && (
+        <ProjectAddDrawer
+          visible={drawer.visible}
+          onClose={() => uiActions.drawer.close()}
+        />
+      )}
     </>
   );
 };

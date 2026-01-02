@@ -9,10 +9,12 @@
  * Drawer 크기 상수 (픽셀 값)
  */
 export const DRAWER_SIZES = {
-  SM: '400px',   // 간단한 폼, 빠른 입력
-  MD: '600px',   // 기본 상세보기
-  LG: '800px',   // 복잡한 폼
-  XL: '900px',   // 매우 복잡한 폼 (탭, 섹션 포함)
+  SM: '400px', // 간단한 폼, 빠른 입력
+  MD: '600px', // 기본 상세보기
+  LG: '800px', // 복잡한 폼
+  XL: '900px', // 매우 복잡한 폼 (탭, 섹션 포함)
+  XXL: '1200px', // 매우 큰 폼 (프로젝트 상세 등)
+  WIDE: 'calc(100vw - 256px)', // 사이드바 제외 전체 (사이드바 펼침 상태)
   FULL: '100vw', // 전체 화면
 };
 
@@ -24,6 +26,9 @@ export const DRAWER_SIZE_CLASSES = {
   MD: 'w-[600px]',
   LG: 'w-[800px]',
   XL: 'w-[900px]',
+  XXL: 'w-[1200px]',
+  // WIDE: 'w-[calc(100vw-256px)]',
+  WIDE: 'w-[calc(100vw-300px)]',
   FULL: 'w-screen',
 };
 
@@ -115,8 +120,19 @@ export const DRAWER_DEFAULTS = {
 
 /**
  * Drawer z-index 값
+ * PRIMARY: 기본 Drawer (프로젝트 상세보기 등)
+ * SECONDARY: 중첩 Drawer (진행상태 관리 등)
  */
 export const DRAWER_Z_INDEX = {
+  // Primary Drawer (기본)
+  PRIMARY_OVERLAY: 50,
+  PRIMARY_DRAWER: 50,
+
+  // Secondary Drawer (중첩)
+  SECONDARY_OVERLAY: 60,
+  SECONDARY_DRAWER: 60,
+
+  // 하위 호환성
   OVERLAY: 50,
   DRAWER: 50,
 };

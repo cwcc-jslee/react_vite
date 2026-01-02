@@ -32,7 +32,7 @@ import {
   clearChartFilter,
   updateChartFilteredItems,
 } from '../../../store/slices/projectSlice';
-import { changePageMenu, changeSubMenu } from '../../../store/slices/uiSlice';
+import { changePageMenu, changeSubMenu, setDrawer } from '../../../store/slices/uiSlice';
 import { PAGE_MENUS } from '@shared/constants/navigation';
 import { updateProjectsWithProgress } from '../utils/projectProgressUtils';
 import { PROJECT_STATUS_MAP } from '../constants/projectStatusConstants';
@@ -360,6 +360,7 @@ export const useProjectStore = () => {
 
     // 상세 정보 조회
     detail: {
+      // 기존 방식: Layout 전환
       fetchDetail: (id) => {
         dispatch(fetchProjectDetail(id));
         dispatch(fetchProjectWorks({ projectId: id }));
@@ -374,6 +375,19 @@ export const useProjectStore = () => {
             },
           }),
         );
+      },
+      // 신규 방식: Drawer 열기
+      fetchDetailForDrawer: async (id) => {
+        const resultAction = await dispatch(fetchProjectDetail(id));
+        if (fetchProjectDetail.fulfilled.match(resultAction)) {
+          dispatch(
+            setDrawer({
+              visible: true,
+              mode: 'view',
+              data: resultAction.payload,
+            }),
+          );
+        }
       },
       refreshWorks: (id, params = {}) => {
         dispatch(fetchProjectWorks({ projectId: id, ...params }));

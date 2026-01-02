@@ -242,9 +242,9 @@ const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
   const dispatch = useDispatch();
   const actualIndex = (currentPage - 1) * pageSize + index + 1;
 
-  // 프로젝트 상세정보 조회 핸들러
+  // 프로젝트 상세정보 조회 핸들러 (Drawer 방식으로 변경)
   const handleViewDetail = () => {
-    actions.detail.fetchDetail(item.id);
+    actions.detail.fetchDetailForDrawer(item.id);
   };
 
   // business_type 표시를 위한 헬퍼 함수

@@ -27,7 +27,7 @@ import ProjectTaskEditForm from '../components/forms/ProjectTaskEditForm';
  */
 const ProjectDetailTaskSection = ({
   // data,
-  // projectTaskBuckets = [],
+  projectTaskBuckets = [],
   projectTasks = [],
   bucketActions,
   //
@@ -38,6 +38,7 @@ const ProjectDetailTaskSection = ({
   handlePageSizeChange = () => {},
   onTaskComplete = () => {},
   onTaskEdit = () => {},
+  activeMenu: activeMenuProp, // Drawer에서 전달받은 activeMenu
 }) => {
   // 칸반 보드 훅 사용
   const {
@@ -45,6 +46,13 @@ const ProjectDetailTaskSection = ({
     editState,
     actions: { bucket, edit, task, ui },
   } = useProjectBucketStore();
+
+  // 프로젝트 데이터가 변경될 때마다 칸반 보드 동기화
+  useEffect(() => {
+    if (projectTaskBuckets.length > 0 && projectTasks.length > 0) {
+      bucket.syncProjectTasksToKanban(projectTaskBuckets, projectTasks);
+    }
+  }, [projectTaskBuckets, projectTasks]);
 
   const { modalState, openModal, closeModal, handleConfirm } = useModal();
 
@@ -59,9 +67,10 @@ const ProjectDetailTaskSection = ({
 
   console.log(`===== codebooks`, codebooks);
 
-  // Redux 상태에서 현재 레이아웃 설정 가져오기
+  // Redux 상태에서 현재 레이아웃 설정 가져오기 (Layout에서 사용)
   const { layout, subMenu } = useSelector((state) => state.ui.pageLayout);
-  const activeMenu = subMenu.menu;
+  // Drawer에서 전달받은 prop이 있으면 우선 사용, 없으면 Redux 사용
+  const activeMenu = activeMenuProp || subMenu.menu;
 
   const { handleFilterChange, handleResetFilters } = useWorkStore();
 

@@ -13,7 +13,7 @@ import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../ui';
 import { getWidthClass, shouldShowMenu } from './utils/drawerUtils';
-import { DRAWER_ANIMATIONS, DRAWER_DEFAULTS } from './constants/drawerConfig';
+import { DRAWER_ANIMATIONS, DRAWER_DEFAULTS, DRAWER_Z_INDEX } from './constants/drawerConfig';
 
 /**
  * @typedef {import('./types/drawer.types').DrawerProps} DrawerProps
@@ -29,6 +29,7 @@ const Drawer = ({
   visible = false,
   title = '',
   width = DRAWER_DEFAULTS.width,
+  level = 'primary', // 'primary' | 'secondary' - 중첩 Drawer 지원
   onClose,
   menu,
   headerActions,
@@ -41,7 +42,14 @@ const Drawer = ({
   className = '',
 }) => {
   // ==================== Body 스크롤 제어 ====================
+  // 중첩 Drawer(secondary)는 body 스크롤 제어를 하지 않음
+  // Primary Drawer만 body 스크롤을 제어
   useEffect(() => {
+    // Secondary level Drawer는 body 스크롤 제어 건너뛰기
+    if (level === 'secondary') {
+      return;
+    }
+
     if (visible) {
       // 현재 스크롤 위치 저장
       const scrollY = window.scrollY;
@@ -63,7 +71,7 @@ const Drawer = ({
       document.body.style.top = '';
       document.body.style.width = '';
     };
-  }, [visible]);
+  }, [visible, level]);
 
   // ==================== ESC 키 핸들러 ====================
   useEffect(() => {
@@ -88,16 +96,24 @@ const Drawer = ({
   // ==================== Width 클래스 계산 ====================
   const widthClass = getWidthClass(width);
 
+  // ==================== z-index 계산 (level에 따라) ====================
+  const zIndex = level === 'secondary'
+    ? DRAWER_Z_INDEX.SECONDARY_DRAWER
+    : DRAWER_Z_INDEX.PRIMARY_DRAWER;
+
+  const overlayOpacity = level === 'secondary' ? 0.3 : 0.5;
+
   // ==================== 렌더링 ====================
   if (!visible) return null;
 
   // 애니메이션 비활성화 시 일반 렌더링
   if (!animationEnabled) {
     return (
-      <div className="fixed inset-0 z-50 overflow-hidden">
+      <div className="fixed inset-0 overflow-hidden" style={{ zIndex }}>
         {/* Overlay */}
         <div
-          className="absolute inset-0 bg-black bg-opacity-50"
+          className="absolute inset-0 bg-black"
+          style={{ opacity: overlayOpacity }}
           onClick={enableOverlayClick ? onClose : undefined}
         />
 
@@ -125,14 +141,14 @@ const Drawer = ({
   return (
     <AnimatePresence>
       {visible && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+        <div className="fixed inset-0 overflow-hidden" style={{ zIndex }}>
           {/* Overlay with fade animation */}
           <motion.div
             initial={DRAWER_ANIMATIONS.overlay.initial}
-            animate={DRAWER_ANIMATIONS.overlay.animate}
+            animate={{ ...DRAWER_ANIMATIONS.overlay.animate, opacity: overlayOpacity }}
             exit={DRAWER_ANIMATIONS.overlay.exit}
             transition={DRAWER_ANIMATIONS.overlay.transition}
-            className="absolute inset-0 bg-black bg-opacity-50"
+            className="absolute inset-0 bg-black"
             onClick={enableOverlayClick ? onClose : undefined}
           />
 
@@ -237,6 +253,7 @@ Drawer.propTypes = {
   title: PropTypes.string.isRequired,
   onClose: PropTypes.func.isRequired,
   width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  level: PropTypes.oneOf(['primary', 'secondary']),
   menu: PropTypes.node,
   headerActions: PropTypes.node,
   footer: PropTypes.node,

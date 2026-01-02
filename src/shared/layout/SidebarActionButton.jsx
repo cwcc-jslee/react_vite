@@ -72,21 +72,9 @@ const ACTION_CONFIG = {
     label: '새프로젝트',
     menuId: 'add',
     config: {
-      layout: 'add',
-      sections: {
-        projectAddForm: true,
-        projectTaskBoard: true,
-        projectCharts: false,
-        projectListTable: false,
-        projectDetailTable: false,
-      },
-      // components: {
-      //   projectChart: false,
-      //   projectTable: false,
-      //   projectAddSection: true,
-      // },
       drawer: {
-        visible: false, // 드로어 표시 여부
+        visible: true, // Drawer 방식으로 변경
+        mode: 'add',
       },
     },
     icon: (

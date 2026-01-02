@@ -16,26 +16,32 @@ import { calculateProjectProgress } from '../utils/projectProgressUtils';
  * Tier 1: 핵심 지표 (카드)
  * Tier 2: 상세 정보 (Expandable)
  */
-const ProjectDetailTableSection = ({ data, projectTasks }) => {
+const ProjectDetailTableSection = ({ data, projectTasks, onStatusClick }) => {
   const { actions } = useUiStore();
 
   // 상태 섹션 클릭 핸들러 - Drawer 열기
   const handleStatusSectionClick = (e) => {
-    console.log('진행상태 변경 클릭:', data);
-    actions.drawer.open({
-      mode: 'status',
-      data: {
-        id: data.id,
-        documentId: data.documentId,
-        pjtStatus: data.pjtStatus,
-        statusHistory: data.statusHistory || [],
-        isClosed: data.isClosed,
-        projectClosure: data.projectClosure,
-        projectTasks: data.projectTasks,
-      },
-      width: '900px',
-      activeTab: 'flow', // 기본적으로 '진행 플로우' 탭 활성화
-    });
+    // onStatusClick prop이 있으면 사용 (Drawer에서 호출 시)
+    // 없으면 기존 방식 유지 (Layout에서 호출 시)
+    if (onStatusClick) {
+      onStatusClick();
+    } else {
+      console.log('진행상태 변경 클릭:', data);
+      actions.drawer.open({
+        mode: 'status',
+        data: {
+          id: data.id,
+          documentId: data.documentId,
+          pjtStatus: data.pjtStatus,
+          statusHistory: data.statusHistory || [],
+          isClosed: data.isClosed,
+          projectClosure: data.projectClosure,
+          projectTasks: data.projectTasks,
+        },
+        width: '900px',
+        activeTab: 'flow', // 기본적으로 '진행 플로우' 탭 활성화
+      });
+    }
   };
 
   // 프로젝트 메트릭 계산 (메모이제이션)

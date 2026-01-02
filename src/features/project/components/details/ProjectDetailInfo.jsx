@@ -9,7 +9,7 @@ import PropTypes from 'prop-types';
  * 부가 정보를 펼치기/접기 형태로 표시
  */
 const ProjectDetailInfo = ({ data = {} }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true); // 기본 펼침 상태
 
   // 정보 아이템 렌더링 헬퍼
   const InfoItem = ({ label, value, className = '' }) => (
