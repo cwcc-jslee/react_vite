@@ -5,7 +5,7 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import { MoreVertical } from 'lucide-react';
+import { EllipsisVertical } from 'lucide-react';
 import {
   Button,
   DropdownMenu,
@@ -84,8 +84,8 @@ const DrawerMenu = ({
       <div className={className}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <MoreVertical className="h-4 w-4" />
+            <Button variant="ghost" size="sm" className="h-10 w-10 p-0 hover:bg-gray-100 rounded-md">
+              <EllipsisVertical className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

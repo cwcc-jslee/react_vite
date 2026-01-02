@@ -116,7 +116,7 @@ const SfaViewDrawer = React.memo(
         enableOverlayClick={false}
         mode="view"
         animationEnabled={true}
-        menu={
+        headerActions={
           <SfaDrawerMenu
             onDelete={handleDelete}
             onCopy={handleCopy}

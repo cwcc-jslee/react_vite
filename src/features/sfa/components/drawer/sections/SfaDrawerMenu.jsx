@@ -34,11 +34,7 @@ const SfaDrawerMenu = ({ onDelete, onCopy, onHistory }) => {
     },
   ];
 
-  return (
-    <div className="flex items-center justify-end w-full">
-      <DrawerMenu type="dropdown" items={dropdownMenuItems} />
-    </div>
-  );
+  return <DrawerMenu type="dropdown" items={dropdownMenuItems} />;
 };
 
 SfaDrawerMenu.propTypes = {

@@ -31,6 +31,7 @@ const Drawer = ({
   width = DRAWER_DEFAULTS.width,
   onClose,
   menu,
+  headerActions,
   footer,
   children,
   mode,
@@ -109,6 +110,7 @@ const Drawer = ({
               showCloseButton={showCloseButton}
               showMenu={showMenu}
               menu={menu}
+              headerActions={headerActions}
               footer={footer}
             >
               {children}
@@ -149,6 +151,7 @@ const Drawer = ({
                 showCloseButton={showCloseButton}
                 showMenu={showMenu}
                 menu={menu}
+                headerActions={headerActions}
                 footer={footer}
               >
                 {children}
@@ -171,6 +174,7 @@ const DrawerContent = ({
   showCloseButton,
   showMenu,
   menu,
+  headerActions,
   footer,
   children,
 }) => (
@@ -178,17 +182,22 @@ const DrawerContent = ({
     {/* Header */}
     <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
       <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-      {showCloseButton && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0 hover:bg-gray-100"
-          onClick={onClose}
-          aria-label="닫기"
-        >
-          <X className="h-5 w-5" />
-        </Button>
-      )}
+      <div className="flex items-center gap-2">
+        {/* Header Actions (더보기 메뉴 등) */}
+        {headerActions && <div className="flex items-center">{headerActions}</div>}
+        {/* 닫기 버튼 */}
+        {showCloseButton && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-10 w-10 p-0 hover:bg-gray-100 rounded-md"
+            onClick={onClose}
+            aria-label="닫기"
+          >
+            <X className="h-6 w-6" />
+          </Button>
+        )}
+      </div>
     </div>
 
     {/* Menu Area */}
@@ -218,6 +227,7 @@ DrawerContent.propTypes = {
   showCloseButton: PropTypes.bool,
   showMenu: PropTypes.bool,
   menu: PropTypes.node,
+  headerActions: PropTypes.node,
   footer: PropTypes.node,
   children: PropTypes.node,
 };
@@ -228,6 +238,7 @@ Drawer.propTypes = {
   onClose: PropTypes.func.isRequired,
   width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   menu: PropTypes.node,
+  headerActions: PropTypes.node,
   footer: PropTypes.node,
   children: PropTypes.node,
   mode: PropTypes.string,
