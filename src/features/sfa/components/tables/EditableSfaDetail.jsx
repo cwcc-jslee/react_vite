@@ -21,8 +21,10 @@ import { useCodebook } from '../../../../shared/hooks/useCodebook';
 import { useSfaStore } from '../../hooks/useSfaStore';
 import { useUiStore } from '../../../../shared/hooks/useUiStore';
 import { transformToDBFields } from '../../utils/transformUtils';
+import { convertKeysToSnakeCase } from '../../../../shared/utils/transformUtils';
 import { sfaSubmitService } from '../../services/sfaSubmitService';
 import SfaEditItemForm from '../forms/SfaEditItemForm';
+import FieldEditModal from '@shared/components/ui/modal/FieldEditModal';
 
 /**
  * 수정 가능한 SFA 상세 정보 컴포넌트
@@ -35,6 +37,16 @@ const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
     cancelEditing,
     handleValueChange,
   } = useEditableField(data);
+
+  // SFA Store actions 가져오기
+  const { form, actions } = useSfaStore();
+
+  // UI Store actions 가져오기
+  const { actions: uiActions } = useUiStore();
+
+  // 모달 상태 관리
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentFieldConfig, setCurrentFieldConfig] = useState(null);
 
   // 저장 완료 후 수정 모드 종료
   const handleSaveWithExit = async () => {
@@ -50,11 +62,98 @@ const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
     'sfaItemType', // 매출품목 타입 추가
   ]);
 
-  // SFA Store actions 가져오기
-  const { form, actions } = useSfaStore();
+  // 모달 열기 핸들러
+  const handleOpenModal = (fieldName, fieldDef) => {
+    // 필드 설정 생성
+    const fieldConfig = {
+      fieldName,
+      label: fieldDef.label,
+      type: fieldDef.type === 'text' ? 'input' : fieldDef.type, // 'text' → 'input' 변환
+      required: fieldDef.required || false,
+    };
 
-  // UI Store actions 가져오기
-  const { actions: uiActions } = useUiStore();
+    // select 타입인 경우 옵션 추가
+    if (fieldDef.type === 'select') {
+      if (fieldName === 'sfaSalesType') {
+        fieldConfig.options = codebooks?.sfaSalesType || [];
+      } else if (fieldName === 'sfaClassification') {
+        fieldConfig.options = codebooks?.sfaClassification || [];
+      }
+    }
+
+    // radio 타입인 경우 옵션 추가 (isSameBilling)
+    if (fieldDef.type === 'radio' && fieldName === 'isSameBilling') {
+      fieldConfig.options = [
+        { id: true, name: '고객사와 동일' },
+        { id: false, name: '별도 매출처' },
+      ];
+    }
+
+    // 초기값 설정
+    const initialValue = fieldDef.getValue ? fieldDef.getValue(data) : data[fieldName];
+
+    setCurrentFieldConfig({ ...fieldConfig, initialValue });
+    setIsModalOpen(true);
+  };
+
+  // 모달 저장 핸들러
+  const handleModalSave = async (newValue) => {
+    if (!currentFieldConfig) return;
+
+    const fieldName = currentFieldConfig.fieldName;
+    const sfaId = data.documentId;
+
+    try {
+      // 필드별 데이터 처리
+      let formData = {};
+
+      if (currentFieldConfig.type === 'customer') {
+        // 고객사 검색인 경우
+        formData = { [fieldName]: newValue.id };
+      } else if (fieldName === 'sfaByItems') {
+        // 사업부 매출 데이터
+        const transformedItems = transformToDBFields.transformSalesByItems(newValue);
+        formData = { sfa_by_items: transformedItems };
+      } else {
+        // 일반 필드 - snake_case 변환
+        formData = convertKeysToSnakeCase({ [fieldName]: newValue });
+      }
+
+      console.log('=== 모달 저장 시작 ===');
+      console.log('필드명:', fieldName);
+      console.log('새로운 값:', newValue);
+      console.log('폼 데이터:', formData);
+
+      // API 호출
+      await sfaSubmitService.updateSfaBase(sfaId, formData);
+
+      // 최신 데이터 조회
+      const updateAction = await actions.data.fetchSfaDetail(data.id);
+
+      if (updateAction.meta.requestStatus === 'fulfilled') {
+        const updatedData = updateAction.payload;
+
+        // Drawer 상태 업데이트
+        uiActions.drawer.update({
+          mode: 'view',
+          featureMode: null,
+          data: updatedData,
+        });
+
+        console.log('=== 모달 저장 성공 ===');
+        console.log('업데이트된 데이터:', updatedData);
+      }
+
+      // 편집 모드 종료
+      if (onSaveField) {
+        onSaveField();
+      }
+    } catch (error) {
+      console.error('=== 모달 저장 실패 ===');
+      console.error('에러:', error);
+      throw error;
+    }
+  };
 
   const { editField } = editState;
 
@@ -328,116 +427,52 @@ const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
     const isEditing = editField === fieldName;
     // if (featureMode !== 'editBase') return;
 
-    // 특수 필드 처리 (프로젝트여부, 매출처)
+    // 특수 필드 처리 (프로젝트여부)
     if (fieldName === 'isProject') {
+      const field = editableFields[fieldName];
       return (
         <div
           className={`
             group relative flex items-center justify-between w-full h-8
             ${
-              !isEditing && featureMode === 'editBase'
+              featureMode === 'editBase'
                 ? 'bg-blue-50/30 border-l-2 border-blue-400 hover:bg-blue-100/50 rounded px-2 -mx-2 cursor-pointer transition-all duration-200'
                 : ''
             }
           `}
+          onClick={() => featureMode === 'editBase' && handleOpenModal(fieldName, field)}
         >
-          {isEditing ? (
-            <div className="flex items-center w-full gap-1 bg-yellow-50 border border-yellow-300 rounded p-2 -m-2">
-              <div className="flex items-center flex-grow">
-                <Switch
-                  checked={editState.newValue === true}
-                  onChange={() =>
-                    handleValueChange(!(editState.newValue === true))
-                  }
-                  size="sm"
-                />
-                <span className="ml-2 text-sm">
-                  {editState.newValue ? 'YES' : 'NO'}
-                </span>
-              </div>
-              {renderEditButtons()}
-            </div>
-          ) : (
-            <div
-              className="flex items-center w-full h-8"
-              onClick={() =>
-                featureMode === 'editBase' &&
-                startEditing(fieldName, editableFields)
-              }
-            >
-              <span className="flex-grow truncate">{content}</span>
-              {featureMode === 'editBase' && (
-                <Icons.Edit3
-                  className="h-4 w-4 text-blue-600 flex-shrink-0"
-                  strokeWidth={2}
-                />
-              )}
-            </div>
+          <span className="flex-grow truncate">{content}</span>
+          {featureMode === 'editBase' && (
+            <Icons.Edit3
+              className="h-4 w-4 text-blue-600 flex-shrink-0"
+              strokeWidth={2}
+            />
           )}
         </div>
       );
     }
 
     if (fieldName === 'isSameBilling') {
+      const field = editableFields[fieldName];
       return (
         <div
           className={`
             group relative flex items-center justify-between w-full h-8
             ${
-              !isEditing && featureMode === 'editBase'
+              featureMode === 'editBase'
                 ? 'bg-blue-50/30 border-l-2 border-blue-400 hover:bg-blue-100/50 rounded px-2 -mx-2 cursor-pointer transition-all duration-200'
                 : ''
             }
           `}
+          onClick={() => featureMode === 'editBase' && handleOpenModal(fieldName, field)}
         >
-          {isEditing ? (
-            <div className="flex items-center w-full gap-1 bg-yellow-50 border border-yellow-300 rounded p-2 -m-2">
-              <div className="flex space-x-4 flex-grow">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="customerType"
-                    className="text-blue-600 focus:ring-blue-500"
-                    checked={editState.newValue === true}
-                    onChange={() => handleCustomerTypeChange(true)}
-                  />
-                  <CheckCircle className="ml-2 h-4 w-4 text-green-500" />
-                  <span className="ml-1 text-sm text-gray-700">
-                    고객사와 동일
-                  </span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="customerType"
-                    className="text-blue-600 focus:ring-blue-500"
-                    checked={editState.newValue === false}
-                    onChange={() => handleCustomerTypeChange(false)}
-                  />
-                  <Building2 className="ml-2 h-4 w-4 text-blue-500" />
-                  <span className="ml-1 text-sm text-gray-700">
-                    별도 매출처
-                  </span>
-                </label>
-              </div>
-              {renderEditButtons()}
-            </div>
-          ) : (
-            <div
-              className="flex items-center w-full h-8"
-              onClick={() =>
-                featureMode === 'editBase' &&
-                startEditing(fieldName, editableFields)
-              }
-            >
-              <span className="flex-grow truncate">{content}</span>
-              {featureMode === 'editBase' && (
-                <Icons.Edit3
-                  className="h-4 w-4 text-blue-600 flex-shrink-0"
-                  strokeWidth={2}
-                />
-              )}
-            </div>
+          <span className="flex-grow truncate">{content}</span>
+          {featureMode === 'editBase' && (
+            <Icons.Edit3
+              className="h-4 w-4 text-blue-600 flex-shrink-0"
+              strokeWidth={2}
+            />
           )}
         </div>
       );
@@ -489,82 +524,19 @@ const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
         className={`
           group relative flex items-center justify-between w-full h-8
           ${
-            !isEditing && featureMode === 'editBase'
+            featureMode === 'editBase'
               ? 'bg-blue-50/30 border-l-2 border-blue-400 hover:bg-blue-100/50 rounded px-2 -mx-2 cursor-pointer transition-all duration-200'
               : ''
           }
         `}
+        onClick={() => featureMode === 'editBase' && handleOpenModal(fieldName, field)}
       >
-        {isEditing ? (
-          <div className="flex items-center w-full gap-1 bg-yellow-50 border border-yellow-300 rounded p-2 -m-2">
-            <div className="flex-grow">
-              {field.type === 'select' && field.label === '매출유형' ? (
-                <Select
-                  value={editState.newValue}
-                  onChange={handleValueChange}
-                  className="w-full h-8 text-sm"
-                >
-                  <option value="">선택하세요</option>
-                  {codebooks?.sfaSalesType?.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.name}
-                    </option>
-                  ))}
-                </Select>
-              ) : field.type === 'select' && field.label === '매출구분' ? (
-                <Select
-                  value={editState.newValue}
-                  onChange={handleValueChange}
-                  className="w-full h-8 text-sm"
-                >
-                  <option value="">선택하세요</option>
-                  {codebooks?.sfaClassification?.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.name}
-                    </option>
-                  ))}
-                </Select>
-              ) : field.type === 'customer' ? (
-                <CustomerSearchInput
-                  value={editState.newValue}
-                  onSelect={(selected) => {
-                    handleValueChange({
-                      target: {
-                        value: selected.id,
-                        type: 'customer-search', // 커스텀 타입 지정
-                        name: selected.name,
-                      },
-                    });
-                  }}
-                  size="small"
-                />
-              ) : (
-                <Input
-                  type="text"
-                  value={editState.newValue}
-                  onChange={handleValueChange}
-                  className="w-full h-8 text-sm"
-                />
-              )}
-            </div>
-            {renderEditButtons()}
-          </div>
-        ) : (
-          <div
-            className="flex items-center w-full h-8"
-            onClick={() =>
-              featureMode === 'editBase' &&
-              startEditing(fieldName, editableFields)
-            }
-          >
-            <span className="flex-grow truncate">{content}</span>
-            {featureMode === 'editBase' && (
-              <Icons.Edit3
-                className="h-4 w-4 text-blue-600 flex-shrink-0"
-                strokeWidth={2}
-              />
-            )}
-          </div>
+        <span className="flex-grow truncate">{content}</span>
+        {featureMode === 'editBase' && (
+          <Icons.Edit3
+            className="h-4 w-4 text-blue-600 flex-shrink-0"
+            strokeWidth={2}
+          />
         )}
       </div>
     );
@@ -572,6 +544,7 @@ const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
 
   // 컴포넌트 렌더링
   return (
+    <>
     <Description className="text-sm">
       {/* 기존 렌더링 코드와 동일 */}
       <DescriptionRow equalItems>
@@ -700,6 +673,19 @@ const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
         </DescriptionItem>
       </DescriptionRow>
     </Description>
+
+    {/* 필드 편집 모달 */}
+    {isModalOpen && currentFieldConfig && (
+      <FieldEditModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        fieldConfig={currentFieldConfig}
+        initialValue={currentFieldConfig.initialValue}
+        onSave={handleModalSave}
+        isLoading={false}
+      />
+    )}
+    </>
   );
 };
 

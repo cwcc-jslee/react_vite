@@ -2,7 +2,7 @@
  * SFA(Sales Force Automation) 상세보기/수정 전용 Drawer 컴포넌트입니다.
  * 섹션별 컨텍스트 편집 방식을 사용하여 기본정보와 결제매출을 독립적으로 수정할 수 있습니다.
  * - 기본정보 섹션: "수정하기" 버튼으로 인라인 편집 활성화
- * - 결제매출 섹션: "수정하기" 버튼으로 추가/수정/삭제 기능 활성화
+ * - 결제매출 섹션: "매출내역 추가" / "매출내역 수정" 버튼으로 기능 분리
  */
 
 import React from 'react';
@@ -15,6 +15,7 @@ import { sfaSubmitService } from '../../services/sfaSubmitService.js';
 import DrawerActionsMenu from './sections/DrawerActionsMenu.jsx';
 import BasicInfoSection from './sections/BasicInfoSection.jsx';
 import PaymentListSection from './sections/PaymentListSection.jsx';
+import PaymentEditDrawer from './PaymentEditDrawer.jsx';
 
 const SfaViewDrawer = React.memo(
   ({ drawer }) => {
@@ -23,29 +24,107 @@ const SfaViewDrawer = React.memo(
     const { actions: sfaActions } = useSfaStore();
 
     // ==================== 섹션별 편집 상태 관리 ====================
-    const [editingSection, setEditingSection] = React.useState(null); // 'base' | 'payment' | null
+    const [editingSection, setEditingSection] = React.useState(null); // 'base' | null
+    const [paymentMode, setPaymentMode] = React.useState('view'); // 'view' | 'add' | 'edit' | 'delete'
     const [editingPaymentId, setEditingPaymentId] = React.useState(null);
 
-    // ==================== 섹션 편집 핸들러 ====================
-    const handleStartEdit = (section) => {
-      // 다른 섹션을 편집 중이면 경고
-      if (editingSection && editingSection !== section) {
+    // ==================== 결제매출 Drawer 상태 관리 ====================
+    const [paymentDrawer, setPaymentDrawer] = React.useState({
+      visible: false,
+      mode: null,      // 'add' | 'edit'
+      payment: null,   // 수정할 payment 데이터
+    });
+
+    // ==================== 기본정보 편집 핸들러 ====================
+    const handleStartEditBase = () => {
+      // 결제매출 편집 중이면 경고
+      if (paymentMode !== 'view') {
         const shouldContinue = window.confirm(
-          `${editingSection === 'base' ? '기본정보' : '결제매출'} 섹션을 편집 중입니다.\n저장하지 않은 변경사항이 있을 수 있습니다.\n계속하시겠습니까?`,
+          `결제매출 ${paymentMode === 'add' ? '추가' : '수정'} 모드입니다.\n저장하지 않은 변경사항이 있을 수 있습니다.\n계속하시겠습니까?`,
         );
         if (!shouldContinue) return;
+
+        // 결제매출 모드 초기화
+        setPaymentMode('view');
+        sfaActions.form.updateField('sfaDraftPayments', []);
       }
-      setEditingSection(section);
+
+      setEditingSection('base');
     };
 
-    const handleFinishEdit = () => {
+    const handleFinishEditBase = () => {
       setEditingSection(null);
-      sfaActions.form.updateField('sfaDraftPayments', []);
     };
 
-    const handleCancelEdit = () => {
+    const handleCancelEditBase = () => {
       setEditingSection(null);
-      sfaActions.form.updateField('sfaDraftPayments', []);
+    };
+
+    // ==================== 결제매출 Drawer 핸들러 ====================
+    const openPaymentDrawer = (mode, payment = null) => {
+      // 기본정보 편집 중이면 경고
+      if (editingSection === 'base') {
+        const shouldContinue = window.confirm(
+          '기본정보를 편집 중입니다.\n저장하지 않은 변경사항이 있을 수 있습니다.\n계속하시겠습니까?',
+        );
+        if (!shouldContinue) return;
+
+        // 기본정보 편집 종료
+        setEditingSection(null);
+      }
+
+      setPaymentDrawer({
+        visible: true,
+        mode,
+        payment,
+      });
+    };
+
+    const closePaymentDrawer = () => {
+      setPaymentDrawer({
+        visible: false,
+        mode: null,
+        payment: null,
+      });
+    };
+
+    const handlePaymentDrawerSave = async () => {
+      // Drawer 닫기만 수행 (모드 변경 없음)
+      closePaymentDrawer();
+    };
+
+    // ==================== 결제매출 편집 핸들러 (헤더 메뉴용) ====================
+    const handleStartAddPayment = () => {
+      // 기본정보 편집 중이면 경고
+      if (editingSection === 'base') {
+        const shouldContinue = window.confirm(
+          '기본정보를 편집 중입니다.\n저장하지 않은 변경사항이 있을 수 있습니다.\n계속하시겠습니까?',
+        );
+        if (!shouldContinue) return;
+
+        // 기본정보 편집 종료
+        setEditingSection(null);
+      }
+
+      // PaymentEditDrawer 열기 (add 모드)
+      openPaymentDrawer('add', null);
+    };
+
+    const handleStartEditPayment = () => {
+      setPaymentMode('edit');
+    };
+
+    const handleStartDeletePayment = () => {
+      setPaymentMode('delete');
+    };
+
+    const handlePaymentModeChange = (newMode) => {
+      setPaymentMode(newMode);
+
+      // view 모드로 돌아갈 때 초안 초기화
+      if (newMode === 'view') {
+        sfaActions.form.updateField('sfaDraftPayments', []);
+      }
     };
 
     // ==================== 메뉴 액션 핸들러 ====================
@@ -147,8 +226,12 @@ const SfaViewDrawer = React.memo(
             onDelete={handleDelete}
             onCopy={handleCopy}
             onHistory={handleHistory}
-            onEditBase={() => handleStartEdit('base')}
+            onEditBase={handleStartEditBase}
             isEditingBase={editingSection === 'base'}
+            onAddPayment={handleStartAddPayment}
+            onEditPayment={handleStartEditPayment}
+            onDeletePayment={handleStartDeletePayment}
+            paymentMode={paymentMode}
           />
         }
       >
@@ -157,9 +240,9 @@ const SfaViewDrawer = React.memo(
           <BasicInfoSection
             data={data}
             isEditing={editingSection === 'base'}
-            onStartEdit={() => handleStartEdit('base')}
-            onFinishEdit={handleFinishEdit}
-            onCancelEdit={handleCancelEdit}
+            onStartEdit={handleStartEditBase}
+            onFinishEdit={handleFinishEditBase}
+            onCancelEdit={handleCancelEditBase}
             onSaveField={() => setEditingSection(null)}
             showBox={false}
           />
@@ -170,15 +253,24 @@ const SfaViewDrawer = React.memo(
           {/* 결제매출 내역 섹션 */}
           <PaymentListSection
             data={data}
-            isEditing={editingSection === 'payment'}
-            onStartEdit={() => handleStartEdit('payment')}
-            onFinishEdit={handleFinishEdit}
-            onCancelEdit={handleCancelEdit}
+            mode={paymentMode}
+            onModeChange={handlePaymentModeChange}
+            onOpenPaymentDrawer={openPaymentDrawer}
             editingPaymentId={editingPaymentId}
             setEditingPaymentId={setEditingPaymentId}
             showBox={false}
           />
         </div>
+
+        {/* 결제매출 추가/수정 Drawer */}
+        <PaymentEditDrawer
+          visible={paymentDrawer.visible}
+          mode={paymentDrawer.mode}
+          data={data}
+          payment={paymentDrawer.payment}
+          onClose={closePaymentDrawer}
+          onSave={handlePaymentDrawerSave}
+        />
       </Drawer>
     );
   },

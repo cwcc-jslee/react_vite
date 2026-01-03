@@ -1,11 +1,10 @@
 /**
  * 결제매출 목록 섹션 컴포넌트
- * - View/Edit 모드 전환
+ * - View/Add/Edit 모드 전환
  * - 결제매출 추가/수정/삭제 기능 제공
  * - usePaymentActions Hook 사용으로 로직 분리
  */
 
-import React from 'react';
 import PropTypes from 'prop-types';
 import { CircleDollarSign } from 'lucide-react';
 import { Button } from '@shared/components/ui';
@@ -23,7 +22,7 @@ const SectionDivider = ({ label, variant = 'default' }) => {
   };
 
   const colorClass = variants[variant] || variants.default;
-  const [borderColor, textColor] = colorClass.split(' ');
+  const borderColor = colorClass.split(' ')[0];
 
   return (
     <div className="relative my-5">
@@ -53,13 +52,20 @@ SectionDivider.propTypes = {
 
 /**
  * 결제매출 목록 섹션
+ * @param {Object} props
+ * @param {Object} props.data - SFA 데이터
+ * @param {string} props.mode - 모드 ('view' | 'add' | 'edit' | 'delete')
+ * @param {Function} props.onModeChange - 모드 변경 핸들러
+ * @param {Function} props.onOpenPaymentDrawer - 결제매출 Drawer 열기 핸들러
+ * @param {number} props.editingPaymentId - 수정 중인 결제매출 ID
+ * @param {Function} props.setEditingPaymentId - 수정 중인 결제매출 ID 설정
+ * @param {boolean} props.showBox - 박스 스타일 여부
  */
 const PaymentListSection = ({
   data,
-  isEditing,
-  onStartEdit,
-  onFinishEdit,
-  onCancelEdit,
+  mode = 'view', // 'view' | 'add' | 'edit' | 'delete'
+  onModeChange,
+  onOpenPaymentDrawer,
   editingPaymentId,
   setEditingPaymentId,
   showBox = true,
@@ -71,10 +77,17 @@ const PaymentListSection = ({
     isSubmitting,
   } = usePaymentActions(data);
 
+  // 모드 종료 (view로 복귀)
+  const handleFinish = () => {
+    onModeChange('view');
+  };
+
+  // 추가 버튼 클릭 (add 모드에서만)
   const handleAddClick = () => {
     const success = addPayment();
     if (!success) {
-      // 최대 개수 도달 시 사용자에게 알림 (이미 console.warn이 나가지만 필요시 추가 UI)
+      // 최대 개수 도달 시 사용자에게 알림
+      console.warn('최대 추가 가능 개수에 도달했습니다.');
     }
   };
 
@@ -87,26 +100,36 @@ const PaymentListSection = ({
           <div className="flex items-center gap-3">
             <CircleDollarSign className="h-5 w-5 text-gray-700" />
             <h2 className="text-lg font-semibold text-gray-900">결제매출 내역</h2>
-            {isEditing && (
+            {mode === 'add' && (
+              <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded border border-green-300">
+                추가 모드
+              </span>
+            )}
+            {mode === 'edit' && (
               <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded border border-blue-300">
-                수정중
+                수정 모드
+              </span>
+            )}
+            {mode === 'delete' && (
+              <span className="px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded border border-red-300">
+                삭제 모드
               </span>
             )}
           </div>
 
           {/* Right: Actions */}
           <div className="flex items-center gap-2">
-            {isEditing ? (
+            {mode === 'view' ? (
+              // View 모드: 아무 버튼 없음 (헤더 메뉴에서 제어)
+              null
+            ) : mode === 'add' ? (
+              // Add 모드: 추가 + 완료
               <>
                 <Button
                   variant="primary"
                   size="sm"
                   onClick={handleAddClick}
-                  disabled={
-                    isSubmitting ||
-                    !canAddMore ||
-                    editingPaymentId !== null
-                  }
+                  disabled={isSubmitting || !canAddMore}
                   className="h-9 px-4"
                 >
                   + 추가
@@ -114,29 +137,30 @@ const PaymentListSection = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={onCancelEdit}
+                  onClick={handleFinish}
                   className="h-9 px-4 text-gray-600 hover:text-gray-900"
                 >
                   완료
                 </Button>
               </>
-            ) : (
+            ) : mode === 'edit' || mode === 'delete' ? (
+              // Edit/Delete 모드: 완료만
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onStartEdit}
-                className="h-9 px-4 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-300"
+                onClick={handleFinish}
+                className="h-9 px-4 text-gray-600 hover:text-gray-900"
               >
-                수정
+                완료
               </Button>
-            )}
+            ) : null}
           </div>
         </div>
 
         {/* Section Content */}
         <div className="space-y-4">
-          {/* 편집 모드: 추가할 매출 섹션 */}
-          {isEditing && draftPaymentsCount > 0 && (
+          {/* 추가 모드: 추가할 매출 섹션 */}
+          {mode === 'add' && draftPaymentsCount > 0 && (
             <>
               <div className="space-y-3">
                 <SectionDivider label="추가할 매출" variant="primary" />
@@ -159,10 +183,15 @@ const PaymentListSection = ({
           {/* 결제매출 내역 */}
           <SfaPaymentSection
             data={data}
-            controlMode={isEditing ? 'edit' : 'view'}
-            featureMode={isEditing ? 'editPayment' : 'viewPayment'}
-            onEditComplete={onFinishEdit}
-            hasAddingPayments={draftPaymentsCount > 0}
+            controlMode={mode === 'edit' || mode === 'delete' ? mode : 'view'}
+            featureMode={
+              mode === 'edit' ? 'editPayment' :
+              mode === 'delete' ? 'deletePayment' :
+              'viewPayment'
+            }
+            onEditComplete={handleFinish}
+            onOpenPaymentDrawer={onOpenPaymentDrawer}
+            hasAddingPayments={mode === 'add' && draftPaymentsCount > 0}
             editingPaymentId={editingPaymentId}
             setEditingPaymentId={setEditingPaymentId}
           />
@@ -181,26 +210,29 @@ const PaymentListSection = ({
           <div className="flex items-center gap-3">
             <CircleDollarSign className="h-5 w-5 text-gray-600" />
             <h2 className="text-base font-semibold text-gray-900">결제매출 내역</h2>
-            {isEditing && (
+            {mode === 'add' && (
+              <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
+                추가 모드
+              </span>
+            )}
+            {mode === 'edit' && (
               <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded">
-                수정 중
+                수정 모드
               </span>
             )}
           </div>
 
           {/* Right: Actions */}
           <div className="flex items-center gap-2">
-            {isEditing ? (
+            {mode === 'view' ? (
+              null
+            ) : mode === 'add' ? (
               <>
                 <Button
                   variant="primary"
                   size="sm"
                   onClick={handleAddClick}
-                  disabled={
-                    isSubmitting ||
-                    !canAddMore ||
-                    editingPaymentId !== null
-                  }
+                  disabled={isSubmitting || !canAddMore}
                   className="h-9 px-4"
                 >
                   + 추가
@@ -208,30 +240,30 @@ const PaymentListSection = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={onCancelEdit}
+                  onClick={handleFinish}
                   className="h-9 px-4 text-gray-600 hover:text-gray-900"
                 >
                   완료
                 </Button>
               </>
-            ) : (
+            ) : mode === 'edit' ? (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onStartEdit}
-                className="h-9 px-4 text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-300"
+                onClick={handleFinish}
+                className="h-9 px-4 text-gray-600 hover:text-gray-900"
               >
-                수정
+                완료
               </Button>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
 
       {/* Section Content */}
       <div className="p-6 space-y-4">
-        {/* 편집 모드: 추가할 매출 섹션 */}
-        {isEditing && draftPaymentsCount > 0 && (
+        {/* 추가 모드: 추가할 매출 섹션 */}
+        {mode === 'add' && draftPaymentsCount > 0 && (
           <>
             <div className="space-y-3">
               <SectionDivider label="추가할 매출" variant="primary" />
@@ -254,10 +286,15 @@ const PaymentListSection = ({
         {/* 결제매출 내역 */}
         <SfaPaymentSection
           data={data}
-          controlMode={isEditing ? 'edit' : 'view'}
-          featureMode={isEditing ? 'editPayment' : 'viewPayment'}
-          onEditComplete={onFinishEdit}
-          hasAddingPayments={draftPaymentsCount > 0}
+          controlMode={mode === 'edit' || mode === 'delete' ? mode : 'view'}
+          featureMode={
+            mode === 'edit' ? 'editPayment' :
+            mode === 'delete' ? 'deletePayment' :
+            'viewPayment'
+          }
+          onEditComplete={handleFinish}
+          onOpenPaymentDrawer={onOpenPaymentDrawer}
+          hasAddingPayments={mode === 'add' && draftPaymentsCount > 0}
           editingPaymentId={editingPaymentId}
           setEditingPaymentId={setEditingPaymentId}
         />
@@ -268,10 +305,9 @@ const PaymentListSection = ({
 
 PaymentListSection.propTypes = {
   data: PropTypes.object.isRequired,
-  isEditing: PropTypes.bool.isRequired,
-  onStartEdit: PropTypes.func.isRequired,
-  onFinishEdit: PropTypes.func.isRequired,
-  onCancelEdit: PropTypes.func.isRequired,
+  mode: PropTypes.oneOf(['view', 'add', 'edit', 'delete']),
+  onModeChange: PropTypes.func.isRequired,
+  onOpenPaymentDrawer: PropTypes.func.isRequired,
   editingPaymentId: PropTypes.number,
   setEditingPaymentId: PropTypes.func.isRequired,
   showBox: PropTypes.bool,
