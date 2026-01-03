@@ -217,7 +217,7 @@ export const showErrorNotification = (errors) => {
   notification.error({
     message: '매출등록오류',
     description: formatValidationErrors(errors),
-    duration: 0,
+    duration: 8000, // 8초 후 자동으로 닫힘 (이전: 0 = 수동으로만 닫기)
     style: { width: 500 },
   });
 };

@@ -21,7 +21,9 @@
       "Bash(npm install:*)",
       "Bash(wc:*)",
       "Bash(cat:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(node -e:*)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

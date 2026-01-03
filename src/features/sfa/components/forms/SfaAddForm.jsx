@@ -1,11 +1,14 @@
 // src/features/sfa/components/forms/SfaAddForm/index.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import dayjs from 'dayjs';
 import { CustomerSearchInput } from '@shared/components/customer/CustomerSearchInput';
 import { formatDisplayNumber } from '@shared/utils/format/number';
 import SalesByItem from '../elements/SalesByItem.jsx';
 import SalesAddByPayment from '../elements/SalesAddByPayment.jsx';
 import RevenueSource from '../elements/RevenueSource.jsx';
 import SalesItemSection from '../sections/SalesItemSection.jsx';
+import PaymentEditDrawer from '../drawer/PaymentEditDrawer.jsx';
+import PaymentCardList from '../cards/PaymentCardList';
 import { useSfaForm1 } from '../../hooks/useSfaForm1.js';
 import { useSfaStore } from '../../hooks/useSfaStore.js';
 import { useSfaOperations } from '../../hooks/useSfaSubmit.js';
@@ -76,6 +79,14 @@ const SfaAddForm = () => {
   // useModal 훅 사용
   const { modalState, openModal, closeModal, handleConfirm } = useModal();
 
+  // PaymentEditDrawer 상태 관리
+  const [paymentDrawer, setPaymentDrawer] = useState({
+    visible: false,
+    mode: null, // 'add' | 'edit'
+    payment: null,
+    paymentIndex: null,
+  });
+
   // SfaAddForm에서 필요한 모든 codebook 직접 조회
   const {
     data: codebooks,
@@ -89,6 +100,26 @@ const SfaAddForm = () => {
     'fy', // 회계년도
   ]);
 
+  // FY 자동 선택 (현재 연도 기준)
+  useEffect(() => {
+    if (!isLoadingCodebook && codebooks?.fy && !form.data.fy) {
+      const currentYear = dayjs().year(); // 2026, 2027, ...
+      const fyCode = String(currentYear % 100); // "26", "27", ...
+
+      // codebook에서 code 필드로 현재 연도에 해당하는 FY 찾기
+      const currentFy = codebooks.fy.find(
+        (item) => item.code === fyCode
+      );
+
+      if (currentFy) {
+        actions.form.updateField('fy', {
+          id: currentFy.id,
+          name: currentFy.name,
+        });
+      }
+    }
+  }, [isLoadingCodebook, codebooks?.fy, form.data.fy, actions.form]);
+
   // revenueSource 데이터 중복 제거 및 정렬
   const uniqueRevenueSources = getUniqueRevenueSources(form.data.sfaByPayments);
 
@@ -99,6 +130,12 @@ const SfaAddForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // PaymentEditDrawer가 열려있으면 submit 무시 (Drawer 내부에서 Enter 키 입력 시 전체 폼 검증 방지)
+    if (paymentDrawer.visible) {
+      return;
+    }
+
     // 유효성 검사 수행
     const { isValid } = validateForm(form.data);
     if (!isValid) return;
@@ -138,6 +175,38 @@ const SfaAddForm = () => {
         await createSfa(form.data);
       },
     );
+  };
+
+  // PaymentEditDrawer 열기
+  const handleOpenPaymentDrawer = (mode, payment = null, paymentIndex = null) => {
+    setPaymentDrawer({
+      visible: true,
+      mode,
+      payment,
+      paymentIndex,
+    });
+  };
+
+  // 결제매출 수정 핸들러
+  const handleEditPayment = (payment, index) => {
+    handleOpenPaymentDrawer('edit', payment, index);
+  };
+
+  // PaymentEditDrawer 닫기
+  const handleClosePaymentDrawer = () => {
+    setPaymentDrawer({
+      visible: false,
+      mode: null,
+      payment: null,
+      paymentIndex: null,
+    });
+  };
+
+  // PaymentEditDrawer 저장
+  const handlePaymentDrawerSave = () => {
+    // PaymentEditDrawer가 이미 Redux store 업데이트를 처리함
+    // 여기서는 Drawer만 닫으면 됨
+    handleClosePaymentDrawer();
   };
 
   return (
@@ -378,9 +447,7 @@ const SfaAddForm = () => {
             <h3 className="font-medium text-gray-900">매출 정보</h3>
             <button
               type="button"
-              onClick={() =>
-                handleAddPaymentWithAllocation(form.data.isSameBilling, form.data.customer)
-              }
+              onClick={() => handleOpenPaymentDrawer('add')}
               className="flex items-center rounded-lg bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
               disabled={!hasCustomer || !hasItems || isSubmitting}
               title={!hasItems ? '사업부 매출 정보를 먼저 입력해주세요' : ''}
@@ -417,29 +484,26 @@ const SfaAddForm = () => {
               </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
-              {(form.data.sfaByPayments || []).map((payment, index) => (
-                <SalesAddByPayment
-                  key={`payment-${payment.id || index}`}
-                  payment={payment}
-                  index={index}
-                  isSameBilling={form.data.isSameBilling}
-                  onChange={handlePaymentChange}
-                  onRemove={handleRemovePayment}
-                  isSubmitting={isSubmitting}
-                  handleRevenueSourceSelect={handleRevenueSourceSelect}
-                  savedRevenueSources={uniqueRevenueSources}
-                  codebooks={codebooks}
-                  isLoadingCodebook={isLoadingCodebook}
-                  isMultiTeam={form.data.isMultiTeam || false}
-                  sfaByItems={form.data.sfaByItems || []}
-                  onPaymentAmountChange={handlePaymentAmountChange}
-                  onAllocationChange={handleAllocationChange}
-                  onAutoAllocateByRatio={handleAutoAllocateByRatio}
-                  onEqualDistribute={handleEqualDistribute}
-                />
-              ))}
-            </div>
+            <PaymentCardList
+              payments={form.data.sfaByPayments || []}
+              isNewSfa={true}
+              showActions={true}
+              showTeamAllocations={false}
+              onEdit={(payment) => {
+                const index = form.data.sfaByPayments.findIndex(
+                  (p) => p.id === payment.id
+                );
+                handleEditPayment(payment, index);
+              }}
+              onDelete={(payment) => {
+                const index = form.data.sfaByPayments.findIndex(
+                  (p) => p.id === payment.id
+                );
+                handleRemovePayment(index);
+              }}
+              disabled={isSubmitting}
+              sortByRecognitionDate={false}
+            />
           )}
 
           {hasPayments && (
@@ -524,6 +588,17 @@ const SfaAddForm = () => {
         modalState={modalState}
         closeModal={closeModal}
         handleConfirm={handleConfirm}
+      />
+
+      {/* 결제매출 수정 Drawer */}
+      <PaymentEditDrawer
+        visible={paymentDrawer.visible}
+        mode={paymentDrawer.mode}
+        data={form.data}
+        payment={paymentDrawer.payment}
+        onClose={handleClosePaymentDrawer}
+        onSave={handlePaymentDrawerSave}
+        isNewSfa={true}
       />
     </>
   );

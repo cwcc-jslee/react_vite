@@ -24,8 +24,9 @@ import { AlertCircle, ChevronDown } from 'lucide-react';
  * @param {Object} props.payment - 수정할 결제매출 데이터 (edit 모드일 때)
  * @param {Function} props.onClose - Drawer 닫기 핸들러
  * @param {Function} props.onSave - 저장 완료 핸들러
+ * @param {boolean} props.isNewSfa - SFA 신규 등록 모드 여부 (true: Redux 저장, false: DB 저장)
  */
-const PaymentEditDrawer = ({ visible, mode, data, payment, onClose, onSave }) => {
+const PaymentEditDrawer = ({ visible, mode, data, payment, onClose, onSave, isNewSfa = false }) => {
   const { form, actions } = useSfaStore();
   const [localPayments, setLocalPayments] = useState([]); // 배열로 변경
   const [paymentCount, setPaymentCount] = useState(1); // 수량 선택
@@ -263,69 +264,131 @@ const PaymentEditDrawer = ({ visible, mode, data, payment, onClose, onSave }) =>
       if (mode === 'edit') {
         // 수정 모드 (단일 payment만)
         const localPayment = localPayments[0];
-        const { documentId, id: paymentId, ...rawUpdateData } = localPayment;
 
-        // DB 필드로 변환
-        const { transformToDBFields } = await import('../../utils/transformUtils');
-        const processedData =
-          transformToDBFields.transformSalesByPaymentsEdit(rawUpdateData);
+        if (isNewSfa) {
+          // 🆕 SFA 신규 등록 모드: Redux store 업데이트
+          console.log('💾 [PaymentEditDrawer] 신규 SFA 수정 모드 - Redux 업데이트:', localPayment);
 
-        console.log('💾 [PaymentEditDrawer] 수정 데이터:', processedData);
+          const currentPayments = form.data.sfaByPayments || [];
 
-        // API 호출
-        const { apiService } = await import('@shared/api/apiService');
-        await apiService.put(
-          `/sfa-by-payment-withhistory/${paymentId}`,
-          processedData,
-        );
+          // payment의 id로 해당 항목 찾아서 업데이트
+          const updatedPayments = currentPayments.map(p =>
+            p.id === localPayment.id ? localPayment : p
+          );
 
-        // 성공 후 데이터 갱신
-        await actions.data.fetchSfaDetail(data.id);
+          // Redux store 업데이트
+          actions.form.updateField('sfaByPayments', updatedPayments);
 
-        if (onSave) {
-          onSave();
-        }
+          console.log('💾 [PaymentEditDrawer] Redux 업데이트 완료');
 
-        onClose();
-        alert('✅ 수정이 완료되었습니다.');
-      } else if (mode === 'add') {
-        // 추가 모드 - DB에 직접 저장
-        const { transformToDBFields } = await import('../../utils/transformUtils');
-        const { apiService } = await import('@shared/api/apiService');
+          if (onSave) {
+            onSave();
+          }
 
-        console.log('💾 [PaymentEditDrawer] 추가 모드 - 저장할 데이터:', localPayments);
+          onClose();
+          alert('✅ 수정이 완료되었습니다.');
+        } else {
+          // 기존 SFA 상세보기 모드: DB 업데이트
+          const { documentId, id: paymentId, ...rawUpdateData } = localPayment;
 
-        // 각 payment를 DB에 저장
-        const savePromises = localPayments.map(async (payment) => {
           // DB 필드로 변환
-          const paymentData = transformToDBFields.transformSalesByPayments(payment);
+          const { transformToDBFields } = await import('../../utils/transformUtils');
+          const processedData =
+            transformToDBFields.transformSalesByPaymentsEdit(rawUpdateData);
 
-          // sfa 연결 추가
-          const processedData = {
-            ...paymentData,
-            sfa: data.id, // sfaId 추가
-          };
-
-          console.log('💾 [PaymentEditDrawer] 변환된 데이터:', processedData);
+          console.log('💾 [PaymentEditDrawer] 수정 데이터:', processedData);
 
           // API 호출
-          return apiService.post('/sfa-by-payment-withhistory', processedData);
-        });
+          const { apiService } = await import('@shared/api/apiService');
+          await apiService.put(
+            `/sfa-by-payment-withhistory/${paymentId}`,
+            processedData,
+          );
 
-        // 모든 저장 완료 대기
-        await Promise.all(savePromises);
+          // 성공 후 데이터 갱신
+          await actions.data.fetchSfaDetail(data.id);
 
-        console.log('💾 [PaymentEditDrawer] 모든 결제매출 저장 완료');
+          if (onSave) {
+            onSave();
+          }
 
-        // 성공 후 데이터 갱신
-        await actions.data.fetchSfaDetail(data.id);
-
-        if (onSave) {
-          onSave();
+          onClose();
+          alert('✅ 수정이 완료되었습니다.');
         }
+      } else if (mode === 'add') {
+        // 추가 모드
+        if (isNewSfa) {
+          // 🆕 SFA 신규 등록 모드: Redux store에 임시 저장
+          console.log('💾 [PaymentEditDrawer] 신규 SFA 모드 - Redux 저장:', localPayments);
 
-        onClose();
-        alert(`✅ ${localPayments.length}개의 결제매출이 저장되었습니다.`);
+          // 현재 Redux store의 sfaByPayments 가져오기
+          const currentPayments = form.data.sfaByPayments || [];
+
+          // 새 payment들에 임시 ID 부여 (기존 최대 ID + 1부터)
+          const maxId = currentPayments.reduce((max, p) => {
+            const id = parseInt(p.id) || 0;
+            return id > max ? id : max;
+          }, 0);
+
+          const paymentsWithId = localPayments.map((payment, index) => ({
+            ...payment,
+            id: maxId + index + 1, // 임시 ID
+            __isNew: true, // 신규 payment 표시
+          }));
+
+          // Redux store 업데이트
+          actions.form.updateField('sfaByPayments', [
+            ...currentPayments,
+            ...paymentsWithId,
+          ]);
+
+          console.log('💾 [PaymentEditDrawer] Redux 저장 완료:', paymentsWithId);
+
+          if (onSave) {
+            onSave();
+          }
+
+          onClose();
+          alert(`✅ ${localPayments.length}개의 결제매출이 추가되었습니다.`);
+        } else {
+          // 기존 SFA 상세보기 모드: DB에 직접 저장
+          const { transformToDBFields } = await import('../../utils/transformUtils');
+          const { apiService } = await import('@shared/api/apiService');
+
+          console.log('💾 [PaymentEditDrawer] 상세보기 모드 - DB 저장:', localPayments);
+
+          // 각 payment를 DB에 저장
+          const savePromises = localPayments.map(async (payment) => {
+            // DB 필드로 변환
+            const paymentData = transformToDBFields.transformSalesByPayments(payment);
+
+            // sfa 연결 추가
+            const processedData = {
+              ...paymentData,
+              sfa: data.id, // sfaId 추가
+            };
+
+            console.log('💾 [PaymentEditDrawer] 변환된 데이터:', processedData);
+
+            // API 호출
+            return apiService.post('/sfa-by-payment-withhistory', processedData);
+          });
+
+          // 모든 저장 완료 대기
+          await Promise.all(savePromises);
+
+          console.log('💾 [PaymentEditDrawer] 모든 결제매출 저장 완료');
+
+          // 성공 후 데이터 갱신
+          await actions.data.fetchSfaDetail(data.id);
+
+          if (onSave) {
+            onSave();
+          }
+
+          onClose();
+          alert(`✅ ${localPayments.length}개의 결제매출이 저장되었습니다.`);
+        }
       }
     } catch (error) {
       console.error('💾 [PaymentEditDrawer] 저장 실패:', error);
@@ -488,6 +551,7 @@ PaymentEditDrawer.propTypes = {
   payment: PropTypes.object,
   onClose: PropTypes.func.isRequired,
   onSave: PropTypes.func,
+  isNewSfa: PropTypes.bool,
 };
 
 export default PaymentEditDrawer;
