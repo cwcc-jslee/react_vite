@@ -225,6 +225,7 @@ const PaymentEditDrawer = ({ visible, mode, data, payment, onClose, onSave, isNe
   // 유효성 검사
   const validatePayments = () => {
     const errors = [];
+    const isMultiTeam = data.sfaByItems?.length > 1;
 
     localPayments.forEach((payment, index) => {
       const paymentNum = index + 1;
@@ -238,8 +239,38 @@ const PaymentEditDrawer = ({ visible, mode, data, payment, onClose, onSave, isNe
       if (!payment.amount || payment.amount === '0') {
         errors.push(`[${paymentNum}번] 매출액을 입력해주세요`);
       }
+      if (!payment.recognitionDate) {
+        errors.push(`[${paymentNum}번] 매출인식일자를 선택해주세요`);
+      }
       if (!payment.probability && !payment.isConfirmed) {
         errors.push(`[${paymentNum}번] 매출확률을 선택하거나 확정여부를 체크해주세요`);
+      }
+
+      // 다중 사업부일 때 사업부별 매출 할당 검증
+      if (isMultiTeam && isNewSfa) {
+        const teamAllocations = payment.teamAllocations || [];
+
+        // 모든 할당값이 입력되어야 함
+        const hasEmptyAllocation = teamAllocations.some(
+          (allocation) => !allocation.allocatedAmount || allocation.allocatedAmount === 0
+        );
+
+        if (hasEmptyAllocation) {
+          errors.push(`[${paymentNum}번] 사업부별 매출 할당 금액을 모두 입력해주세요`);
+        }
+
+        // 할당 총액이 매출액과 일치하는지 검증
+        const totalAllocated = teamAllocations.reduce(
+          (sum, allocation) => sum + (parseFloat(allocation.allocatedAmount) || 0),
+          0
+        );
+        const paymentAmount = parseFloat(payment.amount) || 0;
+
+        if (Math.abs(totalAllocated - paymentAmount) > 0.01) {
+          errors.push(
+            `[${paymentNum}번] 사업부별 할당 총액(${totalAllocated.toLocaleString()})이 매출액(${paymentAmount.toLocaleString()})과 일치하지 않습니다`
+          );
+        }
       }
     });
 
@@ -271,9 +302,9 @@ const PaymentEditDrawer = ({ visible, mode, data, payment, onClose, onSave, isNe
 
           const currentPayments = form.data.sfaByPayments || [];
 
-          // payment의 id로 해당 항목 찾아서 업데이트
+          // payment의 no로 해당 항목 찾아서 업데이트 (신규 SFA에서는 no 사용)
           const updatedPayments = currentPayments.map(p =>
-            p.id === localPayment.id ? localPayment : p
+            p.no === localPayment.no ? localPayment : p
           );
 
           // Redux store 업데이트
@@ -324,25 +355,24 @@ const PaymentEditDrawer = ({ visible, mode, data, payment, onClose, onSave, isNe
           // 현재 Redux store의 sfaByPayments 가져오기
           const currentPayments = form.data.sfaByPayments || [];
 
-          // 새 payment들에 임시 ID 부여 (기존 최대 ID + 1부터)
-          const maxId = currentPayments.reduce((max, p) => {
-            const id = parseInt(p.id) || 0;
-            return id > max ? id : max;
+          // 새 payment들에 임시 번호 부여 (기존 최대 번호 + 1부터)
+          const maxNo = currentPayments.reduce((max, p) => {
+            const no = parseInt(p.no) || 0;
+            return no > max ? no : max;
           }, 0);
 
-          const paymentsWithId = localPayments.map((payment, index) => ({
+          const paymentsWithNo = localPayments.map((payment, index) => ({
             ...payment,
-            id: maxId + index + 1, // 임시 ID
-            __isNew: true, // 신규 payment 표시
+            no: maxNo + index + 1, // 임시 번호 (Redux 전용, DB로는 전송되지 않음)
           }));
 
           // Redux store 업데이트
           actions.form.updateField('sfaByPayments', [
             ...currentPayments,
-            ...paymentsWithId,
+            ...paymentsWithNo,
           ]);
 
-          console.log('💾 [PaymentEditDrawer] Redux 저장 완료:', paymentsWithId);
+          console.log('💾 [PaymentEditDrawer] Redux 저장 완료:', paymentsWithNo);
 
           if (onSave) {
             onSave();

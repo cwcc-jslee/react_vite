@@ -88,7 +88,10 @@ export const useSfaOperations = () => {
 
         // 각 결제 정보에서 {id, name} 형태의 객체에서 id만 추출
         const extractedPaymentsData = rawPaymentsData.map((payment, index) => {
-          const extracted = extractIdsFromObject(payment, [
+          // 임시 필드 제거 (no, documentId 등) - id는 실제 DB ID이므로 유지
+          const { no, documentId, ...cleanPayment } = payment;
+
+          const extracted = extractIdsFromObject(cleanPayment, [
             'amount',
             'profitAmount',
             'marginProfitValue',

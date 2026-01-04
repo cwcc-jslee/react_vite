@@ -54,7 +54,7 @@ const PaymentCardList = ({
     <div className="space-y-4">
       {sortedPayments.map((payment) => (
         <PaymentCard
-          key={payment.documentId || payment.id}
+          key={payment.documentId || payment.no || payment.id}
           payment={payment}
           isNewSfa={isNewSfa}
           showActions={showActions}

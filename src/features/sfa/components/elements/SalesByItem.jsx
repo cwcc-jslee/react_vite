@@ -9,23 +9,14 @@ import { QUERY_KEYS } from '../../../../shared/utils/queryKeys';
 import {
   Group,
   Select,
-  Input,
   Message,
 } from '../../../../shared/components/ui';
-import {
-  formatDisplayNumber,
-  ensureNumericAmount,
-} from '../../../../shared/utils/format/number';
 
 /**
  * SalesByItem Component
- * 매출 아이템 입력을 위한 컴포넌트
- * 각 필드(매출품목, 사업부, 금액)가 동일한 너비를 가지도록 수정
- */
-
-/**
- * SalesByItem Component
- * 매출 아이템 입력을 위한 컴포넌트
+ * 사업부 매출 아이템 입력을 위한 컴포넌트
+ * - 사업부 선택 (필수)
+ * - 매출품목 선택 (필수)
  */
 const SalesByItemForm = ({
   items = [],
@@ -53,54 +44,16 @@ const SalesByItemForm = ({
     <div className="space-y-4 px-5">
       {items.map((item, index) => (
         <div key={index} className="space-y-2">
-          <div className="grid grid-cols-[3fr,3fr,2fr,40px] gap-3 items-start">
-            {/* 매출품목 선택 */}
-            <Select
-              // value={item.itemName}
-              value={item.itemId || ''}
-              // onChange={(e) => onChange(index, 'itemName', e.target.value)}
-              onChange={(e) => {
-                const selectedItemId = e.target.value;
-                const selectedItem = itemsData?.data?.find(
-                  (type) => type.id === parseInt(selectedItemId), // select의 value는 문자열로 전달되므로 숫자로 변환
-                );
-                console.log(`***** : ${selectedItem}`);
-                if (selectedItem) {
-                  // teamId와 teamName 모두 업데이트
-                  // onChange(index, 'teamId', selectedTeam.id);
-                  // onChange(index, 'teamName', selectedTeam.name);
-                  onChange(index, {
-                    itemId: selectedItem.id,
-                    itemName: selectedItem.name,
-                  });
-                }
-              }}
-              disabled={isSubmitting || hasPayments}
-              className={
-                hasFieldError(index, 'itemName') ? 'border-red-300' : ''
-              }
-            >
-              <option value="">매출품목 선택</option>
-              {itemsData?.data?.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
-                </option>
-              ))}
-            </Select>
-
+          <div className="grid grid-cols-[1fr,1fr,40px] gap-3 items-start">
             {/* 사업부 선택 */}
             <Select
-              value={item.teamId || ''} // teamId가 없을 경우 빈 문자열
+              value={item.teamId || ''}
               onChange={(e) => {
                 const selectedTeamId = e.target.value;
                 const selectedTeam = teamsData?.data?.find(
-                  (team) => team.id === parseInt(selectedTeamId), // select의 value는 문자열로 전달되므로 숫자로 변환
+                  (team) => team.id === parseInt(selectedTeamId),
                 );
-                console.log(`***** : ${selectedTeam}`);
                 if (selectedTeam) {
-                  // teamId와 teamName 모두 업데이트
-                  // onChange(index, 'teamId', selectedTeam.id);
-                  // onChange(index, 'teamName', selectedTeam.name);
                   onChange(index, {
                     teamId: selectedTeam.id,
                     teamName: selectedTeam.name,
@@ -120,20 +73,33 @@ const SalesByItemForm = ({
               ))}
             </Select>
 
-            {/* 금액 입력 */}
-            <Input
-              type="text"
-              value={formatDisplayNumber(item.amount)}
+            {/* 매출품목 선택 */}
+            <Select
+              value={item.itemId || ''}
               onChange={(e) => {
-                const numericValue = ensureNumericAmount(e.target.value);
-                onChange(index, 'amount', numericValue);
+                const selectedItemId = e.target.value;
+                const selectedItem = itemsData?.data?.find(
+                  (type) => type.id === parseInt(selectedItemId),
+                );
+                if (selectedItem) {
+                  onChange(index, {
+                    itemId: selectedItem.id,
+                    itemName: selectedItem.name,
+                  });
+                }
               }}
-              placeholder="금액"
               disabled={isSubmitting || hasPayments}
-              className={`text-right ${
-                hasFieldError(index, 'amount') ? 'border-red-300' : ''
-              }`}
-            />
+              className={
+                hasFieldError(index, 'itemName') ? 'border-red-300' : ''
+              }
+            >
+              <option value="">매출품목 선택</option>
+              {itemsData?.data?.map((type) => (
+                <option key={type.id} value={type.id}>
+                  {type.name}
+                </option>
+              ))}
+            </Select>
 
             {/* 삭제 버튼 */}
             <button

@@ -4,7 +4,7 @@
 
 /**
  * SFA의 sfaByItems로부터 팀 할당 템플릿 생성
- * @param {Array} sfaByItems - [{ teamId, teamName, itemId, itemName, amount }]
+ * @param {Array} sfaByItems - [{ teamId, teamName, itemId, itemName }]
  * @returns {Array} 팀 할당 템플릿
  */
 export const createTeamAllocationTemplate = (sfaByItems) => {
@@ -22,53 +22,14 @@ export const createTeamAllocationTemplate = (sfaByItems) => {
 };
 
 /**
- * 결제 금액을 팀별 매출 비율로 자동 배분
+ * 결제 금액을 팀별로 균등 배분 (amount 필드 제거로 인해 비율 배분 불가)
  * @param {number} paymentAmount - 결제 금액
- * @param {Array} sfaByItems - 팀별 총 매출액 정보
- * @returns {Array} 할당된 팀 배열
+ * @param {Array} sfaByItems - 팀 정보
+ * @returns {Array} 균등 할당된 팀 배열
  */
 export const autoAllocateByRatio = (paymentAmount, sfaByItems) => {
-  if (!Array.isArray(sfaByItems) || sfaByItems.length === 0) {
-    return [];
-  }
-
-  const payment = parseFloat(paymentAmount || 0);
-  if (payment === 0) {
-    return createTeamAllocationTemplate(sfaByItems);
-  }
-
-  // 총 매출액 계산
-  const totalAmount = sfaByItems.reduce((sum, item) => {
-    return sum + parseFloat(item.amount || 0);
-  }, 0);
-
-  if (totalAmount === 0) {
-    return createTeamAllocationTemplate(sfaByItems);
-  }
-
-  // 비율 계산하여 배분
-  let allocatedTotal = 0;
-  const allocations = sfaByItems.map((item, index) => {
-    const ratio = parseFloat(item.amount || 0) / totalAmount;
-    let allocated = Math.round(payment * ratio);
-
-    // 마지막 항목은 반올림 오차 보정
-    if (index === sfaByItems.length - 1) {
-      allocated = payment - allocatedTotal;
-    }
-
-    allocatedTotal += allocated;
-
-    return {
-      teamId: item.teamId,
-      teamName: item.teamName,
-      itemId: item.itemId,
-      itemName: item.itemName,
-      allocatedAmount: allocated,
-    };
-  });
-
-  return allocations;
+  // autoAllocateByRatio는 이제 균등 배분으로 동작 (이전 코드와의 호환성 유지)
+  return autoAllocateEqually(paymentAmount, sfaByItems);
 };
 
 /**

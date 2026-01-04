@@ -67,9 +67,8 @@ const validateSalesItems = (formData) => {
 
   formData.sfaByItems.forEach((item, index) => {
     const missingFields = [];
-    if (!item.itemName) missingFields.push('매출품목');
     if (!item.teamName) missingFields.push('사업부');
-    if (!item.amount) missingFields.push('매출금액');
+    if (!item.itemName) missingFields.push('매출품목');
 
     if (missingFields.length > 0) {
       errors.push(ERROR_MESSAGES.ITEM_FIELDS(index + 1, missingFields));

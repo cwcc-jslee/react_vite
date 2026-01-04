@@ -163,6 +163,40 @@ export const useSfaForm1 = () => {
     }
   }, [actions.form, form.data.sfaByItems]);
 
+  /**
+   * 수량만큼 사업부 매출 항목 일괄 생성
+   * @param {number} count - 생성할 항목 수 (1~3)
+   */
+  const handleAddSalesItemsByCount = useCallback(
+    (count) => {
+      console.log('🔄 [handleAddSalesItemsByCount] 호출됨:', { count });
+
+      // 수량 검증
+      const itemCount = parseInt(count, 10);
+      if (itemCount < 1 || itemCount > 3 || isNaN(itemCount)) {
+        console.error('❌ 유효하지 않은 수량:', count);
+        return;
+      }
+
+      // 수량만큼 빈 항목 생성
+      const newItems = Array.from({ length: itemCount }, () => ({
+        ...initialSalesByItem,
+      }));
+
+      // Redux store 업데이트
+      actions.form.updateField('sfaByItems', newItems);
+
+      // isMultiTeam 자동 설정: 수량이 2 이상이면 true
+      actions.form.updateField('isMultiTeam', itemCount > 1);
+
+      console.log('✅ [handleAddSalesItemsByCount] 완료:', {
+        itemCount,
+        isMultiTeam: itemCount > 1,
+      });
+    },
+    [actions.form],
+  );
+
   const handleRemoveSalesItem = useCallback(
     (index) => {
       const currentItems = [...(form.data.sfaByItems || [])];
@@ -552,6 +586,7 @@ export const useSfaForm1 = () => {
 
     // 판매 아이템 핸들러
     handleAddSalesItem,
+    handleAddSalesItemsByCount,
     handleRemoveSalesItem,
     handleSalesItemChange,
 

@@ -6,11 +6,10 @@ export const FORM_LIMITS = {
 };
 
 export const initialSalesByItem = {
-  itemId: '',
-  itemName: '',
   teamId: '',
   teamName: '',
-  amount: '',
+  itemId: '',
+  itemName: '',
 };
 
 export const initialSfaByPayment = {

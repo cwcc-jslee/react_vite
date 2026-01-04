@@ -38,7 +38,7 @@ const PaymentCard = ({
         <div className="space-y-2">
           <div className="flex items-center gap-4">
             {/* ID 헤더 */}
-            <PaymentCardHeader id={payment.id} />
+            <PaymentCardHeader id={payment.no || payment.id} />
 
             {/* 카드 본문 (Grid 6열) */}
             <PaymentCardBody payment={payment} />

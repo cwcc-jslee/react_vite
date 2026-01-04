@@ -16,6 +16,7 @@ import DrawerActionsMenu from './sections/DrawerActionsMenu.jsx';
 import BasicInfoSection from './sections/BasicInfoSection.jsx';
 import PaymentListSection from './sections/PaymentListSection.jsx';
 import PaymentEditDrawer from './PaymentEditDrawer.jsx';
+import RevenueSummaryCard from '../cards/RevenueSummaryCard.jsx';
 
 const SfaViewDrawer = React.memo(
   ({ drawer }) => {
@@ -245,6 +246,12 @@ const SfaViewDrawer = React.memo(
             onCancelEdit={handleCancelEditBase}
             onSaveField={() => setEditingSection(null)}
             showBox={false}
+          />
+
+          {/* 매출정보 요약 카드 */}
+          <RevenueSummaryCard
+            sfaByPayments={data?.sfaByPayments || []}
+            sfaByItems={data?.sfaByItems || []}
           />
 
           {/* 섹션 구분선 */}

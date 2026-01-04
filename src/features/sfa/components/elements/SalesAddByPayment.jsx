@@ -510,6 +510,7 @@ const SalesAddByPayment = ({
           <span className="text-xs font-medium text-gray-600 mb-1.5 flex items-center gap-1">
             <Calendar size={12} />
             매출인식일자
+            <span className="text-red-500">*</span>
           </span>
           <Input
             type="date"
@@ -519,6 +520,7 @@ const SalesAddByPayment = ({
             }
             disabled={isSubmitting}
             className="h-9"
+            required
           />
         </div>
 

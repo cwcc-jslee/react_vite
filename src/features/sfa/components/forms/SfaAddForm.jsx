@@ -9,6 +9,7 @@ import RevenueSource from '../elements/RevenueSource.jsx';
 import SalesItemSection from '../sections/SalesItemSection.jsx';
 import PaymentEditDrawer from '../drawer/PaymentEditDrawer.jsx';
 import PaymentCardList from '../cards/PaymentCardList';
+import RevenueSummaryCard from '../cards/RevenueSummaryCard.jsx';
 import { useSfaForm1 } from '../../hooks/useSfaForm1.js';
 import { useSfaStore } from '../../hooks/useSfaStore.js';
 import { useSfaOperations } from '../../hooks/useSfaSubmit.js';
@@ -41,6 +42,7 @@ import {
 } from 'lucide-react';
 import { useCodebook } from '../../../../shared/hooks/useCodebook';
 import { getUniqueRevenueSources } from '../../utils/transformUtils';
+import { notification } from '@shared/services/notification';
 
 const SfaAddForm = () => {
   // useSfaStore에서 form과 actions 직접 가져오기
@@ -52,6 +54,7 @@ const SfaAddForm = () => {
   const {
     updateFormField,
     handleAddSalesItem,
+    handleAddSalesItemsByCount,
     handleRemoveSalesItem,
     handleSalesItemChange,
     handleAddPayment,
@@ -177,8 +180,43 @@ const SfaAddForm = () => {
     );
   };
 
+  // 사업부 매출 정보 완성도 검증
+  const validateSalesItems = () => {
+    const items = form.data.sfaByItems || [];
+
+    if (items.length === 0) {
+      notification.warning({
+        message: '사업부 매출 정보 필요',
+        description: '사업부 매출 정보를 먼저 입력해주세요.',
+        duration: 3000,
+      });
+      return false;
+    }
+
+    // 모든 항목이 사업부와 매출품목을 선택했는지 확인
+    const incompleteItems = items.filter(
+      (item) => !item.teamId || !item.teamName || !item.itemId || !item.itemName
+    );
+
+    if (incompleteItems.length > 0) {
+      notification.warning({
+        message: '사업부 매출 정보 미완성',
+        description: '모든 사업부 매출 항목의 사업부와 매출품목을 선택해주세요.',
+        duration: 3000,
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   // PaymentEditDrawer 열기
   const handleOpenPaymentDrawer = (mode, payment = null, paymentIndex = null) => {
+    // 사업부 매출 정보 검증
+    if (!validateSalesItems()) {
+      return;
+    }
+
     setPaymentDrawer({
       visible: true,
       mode,
@@ -426,12 +464,17 @@ const SfaAddForm = () => {
           </Group>
         </div>
 
+        {/* 매출정보 요약 카드 */}
+        <RevenueSummaryCard
+          sfaByPayments={form.data.sfaByPayments || []}
+          sfaByItems={form.data.sfaByItems || []}
+        />
+
         {/* 사업부 매출 정보 */}
         <SalesItemSection
           isMultiTeam={form.data.isMultiTeam || false}
-          onTeamModeToggle={handleTeamModeToggle}
           sfaByItems={form.data.sfaByItems || []}
-          onAddSalesItem={handleAddSalesItem}
+          onAddSalesItemsByCount={handleAddSalesItemsByCount}
           onRemoveSalesItem={handleRemoveSalesItem}
           onSalesItemChange={handleSalesItemChange}
           isSubmitting={isSubmitting}
@@ -491,13 +534,13 @@ const SfaAddForm = () => {
               showTeamAllocations={false}
               onEdit={(payment) => {
                 const index = form.data.sfaByPayments.findIndex(
-                  (p) => p.id === payment.id
+                  (p) => p.no === payment.no
                 );
                 handleEditPayment(payment, index);
               }}
               onDelete={(payment) => {
                 const index = form.data.sfaByPayments.findIndex(
-                  (p) => p.id === payment.id
+                  (p) => p.no === payment.no
                 );
                 handleRemovePayment(index);
               }}

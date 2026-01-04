@@ -78,12 +78,11 @@ export const transformToDBFields = {
     }
 
     const transformed = items.map((item) => ({
-      item_id: item.itemId || null,
-      item_name: item.itemName || '',
       team_id: item.teamId || null,
       team_name: item.teamName || '',
-      item_price: parseNumber(item.amount),
-      // 추가 필드가 있다면 여기에 작성
+      item_id: item.itemId || null,
+      item_name: item.itemName || '',
+      // item_price 필드 제거 (사업부 매출 정보에서 금액 필드 제거됨)
     }));
 
     // JSON 문자열로 변환
