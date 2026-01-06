@@ -22,20 +22,20 @@ const PaymentCard = ({
   disabled = false,
 }) => {
   return (
-    <div className="space-y-2">
+    <div>
       {/* 매출 항목 카드 */}
       <div
         className={`
-          bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200
+          bg-white rounded-lg border shadow-sm hover:shadow-md transition-all duration-200
           ${
             payment.isConfirmed
-              ? 'border-l-4 border-green-500 bg-gradient-to-r from-green-50/30 to-white'
-              : 'border-l-4 border-gray-300 bg-gradient-to-r from-gray-50/30 to-white'
+              ? 'border-l-4 border-green-500 border-t border-r border-b border-gray-200 bg-gradient-to-r from-green-50/20 to-white'
+              : 'border-l-4 border-gray-400 border-t border-r border-b border-gray-200 bg-white'
           }
           p-4
         `}
       >
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center gap-4">
             {/* ID 헤더 */}
             <PaymentCardHeader id={payment.no || payment.id} />

@@ -16,6 +16,31 @@
  */
 
 /**
+ * 빈 값(빈 문자열, 빈 배열, null, undefined)을 가진 필드 제거
+ * @param {Object} data - 처리할 데이터
+ * @returns {Object} 빈 값이 제거된 데이터
+ */
+export const removeEmptyFields = (data) => {
+  const cleanedData = {};
+
+  Object.keys(data).forEach((key) => {
+    const value = data[key];
+
+    // 값이 유효한 경우만 포함
+    if (
+      value !== null &&
+      value !== undefined &&
+      value !== '' &&
+      !(Array.isArray(value) && value.length === 0)
+    ) {
+      cleanedData[key] = value;
+    }
+  });
+
+  return cleanedData;
+};
+
+/**
  * 관계 필드를 처리하는 유틸리티 함수
  * 객체 배열을 ID 배열로 변환 (예: users배열)
  *
@@ -58,6 +83,10 @@ export const processRelationFields = (data) => {
     'service',
     'team',
     'customer',
+    'coClassification',
+    'businessScale',
+    'region',
+    'employee',
   ];
 
   idExtractionKeys.forEach((key) => {
@@ -67,6 +96,24 @@ export const processRelationFields = (data) => {
       processedData[key].id !== undefined
     ) {
       processedData[key] = processedData[key].id;
+    }
+  });
+
+  // businessType, funnel 같은 객체 배열 필드 처리
+  const arrayIdExtractionKeys = ['businessType', 'funnel'];
+
+  arrayIdExtractionKeys.forEach((key) => {
+    if (
+      processedData[key] &&
+      Array.isArray(processedData[key]) &&
+      processedData[key].length > 0
+    ) {
+      if (
+        typeof processedData[key][0] === 'object' &&
+        processedData[key][0].id !== undefined
+      ) {
+        processedData[key] = processedData[key].map((item) => item.id);
+      }
     }
   });
 

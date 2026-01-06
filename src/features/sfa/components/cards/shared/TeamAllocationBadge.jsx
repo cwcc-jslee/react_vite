@@ -23,7 +23,7 @@ const TeamAllocationBadge = ({ allocation, index }) => {
       `}
     >
       <span className="font-semibold">
-        {allocation.itemName || allocation.teamName}
+        {allocation.teamName}/{allocation.itemName}
       </span>
       <span className="text-gray-400">|</span>
       <span>

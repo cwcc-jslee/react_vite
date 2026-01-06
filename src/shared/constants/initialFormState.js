@@ -3,7 +3,7 @@
 // Customer 모듈 초기 상태
 export const customerInitialState = {
   name: '',
-  coClassfication: '',
+  coClassification: '',
   businessNumber: '',
   homepage: '',
   businessType: [],

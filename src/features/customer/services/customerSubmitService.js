@@ -1,5 +1,9 @@
 // src/features/customer/services/customerSubmitService.js
 import { apiService } from '../../../shared/api/apiService';
+import {
+  processRelationFields,
+  removeEmptyFields,
+} from '../../../shared/utils/relationFieldUtils';
 
 export const customerSubmitService = {
   /**
@@ -9,8 +13,16 @@ export const customerSubmitService = {
     console.log('[Customer] Creating base with formData:', formData);
 
     try {
+      // 1. 관계 필드 처리 (객체 → ID)
+      let processedData = processRelationFields(formData);
+
+      // 2. 빈 값 제거 (빈 문자열, 빈 배열, null, undefined)
+      processedData = removeEmptyFields(processedData);
+
+      console.log('[Customer] Processed data:', processedData);
+
       // Interceptor가 자동으로 camelCase → snake_case 변환
-      const response = await apiService.post('/customers', formData);
+      const response = await apiService.post('/customers', processedData);
 
       return response.data;
     } catch (error) {

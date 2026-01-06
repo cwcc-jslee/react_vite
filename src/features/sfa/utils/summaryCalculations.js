@@ -23,8 +23,7 @@ export const calculateTotalAmount = (sfaByPayments = []) => {
 
 /**
  * 전체 매출이익 계산
- * - isProfit=true: marginProfitValue가 이익 금액
- * - isProfit=false: marginProfitValue가 마진율 -> (amount * marginProfitValue / 100)
+ * - profitAmount 필드 사용 (계산된 이익 금액)
  * @param {Array} sfaByPayments - 결제매출 배열
  * @returns {number} 총 매출이익
  */
@@ -34,19 +33,8 @@ export const calculateTotalProfit = (sfaByPayments = []) => {
   }
 
   return sfaByPayments.reduce((sum, payment) => {
-    const amount = parseFloat(payment.amount) || 0;
-    const marginProfitValue = parseFloat(payment.marginProfitValue) || 0;
-
-    let profit = 0;
-    if (payment.isProfit) {
-      // 이익 직접 입력
-      profit = marginProfitValue;
-    } else {
-      // 마진율 -> 이익 계산
-      profit = (amount * marginProfitValue) / 100;
-    }
-
-    return sum + profit;
+    const profitAmount = parseFloat(payment.profitAmount) || 0;
+    return sum + profitAmount;
   }, 0);
 };
 

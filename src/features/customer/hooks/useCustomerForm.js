@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useDispatch } from 'react-redux';
 import { useCustomer } from '../context/CustomerProvider';
+import { setDrawer } from '../../../store/slices/uiSlice';
 import { customerInitialState } from '../../../shared/constants/initialFormState';
 import { createCustomer } from '../services/customerSubmitService';
 import { notification } from '../../../shared/services/notification';
@@ -7,7 +9,8 @@ import { notification } from '../../../shared/services/notification';
  * Customer Form 관련 로직을 관리하는 Custom Hook
  */
 export const useCustomerForm = () => {
-  const { setDrawerClose } = useCustomer();
+  const dispatch = useDispatch();
+  const { fetchCustomerList } = useCustomer();
   // 폼 데이터 상태 관리
   const [formData, setFormData] = useState(customerInitialState);
   // 에러 상태 관리
@@ -71,7 +74,11 @@ export const useCustomerForm = () => {
         description: '성공적으로 저장되었습니다.',
       });
 
-      setDrawerClose();
+      // 드로어 닫기
+      dispatch(setDrawer({ visible: false }));
+
+      // 목록 갱신
+      fetchCustomerList();
     } catch (error) {
       console.error('Form submission error:', error);
       const errorMessage = error?.message || '저장 중 오류가 발생했습니다.';
