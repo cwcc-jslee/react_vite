@@ -297,11 +297,11 @@ const TodoCard = ({
             </Badge>
           </div>
           {/* 고객사 정보 추가 */}
-          {task.project.sfa?.customer && (
+          {task.project.customer && (
             <Tag color="orange" className="mr-2">
-              {typeof task.project.sfa.customer === 'object'
-                ? task.project.sfa.customer.name || '고객사 없음'
-                : String(task.sfa.customer)}
+              {typeof task.project.customer === 'object'
+                ? task.project.customer.name || '고객사 없음'
+                : String(task.project.customer)}
             </Tag>
           )}
           {task.isScheduled !== undefined && (

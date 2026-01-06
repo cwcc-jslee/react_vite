@@ -74,13 +74,6 @@ const DrawerActionsMenu = ({
       onClick: onCopy,
       className: 'text-gray-700 hover:bg-gray-50',
     },
-    {
-      key: 'history',
-      label: '이력 보기',
-      icon: FileText,
-      onClick: onHistory,
-      className: 'text-gray-700 hover:bg-gray-50',
-    },
   ];
 
   return <DrawerMenu type="dropdown" items={dropdownMenuItems} />;
@@ -89,7 +82,7 @@ const DrawerActionsMenu = ({
 DrawerActionsMenu.propTypes = {
   onDelete: PropTypes.func.isRequired,
   onCopy: PropTypes.func.isRequired,
-  onHistory: PropTypes.func.isRequired,
+  // onHistory: PropTypes.func.isRequired, // Removed
   onEditBase: PropTypes.func.isRequired,
   isEditingBase: PropTypes.bool,
   onAddPayment: PropTypes.func.isRequired,

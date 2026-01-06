@@ -32,8 +32,8 @@ const SfaViewDrawer = React.memo(
     // ==================== 결제매출 Drawer 상태 관리 ====================
     const [paymentDrawer, setPaymentDrawer] = React.useState({
       visible: false,
-      mode: null,      // 'add' | 'edit'
-      payment: null,   // 수정할 payment 데이터
+      mode: null, // 'add' | 'edit'
+      payment: null, // 수정할 payment 데이터
     });
 
     // ==================== 기본정보 편집 핸들러 ====================
@@ -41,7 +41,9 @@ const SfaViewDrawer = React.memo(
       // 결제매출 편집 중이면 경고
       if (paymentMode !== 'view') {
         const shouldContinue = window.confirm(
-          `결제매출 ${paymentMode === 'add' ? '추가' : '수정'} 모드입니다.\n저장하지 않은 변경사항이 있을 수 있습니다.\n계속하시겠습니까?`,
+          `결제매출 ${
+            paymentMode === 'add' ? '추가' : '수정'
+          } 모드입니다.\n저장하지 않은 변경사항이 있을 수 있습니다.\n계속하시겠습니까?`,
         );
         if (!shouldContinue) return;
 
@@ -107,15 +109,46 @@ const SfaViewDrawer = React.memo(
         setEditingSection(null);
       }
 
+      // 결제매출 수정/삭제 모드이면 경고 후 종료
+      if (paymentMode === 'edit' || paymentMode === 'delete') {
+        const shouldContinue = window.confirm(
+          `결제매출 ${
+            paymentMode === 'edit' ? '수정' : '삭제'
+          } 모드입니다.\n모드를 종료하고 매출내역을 추가하시겠습니까?`,
+        );
+        if (!shouldContinue) return;
+        setPaymentMode('view');
+      }
+
       // PaymentEditDrawer 열기 (add 모드)
       openPaymentDrawer('add', null);
     };
 
     const handleStartEditPayment = () => {
+      // 기본정보 편집 중이면 경고
+      if (editingSection === 'base') {
+        const shouldContinue = window.confirm(
+          '기본정보를 편집 중입니다.\n저장하지 않은 변경사항이 있을 수 있습니다.\n계속하시겠습니까?',
+        );
+        if (!shouldContinue) return;
+
+        // 기본정보 편집 종료
+        setEditingSection(null);
+      }
       setPaymentMode('edit');
     };
 
     const handleStartDeletePayment = () => {
+      // 기본정보 편집 중이면 경고
+      if (editingSection === 'base') {
+        const shouldContinue = window.confirm(
+          '기본정보를 편집 중입니다.\n저장하지 않은 변경사항이 있을 수 있습니다.\n계속하시겠습니까?',
+        );
+        if (!shouldContinue) return;
+
+        // 기본정보 편집 종료
+        setEditingSection(null);
+      }
       setPaymentMode('delete');
     };
 
@@ -180,17 +213,27 @@ const SfaViewDrawer = React.memo(
     };
 
     const handleCopy = () => {
-      console.log('복사하기 기능 - 구현 예정');
-    };
-
-    const handleHistory = () => {
-      console.log('이력 보기 기능 - 구현 예정');
+      alert('구현 예정');
     };
 
     // 수정 모드 취소 핸들러
     const handleCancelEditMode = () => {
-      if (window.confirm('수정을 취소하시겠습니까?\n저장하지 않은 변경사항은 사라집니다.')) {
+      if (
+        window.confirm(
+          '수정을 취소하시겠습니까?\n저장하지 않은 변경사항은 사라집니다.',
+        )
+      ) {
         setEditingSection(null);
+      }
+    };
+
+    const handleCancelPaymentEditMode = () => {
+      if (
+        window.confirm(
+          '수정을 취소하시겠습니까?\n저장하지 않은 변경사항은 사라집니다.',
+        )
+      ) {
+        setPaymentMode('view');
       }
     };
 
@@ -215,6 +258,20 @@ const SfaViewDrawer = React.memo(
                 </button>
               </div>
             )}
+            {paymentMode === 'edit' && (
+              <div className="flex items-center gap-1">
+                <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded border border-blue-300">
+                  결제매출 수정중
+                </span>
+                <button
+                  onClick={handleCancelPaymentEditMode}
+                  className="p-1 rounded hover:bg-red-50 transition-colors group"
+                  title="수정 취소"
+                >
+                  <X className="h-4 w-4 text-gray-500 group-hover:text-red-600 transition-colors" />
+                </button>
+              </div>
+            )}
           </div>
         }
         onClose={close}
@@ -226,7 +283,6 @@ const SfaViewDrawer = React.memo(
           <DrawerActionsMenu
             onDelete={handleDelete}
             onCopy={handleCopy}
-            onHistory={handleHistory}
             onEditBase={handleStartEditBase}
             isEditingBase={editingSection === 'base'}
             onAddPayment={handleStartAddPayment}

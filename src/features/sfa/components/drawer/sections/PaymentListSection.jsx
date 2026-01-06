@@ -143,8 +143,8 @@ const PaymentListSection = ({
                   완료
                 </Button>
               </>
-            ) : mode === 'edit' || mode === 'delete' ? (
-              // Edit/Delete 모드: 완료만
+            ) : mode === 'delete' ? (
+              // Delete 모드: 완료만
               <Button
                 variant="outline"
                 size="sm"
@@ -246,15 +246,6 @@ const PaymentListSection = ({
                   완료
                 </Button>
               </>
-            ) : mode === 'edit' ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleFinish}
-                className="h-9 px-4 text-gray-600 hover:text-gray-900"
-              >
-                완료
-              </Button>
             ) : null}
           </div>
         </div>
