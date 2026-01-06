@@ -137,6 +137,8 @@ const SalesItemSection = ({
               <option value={1}>1</option>
               <option value={2}>2</option>
               <option value={3}>3</option>
+              <option value={4}>4</option>
+              <option value={5}>5</option>
             </Select>
             {teamCount === 1 && (
               <span className="text-sm text-blue-700 font-medium">(단일 사업부)</span>

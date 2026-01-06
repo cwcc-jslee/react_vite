@@ -108,7 +108,8 @@ const TableRow = ({
                   10,
                 )}
               </span>
-              {`${item.revenueSource.name} / ${item.sfa.customer.name}`.length > 10 && (
+              {`${item.revenueSource.name} / ${item.sfa.customer.name}`.length >
+                10 && (
                 <div className="invisible group-hover:visible absolute bottom-full left-0 mb-1 z-10 p-2 bg-gray-800 text-white text-sm rounded shadow-lg whitespace-normal max-w-xs">
                   {item.revenueSource.name} / {item.sfa.customer.name}
                 </div>
@@ -125,7 +126,7 @@ const TableRow = ({
               {truncateText(
                 item.sfa?.name
                   ? item.paymentLabel
-                    ? `${item.sfa.name}__${item.paymentLabel}`
+                    ? `${item.sfa.name}_${item.paymentLabel}`
                     : item.sfa.name
                   : '',
                 40,
@@ -133,12 +134,12 @@ const TableRow = ({
             </span>
             {item.sfa?.name &&
               (item.paymentLabel
-                ? `${item.sfa.name}__${item.paymentLabel}`
+                ? `${item.sfa.name}_${item.paymentLabel}`
                 : item.sfa.name
               ).length > 40 && (
                 <div className="invisible group-hover:visible absolute bottom-full left-0 mb-1 z-10 p-2 bg-gray-800 text-white text-sm rounded shadow-lg whitespace-normal max-w-xs">
                   {item.paymentLabel
-                    ? `${item.sfa.name}__${item.paymentLabel}`
+                    ? `${item.sfa.name}_${item.paymentLabel}`
                     : item.sfa.name}
                 </div>
               )}
@@ -194,7 +195,6 @@ const TableRow = ({
     </tr>
   );
 };
-
 
 /**
  * SFA 매출 리스트 테이블 컴포넌트
@@ -279,7 +279,7 @@ const SfaListTable = () => {
     setVisibleColumns((prev) =>
       prev.includes(columnKey)
         ? prev.filter((key) => key !== columnKey)
-        : [...prev, columnKey]
+        : [...prev, columnKey],
     );
   };
 
@@ -290,18 +290,23 @@ const SfaListTable = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium text-blue-800">
-                {bulkUpdateType === 'date' ? '매출일 일괄수정 모드' : '확률 일괄수정 모드'}
+                {bulkUpdateType === 'date'
+                  ? '매출일 일괄수정 모드'
+                  : '확률 일괄수정 모드'}
               </span>
               <span className="text-sm text-blue-600">
                 선택된 항목: {checkedItems.length}개
               </span>
             </div>
-            
+
             {checkedItems.length > 0 && (
               <div className="flex items-center gap-3">
                 {bulkUpdateType === 'date' ? (
                   <div className="flex items-center gap-2">
-                    <label htmlFor="bulkRecognitionDate" className="text-sm font-medium text-gray-700">
+                    <label
+                      htmlFor="bulkRecognitionDate"
+                      className="text-sm font-medium text-gray-700"
+                    >
                       매출인식일:
                     </label>
                     <input
@@ -320,16 +325,24 @@ const SfaListTable = () => {
                         type="checkbox"
                         id="bulkIsConfirmed"
                         checked={bulkIsConfirmed}
-                        onChange={(e) => handleBulkIsConfirmedChange(e.target.checked)}
+                        onChange={(e) =>
+                          handleBulkIsConfirmedChange(e.target.checked)
+                        }
                         disabled={isSubmitting}
                         className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                       />
-                      <label htmlFor="bulkIsConfirmed" className="text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="bulkIsConfirmed"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         확정여부
                       </label>
                     </div>
                     <div className="flex items-center gap-2">
-                      <label htmlFor="bulkProbability" className="text-sm font-medium text-gray-700">
+                      <label
+                        htmlFor="bulkProbability"
+                        className="text-sm font-medium text-gray-700"
+                      >
                         매출확률:
                       </label>
                       <select
@@ -337,7 +350,9 @@ const SfaListTable = () => {
                         value={bulkProbability}
                         onChange={(e) => setBulkProbability(e.target.value)}
                         className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        disabled={isSubmitting || bulkIsConfirmed || isLoadingCodebook}
+                        disabled={
+                          isSubmitting || bulkIsConfirmed || isLoadingCodebook
+                        }
                       >
                         <option value="">매출확률 선택</option>
                         {codebooks?.sfaPercentage?.map((percent) => (
@@ -355,7 +370,9 @@ const SfaListTable = () => {
                   onClick={handleBulkSubmit}
                   disabled={
                     (bulkUpdateType === 'date' && !bulkRecognitionDate) ||
-                    (bulkUpdateType === 'probability' && !bulkIsConfirmed && !bulkProbability) ||
+                    (bulkUpdateType === 'probability' &&
+                      !bulkIsConfirmed &&
+                      !bulkProbability) ||
                     isSubmitting
                   }
                   className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -364,7 +381,7 @@ const SfaListTable = () => {
                 </Button>
               </div>
             )}
-            
+
             <Button
               variant="outline"
               size="sm"
@@ -394,68 +411,77 @@ const SfaListTable = () => {
                   />
                 </th>
               )}
-              {COLUMNS.filter((col) => visibleColumns.includes(col.key)).map((column) => (
-                <th
-                  key={column.key}
-                  className={`px-3 py-2 text-sm font-semibold text-gray-700 whitespace-nowrap
+              {COLUMNS.filter((col) => visibleColumns.includes(col.key)).map(
+                (column) => (
+                  <th
+                    key={column.key}
+                    className={`px-3 py-2 text-sm font-semibold text-gray-700 whitespace-nowrap
                     ${column.align === 'center' && 'text-center'}
                     ${column.align === 'right' && 'text-right'}
                   `}
-                >
-                  {column.key === 'action' ? (
-                    <div className="flex items-center justify-center gap-1">
-                      {/* 햄버거 아이콘 - 일괄수정 메뉴 */}
-                      <div className="relative group" ref={menuRef}>
-                        <button
-                          onClick={handleMenuClick}
-                          className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-                        >
-                          <svg
-                            className="w-4 h-4"
-                            fill="currentColor"
-                            viewBox="0 0 24 24"
+                  >
+                    {column.key === 'action' ? (
+                      <div className="flex items-center justify-center gap-1">
+                        {/* 햄버거 아이콘 - 일괄수정 메뉴 */}
+                        <div className="relative group" ref={menuRef}>
+                          <button
+                            onClick={handleMenuClick}
+                            className="p-1.5 hover:bg-gray-200 rounded transition-colors"
                           >
-                            <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" />
-                          </svg>
-                        </button>
-                        {/* 툴팁 */}
-                        <div className="invisible group-hover:visible absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap z-50">
-                          일괄수정
-                        </div>
-                        {showMenu && (
-                          <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-                            <div className="py-1">
-                              <button
-                                onClick={handleBulkDateEditWithMenu}
-                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                매출일 일괄수정
-                              </button>
-                              <button
-                                onClick={handleBulkProbabilityEditWithMenu}
-                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                확률 일괄수정
-                              </button>
-                            </div>
+                            <svg
+                              className="w-4 h-4"
+                              fill="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" />
+                            </svg>
+                          </button>
+                          {/* 툴팁 */}
+                          <div className="invisible group-hover:visible absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap z-50">
+                            일괄수정
                           </div>
-                        )}
-                      </div>
+                          {showMenu && (
+                            <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+                              <div className="py-1">
+                                <button
+                                  onClick={handleBulkDateEditWithMenu}
+                                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                >
+                                  매출일 일괄수정
+                                </button>
+                                <button
+                                  onClick={handleBulkProbabilityEditWithMenu}
+                                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                >
+                                  확률 일괄수정
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
 
-                      {/* 설정 아이콘 - 컬럼 토글 */}
-                      <ColumnToggleMenu
-                        columns={COLUMNS}
-                        visibleColumns={visibleColumns}
-                        onToggleColumn={handleToggleColumn}
-                        essentialColumns={['no', 'confirmed', 'percentage', 'name', 'revenue', 'action']}
-                        defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}
-                      />
-                    </div>
-                  ) : (
-                    column.title
-                  )}
-                </th>
-              ))}
+                        {/* 설정 아이콘 - 컬럼 토글 */}
+                        <ColumnToggleMenu
+                          columns={COLUMNS}
+                          visibleColumns={visibleColumns}
+                          onToggleColumn={handleToggleColumn}
+                          essentialColumns={[
+                            'no',
+                            'confirmed',
+                            'percentage',
+                            'name',
+                            'revenue',
+                            'action',
+                          ]}
+                          defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}
+                        />
+                      </div>
+                    ) : (
+                      column.title
+                    )}
+                  </th>
+                ),
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">

@@ -1,7 +1,7 @@
 // src/features/sfa/constants/formInitialState.js
 export const FORM_LIMITS = {
-  MAX_SALES_ITEMS: 3,
-  MAX_SALES_PAYMENTS: 3,
+  MAX_SALES_ITEMS: 5,
+  MAX_SALES_PAYMENTS: 12,
   MAX_SALES_REVENUES: 10,
 };
 

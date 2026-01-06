@@ -95,7 +95,7 @@ export const createNewPayment = (data) => {
 /**
  * 결제매출 추가 가능 여부 확인
  */
-export const canAddPayment = (currentPayments, maxLimit = 3) => {
+export const canAddPayment = (currentPayments, maxLimit = 12) => {
   const count = currentPayments?.length || 0;
   return count < maxLimit;
 };

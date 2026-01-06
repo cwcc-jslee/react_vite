@@ -2,7 +2,7 @@
  * 결제매출 추가/수정 Drawer 컴포넌트
  * - SFA 상세 Drawer 위에 우측에서 슬라이드되는 중첩 Drawer
  * - 추가(add) 및 수정(edit) 모드 지원
- * - 추가 모드에서 수량 선택 기능 (1-5개)
+ * - 추가 모드에서 수량 선택 기능 (1-12개)
  * - LG 사이즈 (800px) - SFA Drawer(1100px)보다 작음
  */
 
@@ -64,7 +64,7 @@ const PaymentEditDrawer = ({ visible, mode, data, payment, onClose, onSave, isNe
   // 수량 변경 핸들러
   const handleCountChange = (newCount) => {
     const count = parseInt(newCount, 10);
-    if (count < 1 || count > 5 || isNaN(count)) return;
+    if (count < 1 || count > 12 || isNaN(count)) return;
 
     setPaymentCount(count);
 
@@ -480,7 +480,7 @@ const PaymentEditDrawer = ({ visible, mode, data, payment, onClose, onSave, isNe
                   cursor-pointer
                 "
               >
-                {[1, 2, 3, 4, 5].map((num) => (
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((num) => (
                   <option key={num} value={num}>
                     {num}개
                   </option>

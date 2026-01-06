@@ -3,6 +3,36 @@
  */
 
 /**
+ * 권한 객체를 안전하게 추출 (중첩 구조 처리)
+ * @param {Object} userAccessControl
+ * @returns {Object|null} permissions object
+ */
+export const getSafePermissions = (userAccessControl) => {
+  if (!userAccessControl) return null;
+  let { permissions } = userAccessControl;
+
+  if (!permissions) return null;
+
+  // ⚠️ 중첩된 permissions 구조 처리 (Strapi 데이터 구조 이슈 대응)
+  if (permissions.permissions && typeof permissions.permissions === 'object') {
+    return permissions.permissions;
+  }
+
+  return permissions;
+};
+
+/**
+ * 사용자의 초기 진입 페이지 경로를 반환
+ * @param {Object} userAccessControl
+ * @param {string} defaultPath - 기본 경로
+ * @returns {string}
+ */
+export const getInitialPage = (userAccessControl, defaultPath = '/todo') => {
+  const permissions = getSafePermissions(userAccessControl);
+  return permissions?.initialPage?.path || defaultPath;
+};
+
+/**
  * 통합 권한 체크 함수
  * @param {Object} userAccessControl - 사용자의 권한 정보
  * @param {string} pageId - 페이지 ID
@@ -10,17 +40,8 @@
  * @returns {boolean} - 권한 여부
  */
 export const hasPermission = (userAccessControl, pageId, action = 'view') => {
-  if (!userAccessControl) return false;
-
-  let { permissions } = userAccessControl;
+  const permissions = getSafePermissions(userAccessControl);
   if (!permissions) return false;
-
-  // ⚠️ 중첩된 permissions 구조 처리 (Strapi 데이터 구조 이슈 대응)
-  // permissions.permissions가 존재하면 그것을 사용
-  if (permissions.permissions && typeof permissions.permissions === 'object') {
-    console.warn('중첩된 permissions 구조 감지, 내부 permissions 사용');
-    permissions = permissions.permissions;
-  }
 
   // 기본 권한 확인
   const defaultPermission = permissions.default?.[action];
@@ -103,15 +124,8 @@ export const hasMenuItemPermission = (
   pageId,
   menuId,
 ) => {
-  if (!userAccessControl) return false;
-
-  let { permissions } = userAccessControl;
+  const permissions = getSafePermissions(userAccessControl);
   if (!permissions) return false;
-
-  // 중첩된 permissions 구조 처리
-  if (permissions.permissions && typeof permissions.permissions === 'object') {
-    permissions = permissions.permissions;
-  }
 
   // 1. 페이지 자체 권한 확인 (페이지 접근 불가면 메뉴도 볼 수 없음)
   if (!hasPagePermission(userAccessControl, pageId)) return false;
@@ -141,15 +155,8 @@ export const hasSubMenuPermission = (
   menuId,
   subMenuId,
 ) => {
-  if (!userAccessControl) return false;
-
-  let { permissions } = userAccessControl;
+  const permissions = getSafePermissions(userAccessControl);
   if (!permissions) return false;
-
-  // 중첩된 permissions 구조 처리
-  if (permissions.permissions && typeof permissions.permissions === 'object') {
-    permissions = permissions.permissions;
-  }
 
   // 1. 상위 메뉴 권한 확인 (메뉴 접근 불가면 서브 메뉴도 볼 수 없음)
   if (!hasMenuItemPermission(userAccessControl, pageId, menuId)) return false;

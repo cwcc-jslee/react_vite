@@ -165,7 +165,7 @@ export const useSfaForm1 = () => {
 
   /**
    * 수량만큼 사업부 매출 항목 일괄 생성
-   * @param {number} count - 생성할 항목 수 (1~3)
+   * @param {number} count - 생성할 항목 수 (1~5)
    */
   const handleAddSalesItemsByCount = useCallback(
     (count) => {
@@ -173,7 +173,7 @@ export const useSfaForm1 = () => {
 
       // 수량 검증
       const itemCount = parseInt(count, 10);
-      if (itemCount < 1 || itemCount > 3 || isNaN(itemCount)) {
+      if (itemCount < 1 || itemCount > FORM_LIMITS.MAX_SALES_ITEMS || isNaN(itemCount)) {
         console.error('❌ 유효하지 않은 수량:', count);
         return;
       }
@@ -231,7 +231,7 @@ export const useSfaForm1 = () => {
       const isEditMode = drawer.mode === 'edit';
       const fieldName = isEditMode ? 'sfaDraftPayments' : 'sfaByPayments';
       const currentPayments = form.data[fieldName] || [];
-      const maxLimit = isEditMode ? 3 : FORM_LIMITS.MAX_PAYMENTS;
+      const maxLimit = FORM_LIMITS.MAX_PAYMENTS;
 
       if (currentPayments.length >= maxLimit) return;
 

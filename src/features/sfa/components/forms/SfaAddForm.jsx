@@ -251,11 +251,14 @@ const SfaAddForm = () => {
     <>
       <Form
         onSubmit={handleSubmit}
-        className="space-y-6"
+        className="relative -mx-6 -my-6 h-[calc(100vh-120px)]"
         // 추가: method와 action 속성 명시적 지정
         method="POST"
         action="#"
       >
+        {/* 스크롤 가능한 컨텐츠 영역 */}
+        <div className="h-full overflow-y-auto pb-20">
+        <div className="px-6 pt-6 pb-6 space-y-6">
         <div className="rounded-lg border border-gray-200 p-4">
           <h3 className="mb-4 font-medium text-gray-900">기본 정보</h3>
           <div className="space-y-4">
@@ -595,35 +598,36 @@ const SfaAddForm = () => {
             {errors.submit}
           </Message>
         )}
+        </div>
+        </div>
+        {/* 스크롤 영역 종료 */}
 
-        {/* Submit Button */}
-        <Group>
-          <div className="flex justify-end space-x-3">
-            <Button
-              type="button"
-              variant="secondary"
-              // onClick={() => {
+        {/* 고정 버튼 영역 */}
+        <div className="absolute bottom-0 left-0 right-0 flex justify-end gap-3 pr-6 pl-6 py-4 border-t border-gray-200 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)]">
+          <Button
+            type="button"
+            variant="secondary"
+            // onClick={() => {
 
-              // }}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              취소
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={isSubmitting}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-              onClick={(e) => {
-                // 버튼 클릭 시에도 이벤트 전파 방지
-                e.preventDefault();
-                handleSubmit(e);
-              }}
-            >
-              {isSubmitting ? '처리중...' : '등록'}
-            </Button>
-          </div>
-        </Group>
+            // }}
+            className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            취소
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={isSubmitting}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            onClick={(e) => {
+              // 버튼 클릭 시에도 이벤트 전파 방지
+              e.preventDefault();
+              handleSubmit(e);
+            }}
+          >
+            {isSubmitting ? '처리중...' : '등록'}
+          </Button>
+        </div>
       </Form>
 
       {/* 금액 비교 확인 모달 */}

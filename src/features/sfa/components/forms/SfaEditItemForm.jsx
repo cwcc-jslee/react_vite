@@ -17,7 +17,7 @@ import { apiCommon } from '../../../../shared/api/apiCommon';
 import { useSfaStore } from '../../hooks/useSfaStore';
 
 // 최대 허용 사업부 매출 아이템 수
-const MAX_ITEMS = 3;
+const MAX_ITEMS = 5;
 
 /**
  * 사업부 매출 편집 컴포넌트

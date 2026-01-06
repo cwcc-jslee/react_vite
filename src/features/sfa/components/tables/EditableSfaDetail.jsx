@@ -60,6 +60,7 @@ const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
     'sfaSalesType',
     'sfaClassification',
     'sfaItemType', // 매출품목 타입 추가
+    'fy', // FY 추가
   ]);
 
   // 모달 열기 핸들러
@@ -78,6 +79,8 @@ const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
         fieldConfig.options = codebooks?.sfaSalesType || [];
       } else if (fieldName === 'sfaClassification') {
         fieldConfig.options = codebooks?.sfaClassification || [];
+      } else if (fieldName === 'fy') {
+        fieldConfig.options = codebooks?.fy || [];
       }
     }
 
@@ -283,6 +286,18 @@ const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
         return value;
       },
       getDisplayValue: (data) => (data?.isProject ? 'YES' : 'NO'),
+      editable: true,
+    },
+    fy: {
+      type: 'select',
+      label: 'FY',
+      value: data?.fy?.id,
+      getValue: (data) => {
+        const value = data?.fy?.id || '';
+        console.log('fy getValue:', value, 'from:', data?.fy);
+        return value;
+      },
+      getDisplayValue: (data) => data?.fy?.name || '-',
       editable: true,
     },
     description: {
@@ -624,7 +639,7 @@ const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
               )}
         </DescriptionItem>
       </DescriptionRow>
-      {/* 4행: 매출, 매출이익 */}
+      {/* 4행: 결제 매출/이익, FY */}
       <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
           결제 매출/이익
@@ -635,19 +650,17 @@ const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
             : '-'}
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
-          사업부 구성
+          FY
         </DescriptionItem>
-        <DescriptionItem>
-          {data.isMultiTeam === true
-            ? '다중 사업부'
-            : data.isMultiTeam === false
-            ? '단일 사업부'
-            : '-'}
+        <DescriptionItem className="px-0.5">
+          {featureMode !== 'editBase'
+            ? data.fy?.name || '-'
+            : renderEditableField('fy', editableFields.fy.getDisplayValue(data))}
         </DescriptionItem>
       </DescriptionRow>
 
-      {/* 5행: 사업부 매출 */}
-      <DescriptionRow>
+      {/* 5행: 사업부 매출, 사업부 구성 */}
+      <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
           사업부 매출
         </DescriptionItem>
@@ -658,6 +671,16 @@ const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
                 'sfaByItems',
                 renderSfaByItems(data.sfaByItems, data.isMultiTeam, data.sfaByPayments),
               )}
+        </DescriptionItem>
+        <DescriptionItem label width="w-[140px]">
+          사업부 구성
+        </DescriptionItem>
+        <DescriptionItem>
+          {data.isMultiTeam === true
+            ? '다중 사업부'
+            : data.isMultiTeam === false
+            ? '단일 사업부'
+            : '-'}
         </DescriptionItem>
       </DescriptionRow>
 

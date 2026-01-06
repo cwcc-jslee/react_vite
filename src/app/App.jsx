@@ -5,7 +5,7 @@ import DefaultLayout from '@layout/DefaultLayout';
 import { useSelector } from 'react-redux';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { hasPagePermission } from '../shared/utils/permissionUtils';
+import { hasPagePermission, getInitialPage } from '../shared/utils/permissionUtils';
 
 // Lazy load pages
 const LoginPage = React.lazy(() => import('../features/auth/pages/LoginPage'));
@@ -58,15 +58,12 @@ const PrivateRoute = ({ children, path }) => {
   // 페이지 접근 권한 체크
   if (!checkPagePermission(user, path)) {
     // 권한이 없는 경우 초기 페이지로 리다이렉트
-    const initialPage =
-      user?.user?.user_access_control?.permissions?.initialPage?.path ||
-      '/todo';
+    const initialPage = getInitialPage(user?.user?.user_access_control);
     return <Navigate to={initialPage} replace />;
   }
 
   // 초기 페이지 설정
-  const initialPage =
-    user?.user?.user_access_control?.permissions?.initialPage?.path || '/todo';
+  const initialPage = getInitialPage(user?.user?.user_access_control);
 
   // 현재 경로가 루트('/')인 경우 초기 페이지로 리다이렉트
   if (window.location.pathname === '/') {
@@ -97,10 +94,7 @@ const App = () => {
                 element={
                   <PrivateRoute path="/">
                     <Navigate
-                      to={
-                        user?.user?.user_access_control?.permissions
-                          ?.initialPage?.path || '/dashboard'
-                      }
+                      to={getInitialPage(user?.user?.user_access_control, '/dashboard')}
                       replace
                     />
                   </PrivateRoute>

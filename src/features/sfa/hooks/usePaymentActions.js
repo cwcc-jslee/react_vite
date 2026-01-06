@@ -8,7 +8,7 @@ import { useCallback } from 'react';
 import { useSfaStore } from './useSfaStore.js';
 import { createNewPayment, canAddPayment } from '../utils/paymentUtils.js';
 
-const MAX_PAYMENT_LIMIT = 3;
+const MAX_PAYMENT_LIMIT = 12;
 
 export const usePaymentActions = (data) => {
   const { form, actions: sfaActions } = useSfaStore();
