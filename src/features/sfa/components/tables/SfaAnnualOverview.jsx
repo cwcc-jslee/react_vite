@@ -6,9 +6,11 @@ import { useSfaStore } from '../../hooks/useSfaStore';
 import dayjs from 'dayjs';
 
 // Table Header Cell Component
-const TableHeaderCell = ({ children, onClick }) => (
+const TableHeaderCell = ({ children, onClick, colSpan, rowSpan, className = '' }) => (
   <th
     onClick={onClick}
+    colSpan={colSpan}
+    rowSpan={rowSpan}
     className={`
     bg-gray-100
     p-3
@@ -19,6 +21,7 @@ const TableHeaderCell = ({ children, onClick }) => (
     text-sm
     whitespace-nowrap
     ${onClick ? 'cursor-pointer hover:bg-gray-200 transition-colors' : ''}
+    ${className}
   `}
   >
     {children}
@@ -49,7 +52,7 @@ const TableDataCell = ({ children, onClick, isProbability = false, isSelected = 
   </td>
 );
 
-const SfaAnnualOverview = ({ baseDate }) => {
+const SfaAnnualOverview = ({ baseDate, duration = 12 }) => {
   const { actions } = useSfaStore();
   const [forecastData, setForecastData] = useState({});
   const [loading, setLoading] = useState(true);
@@ -59,12 +62,12 @@ const SfaAnnualOverview = ({ baseDate }) => {
     probability: null,
   });
 
-  // 월 계산 함수 (기준월부터 12개월)
+  // 월 계산 함수 (기준월부터 duration개월)
   const calculateMonths = (base) => {
     const baseMonth = dayjs(base);
     const months = [];
 
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < duration; i++) {
       const date = baseMonth.add(i, 'month');
       months.push({
         month: String(date.month() + 1).padStart(2, '0'),
@@ -92,6 +95,7 @@ const SfaAnnualOverview = ({ baseDate }) => {
       if (probData) {
         validatedData[prob] = {
           revenue: parseInt(probData.revenue || 0),
+          profit: parseInt(probData.profit || 0),
         };
       }
     });
@@ -140,7 +144,7 @@ const SfaAnnualOverview = ({ baseDate }) => {
     };
 
     fetchForecastData();
-  }, [effectiveBaseDate]); // effectiveBaseDate 변경 시 데이터 재조회
+  }, [effectiveBaseDate, duration]); // effectiveBaseDate 또는 duration 변경 시 데이터 재조회
 
   if (loading) return <StateDisplay type="loading" />;
   if (error) return <StateDisplay type="error" message={error} />;
@@ -176,6 +180,60 @@ const SfaAnnualOverview = ({ baseDate }) => {
     );
   };
 
+  const formatMonthHeader = (month, year) => {
+    return `${year}.${month}`;
+  };
+
+  // 4개월 또는 6개월(duration === 4 || duration === 6)일 때만 매출액, 매출이익 표시
+  const showProfit = duration === 4 || duration === 6;
+
+  // 헤더 렌더링
+  const renderHeader = () => {
+    if (showProfit) {
+      return (
+        <thead>
+          <tr>
+            <TableHeaderCell rowSpan={2}>확률</TableHeaderCell>
+            {months.map((month) => (
+              <TableHeaderCell
+                key={`${month.year}-${month.month}-main`}
+                colSpan={2}
+                onClick={() => handleHeaderClick(month)}
+              >
+                {formatMonthHeader(month.month, month.year)}
+              </TableHeaderCell>
+            ))}
+          </tr>
+          <tr>
+            {months.map((month) => (
+              <React.Fragment key={`${month.year}-${month.month}-sub`}>
+                <TableHeaderCell className="text-xs text-gray-500 font-normal">매출액</TableHeaderCell>
+                <TableHeaderCell className="text-xs text-gray-500 font-normal">매출이익</TableHeaderCell>
+              </React.Fragment>
+            ))}
+          </tr>
+        </thead>
+      );
+    }
+
+    // 기본 헤더 (매출액만 표시)
+    return (
+      <thead>
+        <tr>
+          <TableHeaderCell>확률</TableHeaderCell>
+          {months.map((month) => (
+            <TableHeaderCell
+              key={`${month.year}-${month.month}`}
+              onClick={() => handleHeaderClick(month)}
+            >
+              {formatMonthHeader(month.month, month.year)}
+            </TableHeaderCell>
+          ))}
+        </tr>
+      </thead>
+    );
+  };
+
   // 행 렌더링 함수
   const renderRow = (prob) => {
     return (
@@ -183,8 +241,27 @@ const SfaAnnualOverview = ({ baseDate }) => {
         <TableDataCell isProbability>{prob}</TableDataCell>
         {months.map((month) => {
           const monthData = forecastData[month.month] || {};
-          const probData = monthData[prob] || { revenue: 0 };
+          const probData = monthData[prob] || { revenue: 0, profit: 0 };
           const isSelected = isCellSelected(month, prob);
+
+          if (showProfit) {
+            return (
+              <React.Fragment key={`${month.year}-${month.month}`}>
+                <TableDataCell
+                  onClick={() => handleCellClick(month, prob)}
+                  isSelected={isSelected}
+                >
+                  {probData.revenue.toLocaleString()}
+                </TableDataCell>
+                <TableDataCell
+                  onClick={() => handleCellClick(month, prob)}
+                  isSelected={isSelected}
+                >
+                  {probData.profit.toLocaleString()}
+                </TableDataCell>
+              </React.Fragment>
+            );
+          }
 
           return (
             <TableDataCell
@@ -200,27 +277,11 @@ const SfaAnnualOverview = ({ baseDate }) => {
     );
   };
 
-  const formatMonthHeader = (month, year) => {
-    return `${year}.${month}`;
-  };
-
   return (
     <div className="space-y-4">
       <div className="w-full overflow-x-auto">
         <table className="w-full border-collapse text-sm">
-          <thead>
-            <tr>
-              <TableHeaderCell>확률</TableHeaderCell>
-              {months.map((month) => (
-                <TableHeaderCell
-                  key={`${month.year}-${month.month}`}
-                  onClick={() => handleHeaderClick(month)}
-                >
-                  {formatMonthHeader(month.month, month.year)}
-                </TableHeaderCell>
-              ))}
-            </tr>
-          </thead>
+          {renderHeader()}
           <tbody className="divide-y divide-gray-200">
             {probabilities.map(renderRow)}
           </tbody>

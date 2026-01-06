@@ -66,31 +66,31 @@ export const SIDEBAR_ITEMS = [
 export const PAGE_MENUS = {
   // 페이지별 상단 메뉴
   sfa: {
-    defaultMenu: 'list',
+    defaultMenu: 'forecast',
     items: {
-      list: {
-        label: '현황',
-        visible: true, // 메뉴 표시 여부
-        config: {
-          layout: 'list', // 레이아웃 타입
-          sections: {
-            sfaHeader: true,
-            sfaMonthlyStatus: true,
-            sfaContent: true,
-          },
-          components: {
-            monthlyStatus: true,
-            sfaTable: true,
-            searchForm: false,
-            forecastTable: false,
-            analyticsLayout: false,
-            salesInformationLayout: false,
-          },
-          drawer: {
-            visible: false, // 드로어 표시 여부
-          },
-        },
-      },
+      // list: {
+      //   label: '현황',
+      //   visible: true, // 메뉴 표시 여부
+      //   config: {
+      //     layout: 'list', // 레이아웃 타입
+      //     sections: {
+      //       sfaHeader: true,
+      //       sfaMonthlyStatus: true,
+      //       sfaContent: true,
+      //     },
+      //     components: {
+      //       monthlyStatus: true,
+      //       sfaTable: true,
+      //       searchForm: false,
+      //       forecastTable: false,
+      //       analyticsLayout: false,
+      //       salesInformationLayout: false,
+      //     },
+      //     drawer: {
+      //       visible: false, // 드로어 표시 여부
+      //     },
+      //   },
+      // },
       // search: {
       //   label: '상세조회',
       //   visible: true,
@@ -115,7 +115,7 @@ export const PAGE_MENUS = {
       //   },
       // },
       forecast: {
-        label: '매출예측',
+        label: '매출현황',
         visible: true,
         config: {
           layout: 'forecast',

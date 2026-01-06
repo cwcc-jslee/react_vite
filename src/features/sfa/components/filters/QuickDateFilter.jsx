@@ -21,7 +21,9 @@ const QuickDateFilter = ({
   onViewModeChange,
   showAnnualRange = false,
   annualBaseDate,
-  onAnnualDateChange
+  onAnnualDateChange,
+  duration = 12,
+  onDurationChange
 }) => {
   const { filters, actions } = useSfaStore();
   const [showMonthPicker, setShowMonthPicker] = useState(false);
@@ -113,7 +115,7 @@ const QuickDateFilter = ({
   // 연간 기간 포맷 (12개월 범위 표시용)
   const annualPeriodLabel = () => {
     const start = dayjs(currentStartDate);
-    const end = start.add(11, 'month'); // 시작월부터 11개월 후
+    const end = start.add(duration - 1, 'month'); // 시작월부터 duration-1개월 후
     return `${start.format('YYYY년 MM월')} - ${end.format('YYYY년 MM월')}`;
   };
 
@@ -234,31 +236,69 @@ const QuickDateFilter = ({
           </div>
         </div>
 
-        {/* 오른쪽: 뷰 모드 전환 버튼 (optional) */}
-        {onViewModeChange && (
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => onViewModeChange('overview')}
-              className={`px-3 py-1 text-sm font-medium rounded transition-colors ${
-                viewMode === 'overview'
-                  ? 'text-blue-700 bg-blue-50 border border-blue-300'
-                  : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              현황
-            </button>
+        {/* 오른쪽: 뷰 모드 전환 버튼 및 기간 선택 드롭다운 */}
+        <div className="flex items-center gap-1">
+          {/* 1. 현황 관련 (독립 버튼 또는 개월 드롭다운) */}
+          {onViewModeChange && (
+            <>
+              {/* SfaOverviewLayout용 독립 현황 버튼 */}
+              {!showAnnualRange && (
+                <button
+                  onClick={() => onViewModeChange('overview')}
+                  className={`w-20 h-8 text-sm font-bold rounded transition-all flex items-center justify-center border ${
+                    viewMode === 'overview'
+                      ? 'text-blue-700 bg-blue-50 border-blue-300 ring-1 ring-blue-300'
+                      : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  현황
+                </button>
+              )}
+
+              {/* SfaForecastLayout용 개월 선택 드롭다운 통합 버튼 */}
+              {showAnnualRange && onDurationChange && (
+                <div className="">
+                  {viewMode === 'search' ? (
+                    <button
+                      onClick={() => onViewModeChange('overview')}
+                      className="w-20 h-8 border border-gray-300 rounded text-sm font-bold bg-white text-gray-500 hover:bg-gray-50 flex items-center justify-center transition-all"
+                      title="현황 보기 및 기간 선택"
+                    >
+                      {duration}개월
+                    </button>
+                  ) : (
+                    <select
+                      value={duration}
+                      onChange={onDurationChange}
+                      className="w-20 h-8 px-1 py-0 border border-blue-300 rounded text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-blue-50 text-blue-700 cursor-pointer transition-all appearance-none text-center"
+                      title="조회 기간 선택 (월)"
+                    >
+                      {[4, 6, 9, 12].map((num) => (
+                        <option key={num} value={num} className="font-medium">
+                          {num}개월
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* 2. 상세검색 버튼 (항상 마지막에 위치) */}
+          {onViewModeChange && (
             <button
               onClick={() => onViewModeChange('search')}
-              className={`px-3 py-1 text-sm font-medium rounded transition-colors ${
+              className={`w-20 h-8 text-sm font-bold rounded transition-all flex items-center justify-center border ${
                 viewMode === 'search'
-                  ? 'text-blue-700 bg-blue-50 border border-blue-300'
-                  : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                  ? 'text-blue-700 bg-blue-50 border-blue-300 ring-1 ring-blue-300'
+                  : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'
               }`}
             >
               상세검색
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
