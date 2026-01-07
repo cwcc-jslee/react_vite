@@ -243,7 +243,7 @@ const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
         return value;
       },
       getDisplayValue: (data) => data?.customer?.name || '-',
-      editable: true,
+      editable: false,
     },
     isSameBilling: {
       type: 'radio',
@@ -267,7 +267,7 @@ const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
           : data?.isSameBilling === false
           ? '별도 매출처'
           : '-',
-      editable: true,
+      editable: false,
     },
     isProject: {
       type: 'switch',
@@ -321,7 +321,7 @@ const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
         return value;
       },
       getDisplayValue: (data) => formatSfaByItems(data?.sfaByItems),
-      editable: true,
+      editable: false,
     },
   };
 
@@ -468,68 +468,6 @@ const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
       );
     }
 
-    if (fieldName === 'isSameBilling') {
-      const field = editableFields[fieldName];
-      return (
-        <div
-          className={`
-            group relative flex items-center justify-between w-full h-8
-            ${
-              featureMode === 'editBase'
-                ? 'bg-blue-50/30 border-l-2 border-blue-400 hover:bg-blue-100/50 rounded px-2 -mx-2 cursor-pointer transition-all duration-200'
-                : ''
-            }
-          `}
-          onClick={() => featureMode === 'editBase' && handleOpenModal(fieldName, field)}
-        >
-          <span className="flex-grow truncate">{content}</span>
-          {featureMode === 'editBase' && (
-            <Icons.Edit3
-              className="h-4 w-4 text-blue-600 flex-shrink-0"
-              strokeWidth={2}
-            />
-          )}
-        </div>
-      );
-    }
-
-    // 사업부 매출 필드 처리
-    if (fieldName === 'sfaByItems') {
-      return (
-        <div className="group relative flex items-center justify-between w-full min-h-8">
-          {isEditing ? (
-            <SfaEditItemForm
-              data={form.data.sfaDraftItems} // sfaDraftItems 사용
-              onSave={saveSfaByItems}
-              onCancel={cancelSfaByItems}
-              codebooks={codebooks}
-              isLoadingCodebook={isLoadingCodebook}
-              isEditing={isSfaByItemsEditing}
-              sfaClassificationId={data?.sfaClassification?.id}
-            />
-          ) : (
-            <div className="flex items-center w-full min-h-8">
-              <span className="flex-grow">{content}</span>
-              <button
-                type="button"
-                onClick={() => {
-                  startEditingSfaByItems();
-                  startEditing(fieldName, editableFields);
-                }}
-                className="invisible group-hover:visible flex items-center justify-center 
-                          h-7 w-7 rounded-sm hover:bg-blue-100"
-              >
-                <Icons.Edit
-                  className="h-4 w-4 text-blue-600"
-                  strokeWidth={2.5}
-                />
-              </button>
-            </div>
-          )}
-        </div>
-      );
-    }
-
     // 기본 필드 렌더링
     const field = editableFields[fieldName];
     if (!field?.editable) return content;
@@ -589,28 +527,17 @@ const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
           고객사
         </DescriptionItem>
         <DescriptionItem className="px-0.5">
-          {/* {data?.customer?.name || '-'} */}
-          {featureMode !== 'editBase'
-            ? data?.customer?.name || '-'
-            : renderEditableField(
-                'customer',
-                editableFields.customer.getDisplayValue(data),
-              )}
+          {data?.customer?.name || '-'}
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
           매출처
         </DescriptionItem>
         <DescriptionItem className="px-0.5">
-          {featureMode !== 'editBase'
-            ? data.isSameBilling === true
+          {data.isSameBilling === true
               ? '고객사와 동일'
               : data.isSameBilling === false
               ? '별도 매출처'
-              : '-'
-            : renderEditableField(
-                'isSameBilling',
-                editableFields.isSameBilling.getDisplayValue(data),
-              )}
+              : '-'}
         </DescriptionItem>
       </DescriptionRow>
 
@@ -665,12 +592,7 @@ const EditableSfaDetail = ({ data, featureMode, onSaveField }) => {
           사업부 매출
         </DescriptionItem>
         <DescriptionItem className="px-0.5">
-          {featureMode !== 'editBase'
-            ? renderSfaByItems(data.sfaByItems, data.isMultiTeam, data.sfaByPayments)
-            : renderEditableField(
-                'sfaByItems',
-                renderSfaByItems(data.sfaByItems, data.isMultiTeam, data.sfaByPayments),
-              )}
+          {renderSfaByItems(data.sfaByItems, data.isMultiTeam, data.sfaByPayments)}
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
           사업부 구성

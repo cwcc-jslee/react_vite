@@ -6,7 +6,7 @@
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Trash2, Copy, FileText, Edit3, PlusCircle, Edit } from 'lucide-react';
+import { Trash2, Copy, FileText, Edit3, PlusCircle, Edit, Briefcase } from 'lucide-react';
 import { DrawerMenu } from '@shared/components/drawer';
 
 const DrawerActionsMenu = ({
@@ -15,6 +15,7 @@ const DrawerActionsMenu = ({
   onHistory,
   onEditBase,
   isEditingBase,
+  onEditDivisionRevenue,
   onAddPayment,
   onEditPayment,
   onDeletePayment,
@@ -29,6 +30,13 @@ const DrawerActionsMenu = ({
       className: isEditingBase
         ? 'bg-blue-100 text-blue-700 font-semibold'
         : 'text-gray-700 hover:bg-gray-50',
+    },
+    {
+      key: 'editDivisionRevenue',
+      label: '사업부 매출 수정',
+      icon: Briefcase,
+      onClick: onEditDivisionRevenue,
+      className: 'text-gray-700 hover:bg-gray-50',
     },
     { separator: true },
     {
@@ -85,6 +93,7 @@ DrawerActionsMenu.propTypes = {
   // onHistory: PropTypes.func.isRequired, // Removed
   onEditBase: PropTypes.func.isRequired,
   isEditingBase: PropTypes.bool,
+  onEditDivisionRevenue: PropTypes.func.isRequired,
   onAddPayment: PropTypes.func.isRequired,
   onEditPayment: PropTypes.func.isRequired,
   onDeletePayment: PropTypes.func.isRequired,

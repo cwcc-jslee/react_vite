@@ -24,7 +24,7 @@ const SfaForecastLayout = () => {
 
   // 연간 테이블 기준월 (로컬 상태로 관리)
   const [annualBaseDate, setAnnualBaseDate] = useState(
-    dayjs().startOf('month').format('YYYY-MM-DD')
+    dayjs().subtract(1, 'month').startOf('month').format('YYYY-MM-DD')
   );
 
   // 조회 기간 설정 (기본값 4개월)

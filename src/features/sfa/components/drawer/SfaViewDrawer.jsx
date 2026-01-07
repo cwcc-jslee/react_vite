@@ -16,6 +16,7 @@ import DrawerActionsMenu from './sections/DrawerActionsMenu.jsx';
 import BasicInfoSection from './sections/BasicInfoSection.jsx';
 import PaymentListSection from './sections/PaymentListSection.jsx';
 import PaymentEditDrawer from './PaymentEditDrawer.jsx';
+import DivisionRevenueEditDrawer from './DivisionRevenueEditDrawer.jsx';
 import RevenueSummaryCard from '../cards/RevenueSummaryCard.jsx';
 
 const SfaViewDrawer = React.memo(
@@ -35,6 +36,8 @@ const SfaViewDrawer = React.memo(
       mode: null, // 'add' | 'edit'
       payment: null, // 수정할 payment 데이터
     });
+
+    const [divisionRevenueDrawerVisible, setDivisionRevenueDrawerVisible] = React.useState(false);
 
     // ==================== 기본정보 편집 핸들러 ====================
     const handleStartEditBase = () => {
@@ -61,6 +64,31 @@ const SfaViewDrawer = React.memo(
 
     const handleCancelEditBase = () => {
       setEditingSection(null);
+    };
+
+    // ==================== 사업부 매출 수정 핸들러 ====================
+    const handleStartEditDivisionRevenue = () => {
+      // 1. 기본정보 편집 확인
+      if (editingSection === 'base') {
+        const shouldContinue = window.confirm(
+          '기본정보를 편집 중입니다.\n저장하지 않은 변경사항이 있을 수 있습니다.\n계속하시겠습니까?',
+        );
+        if (!shouldContinue) return;
+        setEditingSection(null);
+      }
+
+      // 2. 결제매출 편집 모드 확인
+      if (paymentMode === 'edit' || paymentMode === 'delete') {
+        const shouldContinue = window.confirm(
+          `결제매출 ${
+            paymentMode === 'edit' ? '수정' : '삭제'
+          } 모드입니다.\n모드를 종료하고 사업부 매출을 수정하시겠습니까?`,
+        );
+        if (!shouldContinue) return;
+        setPaymentMode('view');
+      }
+
+      setDivisionRevenueDrawerVisible(true);
     };
 
     // ==================== 결제매출 Drawer 핸들러 ====================
@@ -285,6 +313,7 @@ const SfaViewDrawer = React.memo(
             onCopy={handleCopy}
             onEditBase={handleStartEditBase}
             isEditingBase={editingSection === 'base'}
+            onEditDivisionRevenue={handleStartEditDivisionRevenue}
             onAddPayment={handleStartAddPayment}
             onEditPayment={handleStartEditPayment}
             onDeletePayment={handleStartDeletePayment}
@@ -333,6 +362,13 @@ const SfaViewDrawer = React.memo(
           payment={paymentDrawer.payment}
           onClose={closePaymentDrawer}
           onSave={handlePaymentDrawerSave}
+        />
+
+        {/* 사업부 매출 수정 Drawer */}
+        <DivisionRevenueEditDrawer
+          visible={divisionRevenueDrawerVisible}
+          data={data}
+          onClose={() => setDivisionRevenueDrawerVisible(false)}
         />
       </Drawer>
     );
