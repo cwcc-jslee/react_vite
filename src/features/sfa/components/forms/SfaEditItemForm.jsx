@@ -1,71 +1,75 @@
 // src/features/sfa/components/forms/SfaEditItemForm.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Check, X, AlertCircle } from 'lucide-react';
+import { Check, X, CreditCard, ChevronDown, ChevronUp } from 'lucide-react';
 import {
   Button,
   Select,
-  Input,
-  Badge,
-  Message,
 } from '../../../../shared/components/ui';
-import { useTeam } from '../../../../shared/hooks/useTeam';
-import {
-  formatDisplayNumber,
-  ensureNumericAmount,
-} from '../../../../shared/utils/format/number';
 import { apiCommon } from '../../../../shared/api/apiCommon';
 import { useSfaStore } from '../../hooks/useSfaStore';
-
-// 최대 허용 사업부 매출 아이템 수
-const MAX_ITEMS = 5;
+import SalesByItem from '../elements/SalesByItem.jsx';
+import TeamAllocationSection from '../elements/TeamAllocationSection.jsx';
 
 /**
  * 사업부 매출 편집 컴포넌트
- * EditableSfaDetail에서 사업부 매출 편집 기능을 분리한 컴포넌트
+ * - 사업부/품목 구조 수정
+ * - 연동된 모든 결제매출의 사업부별 할당 금액 수정 기능 추가
  */
 const SfaEditItemForm = ({
   data = [],
+  sfaByPayments = [], // 연동된 결제매출 목록 추가
   onSave,
   onCancel,
   codebooks,
   isLoadingCodebook,
   isEditing = false,
-  sfaClassificationId, // 매출구분 ID 추가
+  sfaClassificationId,
 }) => {
-  // 팀 데이터 조회
-  const { data: teamsData, isLoading: isTeamsLoading } = useTeam();
-
-  // SFA Store actions 가져오기
   const { form, actions } = useSfaStore();
-
-  // 새로운 아이템 입력 상태 관리
-  const [selectedItemId, setSelectedItemId] = useState('');
-  const [selectedTeamId, setSelectedTeamId] = useState('');
-  const [amountInput, setAmountInput] = useState('');
-
-  // 편집 중인 아이템 인덱스 (-1이면 새로 추가, 0 이상이면 수정 모드)
-  const [editingIndex, setEditingIndex] = useState(-1);
-
-  // 최대 개수 초과 메시지 표시 여부
-  const [showLimitWarning, setShowLimitWarning] = useState(false);
-
-  // 매출품목 데이터 상태 관리
+  
+  // 사업부 수량 상태
+  const [teamCount, setTeamCount] = useState(1);
+  
+  // 매출품목 데이터 상태
   const [itemsData, setItemsData] = useState({ data: [] });
   const [isItemsLoading, setIsItemsLoading] = useState(false);
 
-  console.log('>>>>> data: ', data);
+  // 결제매출 할당 수정용 로컬 상태
+  const [draftPayments, setDraftPayments] = useState([]);
+  const [allocationDisplayValues, setAllocationDisplayValues] = useState({});
+  const [isAllocationSectionExpanded, setIsAllocationSectionExpanded] = useState(true); // 전체 섹션 아코디언 상태
 
-  // 편집 모드 진입 시 편집 상태 초기화
+  // 초기 로딩 시 itemsData 조회 및 상태 설정
   useEffect(() => {
-    if (isEditing) {
-      // 편집 상태 초기화
-      setSelectedItemId('');
-      setSelectedTeamId('');
-      setAmountInput('');
-      setEditingIndex(-1);
-      setShowLimitWarning(false);
+    if (sfaClassificationId) {
+      loadItems(sfaClassificationId);
     }
-  }, [isEditing]);
+  }, [sfaClassificationId]);
+
+  useEffect(() => {
+    // 사업부 데이터 설정 (데이터가 로드되면 수량 동기화)
+    if (form.data.sfaDraftItems && form.data.sfaDraftItems.length > 0) {
+      setTeamCount(form.data.sfaDraftItems.length);
+    } else if (isEditing && (!form.data.sfaDraftItems || form.data.sfaDraftItems.length === 0)) {
+       // 데이터가 없을 때 초기화 (최초 1회)
+       const initialItems = [{
+          id: Date.now(),
+          itemId: null,
+          itemName: '',
+          teamId: null,
+          teamName: '',
+       }];
+       actions.form.updateField('sfaDraftItems', initialItems);
+       setTeamCount(1);
+    }
+  }, [form.data.sfaDraftItems, isEditing]); // sfaDraftItems 변경 감지 추가
+
+  useEffect(() => {
+    // 결제매출 데이터 최초 설정 (원본 데이터가 들어올 때만)
+    if (sfaByPayments?.length > 0 && draftPayments.length === 0) {
+      setDraftPayments(JSON.parse(JSON.stringify(sfaByPayments)));
+    }
+  }, [sfaByPayments]); // 원동 데이터 변경 시에만 초기화
 
   // 매출품목 데이터 조회
   const loadItems = useCallback(async (classificationId) => {
@@ -86,387 +90,292 @@ const SfaEditItemForm = ({
     }
   }, []);
 
-  // 매출구분 ID 변경 시 매출품목 데이터 조회
-  useEffect(() => {
-    if (sfaClassificationId) {
-      loadItems(sfaClassificationId);
-    }
-  }, [sfaClassificationId, loadItems]);
-
-  // 최대 개수 도달 여부 확인 (편집 모드일 때는 제한 없음)
-  const isMaxLimitReached =
-    editingIndex === -1 && (form.data.sfaDraftItems || []).length >= MAX_ITEMS;
-
-  // 경고 메시지 자동 숨김 효과
-  useEffect(() => {
-    let timer;
-    if (showLimitWarning) {
-      timer = setTimeout(() => {
-        setShowLimitWarning(false);
-      }, 3000); // 3초 후 메시지 숨김
-    }
-    return () => clearTimeout(timer);
-  }, [showLimitWarning]);
-
-  // Badge 클릭 핸들러 (편집 모드로 전환)
-  const handleBadgeClick = (index) => {
-    const item = (form.data.sfaDraftItems || [])[index];
-    if (!item) return;
-
-    // 입력 필드에 현재 값 채우기
-    setSelectedItemId(String(item.itemId));
-    setSelectedTeamId(String(item.teamId));
-    setAmountInput(String(item.amount || ''));
-    setEditingIndex(index);
+  // 수량 변경 핸들러
+  const handleCountChange = (e) => {
+    const newCount = Number(e.target.value);
+    setTeamCount(newCount);
+    handleAddSalesItemsByCount(newCount);
   };
 
-  // 편집 취소 핸들러
-  const handleCancelEdit = () => {
-    setSelectedItemId('');
-    setSelectedTeamId('');
-    setAmountInput('');
-    setEditingIndex(-1);
-  };
-
-  // 사업부 매출 아이템 추가/수정
-  const handleAddItem = () => {
-    if (!selectedItemId || !selectedTeamId || !amountInput) {
-      return;
-    }
-
-    // 매출품목 및 팀 데이터가 없는 경우 처리
-    if (!itemsData?.data || !teamsData?.data) {
-      console.log('매출품목 또는 팀 데이터가 아직 로드되지 않았습니다.');
-      return;
-    }
-
-    // 매출품목 찾기
-    const itemType = itemsData.data.find(
-      (item) => String(item.id) === String(selectedItemId),
-    );
-
-    // 사업부 찾기
-    const teamType = teamsData.data.find(
-      (team) => String(team.id) === String(selectedTeamId),
-    );
-
-    if (!itemType || !teamType) {
-      console.log('선택된 매출품목 또는 사업부를 찾을 수 없습니다.');
-      return;
-    }
-
+  // 수량에 따른 아이템 생성/삭제 로직 (결제매출 할당 동기화 포함)
+  const handleAddSalesItemsByCount = (count) => {
     const currentItems = form.data.sfaDraftItems || [];
+    const currentCount = currentItems.length;
+    let nextItems = [...currentItems];
 
-    // 편집 모드인 경우 아이템 업데이트
-    if (editingIndex >= 0) {
-      const updatedItems = [...currentItems];
-      updatedItems[editingIndex] = {
-        ...updatedItems[editingIndex],
-        itemId: itemType.id,
-        itemName: itemType.name,
-        teamId: teamType.id,
-        teamName: teamType.name,
-        amount: ensureNumericAmount(amountInput),
-      };
-      actions.form.updateField('sfaDraftItems', updatedItems);
-    } else {
-      // 새로 추가하는 경우
-      // 최대 개수 체크
-      if (isMaxLimitReached) {
-        setShowLimitWarning(true);
-        return;
-      }
-
-      // 중복 체크 (같은 매출품목 + 사업부 조합)
-      const isDuplicate = currentItems.some(
-        (item) =>
-          item.itemId === selectedItemId && item.teamId === selectedTeamId,
-      );
-
-      if (isDuplicate) {
-        alert('이미 추가된 매출품목과 사업부 조합입니다.');
-        return;
-      }
-
-      // 추가할 아이템 객체 생성
-      const newItem = {
-        id: Date.now(), // 임시 ID
-        itemId: itemType.id,
-        itemName: itemType.name,
-        teamId: teamType.id,
-        teamName: teamType.name,
-        amount: ensureNumericAmount(amountInput),
-      };
-
-      // 기존 아이템 배열에 추가
-      actions.form.updateField('sfaDraftItems', [...currentItems, newItem]);
+    if (count > currentCount) {
+      const addedCount = count - currentCount;
+      const newItems = Array.from({ length: addedCount }).map((_, index) => ({
+        id: Date.now() + index,
+        itemId: null,
+        itemName: '',
+        teamId: null,
+        teamName: '',
+      }));
+      nextItems = [...currentItems, ...newItems];
+    } else if (count < currentCount) {
+      nextItems = currentItems.slice(0, count);
     }
+    
+    actions.form.updateField('sfaDraftItems', nextItems);
 
-    // 입력 필드 초기화
-    setSelectedItemId('');
-    setSelectedTeamId('');
-    setAmountInput('');
-    setEditingIndex(-1);
+    // 결제매출 할당 배열 동기화
+    setDraftPayments(prev => prev.map(payment => {
+      const currentAllocations = payment.teamAllocations || [];
+      let nextAllocations = [...currentAllocations];
+
+      if (count > currentCount) {
+        const addedCount = count - currentCount;
+        // 새로 추가된 nextItems의 뒷부분을 참조하여 할당 정보 생성
+        const newAllocations = Array.from({ length: addedCount }).map((_, idx) => {
+          const itemIndex = currentCount + idx;
+          const sourceItem = nextItems[itemIndex];
+          return {
+            teamId: sourceItem?.teamId || null,
+            teamName: sourceItem?.teamName || '',
+            itemId: sourceItem?.itemId || null,
+            itemName: sourceItem?.itemName || '',
+            allocatedAmount: 0,
+          };
+        });
+        nextAllocations = [...currentAllocations, ...newAllocations];
+      } else if (count < currentCount) {
+        nextAllocations = currentAllocations.slice(0, count);
+        
+        // 단일 사업부로 변경 시 전체 금액 자동 할당
+        if (count === 1 && nextAllocations.length === 1) {
+          nextAllocations[0] = {
+            ...nextAllocations[0],
+            allocatedAmount: payment.amount // 전체 금액 할당
+          };
+        }
+      }
+
+      return { ...payment, teamAllocations: nextAllocations };
+    }));
   };
 
-  // 사업부 매출 아이템 삭제
+  // 개별 아이템 변경 핸들러 (결제매출 할당 동기화 포함)
+  const handleSalesItemChange = (index, updates) => {
+    const currentItems = [...(form.data.sfaDraftItems || [])];
+    const updatedItem = { ...currentItems[index], ...updates };
+    currentItems[index] = updatedItem;
+    actions.form.updateField('sfaDraftItems', currentItems);
+
+    // 결제매출 할당 정보(메타데이터) 동기화
+    setDraftPayments(prev => prev.map(payment => {
+      const allocations = [...(payment.teamAllocations || [])];
+      // 해당 인덱스의 할당 정보가 없을 경우를 대비해 안전하게 처리
+      if (!allocations[index]) {
+         // 할당 정보가 없으면 새로 생성 (이론상 발생하면 안되지만 안전장치)
+         allocations[index] = {
+            teamId: updatedItem.teamId,
+            teamName: updatedItem.teamName,
+            itemId: updatedItem.itemId,
+            itemName: updatedItem.itemName,
+            allocatedAmount: 0
+         };
+      } else {
+        allocations[index] = {
+          ...allocations[index],
+          teamId: updatedItem.teamId,
+          teamName: updatedItem.teamName,
+          itemId: updatedItem.itemId,
+          itemName: updatedItem.itemName,
+        };
+      }
+      return { ...payment, teamAllocations: allocations };
+    }));
+  };
+
+  // 개별 아이템 삭제 핸들러 (결제매출 할당 동기화 포함)
   const handleRemoveItem = (index) => {
     const currentItems = form.data.sfaDraftItems || [];
-    const updatedItems = currentItems.filter((_, i) => i !== index);
-    actions.form.updateField('sfaDraftItems', updatedItems);
-
-    // 현재 편집 중인 아이템이 삭제된 경우 편집 모드 초기화
-    if (editingIndex === index) {
-      setSelectedItemId('');
-      setSelectedTeamId('');
-      setAmountInput('');
-      setEditingIndex(-1);
-    } else if (editingIndex > index) {
-      // 편집 중인 아이템보다 앞의 아이템이 삭제된 경우 인덱스 조정
-      setEditingIndex(editingIndex - 1);
+    if (currentItems.length <= 1) {
+        alert("최소 1개의 항목은 유지해야 합니다.");
+        return;
     }
+    const newItems = currentItems.filter((_, i) => i !== index);
+    actions.form.updateField('sfaDraftItems', newItems);
+    setTeamCount(newItems.length);
 
-    // 제거 후 경고 메시지 숨김
-    setShowLimitWarning(false);
+    // 결제매출 할당에서도 삭제
+    setDraftPayments(prev => prev.map(payment => {
+      const allocations = (payment.teamAllocations || []).filter((_, i) => i !== index);
+      return { ...payment, teamAllocations: allocations };
+    }));
   };
 
-  // 금액 입력 처리
-  const handleAmountChange = (value) => {
-    const sanitizedValue = value.replace(/[^\d,]/g, '');
-    setAmountInput(sanitizedValue);
-  };
-
-  // 키보드 이벤트 처리 (Enter 키로 추가)
-  const handleKeyDown = (e) => {
-    if (
-      e.key === 'Enter' &&
-      selectedItemId &&
-      selectedTeamId &&
-      amountInput &&
-      !isMaxLimitReached
-    ) {
-      e.preventDefault(); // 폼 제출 방지
-      handleAddItem();
+  // --- 할당 수정 관련 핸들러 ---
+  const handleAllocationChange = (paymentIndex, teamIndex, value) => {
+    const updatedPayments = [...draftPayments];
+    const payment = { ...updatedPayments[paymentIndex] };
+    const allocations = [...(payment.teamAllocations || [])];
+    
+    if (allocations[teamIndex]) {
+      allocations[teamIndex] = { ...allocations[teamIndex], allocatedAmount: value };
     }
+    
+    payment.teamAllocations = allocations;
+    updatedPayments[paymentIndex] = payment;
+    setDraftPayments(updatedPayments);
   };
 
-  // 저장 핸들러
+  const handleAllocationFocus = (paymentIndex, teamIndex) => {
+    const key = `${paymentIndex}-${teamIndex}`;
+    const amount = draftPayments[paymentIndex].teamAllocations[teamIndex].allocatedAmount;
+    setAllocationDisplayValues(prev => ({ ...prev, [key]: String(amount || '') }));
+  };
+
+  const handleAllocationBlur = (paymentIndex, teamIndex) => {
+    const key = `${paymentIndex}-${teamIndex}`;
+    setAllocationDisplayValues(prev => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
+  const handleAllocationInputChange = (paymentIndex, teamIndex, value) => {
+    const sanitized = value.replace(/[^\d]/g, '');
+    const key = `${paymentIndex}-${teamIndex}`;
+    setAllocationDisplayValues(prev => ({ ...prev, [key]: sanitized }));
+    handleAllocationChange(paymentIndex, teamIndex, sanitized);
+  };
+
   const handleSave = () => {
-    onSave(form.data.sfaDraftItems || []);
-  };
+    const items = form.data.sfaDraftItems || [];
+    const isValid = items.every(item => item.teamId && item.itemId);
+    
+    if (!isValid) {
+      alert("모든 항목의 사업부와 매출품목을 선택해주세요.");
+      return;
+    }
 
-  // 취소 핸들러
-  const handleCancel = () => {
-    setSelectedItemId('');
-    setSelectedTeamId('');
-    setAmountInput('');
-    setEditingIndex(-1);
-    setShowLimitWarning(false);
-    onCancel();
+    // 할당 금액 검증
+    const isAllocationBalanced = draftPayments.every(p => {
+      const total = (p.teamAllocations || []).reduce((sum, a) => sum + (parseFloat(a.allocatedAmount) || 0), 0);
+      return Math.abs(total - (parseFloat(p.amount) || 0)) < 1;
+    });
+
+    if (!isAllocationBalanced) {
+      alert("모든 결제매출의 사업부별 할당 합계가 매출액과 일치해야 합니다.\n빨간색으로 표시된 할당 금액을 확인해주세요.");
+      return;
+    }
+
+    onSave(items, draftPayments);
   };
 
   if (!isEditing) return null;
 
   return (
-    <div className="flex flex-col w-full gap-3">
+    <div className="flex flex-col w-full gap-6">
       {/* 헤더 영역 */}
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium">사업부 매출 편집</span>
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={handleSave}
-            className="flex items-center justify-center h-7 w-7 rounded-sm hover:bg-green-100"
-          >
-            <Check className="h-4 w-4 text-green-600" strokeWidth={2.5} />
-          </button>
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="flex items-center justify-center h-7 w-7 rounded-sm hover:bg-red-100"
-          >
-            <X className="h-4 w-4 text-red-600" strokeWidth={2.5} />
-          </button>
+      <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+        <div className="flex items-center gap-2">
+           <span className="text-base font-semibold text-gray-800">사업부 매출 정보 수정</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button type="button" onClick={onCancel} variant="secondary" className="h-8 px-3 text-sm">
+            <X className="h-4 w-4 mr-1" /> 취소
+          </Button>
+          <Button type="button" onClick={handleSave} variant="primary" className="h-8 px-3 text-sm bg-blue-600 hover:bg-blue-700 text-white">
+            <Check className="h-4 w-4 mr-1" /> 저장
+          </Button>
         </div>
       </div>
 
-      {/* 입력 영역 */}
-      <div className="space-y-3">
-        <div className="grid grid-cols-[1fr,1fr,1fr,auto] gap-2">
-          {/* 매출품목 선택 */}
+      {/* 1. 사업부/품목 설정 섹션 */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+           <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
+           <h3 className="text-sm font-bold text-gray-700">사업부 및 품목 설정</h3>
+        </div>
+        
+        <div className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-100 rounded-lg">
+          <span className="text-sm font-semibold text-blue-900">사업부 수량:</span>
           <Select
-            value={selectedItemId}
-            onChange={(e) => setSelectedItemId(e.target.value)}
-            disabled={isItemsLoading || isMaxLimitReached}
-            className={
-              isMaxLimitReached ? 'bg-gray-100 cursor-not-allowed' : ''
-            }
+            value={teamCount}
+            onChange={handleCountChange}
+            className="w-20 px-2 py-1.5 text-center font-medium border border-blue-300 rounded-md bg-white"
           >
-            <option value="">
-              {isMaxLimitReached
-                ? `최대 ${MAX_ITEMS}개까지 추가 가능`
-                : '매출품목 선택'}
-            </option>
-            {!isMaxLimitReached &&
-              itemsData?.data?.map((item) => (
-                <option key={item.id} value={String(item.id)}>
-                  {item.name}
-                </option>
-              ))}
+            {[1, 2, 3, 4, 5].map((num) => (
+              <option key={num} value={num}>{num}</option>
+            ))}
           </Select>
+          <span className="text-xs text-blue-700 ml-1">※ 사업부 구성을 변경하면 아래 할당 정보도 자동 반영됩니다.</span>
+        </div>
 
-          {/* 사업부 선택 */}
-          <Select
-            value={selectedTeamId}
-            onChange={(e) => setSelectedTeamId(e.target.value)}
-            disabled={isTeamsLoading || isMaxLimitReached}
-            className={
-              isMaxLimitReached ? 'bg-gray-100 cursor-not-allowed' : ''
-            }
-          >
-            <option value="">
-              {isMaxLimitReached
-                ? `최대 ${MAX_ITEMS}개까지 추가 가능`
-                : '사업부 선택'}
-            </option>
-            {!isMaxLimitReached &&
-              teamsData?.data?.map((team) => (
-                <option key={team.id} value={String(team.id)}>
-                  {team.name}
-                </option>
-              ))}
-          </Select>
-
-          {/* 금액 입력 */}
-          <Input
-            type="text"
-            placeholder={isMaxLimitReached ? '최대 개수 도달' : '금액 입력'}
-            value={amountInput}
-            onChange={(e) => handleAmountChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            disabled={isMaxLimitReached}
-            className={`text-right ${
-              isMaxLimitReached ? 'bg-gray-100 cursor-not-allowed' : ''
-            }`}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <SalesByItem
+            items={form.data.sfaDraftItems}
+            onChange={handleSalesItemChange}
+            onRemove={handleRemoveItem}
+            itemsData={itemsData}
+            isItemsLoading={isItemsLoading}
+            isMultiTeam={true}
           />
-
-          {/* 추가/수정 버튼 */}
-          {editingIndex >= 0 ? (
-            <div className="flex gap-1">
-              <Button
-                type="button"
-                onClick={handleAddItem}
-                disabled={!selectedItemId || !selectedTeamId || !amountInput}
-                variant="outline"
-                className="whitespace-nowrap"
-              >
-                <Check className="h-4 w-4 mr-1" />
-                수정
-              </Button>
-              <Button
-                type="button"
-                onClick={handleCancelEdit}
-                variant="outline"
-                className="whitespace-nowrap"
-              >
-                <X className="h-4 w-4 mr-1" />
-                취소
-              </Button>
-            </div>
-          ) : (
-            <Button
-              type="button"
-              onClick={handleAddItem}
-              disabled={
-                !selectedItemId ||
-                !selectedTeamId ||
-                !amountInput ||
-                isMaxLimitReached
-              }
-              variant="outline"
-              className="whitespace-nowrap"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              추가
-            </Button>
-          )}
         </div>
+      </section>
 
-        {/* 최대 개수 경고 메시지 */}
-        {showLimitWarning && (
-          <Message type="warning" className="flex items-center gap-2">
-            <AlertCircle size={16} />
-            <span>
-              사업부 매출은 최대 {MAX_ITEMS}개까지만 추가할 수 있습니다.
-            </span>
-          </Message>
-        )}
-
-        {/* 기존 아이템들을 Badge 형태로 표시 */}
-        {(form.data.sfaDraftItems || []).length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {(form.data.sfaDraftItems || []).map((item, index) => {
-              console.log(
-                'Badge item:',
-                item,
-                'amount type:',
-                typeof item.amount,
-                'amount value:',
-                item.amount,
-              ); // 디버깅용 로그
-              return (
-                <Badge
-                  key={item.id}
-                  variant="info"
-                  size="md"
-                  className={`flex items-center gap-1 pl-3 pr-2 py-1.5 cursor-pointer transition-colors ${
-                    editingIndex === index
-                      ? 'bg-blue-200 border-blue-400'
-                      : 'hover:bg-blue-200'
-                  }`}
-                  onClick={() => handleBadgeClick(index)}
-                >
-                  <span className="font-medium">
-                    {item.itemName}-{item.teamName}(
-                    {(() => {
-                      const amount = item.amount || item.itemPrice;
-                      return amount != null && amount !== ''
-                        ? Number(amount).toLocaleString()
-                        : '-';
-                    })()}
-                    )
-                  </span>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Badge 클릭 이벤트 방지
-                      handleRemoveItem(index);
-                    }}
-                    className="ml-1 text-blue-500 hover:text-red-500 focus:outline-none"
-                    aria-label={`${item.itemName} 삭제`}
-                  >
-                    <X size={14} />
-                  </button>
-                </Badge>
-              );
-            })}
+      {/* 2. 결제매출 할당 수정 섹션 */}
+      {draftPayments.length > 0 && (
+        <section className="space-y-4 pt-4 border-t border-gray-100">
+          <div 
+            className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
+            onClick={() => setIsAllocationSectionExpanded(!isAllocationSectionExpanded)}
+          >
+             <div className="flex items-center gap-2">
+                <div className="w-1 h-4 bg-green-500 rounded-full"></div>
+                <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                    <CreditCard size={16} className="text-green-600" />
+                    결제매출별 사업부 할당 수정
+                    <span className="text-xs font-normal text-gray-500 ml-1">
+                      (총 {draftPayments.length}건)
+                    </span>
+                </h3>
+             </div>
+             {isAllocationSectionExpanded ? <ChevronUp size={18} className="text-gray-500" /> : <ChevronDown size={18} className="text-gray-500" />}
           </div>
-        )}
-
-        {/* 항목 개수 표시 */}
-        {(form.data.sfaDraftItems || []).length > 0 && (
-          <div className="text-xs text-gray-500">
-            {(form.data.sfaDraftItems || []).length}/{MAX_ITEMS} 개 등록됨
-          </div>
-        )}
-
-        {/* 빈 상태 메시지 */}
-        {(form.data.sfaDraftItems || []).length === 0 && (
-          <div className="text-center text-gray-500 py-4 border rounded-md bg-gray-50">
-            사업부 매출 정보가 없습니다.
-          </div>
-        )}
-      </div>
+          
+          {isAllocationSectionExpanded && (
+            <div className="space-y-4">
+              {draftPayments.map((payment, pIndex) => (
+                <div key={pIndex} className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="bg-gray-100 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-gray-700">
+                          결제매출 #{pIndex + 1} | {payment.paymentLabel || '라벨없음'}
+                      </span>
+                    </div>
+                    <span className="text-xs font-medium text-blue-600">
+                        {Number(payment.amount).toLocaleString()}원
+                    </span>
+                  </div>
+                  
+                  <div className="p-3 bg-white">
+                    <TeamAllocationSection
+                      isMultiTeam={teamCount > 1}
+                      payment={payment}
+                      index={pIndex}
+                      onAllocationChange={(pIdx, tIdx, val) => handleAllocationChange(pIdx, tIdx, val)}
+                      isSubmitting={false}
+                      allocationDisplayValues={{
+                        ...Object.keys(allocationDisplayValues)
+                          .filter(key => key.startsWith(`${pIndex}-`))
+                          .reduce((obj, key) => ({ ...obj, [key.split('-')[1]]: allocationDisplayValues[key] }), {})
+                      }}
+                      handleAllocationFocus={(tIdx) => handleAllocationFocus(pIndex, tIdx)}
+                      handleAllocationBlur={(tIdx) => handleAllocationBlur(pIndex, tIdx)}
+                      handleAllocationInputChange={(tIdx, val) => handleAllocationInputChange(pIndex, tIdx, val)}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 };

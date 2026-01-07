@@ -1,4 +1,4 @@
-// src/features/sfa/components/drawer/DivisionRevenueEditDrawer.jsx
+// src/features/sfa/components/drawer/TeamSalesEditDrawer.jsx
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Drawer, DRAWER_SIZES } from '@shared/components/drawer';
@@ -7,8 +7,9 @@ import { sfaSubmitService } from '../../services/sfaSubmitService.js';
 import { transformToDBFields } from '../../utils/transformUtils';
 import SfaEditItemForm from '../forms/SfaEditItemForm.jsx';
 import { useCodebook } from '@shared/hooks/useCodebook';
+import { apiService } from '@shared/api/apiService';
 
-const DivisionRevenueEditDrawer = ({ visible, data, onClose, onSave }) => {
+const TeamSalesEditDrawer = ({ visible, data, onClose, onSave }) => {
   const { actions, form } = useSfaStore();
 
   // Codebook needed for SfaEditItemForm
@@ -29,31 +30,56 @@ const DivisionRevenueEditDrawer = ({ visible, data, onClose, onSave }) => {
         itemName: item.itemName,
         teamId: item.teamId,
         teamName: item.teamName,
-        amount: item.amount ?? item.itemPrice ?? '',
       }));
       actions.form.updateField('sfaDraftItems', draftItems);
     }
   }, [visible, data, actions.form]);
 
-  const handleSave = async (updatedItems) => {
+  /**
+   * 저장 핸들러
+   * @param {Array} updatedItems - 수정된 사업부/품목 목록
+   * @param {Array} updatedPayments - 수정된 결제매출 할당 정보 목록
+   */
+  const handleSave = async (updatedItems, updatedPayments = []) => {
     try {
       const sfaId = data.documentId;
-      // Transform to DB format
+      
+      // 1. 사업부/품목 정보 업데이트
       const transformedItems = transformToDBFields.transformSalesByItems(updatedItems);
-      const formData = {
-        sfa_by_items: transformedItems,
-      };
+      
+      // 사업부 수량에 따라 isMultiTeam 값 결정
+      const isMultiTeam = updatedItems.length > 1;
 
-      await sfaSubmitService.updateSfaBase(sfaId, formData);
+      const sfaBaseData = {
+        sfa_by_items: transformedItems,
+        is_multi_team: isMultiTeam, // 수량 기반으로 자동 설정
+      };
+      await sfaSubmitService.updateSfaBase(sfaId, sfaBaseData);
+
+      // 2. 결제매출 할당 정보 업데이트 (있는 경우)
+      if (updatedPayments.length > 0) {
+        const updatePromises = updatedPayments.map(payment => {
+          const paymentId = payment.id;
+          const processedPayment = transformToDBFields.transformSalesByPaymentsEdit(payment);
+          
+          // team_allocations 키만 추출하여 전송
+          const updateData = {
+            team_allocations: processedPayment.team_allocations
+          };
+          
+          return apiService.put(`/sfa-by-payment-withhistory/${paymentId}`, updateData);
+        });
+        await Promise.all(updatePromises);
+      }
       
       // Refresh data
       await actions.data.fetchSfaDetail(data.id);
       
       if (onSave) onSave();
       onClose();
-      alert('✅ 사업부 매출이 수정되었습니다.');
+      alert('✅ 사업부 매출 및 결제 할당 정보가 수정되었습니다.');
     } catch (error) {
-      console.error('사업부 매출 저장 실패:', error);
+      console.error('저장 실패:', error);
       alert('❌ 저장 중 오류가 발생했습니다: ' + error.message);
     }
   };
@@ -80,6 +106,7 @@ const DivisionRevenueEditDrawer = ({ visible, data, onClose, onSave }) => {
       <div className="p-4">
         <SfaEditItemForm 
           data={form.data.sfaDraftItems}
+          sfaByPayments={data?.sfaByPayments || []} // 결제매출 목록 전달
           onSave={handleSave}
           onCancel={handleCancel}
           codebooks={codebooks}
@@ -92,11 +119,11 @@ const DivisionRevenueEditDrawer = ({ visible, data, onClose, onSave }) => {
   );
 };
 
-DivisionRevenueEditDrawer.propTypes = {
+TeamSalesEditDrawer.propTypes = {
   visible: PropTypes.bool.isRequired,
   data: PropTypes.object.isRequired,
   onClose: PropTypes.func.isRequired,
   onSave: PropTypes.func,
 };
 
-export default DivisionRevenueEditDrawer;
+export default TeamSalesEditDrawer;

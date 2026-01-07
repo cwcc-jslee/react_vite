@@ -11,7 +11,6 @@ import {
   formatSfaByItems,
 } from '../../utils/displayUtils';
 import RevenueSummary from '../elements/RevenueSummary';
-import TeamRevenueBadges from '../elements/TeamRevenueBadges';
 
 /**
  * SFA 상세 정보를 표시하는 컴포넌트
@@ -88,17 +87,15 @@ const SfaDetail = ({ data }) => {
         <DescriptionItem>{data.isProject ? 'YES' : 'NO'}</DescriptionItem>
       </DescriptionRow>
 
-      {/* 4행: 결제 매출/이익, FY */}
+      {/* 4행: 매출액, FY */}
       <DescriptionRow equalItems>
         <DescriptionItem label width="w-[140px]">
-          결제 매출/이익
+          매출액
         </DescriptionItem>
         <DescriptionItem>
-          <RevenueSummary
-            totalAmount={paymentTotals.totalAmount}
-            totalProfit={paymentTotals.totalProfit}
-            variant="compact"
-          />
+          <span className="text-lg font-bold text-blue-600">
+            {paymentTotals.totalAmount.toLocaleString()}원
+          </span>
         </DescriptionItem>
         <DescriptionItem label width="w-[140px]">
           FY
@@ -106,40 +103,7 @@ const SfaDetail = ({ data }) => {
         <DescriptionItem>{data.fy?.name || '-'}</DescriptionItem>
       </DescriptionRow>
 
-      {/* 5행: 사업부 매출, 사업부 구성 */}
-      <DescriptionRow equalItems>
-        <DescriptionItem label width="w-[140px]">
-          사업부 매출
-        </DescriptionItem>
-        <DescriptionItem>
-          <TeamRevenueBadges
-            items={formatSfaByItems(data.sfaByItems, data.isMultiTeam, data.sfaByPayments)}
-            isMultiTeam={data.isMultiTeam}
-          />
-        </DescriptionItem>
-        <DescriptionItem label width="w-[140px]">
-          사업부 구성
-        </DescriptionItem>
-        <DescriptionItem>
-          <span
-            className={`
-              inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border
-              ${data.isMultiTeam
-                ? 'bg-purple-100 text-purple-800 border-purple-200'
-                : 'bg-blue-100 text-blue-800 border-blue-200'
-              }
-            `}
-          >
-            {data.isMultiTeam === true
-              ? '다중 사업부'
-              : data.isMultiTeam === false
-              ? '단일 사업부'
-              : '-'}
-          </span>
-        </DescriptionItem>
-      </DescriptionRow>
-
-      {/* 6행: 비고 */}
+      {/* 5행: 비고 */}
       <DescriptionRow>
         <DescriptionItem label width="w-[140px]">
           비고

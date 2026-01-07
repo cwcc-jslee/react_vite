@@ -27,7 +27,12 @@ const BasicInfoSection = ({
         {/* Section Title */}
         <div className="flex items-center gap-3 mb-4">
           <FileText className="h-5 w-5 text-gray-700" />
-          <h2 className="text-lg font-semibold text-gray-900">기본 정보</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-semibold text-gray-900">기본 정보</h2>
+            <span className="px-2 py-0.5 text-xs font-mono font-medium bg-gray-100 text-gray-500 rounded border border-gray-200">
+              ID: {data?.id || '-'}
+            </span>
+          </div>
           {isEditing && (
             <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded border border-blue-300">
               수정중
@@ -60,7 +65,12 @@ const BasicInfoSection = ({
           {/* Left: Icon + Title */}
           <div className="flex items-center gap-3">
             <FileText className="h-5 w-5 text-gray-600" />
-            <h2 className="text-base font-semibold text-gray-900">기본 정보</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-semibold text-gray-900">기본 정보</h2>
+              <span className="px-2 py-0.5 text-[10px] font-mono font-medium bg-gray-100 text-gray-500 rounded border border-gray-200">
+                ID: {data?.id || '-'}
+              </span>
+            </div>
           </div>
         </div>
       </div>

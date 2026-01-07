@@ -5,7 +5,8 @@
  * - 결제매출 섹션: "매출내역 추가" / "매출내역 수정" 버튼으로 기능 분리
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { X } from 'lucide-react';
 import { Drawer, useDrawer, DRAWER_SIZES } from '@shared/components/drawer';
 import { useSfaStore } from '../../hooks/useSfaStore.js';
@@ -16,14 +17,23 @@ import DrawerActionsMenu from './sections/DrawerActionsMenu.jsx';
 import BasicInfoSection from './sections/BasicInfoSection.jsx';
 import PaymentListSection from './sections/PaymentListSection.jsx';
 import PaymentEditDrawer from './PaymentEditDrawer.jsx';
-import DivisionRevenueEditDrawer from './DivisionRevenueEditDrawer.jsx';
+import TeamSalesEditDrawer from './TeamSalesEditDrawer.jsx';
 import RevenueSummaryCard from '../cards/RevenueSummaryCard.jsx';
 
 const SfaViewDrawer = React.memo(
   ({ drawer }) => {
-    const { visible, data } = drawer;
+    const { visible, data: initialData } = drawer;
     const { close } = useDrawer();
     const { actions: sfaActions } = useSfaStore();
+
+    // Redux store에서 최신 상세 데이터 구독
+    const sfaDetail = useSelector((state) => state.sfa.sfaDetail);
+
+    // 화면에 표시할 데이터 결정 (Store 데이터 우선 사용)
+    // 단, Store 데이터가 현재 보고 있는 문서와 일치하는지 확인 (ID 비교)
+    const data = (sfaDetail && initialData && String(sfaDetail.id) === String(initialData.id)) 
+      ? sfaDetail 
+      : initialData;
 
     // ==================== 섹션별 편집 상태 관리 ====================
     const [editingSection, setEditingSection] = React.useState(null); // 'base' | null
@@ -37,7 +47,7 @@ const SfaViewDrawer = React.memo(
       payment: null, // 수정할 payment 데이터
     });
 
-    const [divisionRevenueDrawerVisible, setDivisionRevenueDrawerVisible] = React.useState(false);
+    const [teamSalesDrawerVisible, setTeamSalesDrawerVisible] = React.useState(false);
 
     // ==================== 기본정보 편집 핸들러 ====================
     const handleStartEditBase = () => {
@@ -67,7 +77,7 @@ const SfaViewDrawer = React.memo(
     };
 
     // ==================== 사업부 매출 수정 핸들러 ====================
-    const handleStartEditDivisionRevenue = () => {
+    const handleStartEditTeamSales = () => {
       // 1. 기본정보 편집 확인
       if (editingSection === 'base') {
         const shouldContinue = window.confirm(
@@ -88,7 +98,7 @@ const SfaViewDrawer = React.memo(
         setPaymentMode('view');
       }
 
-      setDivisionRevenueDrawerVisible(true);
+      setTeamSalesDrawerVisible(true);
     };
 
     // ==================== 결제매출 Drawer 핸들러 ====================
@@ -313,7 +323,7 @@ const SfaViewDrawer = React.memo(
             onCopy={handleCopy}
             onEditBase={handleStartEditBase}
             isEditingBase={editingSection === 'base'}
-            onEditDivisionRevenue={handleStartEditDivisionRevenue}
+            onEditTeamSales={handleStartEditTeamSales}
             onAddPayment={handleStartAddPayment}
             onEditPayment={handleStartEditPayment}
             onDeletePayment={handleStartDeletePayment}
@@ -365,10 +375,10 @@ const SfaViewDrawer = React.memo(
         />
 
         {/* 사업부 매출 수정 Drawer */}
-        <DivisionRevenueEditDrawer
-          visible={divisionRevenueDrawerVisible}
+        <TeamSalesEditDrawer
+          visible={teamSalesDrawerVisible}
           data={data}
-          onClose={() => setDivisionRevenueDrawerVisible(false)}
+          onClose={() => setTeamSalesDrawerVisible(false)}
         />
       </Drawer>
     );
