@@ -70,6 +70,8 @@ export const validateProjectTaskForm = (projectBuckets) => {
   const errors = [];
   let isValid = true;
 
+  console.log('Validating Project Task Form:', projectBuckets);
+
   // 칸반 보드에 최소 1개 이상의 컬럼이 있어야 함
   if (!projectBuckets || projectBuckets.length === 0) {
     errors.push('최소 1개 이상의 버킷이 필요합니다.');
@@ -87,6 +89,8 @@ export const validateProjectTaskForm = (projectBuckets) => {
     // 해당 버킷의 작업들 검사
     if (bucket.tasks && bucket.tasks.length > 0) {
       bucket.tasks.forEach((task, taskIndex) => {
+        console.log(`Checking Task [${bucketIndex}-${taskIndex}]:`, task);
+        
         // 작업명 필수
         if (!task.name || task.name.trim() === '') {
           errors.push(
@@ -99,8 +103,11 @@ export const validateProjectTaskForm = (projectBuckets) => {
 
         // isScheduled가 true인 경우에만 검사
         if (task.isScheduled) {
+          console.log(`Task is Scheduled. Dates: Start=${task.planStartDate}, End=${task.planEndDate}`);
+          
           // 계획 시작일, 종료일 필수
           if (!task.planStartDate || !task.planEndDate) {
+            console.error(`Validation Failed: Missing dates for scheduled task "${task.name}"`);
             errors.push(
               `${bucket.bucket || `버킷 ${bucketIndex + 1}`}의 "${
                 task.name || `작업 ${taskIndex + 1}`

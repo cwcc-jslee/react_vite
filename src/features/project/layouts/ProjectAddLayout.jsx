@@ -2,8 +2,8 @@
 
 import React, { useEffect } from 'react';
 import useProjectTask from '../hooks/useProjectTask';
-import ProjectAddFormSection from '../sections/ProjectAddFormSection';
-import ProjectAddTasksSection from '../sections/ProjectAddTasksSection';
+import ProjectBasicInfoForm from '../components/registration/ProjectBasicInfoForm';
+import TaskPlanningBoard from '../components/registration/TaskPlanningBoard';
 
 /**
  * 프로젝트 추가 페이지 레이아웃 컴포넌트
@@ -21,11 +21,11 @@ const ProjectAddLayout = () => {
 
   return (
     <div className="project-add-layout">
-      {/* 프로젝트 기본정보 입력 폼 섹션 */}
-      <ProjectAddFormSection />
+      {/* 프로젝트 기본정보 입력 폼 */}
+      <ProjectBasicInfoForm />
 
-      {/* 프로젝트 작업 칸반보드 섹션 */}
-      <ProjectAddTasksSection />
+      {/* 프로젝트 작업 계획 보드 */}
+      <TaskPlanningBoard />
     </div>
   );
 };

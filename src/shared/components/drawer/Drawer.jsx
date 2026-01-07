@@ -196,8 +196,8 @@ const DrawerContent = ({
 }) => (
   <div className="flex h-full flex-col overflow-hidden bg-white shadow-xl">
     {/* Header */}
-    <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-      <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+    <div className="flex items-center justify-between border-b border-gray-200 px-8 py-5">
+      <h2 className="text-xl font-bold text-gray-900">{title}</h2>
       <div className="flex items-center gap-2">
         {/* Header Actions (더보기 메뉴 등) */}
         {headerActions && <div className="flex items-center">{headerActions}</div>}

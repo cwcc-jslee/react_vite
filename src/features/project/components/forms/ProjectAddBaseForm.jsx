@@ -1,59 +1,40 @@
-// src/features/project/components/ui/ProjectBaseForm.jsx
-// 프로젝트 정보 입력을 위한 폼 컴포넌트
-// 고객사, SFA, 프로젝트명, 서비스, 사업부 정보를 입력 받습니다
+// src/features/project/components/forms/ProjectAddBaseForm.jsx
+// 프로젝트 정보 입력을 위한 폼 컴포넌트 (XL 사이즈 최적화)
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useState, useMemo } from 'react';
 import { apiCommon } from '../../../../shared/api/apiCommon';
-import { projectApiService } from '../../services/projectApiService';
 import { CustomerSearchInput } from '../../../../shared/components/customer/CustomerSearchInput';
 import { useSelectData } from '../../../../shared/hooks/useSelectData';
 import { CREATABLE_PROJECT_STATUSES } from '../../constants/projectStatusConstants';
 import {
-  Form,
   FormItem,
-  Group,
-  Stack,
   Label,
   Input,
   Select,
-  Button,
-  Checkbox,
-  TextArea,
-  Row,
-  Col,
 } from '../../../../shared/components/ui';
 
-// 프로젝트 정보 입력 폼 컴포넌트
-const ProjectAddBaseForm = ({
-  codebooks,
-  formData,
-  updateField,
-  isSubmitting,
-  templeteOptions,
-  handleTemplateSelect,
-}) => {
-  const dispatch = useDispatch();
+// 섹션 헤더 컴포넌트
+const SectionTitle = ({ children }) => (
+  <h3 className="col-span-12 text-lg font-bold text-indigo-800 mt-4 mb-2 border-b-2 border-indigo-50 pb-2">
+    {children}
+  </h3>
+);
 
+const ProjectAddBaseForm = ({ codebooks, formData, updateField }) => {
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
 
   // API 데이터 조회
-  const {
-    data: sfaData,
-    isLoading: isSfaLoading,
-    refetch: refetchSfa,
-  } = useSelectData(apiCommon.getSfasByCustomer, selectedCustomerId);
-
-  const { data: teamsData, isLoading: isTeamsLoading } = useSelectData(
-    apiCommon.getTeams,
+  const { data: sfaData, isLoading: isSfaLoading } = useSelectData(
+    apiCommon.getSfasByCustomer,
+    selectedCustomerId,
   );
-
-  const { data: serviceData, isLoading: isServiceLoading } = useSelectData(
+  const { data: teamsData } = useSelectData(apiCommon.getTeams);
+  const { data: serviceData } = useSelectData(
     apiCommon.getCodebookItems,
     '서비스',
   );
 
-  // SFA 옵션 목록 생성
+  // 옵션 데이터 가공
   const sfaOptions = [
     { value: '', label: '선택하세요' },
     ...(sfaData?.data || []).map((sfa) => ({
@@ -64,7 +45,6 @@ const ProjectAddBaseForm = ({
     })),
   ];
 
-  // 팀 옵션 목록 생성
   const teamOptions = [
     { id: '', name: '선택하세요' },
     ...(teamsData?.data || []).map((team) => ({
@@ -74,7 +54,6 @@ const ProjectAddBaseForm = ({
     })),
   ];
 
-  // 서비스 옵션 목록 생성 (코드북 아이템 특수 구조 처리)
   const serviceOptions = [
     { id: '', name: '선택하세요' },
     ...(serviceData?.data?.[0]?.structure || []).map((item) => ({
@@ -83,13 +62,11 @@ const ProjectAddBaseForm = ({
     })),
   ];
 
-  // 프로젝트 유형 옵션 목록
   const projectTypeOptions = [
     { value: 'revenue', label: '매출' },
     { value: 'investment', label: '투자' },
   ];
 
-  // 작업 유형 옵션 목록
   const workTypeOptions = [
     { value: '', label: '선택하세요' },
     { value: 'project', label: '프로젝트' },
@@ -97,67 +74,61 @@ const ProjectAddBaseForm = ({
     { value: 'maintenance', label: '유지보수' },
   ];
 
-  // 프로젝트 신규 등록 시 선택 가능한 상태 목록 (필터링)
   const creatableStatuses = useMemo(() => {
     if (!codebooks?.pjtStatus) return [];
     return codebooks.pjtStatus.filter((status) =>
-      CREATABLE_PROJECT_STATUSES.includes(status.name)
+      CREATABLE_PROJECT_STATUSES.includes(status.name),
     );
   }, [codebooks?.pjtStatus]);
 
   return (
-    <Row gutter={16} className="w-full">
-      <Col span={24} className="space-y-4">
-        {/* 1열: 유형, 고객사, SFA, 프로젝트명 */}
-        <Group direction="horizontal" className="gap-6">
-          <FormItem className="flex-1">
-            <Label required className="text-left">
-              매출유형
-            </Label>
+    <div className="w-full px-2">
+      {/* 12 컬럼 그리드 레이아웃 */}
+      <div className="grid grid-cols-12 gap-x-6 gap-y-6">
+        {/* ================= 섹션 1: 기본 정의 ================= */}
+        <SectionTitle>1. 프로젝트 정의</SectionTitle>
+
+        <div className="col-span-3">
+          <FormItem direction="vertical">
+            <Label required>매출유형</Label>
             <Select
               name="projectType"
               value={formData.projectType || 'revenue'}
               onChange={(e) => {
                 const value = e.target.value;
                 updateField('projectType', value);
-
-                // 투자로 변경시 SFA 필드 초기화
-                if (value === 'investment') {
-                  updateField('sfa', '');
-                }
+                if (value === 'investment') updateField('sfa', '');
               }}
             >
-              {projectTypeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+              {projectTypeOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
                 </option>
               ))}
             </Select>
           </FormItem>
-          <FormItem className="flex-1">
-            <Label required className="text-left">
-              작업 유형
-            </Label>
+        </div>
+
+        <div className="col-span-3">
+          <FormItem direction="vertical">
+            <Label required>작업 유형</Label>
             <Select
               name="workType"
               value={formData.workType || ''}
-              onChange={(e) => {
-                const value = e.target.value;
-                updateField('workType', value);
-              }}
+              onChange={(e) => updateField('workType', e.target.value)}
             >
-              {workTypeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+              {workTypeOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
                 </option>
               ))}
             </Select>
           </FormItem>
+        </div>
 
-          <FormItem className="flex-1">
-            <Label required className="text-left">
-              고객사
-            </Label>
+        <div className="col-span-3">
+          <FormItem direction="vertical">
+            <Label required>고객사</Label>
             <CustomerSearchInput
               onSelect={(customer) => {
                 setSelectedCustomerId(customer.id);
@@ -166,13 +137,12 @@ const ProjectAddBaseForm = ({
               size="small"
             />
           </FormItem>
+        </div>
 
-          <FormItem className="flex-1">
-            <Label
-              required={formData.projectType === 'revenue'}
-              className="text-left"
-            >
-              SFA
+        <div className="col-span-3">
+          <FormItem direction="vertical">
+            <Label required={formData.projectType === 'revenue'}>
+              SFA (매출기회)
             </Label>
             <Select
               name="sfa"
@@ -180,92 +150,119 @@ const ProjectAddBaseForm = ({
               onChange={updateField}
               disabled={formData.projectType === 'investment'}
             >
-              {sfaOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {isSfaLoading && option.value === ''
-                    ? '로딩 중...'
-                    : formData.projectType === 'investment' &&
-                      option.value === ''
-                    ? '투자 프로젝트는 SFA 불필요'
-                    : option.label}
+              {sfaOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {isSfaLoading && opt.value === '' ? '로딩 중...' : opt.label}
                 </option>
               ))}
             </Select>
           </FormItem>
-        </Group>
+        </div>
 
-        {/* 2열: 서비스, 사업부, 상태, 중요도 */}
-        <Group direction="horizontal" className="gap-6">
-          <FormItem className="flex-1">
-            <Label required className="text-left">
-              프로젝트명
-            </Label>
+        {/* ================= 섹션 2: 프로젝트 상세 ================= */}
+        <SectionTitle>2. 프로젝트 상세 정보</SectionTitle>
+
+        {/* 프로젝트명: 6칸 (절반 차지) */}
+        <div className="col-span-6">
+          <FormItem direction="vertical">
+            <Label required>프로젝트명</Label>
             <Input
               name="name"
               value={formData.name || ''}
               onChange={updateField}
+              placeholder="예: 이노파이브 프로젝트 관리 시스템 구축"
+              className="font-medium"
             />
           </FormItem>
-          <FormItem className="flex-1">
-            <Label required className="text-left">
-              서비스
-            </Label>
+        </div>
+
+        <div className="col-span-2">
+          <FormItem direction="vertical">
+            <Label required>사업년도</Label>
             <Select
-              name="service"
-              value={formData.service?.id || ''}
+              name="fy"
+              value={formData.fy?.id}
               onChange={(e) => {
-                const selectedId = e.target.value;
-                const selectedItem = serviceOptions?.find(
-                  (item) =>
-                    item.id === selectedId || item.id === Number(selectedId),
+                const val = e.target.value;
+                updateField(
+                  'fy',
+                  codebooks?.fy?.find((i) => i.id == val),
                 );
-                updateField('service', selectedItem);
               }}
             >
-              {serviceOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.name}
+              <option value="">선택</option>
+              {codebooks?.fy?.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
                 </option>
               ))}
             </Select>
           </FormItem>
+        </div>
 
-          <FormItem className="flex-1">
-            <Label required className="text-left">
-              사업부
-            </Label>
+        <div className="col-span-2">
+          <FormItem direction="vertical">
+            <Label required>사업부</Label>
             <Select
               name="team"
               value={formData.team?.id || ''}
               onChange={(e) => {
-                const selectedId = e.target.value;
-                const selectedItem = teamOptions?.find(
-                  (item) =>
-                    item.id === selectedId || item.id === Number(selectedId),
+                const val = e.target.value;
+                updateField(
+                  'team',
+                  teamOptions?.find((i) => i.id == val),
                 );
-                updateField('team', selectedItem);
               }}
             >
-              {teamOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.name}
+              {teamOptions.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.name}
                 </option>
               ))}
             </Select>
           </FormItem>
+        </div>
 
-          <FormItem className="flex-1">
-            <Label className="text-left">상태</Label>
+        <div className="col-span-2">
+          <FormItem direction="vertical">
+            <Label required>서비스</Label>
+            <Select
+              name="service"
+              value={formData.service?.id || ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                updateField(
+                  'service',
+                  serviceOptions?.find((i) => i.id == val),
+                );
+              }}
+            >
+              {serviceOptions.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.name}
+                </option>
+              ))}
+            </Select>
+          </FormItem>
+        </div>
+
+        {/* ================= 섹션 3: 일정 및 관리 ================= */}
+        <SectionTitle>3. 일정 및 관리</SectionTitle>
+
+        {/* 계획 시작/종료일 제거됨 */}
+
+        <div className="col-span-3">
+          <FormItem direction="vertical">
+            <Label>상태</Label>
             <Select
               name="pjtStatus"
               value={formData.pjtStatus?.id}
               onChange={(e) => {
-                const selectedId = e.target.value;
-                const selectedItem = creatableStatuses?.find(
-                  (item) =>
-                    item.id === selectedId || item.id === Number(selectedId),
+                const val = e.target.value;
+                updateField(
+                  'pjtStatus',
+                  creatableStatuses?.find((i) => i.id == val),
                 );
-                updateField('pjtStatus', selectedItem);
               }}
             >
               {creatableStatuses?.map((item) => (
@@ -275,22 +272,20 @@ const ProjectAddBaseForm = ({
               ))}
             </Select>
           </FormItem>
-        </Group>
+        </div>
 
-        {/* 3열: 사업년도, 계획시작일, 계획종료일 */}
-        <Group direction="horizontal" className="gap-6">
-          <FormItem className="flex-1">
-            <Label className="text-left">중요 도</Label>
+        <div className="col-span-3">
+          <FormItem direction="vertical">
+            <Label>중요도</Label>
             <Select
               name="importanceLevel"
               value={formData.importanceLevel?.id}
               onChange={(e) => {
-                const selectedId = e.target.value;
-                const selectedItem = codebooks?.importanceLevel?.find(
-                  (item) =>
-                    item.id === selectedId || item.id === Number(selectedId),
+                const val = e.target.value;
+                updateField(
+                  'importanceLevel',
+                  codebooks?.importanceLevel?.find((i) => i.id == val),
                 );
-                updateField('importanceLevel', selectedItem);
               }}
             >
               {codebooks?.importanceLevel?.map((item) => (
@@ -300,89 +295,26 @@ const ProjectAddBaseForm = ({
               ))}
             </Select>
           </FormItem>
-          <FormItem className="flex-1">
-            <Label required className="text-left">
-              사업년도
-            </Label>
-            <Select
-              name="fy"
-              value={formData.fy?.id}
-              onChange={(e) => {
-                const selectedId = e.target.value;
-                const selectedItem = codebooks?.fy?.find(
-                  (item) =>
-                    item.id === selectedId || item.id === Number(selectedId),
-                );
-                updateField('fy', selectedItem);
-              }}
-            >
-              <option value="">선택하세요</option>
-              {codebooks?.fy?.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
-          </FormItem>
-          <FormItem className="flex-1">
-            <Label required className="text-left">
-              계획 시작일
-            </Label>
-            <Input
-              type="date"
-              name="planStartDate"
-              value={formData?.planStartDate || ''}
-              onChange={updateField}
-            />
-          </FormItem>
+        </div>
 
-          <FormItem className="flex-1">
-            <Label required className="text-left">
-              계획 종료일
-            </Label>
-            <Input
-              type="date"
-              name="planEndDate"
-              value={formData?.planEndDate || ''}
-              onChange={updateField}
-            />
-          </FormItem>
-        </Group>
+        <div className="col-span-6"></div>
 
-        {/* 4열: 비고 */}
-        <Group direction="horizontal" className="gap-6">
-          <FormItem className="flex-1">
-            <Label className="text-left">템플릿</Label>
-            <Select
-              name="template"
-              value={formData.templateId || ''}
-              onChange={(e) => {
-                const value = e.target.value;
-                updateField('templateId', value);
-                handleTemplateSelect(value);
-              }}
-              disabled={false}
-            >
-              {templeteOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </Select>
-          </FormItem>
-          <FormItem className="flex-1">
-            <Label className="text-left">비고</Label>
+        {/* ================= 섹션 4: 기타 설정 ================= */}
+        <SectionTitle>4. 기타 설정</SectionTitle>
+
+        <div className="col-span-12">
+          <FormItem direction="vertical">
+            <Label>비고</Label>
             <Input
               name="remarks"
               value={formData.remarks || ''}
               onChange={updateField}
+              placeholder="프로젝트 관련 특이사항이나 메모를 입력하세요."
             />
           </FormItem>
-          <FormItem className="flex-1"></FormItem>
-          <FormItem className="flex-1"></FormItem>
-        </Group>
-      </Col>
-    </Row>
+        </div>
+      </div>
+    </div>
   );
 };
 

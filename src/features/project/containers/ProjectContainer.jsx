@@ -17,7 +17,7 @@ import TeamWeeklyUtilizationLayout from '../layouts/TeamWeeklyUtilizationLayout'
 // Components
 import ProjectDrawer from '../components/drawer/ProjectDrawer';
 import ProjectDetailDrawer from '../components/drawer/ProjectDetailDrawer';
-import ProjectAddDrawer from '../components/drawer/ProjectAddDrawer';
+import ProjectRegistrationDrawer from '../components/registration/ProjectRegistrationDrawer';
 
 /**
  * Project 메인 컨테이너 컴포넌트
@@ -77,7 +77,7 @@ const ProjectContainer = () => {
 
       {/* 프로젝트 추가 Drawer (add 모드일 때만) */}
       {drawer.visible && drawer.mode === 'add' && (
-        <ProjectAddDrawer
+        <ProjectRegistrationDrawer
           visible={drawer.visible}
           onClose={() => uiActions.drawer.close()}
         />
