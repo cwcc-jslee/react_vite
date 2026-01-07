@@ -72,6 +72,26 @@ export const projectApiService = {
   },
 
   /**
+   * SFA ID로 연계된 프로젝트 목록 조회
+   * @param {number} sfaId - SFA ID
+   */
+  getProjectsBySfaId: async (sfaId) => {
+    try {
+      const query = buildProjectListQuery({
+        filters: {
+          sfa: { id: { $eq: sfaId } },
+        },
+        pagination: { current: 1, pageSize: 100 },
+      });
+      const response = await apiClientV2.get(`/projects?${query}`);
+
+      return normalizeResponse(response);
+    } catch (error) {
+      handleApiError(error, '연계 프로젝트 목록을 불러오는 중 오류가 발생했습니다.');
+    }
+  },
+
+  /**
    * 프로젝트 상세 조회
    * @param {Object} id - 검색 파라미터
    */

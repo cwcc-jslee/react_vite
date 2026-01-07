@@ -11,14 +11,19 @@ import { X } from 'lucide-react';
 import { Drawer, useDrawer, DRAWER_SIZES } from '@shared/components/drawer';
 import { useSfaStore } from '../../hooks/useSfaStore.js';
 import { sfaSubmitService } from '../../services/sfaSubmitService.js';
+import { useQuery } from '@tanstack/react-query';
+import { projectApiService } from '@features/project/services/projectApiService.js';
+import { useProjectStore } from '@features/project/hooks/useProjectStore.js';
 
 // 섹션 컴포넌트 import
 import DrawerActionsMenu from './sections/DrawerActionsMenu.jsx';
 import BasicInfoSection from './sections/BasicInfoSection.jsx';
 import PaymentListSection from './sections/PaymentListSection.jsx';
+import ProjectRelationSection from './sections/ProjectRelationSection.jsx';
 import PaymentEditDrawer from './PaymentEditDrawer.jsx';
 import TeamSalesEditDrawer from './TeamSalesEditDrawer.jsx';
 import RevenueSummaryCard from '../cards/RevenueSummaryCard.jsx';
+import { CircleDollarSign, Briefcase } from 'lucide-react';
 
 const SfaViewDrawer = React.memo(
   ({ drawer }) => {
@@ -30,10 +35,36 @@ const SfaViewDrawer = React.memo(
     const sfaDetail = useSelector((state) => state.sfa.sfaDetail);
 
     // 화면에 표시할 데이터 결정 (Store 데이터 우선 사용)
-    // 단, Store 데이터가 현재 보고 있는 문서와 일치하는지 확인 (ID 비교)
     const data = (sfaDetail && initialData && String(sfaDetail.id) === String(initialData.id)) 
       ? sfaDetail 
       : initialData;
+
+    // 프로젝트 상세 조회를 위한 ProjectStore 액션
+    const { actions: projectActions } = useProjectStore();
+
+    // ==================== 탭 상태 관리 ====================
+    const [activeTab, setActiveTab] = React.useState('payment'); // 'payment' | 'project'
+
+    // ==================== 연계 프로젝트 데이터 조회 (Lazy Loading) ====================
+    const { 
+      data: projectsData, 
+      isLoading: isProjectsLoading,
+      error: projectsError 
+    } = useQuery({
+      queryKey: ['projects', 'sfa', data?.id],
+      queryFn: () => projectApiService.getProjectsBySfaId(data?.id),
+      enabled: !!data?.id && data?.isProject && activeTab === 'project',
+      staleTime: 1000 * 60 * 5, // 5분
+    });
+
+    const projects = projectsData?.data || [];
+
+    // 프로젝트 여부에 따른 탭 제어
+    React.useEffect(() => {
+      if (!data?.isProject && activeTab === 'project') {
+        setActiveTab('payment');
+      }
+    }, [data?.isProject, activeTab]);
 
     // ==================== 섹션별 편집 상태 관리 ====================
     const [editingSection, setEditingSection] = React.useState(null); // 'base' | null
@@ -136,6 +167,9 @@ const SfaViewDrawer = React.memo(
 
     // ==================== 결제매출 편집 핸들러 (헤더 메뉴용) ====================
     const handleStartAddPayment = () => {
+      // 탭 전환 (결제매출 탭으로)
+      setActiveTab('payment');
+
       // 기본정보 편집 중이면 경고
       if (editingSection === 'base') {
         const shouldContinue = window.confirm(
@@ -163,6 +197,8 @@ const SfaViewDrawer = React.memo(
     };
 
     const handleStartEditPayment = () => {
+      setActiveTab('payment');
+      
       // 기본정보 편집 중이면 경고
       if (editingSection === 'base') {
         const shouldContinue = window.confirm(
@@ -177,6 +213,8 @@ const SfaViewDrawer = React.memo(
     };
 
     const handleStartDeletePayment = () => {
+      setActiveTab('payment');
+
       // 기본정보 편집 중이면 경고
       if (editingSection === 'base') {
         const shouldContinue = window.confirm(
@@ -196,6 +234,25 @@ const SfaViewDrawer = React.memo(
       // view 모드로 돌아갈 때 초안 초기화
       if (newMode === 'view') {
         sfaActions.form.updateField('sfaDraftPayments', []);
+      }
+    };
+
+    // ==================== 프로젝트 연동 핸들러 ====================
+    const handleConnectProject = () => {
+      alert('프로젝트 연결 기능 준비중입니다.');
+    };
+
+    const handleCreateProject = () => {
+      alert('프로젝트 생성 기능 준비중입니다.');
+    };
+
+    // 프로젝트 상세 보기 핸들러 (디버깅용 로그 추가)
+    const handleViewProjectDetail = (projectId) => {
+      console.log('🖱️ [SfaViewDrawer] 프로젝트 상세 보기 클릭:', projectId);
+      if (projectId) {
+        projectActions.detail.fetchDetailForDrawer(projectId);
+      } else {
+        console.warn('⚠️ [SfaViewDrawer] 유효하지 않은 프로젝트 ID:', projectId);
       }
     };
 
@@ -331,8 +388,8 @@ const SfaViewDrawer = React.memo(
           />
         }
       >
-        <div className="space-y-8">
-          {/* 기본 정보 섹션 */}
+        <div className="space-y-6">
+          {/* 1. 기본 정보 섹션 (고정) */}
           <BasicInfoSection
             data={data}
             isEditing={editingSection === 'base'}
@@ -343,25 +400,90 @@ const SfaViewDrawer = React.memo(
             showBox={false}
           />
 
-          {/* 매출정보 요약 카드 */}
+          {/* 2. 매출정보 요약 카드 (고정) */}
           <RevenueSummaryCard
             sfaByPayments={data?.sfaByPayments || []}
             sfaByItems={data?.sfaByItems || []}
           />
 
-          {/* 섹션 구분선 */}
-          <div className="border-t-2 border-gray-200" />
+          {/* 3. 탭 메뉴 (Tab Menu) */}
+          <div className="border-b border-gray-200">
+            <div className="flex items-center -mb-px space-x-6">
+              <button
+                onClick={() => setActiveTab('payment')}
+                className={`
+                  flex items-center gap-2 pb-3 px-1 border-b-2 text-sm font-medium transition-colors
+                  ${activeTab === 'payment'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }
+                `}
+              >
+                <CircleDollarSign className="h-4 w-4" />
+                결제매출
+                <span className={`
+                  ml-1 py-0.5 px-2 rounded-full text-xs
+                  ${activeTab === 'payment' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}
+                `}>
+                  {data?.sfaByPayments?.length || 0}
+                </span>
+              </button>
 
-          {/* 결제매출 내역 섹션 */}
-          <PaymentListSection
-            data={data}
-            mode={paymentMode}
-            onModeChange={handlePaymentModeChange}
-            onOpenPaymentDrawer={openPaymentDrawer}
-            editingPaymentId={editingPaymentId}
-            setEditingPaymentId={setEditingPaymentId}
-            showBox={false}
-          />
+              <button
+                onClick={() => {
+                  if (data?.isProject) {
+                    setActiveTab('project');
+                  }
+                }}
+                disabled={!data?.isProject}
+                className={`
+                  flex items-center gap-2 pb-3 px-1 border-b-2 text-sm font-medium transition-colors
+                  ${!data?.isProject ? 'cursor-not-allowed opacity-40 border-transparent text-gray-400' : 
+                    activeTab === 'project'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }
+                `}
+                title={!data?.isProject ? '프로젝트 여부가 YES인 경우에만 활성화됩니다.' : ''}
+              >
+                <Briefcase className="h-4 w-4" />
+                연계 프로젝트
+                {data?.isProject && (
+                  <span className={`
+                    ml-1 py-0.5 px-2 rounded-full text-xs
+                    ${activeTab === 'project' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}
+                  `}>
+                    {data?.projects?.length || projects.length || 0}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* 4. 상세 컨텐츠 영역 (가변) */}
+          <div className="min-h-[300px]">
+            {activeTab === 'payment' ? (
+              <PaymentListSection
+                data={data}
+                mode={paymentMode}
+                onModeChange={handlePaymentModeChange}
+                onOpenPaymentDrawer={openPaymentDrawer}
+                editingPaymentId={editingPaymentId}
+                setEditingPaymentId={setEditingPaymentId}
+                showBox={false}
+              />
+            ) : (
+              <ProjectRelationSection
+                data={data}
+                projects={projects}
+                isLoading={isProjectsLoading}
+                error={projectsError}
+                onViewDetail={handleViewProjectDetail}
+                onCreateProject={handleCreateProject}
+                showBox={false}
+              />
+            )}
+          </div>
         </div>
 
         {/* 결제매출 추가/수정 Drawer */}

@@ -1,7 +1,7 @@
 // src/features/sfa/components/filters/QuickDateFilter.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useSfaStore } from '../../hooks/useSfaStore';
-import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import dayjs from 'dayjs';
 
 /**
@@ -23,7 +23,8 @@ const QuickDateFilter = ({
   annualBaseDate,
   onAnnualDateChange,
   duration = 12,
-  onDurationChange
+  onDurationChange,
+  onDownload
 }) => {
   const { filters, actions } = useSfaStore();
   const [showMonthPicker, setShowMonthPicker] = useState(false);
@@ -238,6 +239,17 @@ const QuickDateFilter = ({
 
         {/* 오른쪽: 뷰 모드 전환 버튼 및 기간 선택 드롭다운 */}
         <div className="flex items-center gap-1">
+          {/* 엑셀 다운로드 버튼 (추가) */}
+          {onDownload && (
+            <button
+              onClick={onDownload}
+              className="w-8 h-8 rounded border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 flex items-center justify-center transition-all"
+              title="엑셀 다운로드"
+            >
+              <Download size={16} />
+            </button>
+          )}
+
           {/* 1. 현황 관련 (독립 버튼 또는 개월 드롭다운) */}
           {onViewModeChange && (
             <>

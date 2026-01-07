@@ -213,6 +213,9 @@ export const buildSfaDetailQuery = (id) => {
         sfa_sales_type: {
           fields: ['name'],
         },
+        projects: {
+          fields: ['id'],
+        },
         sfa_by_payments: {
           filters: {
             is_deleted: {
