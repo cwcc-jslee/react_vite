@@ -1,4 +1,4 @@
-// src/features/project/components/ui/KanbanColumn.jsx
+// src/features/project/components/card/KanbanColumn.jsx
 // 칸반 보드의 개별 컬럼(버킷)을 표현하는 컴포넌트
 // 버킷 제목 편집, 작업 관리, 컬럼 이동 및 삭제 기능을 제공합니다
 
@@ -19,7 +19,6 @@ import ConfirmDialog from './ConfirmDialog';
 
 /**
  * 칸반 컬럼 컴포넌트
- *
  */
 const KanbanColumn = ({
   bucket,
@@ -30,7 +29,7 @@ const KanbanColumn = ({
   handleEditChange,
   saveEdit,
   cancelEdit,
-  onAddTask,
+  onAddTaskClick, // 변경: 직접 추가 대신 클릭 핸들러 받음
   startEditing,
   toggleTaskCompletion,
   toggleCompletedSection,
@@ -56,10 +55,10 @@ const KanbanColumn = ({
 
   // 작업을 완료된 것과 진행 중인 것으로 분류
   const completedTasks = bucket.tasks.filter(
-    (task) => task.pjt_progress === '100',
+    (task) => task.taskProgress?.code === '100' || task.pjt_progress === '100',
   );
   const pendingTasks = bucket.tasks.filter(
-    (task) => task.pjt_progress !== '100',
+    (task) => task.taskProgress?.code !== '100' && task.pjt_progress !== '100',
   );
 
   // 메뉴 외부 클릭 시 닫기
@@ -76,15 +75,11 @@ const KanbanColumn = ({
     };
   }, []);
 
-  // 작업 추가 버튼 클릭 핸들러
+  // 작업 추가 버튼 클릭 핸들러 (UX 개선: 모달 열기)
   const handleAddTaskClick = () => {
-    const newTask = {
-      name: '새 작업',
-      isScheduled: true,
-      isProgress: true,
-    };
-
-    onAddTask(bucketIndex, newTask);
+    if (onAddTaskClick) {
+      onAddTaskClick(bucketIndex);
+    }
   };
 
   // 컬럼 이동 핸들러
@@ -126,15 +121,15 @@ const KanbanColumn = ({
                 />
               ) : (
                 <h2
-                  className="font-semibold text-zinc-800 mb-3 pl-1 cursor-pointer hover:text-indigo-700 flex-grow"
-                  // onClick={() => startEditingColumnTitle(bucketIndex)}
+                  className="font-semibold text-zinc-800 mb-3 pl-1 cursor-pointer hover:text-indigo-700 flex-grow truncate"
+                  title={bucket.bucket}
                 >
                   {bucket.bucket}
                 </h2>
               )}
 
               {/* 메뉴 버튼 - 호버 시에만 표시 */}
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-0 top-0">
                 <button
                   className="p-1 text-gray-500 hover:text-gray-700 focus:outline-none rounded-full hover:bg-gray-100"
                   onClick={() => setMenuOpen(!menuOpen)}
@@ -174,25 +169,23 @@ const KanbanColumn = ({
                       삭제
                     </button>
 
-                    {/* 왼쪽으로 이동 버튼 (첫 번째 컬럼이 아닐 때만 표시) */}
                     {bucketIndex > 0 && (
                       <button
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                         onClick={() => handleMoveColumn('left')}
                       >
                         <FiArrowLeft className="mr-2" size={14} />
-                        왼쪽으로 이동
+                        이동 (좌)
                       </button>
                     )}
 
-                    {/* 오른쪽으로 이동 버튼 (마지막 컬럼이 아닐 때만 표시) */}
                     {bucketIndex < totalColumns - 1 && (
                       <button
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                         onClick={() => handleMoveColumn('right')}
                       >
                         <FiArrowRight className="mr-2" size={14} />
-                        오른쪽으로 이동
+                        이동 (우)
                       </button>
                     )}
                   </>
@@ -201,27 +194,25 @@ const KanbanColumn = ({
             )}
 
             {/* 작업 추가 버튼 */}
-            <div className="p-2">
+            <div className="p-1 mt-1">
               <button
-                className={`w-full h-10 flex items-center justify-center ${
+                className={`w-full h-8 flex items-center justify-center ${
                   isSingleWorkType
                     ? 'text-gray-500 border-gray-300 cursor-not-allowed'
-                    : 'text-indigo-600 border-indigo-600'
-                } border-2 rounded-sm text-sm`}
+                    : 'text-indigo-600 border-indigo-600 hover:bg-indigo-50'
+                } border rounded-sm text-xs transition-colors`}
                 onClick={handleAddTaskClick}
                 disabled={isSingleWorkType}
               >
-                <FiPlus className="mr-2" size={18} />
-                <span>작업 추가</span>
+                <FiPlus className="mr-1" size={14} />
+                작업 추가
               </button>
             </div>
           </div>
 
-          {/* 작업 카드 목록 - 스크롤 가능하도록 수정 */}
-          <div className="flex-grow overflow-y-auto px-3 py-2 kanban-column-content">
-            {/* 진행 중인 작업 목록 */}
+          {/* 작업 카드 목록 */}
+          <div className="flex-grow overflow-y-auto px-2 py-2 kanban-column-content space-y-2">
             {pendingTasks.map((task, taskIndex) => {
-              // 실제 전체 tasks 배열에서의 인덱스 계산
               const actualIndex = bucket.tasks.findIndex((t) => t === task);
               return (
                 <TaskCard
@@ -242,12 +233,11 @@ const KanbanColumn = ({
               );
             })}
 
-            {/* 완료된 작업이 있는 경우 완료됨 섹션 표시 */}
+            {/* 완료된 작업 섹션 */}
             {completedTasks.length > 0 && (
-              <div className="mt-4 bg-gray-50 rounded-md">
-                {/* 완료됨 섹션 헤더 */}
+              <div className="mt-4 pt-2 border-t border-gray-200">
                 <div
-                  className="flex items-center py-2 px-3 cursor-pointer text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md"
+                  className="flex items-center py-1 px-1 cursor-pointer text-gray-500 hover:text-gray-700 rounded-sm"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -255,20 +245,18 @@ const KanbanColumn = ({
                   }}
                 >
                   {completedExpanded ? (
-                    <FiChevronUp className="mr-2" size={16} />
+                    <FiChevronUp className="mr-1" size={14} />
                   ) : (
-                    <FiChevronDown className="mr-2" size={16} />
+                    <FiChevronDown className="mr-1" size={14} />
                   )}
-                  <span className="text-sm font-medium">
+                  <span className="text-xs font-medium">
                     완료됨 ({completedTasks.length})
                   </span>
                 </div>
 
-                {/* 완료된 작업 목록 (펼쳐진 경우에만 표시) */}
                 {completedExpanded && (
-                  <div className="mt-1 pb-2">
+                  <div className="mt-1 space-y-2">
                     {completedTasks.map((task, taskIndex) => {
-                      // 실제 전체 tasks 배열에서의 인덱스 계산
                       const actualIndex = bucket.tasks.findIndex(
                         (t) => t === task,
                       );
@@ -302,7 +290,7 @@ const KanbanColumn = ({
       {showDeleteDialog && (
         <ConfirmDialog
           title="버킷 삭제"
-          message={`"${bucket.bucket}" 버킷과 모든 작업을 삭제하시겠습니까?`}
+          message={`"${bucket.bucket}" 버킷을 삭제하시겠습니까?`}
           confirmLabel="삭제"
           cancelLabel="취소"
           icon={<FiAlertTriangle className="text-red-500" size={24} />}

@@ -1,5 +1,5 @@
 // src/features/project/components/registration/TaskPlanningBoard.jsx
-// 프로젝트 태스크 관리를 위한 칸반보드 섹션 (툴바 개선: 프로젝트 유형별 공수 검증 로직 적용)
+// 프로젝트 태스크 관리를 위한 칸반보드 섹션 (리팩토링: 중첩 Drawer 적용)
 
 import React, { useState, useMemo } from 'react';
 import { FiPlus, FiCalendar, FiLayout, FiClock, FiAlertCircle, FiCheckCircle, FiTrendingUp } from 'react-icons/fi';
@@ -8,22 +8,21 @@ import { projectApiService } from '../../services/projectApiService';
 
 // Hooks
 import { useCodebook } from '@shared/hooks/useCodebook';
-import useModal from '@shared/hooks/useModal';
 import useProjectTask from '../../hooks/useProjectTask';
 import useSelectData from '@shared/hooks/useSelectData';
 import { useProjectForm } from '../../hooks/useProjectForm';
 
 // Utils
-import { validateProjectTaskForm } from '../../utils/validateProjectForm'; // 유효성 검사 함수 추가
+import { validateProjectTaskForm } from '../../utils/validateProjectForm';
 
 // Components
 import KanbanColumn from '../card/KanbanColumn';
-import ModalRenderer from '@shared/components/ui/modal/ModalRenderer';
-import ProjectTaskForm from '../forms/ProjectTaskForm';
-import { Select, Input, Tooltip, Button } from '@shared/components/ui';
+import TaskDetailDrawer from './TaskDetailDrawer'; // 신규 드로어 컴포넌트
+import { Select, Input, Tooltip } from '@shared/components/ui';
 import { notification } from '@shared/services/notification';
+// import useModal from '@shared/hooks/useModal'; // 제거됨
 
-const TaskPlanningBoard = ({ onBack, onNext, isStepperMode = false }) => {
+const TaskPlanningBoard = () => {
   const { formData, updateField } = useProjectForm();
   const isSingleWorkType = formData?.workType === 'single';
 
@@ -35,11 +34,19 @@ const TaskPlanningBoard = ({ onBack, onNext, isStepperMode = false }) => {
   } = useProjectTask();
 
   const { data: codebooks } = useCodebook(['priorityLevel', 'taskProgress']);
-  const { modalState, openModal, closeModal, handleConfirm } = useModal();
   const { data: usersData } = useSelectData(apiCommon.getUsers);
-  
   const { data: taskTempleteData } = useSelectData(projectApiService.getTaskTemplate);
+  
   const [selectedTemplate, setSelectedTemplate] = useState('');
+
+  // 드로어 상태 관리 (모달 대체)
+  const [taskDrawer, setTaskDrawer] = useState({
+    visible: false,
+    mode: 'add', // 'add' | 'edit'
+    task: null,
+    bucketIndex: -1,
+    taskIndex: -1,
+  });
 
   // 총 계획 시간 계산
   const totalPlannedHours = useMemo(() => {
@@ -51,7 +58,7 @@ const TaskPlanningBoard = ({ onBack, onNext, isStepperMode = false }) => {
     }, 0);
   }, [buckets]);
 
-  // ==================== 가용 공수 검증 로직 ====================
+  // 가용 공수 검증 로직
   const projectType = formData.projectType || 'revenue';
   const hasSfa = !!formData.sfa;
   const sfaBudgetHours = 120; 
@@ -79,7 +86,6 @@ const TaskPlanningBoard = ({ onBack, onNext, isStepperMode = false }) => {
     isOverBudget = totalPlannedHours > sfaBudgetHours;
     statusColor = isOverBudget ? 'bg-red-600' : 'bg-indigo-900';
   }
-  // =============================================================
 
   const handleAddColumnClick = () => {
     addColumn({ bucket: '새 버킷', tasks: [] });
@@ -105,19 +111,47 @@ const TaskPlanningBoard = ({ onBack, onNext, isStepperMode = false }) => {
     }
   };
 
-  const handleOpenTaskEditModal = (task, bucketIndex, taskIndex) => {
-    openModal(
-      'custom', '작업 등록',
-      <ProjectTaskForm
-        task={task} codebooks={codebooks} usersData={usersData}
-        onSave={(updatedTask) => {
-          updateTask(bucketIndex, taskIndex, updatedTask);
-          closeModal();
-        }}
-        onCancel={closeModal}
-      />,
-      null, null, null, { size: 'xl' }
-    );
+  /**
+   * 작업 드로어 열기 (추가/수정 통합)
+   */
+  const openTaskDrawer = (mode, bucketIndex, task = null, taskIndex = -1) => {
+    let targetTask = task;
+
+    // 추가 모드일 경우 초기값 설정
+    if (mode === 'add') {
+      targetTask = {
+        name: '',
+        isScheduled: true,
+        isProgress: true,
+        planStartDate: formData.planStartDate || '',
+        planEndDate: formData.planEndDate || '',
+        planningTimeData: {
+          personnelCount: 1,
+          allocationRate: 1.0,
+          workDays: 1,
+        }
+      };
+    }
+
+    setTaskDrawer({
+      visible: true,
+      mode,
+      task: targetTask,
+      bucketIndex,
+      taskIndex,
+    });
+  };
+
+  const closeTaskDrawer = () => {
+    setTaskDrawer((prev) => ({ ...prev, visible: false }));
+  };
+
+  const handleTaskSave = (updatedTask) => {
+    if (taskDrawer.mode === 'add') {
+      addTask(taskDrawer.bucketIndex, updatedTask);
+    } else {
+      updateTask(taskDrawer.bucketIndex, taskDrawer.taskIndex, updatedTask);
+    }
   };
 
   const templeteOptions = [
@@ -127,32 +161,6 @@ const TaskPlanningBoard = ({ onBack, onNext, isStepperMode = false }) => {
       label: item?.name || '이름 없음',
     })),
   ];
-
-  /**
-   * 다음 단계(검증)로 이동 핸들러 (유효성 검사 추가)
-   */
-  const handleNextStep = () => {
-    // 1. 프로젝트 일정 체크
-    if (!formData.planStartDate || !formData.planEndDate) {
-      notification.warning({ message: '프로젝트 전체 일정(시작일/종료일)을 설정해주세요.' });
-      return;
-    }
-    
-    // 2. 태스크 유효성 검사
-    const { isValid, errors } = validateProjectTaskForm(buckets);
-
-    if (!isValid) {
-      // 첫 번째 에러 메시지 표시
-      const errorMessage = errors[0] || '작업 계획에 문제가 있습니다.';
-      notification.error({ 
-        message: '유효성 검사 실패', 
-        description: errorMessage 
-      });
-      return;
-    }
-
-    if (onNext) onNext();
-  };
 
   return (
     <div className="flex flex-col h-full bg-white rounded-md relative overflow-hidden">
@@ -209,7 +217,6 @@ const TaskPlanningBoard = ({ onBack, onNext, isStepperMode = false }) => {
           ${statusColor} rounded-lg shadow-md px-4 py-2 flex flex-col justify-center relative overflow-hidden group
           transition-colors duration-300
         `}>
-          {/* 배경 아이콘 */}
           <div className="absolute -right-2 -bottom-2 p-2 opacity-10 text-white">
             <FiClock size={50} />
           </div>
@@ -262,10 +269,14 @@ const TaskPlanningBoard = ({ onBack, onNext, isStepperMode = false }) => {
               key={index} bucket={bucket} bucketIndex={index} totalColumns={buckets.length}
               startEditingColumnTitle={startEditingColumnTitle} editState={editState}
               handleEditChange={handleEditChange} saveEdit={saveEdit} cancelEdit={cancelEdit}
-              onAddTask={addTask} startEditing={startEditing}
+              startEditing={startEditing}
               toggleTaskCompletion={toggleTaskCompletion} toggleCompletedSection={toggleCompletedSection}
               deleteTask={deleteTask} deleteColumn={deleteColumn} moveColumn={moveColumn}
-              onOpenTaskEditModal={handleOpenTaskEditModal} isSingleWorkType={isSingleWorkType}
+              
+              // UX 변경: 드로어 오픈 핸들러 전달
+              onAddTaskClick={() => openTaskDrawer('add', index)} 
+              onOpenTaskEditModal={(task, bIdx, tIdx) => openTaskDrawer('edit', bIdx, task, tIdx)} 
+              isSingleWorkType={isSingleWorkType}
             />
           ))}
 
@@ -285,7 +296,16 @@ const TaskPlanningBoard = ({ onBack, onNext, isStepperMode = false }) => {
         </div>
       </div>
 
-      <ModalRenderer modalState={modalState} closeModal={closeModal} handleConfirm={handleConfirm} />
+      {/* 중첩 Drawer (작업 상세) */}
+      <TaskDetailDrawer 
+        visible={taskDrawer.visible}
+        mode={taskDrawer.mode}
+        task={taskDrawer.task}
+        onClose={closeTaskDrawer}
+        onSave={handleTaskSave}
+        codebooks={codebooks}
+        usersData={usersData}
+      />
     </div>
   );
 };

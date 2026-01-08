@@ -176,14 +176,14 @@ const ProjectRegistrationDrawer = ({ visible, onClose }) => {
           </div>
 
           {/* Right: Navigation Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             {currentStep > 1 && (
               <Button 
                 variant="outline" 
                 size="md" 
                 onClick={handleBack} 
                 disabled={isSubmitting}
-                className="bg-white border-gray-300 font-bold"
+                className="bg-white border-gray-300 font-bold whitespace-nowrap"
               >
                 이전 단계
               </Button>
@@ -195,9 +195,11 @@ const ProjectRegistrationDrawer = ({ visible, onClose }) => {
                 size="md" 
                 onClick={handleNext} 
                 disabled={currentStep === 1 && !isRequiredFieldsFilled}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md font-bold px-6"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md font-bold px-6 min-w-[120px]"
               >
-                다음 단계 <FiArrowRight className="ml-2" />
+                <div className="flex items-center justify-center whitespace-nowrap">
+                  <span>다음 단계</span> <FiArrowRight className="ml-2" />
+                </div>
               </Button>
             ) : (
               <Button 
@@ -205,7 +207,7 @@ const ProjectRegistrationDrawer = ({ visible, onClose }) => {
                 size="md" 
                 onClick={handleFinalSubmit} 
                 loading={isSubmitting}
-                className="bg-green-600 hover:bg-green-700 text-white shadow-md font-bold px-8"
+                className="bg-green-600 hover:bg-green-700 text-white shadow-md font-bold px-8 whitespace-nowrap"
               >
                 <FiCheck className="mr-2" /> 최종 승인 등록
               </Button>
