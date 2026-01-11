@@ -14,6 +14,7 @@ import { useProjectForm } from '../../hooks/useProjectForm';
 
 // Utils
 import { validateProjectTaskForm } from '../../utils/validateProjectForm';
+import { PROJECT_COST_CONSTANTS } from '../../constants/projectCostConstants';
 
 // Components
 import KanbanColumn from '../card/KanbanColumn';
@@ -61,7 +62,12 @@ const TaskPlanningBoard = () => {
   // 가용 공수 검증 로직
   const projectType = formData.projectType || 'revenue';
   const hasSfa = !!formData.sfa;
-  const sfaBudgetHours = 120; 
+  
+  // 매출 이익 기반 가용 공수 계산 (기본값 0)
+  const sfaBudgetHours = useMemo(() => {
+    const profit = Number(formData.revenueProfit) || 0;
+    return Math.floor(profit / PROJECT_COST_CONSTANTS.STANDARD_HOURLY_RATE);
+  }, [formData.revenueProfit]);
 
   let budgetDisplay = '-';
   let budgetLabel = '가용 공수';

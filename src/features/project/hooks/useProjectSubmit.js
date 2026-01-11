@@ -48,8 +48,8 @@ export const useProjectSubmit = () => {
     // 깊은 복사로 원본 데이터 유지
     const clonedData = JSON.parse(JSON.stringify(data));
 
-    // 불필요한 임시 필드 제거
-    const { __temp, ...cleanData } = clonedData;
+    // 불필요한 임시 필드 및 참고용 데이터 제거
+    const { __temp, revenueAmount, revenueProfit, ...cleanData } = clonedData;
 
     // null이나 빈 문자열인 경우 해당 키 삭제
     Object.keys(cleanData).forEach((key) => {

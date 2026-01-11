@@ -20,14 +20,16 @@ import {
 import { useProjectForm } from '../../hooks/useProjectForm';
 import useProjectTask from '../../hooks/useProjectTask';
 import { Card, Badge } from '@shared/components/ui';
+import { PROJECT_COST_CONSTANTS } from '../../constants/projectCostConstants';
 
 const TaskVerificationStep = () => {
   const { formData } = useProjectForm();
   const { buckets } = useProjectTask();
 
-  // [Mock Data] 향후 실제 연동 시 formData.sfa 정보를 통해 계산될 값들
-  const budgetHours = 120; // 가용 공수
-  const revenueProfit = 10000000; // 매출 이익 (1,000만원)
+  // 1단계에서 선택된 매출 이익 정보 사용
+  const revenueProfit = Number(formData.revenueProfit) || 0;
+  // 가용 공수 자동 계산
+  const budgetHours = Math.floor(revenueProfit / PROJECT_COST_CONSTANTS.STANDARD_HOURLY_RATE);
 
   // 통계 계산
   const totalBuckets = buckets.length;

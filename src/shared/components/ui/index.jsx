@@ -817,3 +817,5 @@ export {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from './dropdown/DropdownMenu';
+
+export { default as TableColumnMenu } from './table/TableColumnMenu';

@@ -355,7 +355,9 @@ export const useProjectStore = () => {
 
     // 프로젝트 대시보드 데이터 업데이트
     fetchProjectDashboardData: () => {
-      dispatch(fetchProjectDashboardData());
+      dispatch(fetchProjectDashboardData()).then(() => {
+        dispatch(updateChartFilteredItems());
+      });
     },
 
     // 상세 정보 조회

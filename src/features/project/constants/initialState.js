@@ -1,6 +1,7 @@
 // src/features/project/constants/initialState.js
 // import { getCommonTaskState } from '@/shared/constants/commonState';
 
+import dayjs from 'dayjs';
 import { PROJECT_STATUS_CODES } from './projectStatusConstants';
 
 /**
@@ -8,6 +9,10 @@ import { PROJECT_STATUS_CODES } from './projectStatusConstants';
  * @date 25.04.09
  * @version 1.0.0
  */
+
+// 현재 연도 기반 fy 정보 생성 (예: 2026년 -> { code: '26', name: '26년' })
+const currentYearShort = dayjs().format('YY');
+const currentYearName = `${currentYearShort}년`;
 
 // 필터 기본값 상수 정의
 export const DEFAULT_FILTERS = {
@@ -153,8 +158,8 @@ export const initialState = {
     data: {
       pjtStatus: { id: PROJECT_STATUS_CODES.NOT_STARTED, code: '시작전', name: '시작전' },
       importanceLevel: { id: 121, code: 'medium', name: '중간' },
-      workType: '',
-      fy: { id: 114, code: '25', name: '25년' },
+      workType: 'project',
+      fy: { id: null, code: currentYearShort, name: currentYearName },
     },
     errors: {},
     isSubmitting: false,

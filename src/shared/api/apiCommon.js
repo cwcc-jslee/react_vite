@@ -77,27 +77,45 @@ export const apiCommon = {
   },
 
   /**
-   * 고객사별 SFA 목록을 조회하는 함수
+   * 고객사별 SFA 목록을 조회하는 함수 (당해년도 ±1년 필터링 추가)
    * @param {number} customerId - 고객사 ID
    * @returns {Promise} SFA 데이터 배열
    */
   getSfasByCustomer: async (customerId) => {
+    // 현재 연도 기준 ±1년 code 생성 (예: 2026년 -> ['25', '26', '27'])
+    const currentYear = new Date().getFullYear();
+    const targetCodes = [
+      (currentYear - 1).toString().slice(-2),
+      currentYear.toString().slice(-2),
+      (currentYear + 1).toString().slice(-2),
+    ];
+
     const query = qs.stringify(
       {
         filters: {
-          customer: {
-            id: {
-              $eq: customerId,
+          $and: [
+            {
+              customer: {
+                id: { $eq: customerId },
+              },
             },
-          },
-          is_project: {
-            $eq: true,
-          },
+            {
+              is_project: { $eq: true },
+            },
+            {
+              fy: {
+                code: { $in: targetCodes },
+              },
+            },
+          ],
         },
         fields: ['name'],
         populate: {
           fy: {
             fields: ['code', 'name'],
+          },
+          sfa_by_payments: {
+            fields: ['amount', 'profit_amount', 'team_allocations'],
           },
         },
         sort: ['id:asc'],

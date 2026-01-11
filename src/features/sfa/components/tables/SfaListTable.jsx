@@ -1,17 +1,15 @@
-// src/features/sfa/components/tables/SfaListTable.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useSfaStore } from '../../hooks/useSfaStore';
 import { useUiStore } from '../../../../shared/hooks/useUiStore';
 import { useSfaBulkUpdate } from '../../hooks/useSfaBulkUpdate';
 import { fetchSfaDetail } from '../../../../store/slices/sfaSlice';
-import { Button } from '../../../../shared/components/ui';
+import { useTableColumns } from '../../../../shared/hooks/useTableColumns';
+import { Button, TableColumnMenu } from '../../../../shared/components/ui';
 import { Card } from '../../../../shared/components/ui/card/Card';
 import { StateDisplay } from '../../../../shared/components/ui/state/StateDisplay';
 import { Pagination } from '../../../../shared/components/ui/pagination/Pagination';
-import { formatCustomerDisplay } from '../../utils/displayUtils';
 import { truncateText } from '../../../../shared/utils/textUtils';
-import ColumnToggleMenu from './ColumnToggleMenu';
-import dayjs from 'dayjs';
+import SfaBulkActionMenu from './SfaBulkActionMenu';
 
 const COLUMNS = [
   { key: 'no', title: 'No', align: 'center', essential: true },
@@ -42,6 +40,28 @@ const DEFAULT_VISIBLE_COLUMNS = [
   'date',
   'action',
 ];
+
+/**
+ * 텍스트가 길어질 경우 툴팁을 보여주는 셀 컴포넌트
+ */
+const TooltipCell = ({ text, subText, limit = 10 }) => {
+  const displayText = subText ? `${text} / ${subText}` : text;
+  const isLong = displayText && displayText.length > limit;
+
+  if (!displayText) return '-';
+
+  return (
+    <div className="group relative">
+      <span>{truncateText(displayText, limit)}</span>
+      {isLong && (
+        <div className="invisible group-hover:visible absolute bottom-full left-0 mb-1 z-10 p-2 bg-gray-800 text-white text-sm rounded shadow-lg whitespace-normal max-w-xs break-keep">
+          {text}
+          {subText && <div className="text-gray-300 text-xs mt-1">{subText}</div>}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const TableRow = ({
   item,
@@ -89,62 +109,30 @@ const TableRow = ({
         return item.isConfirmed ? 'YES' : 'NO';
       case 'percentage':
         return item.probability || '-';
-      case 'customer':
-        return item?.revenueSource?.name ? (
-          item?.revenueSource?.name === item?.sfa?.customer?.name ? (
-            <div className="group relative">
-              <span>{truncateText(item.revenueSource.name, 10)}</span>
-              {item.revenueSource.name.length > 10 && (
-                <div className="invisible group-hover:visible absolute bottom-full left-0 mb-1 z-10 p-2 bg-gray-800 text-white text-sm rounded shadow-lg whitespace-normal max-w-xs">
-                  {item.revenueSource.name}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="group relative">
-              <span>
-                {truncateText(
-                  `${item.revenueSource.name} / ${item.sfa.customer.name}`,
-                  10,
-                )}
-              </span>
-              {`${item.revenueSource.name} / ${item.sfa.customer.name}`.length >
-                10 && (
-                <div className="invisible group-hover:visible absolute bottom-full left-0 mb-1 z-10 p-2 bg-gray-800 text-white text-sm rounded shadow-lg whitespace-normal max-w-xs">
-                  {item.revenueSource.name} / {item.sfa.customer.name}
-                </div>
-              )}
-            </div>
-          )
-        ) : (
-          '-'
-        );
-      case 'name':
-        return (
-          <div className="group relative">
-            <span>
-              {truncateText(
-                item.sfa?.name
-                  ? item.paymentLabel
-                    ? `${item.sfa.name}_${item.paymentLabel}`
-                    : item.sfa.name
-                  : '',
-                40,
-              )}
-            </span>
-            {item.sfa?.name &&
-              (item.paymentLabel
-                ? `${item.sfa.name}_${item.paymentLabel}`
-                : item.sfa.name
-              ).length > 40 && (
-                <div className="invisible group-hover:visible absolute bottom-full left-0 mb-1 z-10 p-2 bg-gray-800 text-white text-sm rounded shadow-lg whitespace-normal max-w-xs">
-                  {item.paymentLabel
-                    ? `${item.sfa.name}_${item.paymentLabel}`
-                    : item.sfa.name}
-                </div>
-              )}
-          </div>
-        );
+      case 'customer': {
+        const revName = item?.revenueSource?.name;
+        const custName = item?.sfa?.customer?.name;
+        
+        if (!revName) return '-';
+        
+        // 매출처와 고객사가 같으면 매출처만 표시
+        if (revName === custName) {
+          return <TooltipCell text={revName} limit={10} />;
+        }
+        // 다르면 둘 다 표시
+        return <TooltipCell text={revName} subText={custName} limit={10} />;
+      }
+      case 'name': {
+        const sfaName = item.sfa?.name;
+        const paymentLabel = item.paymentLabel;
+        const displayName = sfaName
+          ? paymentLabel
+            ? `${sfaName}_${paymentLabel}`
+            : sfaName
+          : '';
+          
+        return <TooltipCell text={displayName} limit={40} />;
+      }
       case 'payment':
         return item.billingType || '-';
       case 'classification':
@@ -206,11 +194,10 @@ const SfaListTable = () => {
   // SFA 데이터 관련 상태와 함수
   const { items, status, error, pagination, actions } = useSfaStore();
   const { actions: uiActions } = useUiStore();
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef(null);
 
-  // ✅ 컬럼 표시 상태 관리
-  const [visibleColumns, setVisibleColumns] = useState(DEFAULT_VISIBLE_COLUMNS);
+  // ✅ 컬럼 표시 상태 관리 (공통 훅 사용)
+  const { visibleColumns, toggleColumn, resetColumns, showAllColumns } =
+    useTableColumns(DEFAULT_VISIBLE_COLUMNS);
 
   // 일괄 업데이트 훅 사용
   const {
@@ -235,53 +222,11 @@ const SfaListTable = () => {
     handleBulkSubmit,
   } = useSfaBulkUpdate();
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setShowMenu(false);
-      }
-    };
-
-    if (showMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showMenu]);
-
-  const handleMenuClick = (e) => {
-    e.stopPropagation();
-    setShowMenu(!showMenu);
-  };
-
-  const handleBulkDateEditWithMenu = () => {
-    setShowMenu(false);
-    handleBulkDateEdit();
-  };
-
-  const handleBulkProbabilityEditWithMenu = () => {
-    setShowMenu(false);
-    handleBulkProbabilityEdit();
-  };
-
-  // console.log(`======== SfaTable pagination : `, pagination);
-
   const loading = status === 'loading';
 
   if (loading) return <StateDisplay type="loading" />;
   if (error) return <StateDisplay type="error" message={error} />;
   if (!items?.length) return <StateDisplay type="empty" />;
-
-  // 컬럼 토글 핸들러
-  const handleToggleColumn = (columnKey) => {
-    setVisibleColumns((prev) =>
-      prev.includes(columnKey)
-        ? prev.filter((key) => key !== columnKey)
-        : [...prev, columnKey],
-    );
-  };
 
   return (
     <Card>
@@ -422,49 +367,19 @@ const SfaListTable = () => {
                   >
                     {column.key === 'action' ? (
                       <div className="flex items-center justify-center gap-1">
-                        {/* 햄버거 아이콘 - 일괄수정 메뉴 */}
-                        <div className="relative group" ref={menuRef}>
-                          <button
-                            onClick={handleMenuClick}
-                            className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-                          >
-                            <svg
-                              className="w-4 h-4"
-                              fill="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" />
-                            </svg>
-                          </button>
-                          {/* 툴팁 */}
-                          <div className="invisible group-hover:visible absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap z-50">
-                            일괄수정
-                          </div>
-                          {showMenu && (
-                            <div className="absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50">
-                              <div className="py-1">
-                                <button
-                                  onClick={handleBulkDateEditWithMenu}
-                                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                >
-                                  매출일 일괄수정
-                                </button>
-                                <button
-                                  onClick={handleBulkProbabilityEditWithMenu}
-                                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                >
-                                  확률 일괄수정
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                        {/* 일괄수정 메뉴 컴포넌트 */}
+                        <SfaBulkActionMenu 
+                          onEditDate={handleBulkDateEdit}
+                          onEditProbability={handleBulkProbabilityEdit}
+                        />
 
-                        {/* 설정 아이콘 - 컬럼 토글 */}
-                        <ColumnToggleMenu
+                        {/* 설정 아이콘 - 컬럼 토글 (공통 컴포넌트 사용) */}
+                        <TableColumnMenu
                           columns={COLUMNS}
                           visibleColumns={visibleColumns}
-                          onToggleColumn={handleToggleColumn}
+                          onToggleColumn={toggleColumn}
+                          onReset={resetColumns}
+                          onShowAll={showAllColumns}
                           essentialColumns={[
                             'no',
                             'confirmed',

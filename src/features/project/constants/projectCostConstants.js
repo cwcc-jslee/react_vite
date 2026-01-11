@@ -1,0 +1,3 @@
+export const PROJECT_COST_CONSTANTS = {
+  STANDARD_HOURLY_RATE: 100000, // 1시간당 10만원
+};
