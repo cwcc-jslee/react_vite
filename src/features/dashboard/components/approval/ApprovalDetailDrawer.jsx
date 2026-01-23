@@ -8,18 +8,27 @@ import React, { useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { X, Calendar, User } from 'lucide-react';
 import dayjs from 'dayjs';
+import { useQuery } from '@tanstack/react-query';
 import StatusChangeSummary from './StatusChangeSummary';
 import ReviewForm from './ReviewForm';
 import ApprovalActionButtons from './ApprovalActionButtons';
+import ProjectEfficiencyCard from './ProjectEfficiencyCard';
 import { useApprovalActions } from '../../hooks/useApprovalActions';
 import { useCodebook } from '../../../../shared/hooks/useCodebook';
 import { notification } from '../../../../shared/services/notification';
+import { buildApprovalDetailQuery } from '../../api/queries';
 
 const ApprovalDetailDrawer = ({ approval, onClose }) => {
   const { isProcessing, handleApprove, handleReject } = useApprovalActions();
   const { data: codebooks } = useCodebook(['pjtClosureType']);
   const [approvalComment, setApprovalComment] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);
+
+  // 승인 대기 상세 정보 조회 (추가 데이터: 매출이익, 상세 태스크 등)
+  // Strapi 5 기준 documentId 사용
+  const { data: projectDetail, isLoading: isDetailLoading } = useQuery(
+    buildApprovalDetailQuery(approval?.documentId)
+  );
 
   // 종료 상태 관련 state
   const [closureDate, setClosureDate] = useState(dayjs().format('YYYY-MM-DD'));
@@ -118,6 +127,18 @@ const ApprovalDetailDrawer = ({ approval, onClose }) => {
                 </div>
               </div>
             </div>
+
+            {/* 효율성 분석 카드 (데이터 로딩 완료 시 표시) */}
+            {isDetailLoading ? (
+              <div className="h-40 flex items-center justify-center bg-gray-50 rounded-xl">
+                <div className="animate-spin w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full"></div>
+              </div>
+            ) : projectDetail ? (
+              <ProjectEfficiencyCard
+                project={projectDetail.data}
+                changeTypeName={approval.pendingStatusChange?.name}
+              />
+            ) : null}
 
             {/* 상태 변경 요약 */}
             <StatusChangeSummary

@@ -21,6 +21,7 @@ import {
 import { projectTaskService } from '../services/projectTaskService';
 import { projectApiService } from '../services/projectApiService';
 import { processRelationFields } from '../../../shared/utils/relationFieldUtils';
+import { STATUS_CHANGE_TYPE_CODES } from '../constants/statusChangeTypeConstants';
 import dayjs from 'dayjs';
 
 /**
@@ -287,12 +288,10 @@ export const useProjectSubmit = () => {
           try {
             const statusChangeData = {
               project: projectId,
-              fromStatus: 85, // 보류/대기 (PROJECT_STATUS_CODES.PENDING_WAITING)
+              name: STATUS_CHANGE_TYPE_CODES.CREATE, // 상태 변경 유형
               toStatus: initialStatusId, // 사용자가 선택한 상태
-              statusDetail: '프로젝트 생성',
               requestedBy: currentUser?.user?.id || null,
               requestedAt: dayjs().toISOString(),
-              changeDescription: '프로젝트 신규 등록',
               approvalStatus: 'pending', // 승인 대기 상태
             };
 

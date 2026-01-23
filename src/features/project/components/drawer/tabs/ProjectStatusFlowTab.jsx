@@ -13,6 +13,7 @@ import {
   PROJECT_STATUS_DESCRIPTIONS,
   getStatusCodeByLabel,
 } from '../../../constants/projectStatusConstants';
+import { determineStatusChangeType } from '../../../constants/statusChangeTypeConstants';
 import { useProjectUpdate } from '../../../hooks/useProjectUpdate';
 import { useProjectStore } from '../../../hooks/useProjectStore';
 import { useUiStore } from '../../../../../shared/hooks/useUiStore';
@@ -62,6 +63,7 @@ const ProjectStatusFlowTab = ({ data }) => {
       try {
         const statusChangeData = {
           project: data.id,
+          name: determineStatusChangeType(currentStatus, selectedStatus), // 상태 변경 유형
           fromStatus: fromStatusCode,
           toStatus: toStatusCode,
           statusDetail: formData.statusDetail || null,

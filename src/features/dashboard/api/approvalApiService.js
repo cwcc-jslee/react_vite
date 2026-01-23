@@ -68,30 +68,21 @@ export const approvalApiService = {
 
   /**
    * 승인 대기 건 상세 조회
-   * @param {string} projectId - 프로젝트 ID
+   * @param {string} projectDocumentId - 프로젝트 documentId
    * @returns {Promise} 프로젝트 및 상태 변경 이력 상세
    */
-  getApprovalDetail: async (projectId) => {
+  getApprovalDetail: async (projectDocumentId) => {
     try {
       // params는 snake_case로 작성 (Strapi API 필터)
-      const response = await apiClientV2.get(`/projects/${projectId}`, {
+      const response = await apiClientV2.get(`/projects/${projectDocumentId}`, {
         params: {
           populate: {
             pjt_status: true,
-            pending_status_change: {
+            project_status_changes: {
               populate: {
                 from_status: true,
                 to_status: true,
-                requested_by: {
-                  populate: {
-                    user: true,
-                  },
-                },
-              },
-            },
-            users: {
-              populate: {
-                user: true,
+                requested_by: true,
               },
             },
             project_tasks: {

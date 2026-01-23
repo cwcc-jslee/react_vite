@@ -12,9 +12,20 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/ko';
 import { getStatusColorByKey, PROJECT_STATUS_LABEL_TO_KEY } from '../../../project/constants/projectStatusConstants';
+import { STATUS_CHANGE_TYPE_CODES, getStatusChangeTypeLabel } from '../../../project/constants/statusChangeTypeConstants';
 
 dayjs.extend(relativeTime);
 dayjs.locale('ko');
+
+// 상태 변경 유형별 스타일 매핑
+const APPROVAL_TYPE_STYLES = {
+  [STATUS_CHANGE_TYPE_CODES.CREATE]: { color: 'bg-green-100 text-green-800' },
+  [STATUS_CHANGE_TYPE_CODES.INTERIM_REVIEW]: { color: 'bg-blue-100 text-blue-800' },
+  [STATUS_CHANGE_TYPE_CODES.FINAL_REVIEW]: { color: 'bg-blue-100 text-blue-800' },
+  [STATUS_CHANGE_TYPE_CODES.CLOSE]: { color: 'bg-gray-100 text-gray-800' },
+  [STATUS_CHANGE_TYPE_CODES.RESUME]: { color: 'bg-teal-100 text-teal-800' },
+  [STATUS_CHANGE_TYPE_CODES.STATUS_CHANGE]: { color: 'bg-yellow-100 text-yellow-800' },
+};
 
 const ApprovalCard = ({ approval, onClick }) => {
   const { name, customer, pendingStatusChange } = approval;
@@ -23,25 +34,17 @@ const ApprovalCard = ({ approval, onClick }) => {
     return null;
   }
 
-  const { fromStatus, toStatus, requestedBy, requestedAt, statusDetail } = pendingStatusChange;
+  const { name: changeTypeName, fromStatus, toStatus, requestedBy, requestedAt, statusDetail } = pendingStatusChange;
 
   const fromStatusKey = PROJECT_STATUS_LABEL_TO_KEY[fromStatus?.name];
   const toStatusKey = PROJECT_STATUS_LABEL_TO_KEY[toStatus?.name];
   const fromColor = getStatusColorByKey(fromStatusKey);
   const toColor = getStatusColorByKey(toStatusKey);
 
-  // 승인 유형 결정
+  // 승인 유형 결정 (name 필드 기반)
   const getApprovalType = () => {
-    if (!fromStatus) {
-      return { label: '신규', color: 'bg-green-100 text-green-800' };
-    }
-    if (toStatus?.name === '종료') {
-      return { label: '종료', color: 'bg-gray-100 text-gray-800' };
-    }
-    if (toStatus?.name === '중간검수' || toStatus?.name === '고객검수') {
-      return { label: '검수', color: 'bg-blue-100 text-blue-800' };
-    }
-    return { label: '변경', color: 'bg-yellow-100 text-yellow-800' };
+    const style = APPROVAL_TYPE_STYLES[changeTypeName] || APPROVAL_TYPE_STYLES[STATUS_CHANGE_TYPE_CODES.STATUS_CHANGE];
+    return { label: getStatusChangeTypeLabel(changeTypeName), color: style.color };
   };
 
   const approvalType = getApprovalType();
@@ -127,6 +130,7 @@ ApprovalCard.propTypes = {
     }),
     pendingStatusChange: PropTypes.shape({
       id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      name: PropTypes.string, // 상태 변경 유형 코드 (CREATE, STATUS_CHANGE 등)
       fromStatus: PropTypes.shape({
         id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         name: PropTypes.string,

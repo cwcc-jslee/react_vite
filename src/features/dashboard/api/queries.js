@@ -27,10 +27,10 @@ export const buildApprovalPendingQuery = () => ({
 
 /**
  * 승인 상세 쿼리 빌더
- * @param {string} projectId - 프로젝트 ID
+ * @param {string} documentId - 프로젝트 documentId
  */
-export const buildApprovalDetailQuery = (projectId) => ({
-  queryKey: ['approvals', 'detail', projectId],
-  queryFn: () => approvalApiService.getApprovalDetail(projectId),
-  enabled: !!projectId,
+export const buildApprovalDetailQuery = (documentId) => ({
+  queryKey: ['approvals', 'detail', documentId],
+  queryFn: () => approvalApiService.getApprovalDetail(documentId),
+  enabled: !!documentId,
 });

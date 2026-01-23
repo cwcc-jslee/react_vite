@@ -17,6 +17,7 @@ import { projectApiService } from '../services/projectApiService';
 import { useCodebook } from '../../../shared/hooks/useCodebook';
 import { useProjectStore } from './useProjectStore';
 import { PROJECT_STATUS_TRANSITIONS } from '../constants/projectStatusConstants';
+import { determineStatusChangeType } from '../constants/statusChangeTypeConstants';
 import dayjs from 'dayjs';
 
 export const useProjectUpdate = (initialData) => {
@@ -105,6 +106,7 @@ export const useProjectUpdate = (initialData) => {
           try {
             const statusChangeData = {
               project: id,
+              name: determineStatusChangeType(initialData.pjtStatus.name, formData.pjtStatus.name), // 상태 변경 유형
               fromStatus: initialData.pjtStatus.id,
               toStatus: formData.pjtStatus.id,
               statusDetail: statusDetail || null,
