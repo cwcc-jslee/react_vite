@@ -23,7 +23,8 @@
       "Bash(cat:*)",
       "Bash(test:*)",
       "Bash(node -e:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(move \"d:\\\\dev\\\\cwcc-react-vite\\\\src\\\\features\\\\dashboard\\\\components\\\\cards\\\\ApprovalCard.jsx\" \"d:\\\\dev\\\\cwcc-react-vite\\\\src\\\\features\\\\dashboard\\\\components\\\\approval\\\\ApprovalCard.jsx\")"
     ],
     "deny": [],
     "ask": []

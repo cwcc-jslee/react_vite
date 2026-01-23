@@ -5,7 +5,38 @@
  */
 
 import { apiClientV2 } from '../../../shared/api/apiClientV2';
+import { CLOSURE_STATUS_ID } from '../hooks/useClosureForm';
 import dayjs from 'dayjs';
+
+/**
+ * API 에러를 사용자 친화적 메시지로 변환
+ * @param {Error} error - 원본 에러
+ * @param {string} defaultMessage - 기본 메시지
+ * @returns {Error} 변환된 에러
+ */
+const handleApiError = (error, defaultMessage) => {
+  // HTTP 상태 코드별 메시지
+  if (error.response?.status === 403) {
+    return new Error('권한이 없습니다. 관리자에게 문의하세요.');
+  }
+  if (error.response?.status === 404) {
+    return new Error('요청한 데이터를 찾을 수 없습니다.');
+  }
+  if (error.response?.status === 409) {
+    return new Error('이미 처리된 요청입니다.');
+  }
+  if (error.response?.status >= 500) {
+    return new Error('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+  }
+
+  // Strapi 에러 메시지
+  const strapiMessage = error.response?.data?.error?.message;
+  if (strapiMessage) {
+    return new Error(strapiMessage);
+  }
+
+  return new Error(error.message || defaultMessage);
+};
 
 export const approvalApiService = {
   /**
@@ -62,7 +93,7 @@ export const approvalApiService = {
       };
     } catch (error) {
       console.error('승인 대기 목록 조회 실패:', error);
-      throw error;
+      throw handleApiError(error, '승인 대기 목록 조회에 실패했습니다.');
     }
   },
 
@@ -97,7 +128,7 @@ export const approvalApiService = {
       return response.data;
     } catch (error) {
       console.error('승인 상세 조회 실패:', error);
-      throw error;
+      throw handleApiError(error, '승인 상세 조회에 실패했습니다.');
     }
   },
 
@@ -120,8 +151,11 @@ export const approvalApiService = {
     toStatusId,
     approvedBy,
     approvalComment = null,
-    closureData = null, // 종료 시 필요한 데이터 (projectId, closureDate, closureType)
+    closureData = null,
   ) => {
+    let statusChangeUpdated = false;
+    let projectUpdated = false;
+
     try {
       // 1. 상태 변경 이력 업데이트 (승인 완료)
       await apiClientV2.put(
@@ -135,6 +169,7 @@ export const approvalApiService = {
           },
         },
       );
+      statusChangeUpdated = true;
 
       // 2. 프로젝트 상태 업데이트 (실제 상태 변경)
       const projectUpdateData = {
@@ -142,17 +177,19 @@ export const approvalApiService = {
         currentApprovalStatus: 'approved',
       };
 
-      // 종료 상태(90)로 전환 시 isClosed 플래그 설정
-      if (toStatusId === 90) {
+      // 종료 상태로 전환 시 isClosed 플래그 설정
+      const isClosingStatus = toStatusId === CLOSURE_STATUS_ID;
+      if (isClosingStatus) {
         projectUpdateData.isClosed = true;
       }
 
       await apiClientV2.put(`/projects/${projectDocumentId}`, {
         data: projectUpdateData,
       });
+      projectUpdated = true;
 
       // 3. 종료 상태일 때 project_closures 테이블에 종료 정보 생성
-      if (toStatusId === 90 && closureData) {
+      if (isClosingStatus && closureData) {
         await apiClientV2.post('/project-closures', {
           data: {
             project: closureData.projectId,
@@ -169,7 +206,28 @@ export const approvalApiService = {
       };
     } catch (error) {
       console.error('승인 처리 실패:', error);
-      throw error;
+
+      // 롤백 시도 (상태 변경 이력이 업데이트된 경우)
+      if (statusChangeUpdated && !projectUpdated) {
+        try {
+          await apiClientV2.put(
+            `/project-status-changes/${statusChangeDocumentId}`,
+            {
+              data: {
+                approvalStatus: 'pending',
+                approvedAt: null,
+                approvedBy: null,
+                approvalComment: null,
+              },
+            },
+          );
+          console.log('승인 처리 롤백 완료');
+        } catch (rollbackError) {
+          console.error('롤백 실패:', rollbackError);
+        }
+      }
+
+      throw handleApiError(error, '승인 처리에 실패했습니다.');
     }
   },
 
@@ -187,11 +245,13 @@ export const approvalApiService = {
     approvedBy,
     approvalComment,
   ) => {
-    try {
-      if (!approvalComment) {
-        throw new Error('반려 사유를 입력해주세요.');
-      }
+    if (!approvalComment?.trim()) {
+      throw new Error('반려 사유를 입력해주세요.');
+    }
 
+    let statusChangeUpdated = false;
+
+    try {
       // 1. 상태 변경 이력 업데이트 (반려)
       await apiClientV2.put(
         `/project-status-changes/${statusChangeDocumentId}`,
@@ -204,6 +264,7 @@ export const approvalApiService = {
           },
         },
       );
+      statusChangeUpdated = true;
 
       // 2. 프로젝트 승인 상태 초기화 (상태는 변경하지 않음)
       await apiClientV2.put(`/projects/${projectDocumentId}`, {
@@ -218,7 +279,28 @@ export const approvalApiService = {
       };
     } catch (error) {
       console.error('반려 처리 실패:', error);
-      throw error;
+
+      // 롤백 시도
+      if (statusChangeUpdated) {
+        try {
+          await apiClientV2.put(
+            `/project-status-changes/${statusChangeDocumentId}`,
+            {
+              data: {
+                approvalStatus: 'pending',
+                approvedAt: null,
+                approvedBy: null,
+                approvalComment: null,
+              },
+            },
+          );
+          console.log('반려 처리 롤백 완료');
+        } catch (rollbackError) {
+          console.error('롤백 실패:', rollbackError);
+        }
+      }
+
+      throw handleApiError(error, '반려 처리에 실패했습니다.');
     }
   },
 
@@ -258,7 +340,7 @@ export const approvalApiService = {
       };
     } catch (error) {
       console.error('대시보드 통계 조회 실패:', error);
-      throw error;
+      throw handleApiError(error, '대시보드 통계 조회에 실패했습니다.');
     }
   },
 };

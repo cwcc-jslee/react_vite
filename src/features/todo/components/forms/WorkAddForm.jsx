@@ -337,7 +337,7 @@ const WorkAddForm = () => {
             name="notes"
             placeholder="메모를 입력하세요"
             value={form.data.notes}
-            onChange={actions.form.updateField}
+            onChange={(e) => actions.form.updateField('notes', e.target.value)}
             disabled={isSubmitting}
           />
         </FormItem>

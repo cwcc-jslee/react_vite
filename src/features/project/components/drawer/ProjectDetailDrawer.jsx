@@ -9,8 +9,10 @@
 
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import { useDispatch } from 'react-redux';
 import { Drawer } from '@shared/components/drawer';
 import { useProjectStore } from '../../hooks/useProjectStore';
+import { fetchProjectWorks } from '../../../../store/slices/projectSlice';
 
 // 섹션 컴포넌트
 import ProjectDetailTableSection from '../../sections/ProjectDetailTableSection';
@@ -21,6 +23,7 @@ import ProjectStatusDrawer from './ProjectStatusDrawer';
 import ProjectDetailDrawerMenu from './ProjectDetailDrawerMenu';
 
 const ProjectDetailDrawer = ({ visible, data, onClose }) => {
+  const dispatch = useDispatch();
   const { actions: projectActions } = useProjectStore();
 
   // ==================== 탭 상태 관리 ====================
@@ -30,6 +33,13 @@ const ProjectDetailDrawer = ({ visible, data, onClose }) => {
   // ==================== 진행상태 관리 Drawer 상태 ====================
   const [statusDrawerVisible, setStatusDrawerVisible] = useState(false);
   const [statusDrawerData, setStatusDrawerData] = useState(null);
+
+  // ==================== 작업 탭 활성화 시 데이터 조회 ====================
+  React.useEffect(() => {
+    if (activeTab === 'work' && data?.id) {
+      dispatch(fetchProjectWorks({ projectId: data.id }));
+    }
+  }, [activeTab, data?.id, dispatch]);
 
   // ==================== 탭 메뉴 렌더링 ====================
   const renderTabMenu = () => {

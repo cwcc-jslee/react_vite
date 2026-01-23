@@ -6,7 +6,7 @@ import React from 'react';
 import { useProjectStore } from '../hooks/useProjectStore';
 
 // 컴포넌트트
-import ProjectWorkList from '../components/tables/ProjectWorkList';
+import WorkList from '../../work/components/tables/WorkList';
 
 // 로딩 상태 컴포넌트
 const LoadingState = () => (
@@ -48,8 +48,12 @@ const ProjectWorkListSection = () => {
   const { items, status, error, pagination } = works || {};
 
   // works 관련 액션 구성
-  const worksActions = {
-    pagination: actions.detail.works,
+  const handlePageChange = (page) => {
+    actions.detail.works.setPage(page);
+  };
+
+  const handlePageSizeChange = (pageSize) => {
+    actions.detail.works.setPageSize(pageSize);
   };
 
   // 상태에 따른 컴포넌트 렌더링
@@ -61,10 +65,11 @@ const ProjectWorkListSection = () => {
         return <ErrorState message={error} />;
       case 'succeeded':
         return items?.length ? (
-          <ProjectWorkList
+          <WorkList
             items={items}
             pagination={pagination}
-            actions={worksActions}
+            handlePageChange={handlePageChange}
+            handlePageSizeChange={handlePageSizeChange}
           />
         ) : (
           <EmptyState />

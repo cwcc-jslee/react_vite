@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import TodoCard from '../components/cards/TodoCard';
 import useTodoPanel from '../hooks/useTodoPanel';
 import { Button, Switch, Alert, Card } from '@shared/components/ui';
@@ -6,6 +6,7 @@ import dayjs from 'dayjs';
 // import WorkAddForm from '../components/forms/WorkAddForm';
 import TodoDetailPanel from '../components/panels/TodoDetailPanel';
 import { useUiStore } from '@shared/hooks/useUiStore';
+import { WORK_TYPE } from '../../project/constants/projectTypeConstants';
 /**
  * Todo 통합 섹션 컴포넌트
  * 할 일 목록 표시 및 필터링과 패널 표시를 모두 담당
@@ -27,9 +28,9 @@ const TodoSection = ({ tasks, activeMenu }) => {
 
   // 필터 상태 관리
   const [taskDateFilter, setTaskDateFilter] = useState('started');
+  const [activeWorkType, setActiveWorkType] = useState(WORK_TYPE.PROJECT.code); // 기본값: 프로젝트
   const [taskTypeFilter, setTaskTypeFilter] = useState({
     isScheduled: 'true', // 'all', 'true', 'false' - 기본값: 있음
-    isProgress: 'all',   // 'all', 'true', 'false' - 기본값: 모두
   });
 
   // 날짜 필터 토글 핸들러
@@ -37,6 +38,19 @@ const TodoSection = ({ tasks, activeMenu }) => {
     const newFilter = taskDateFilter === 'started' ? 'upcoming' : 'started';
     setTaskDateFilter(newFilter);
   }, [taskDateFilter]);
+
+  // activeWorkType 변경 시 하위 필터 자동 설정
+  useEffect(() => {
+    if (activeWorkType === WORK_TYPE.PROJECT.code || activeWorkType === WORK_TYPE.TASK.code) {
+      // 프로젝트, 단순작업: 계획 업무 & 오늘 할 일
+      setTaskTypeFilter((prev) => ({ ...prev, isScheduled: 'true' }));
+      setTaskDateFilter('started');
+    } else {
+      // 유지보수, 전체: 전체 & 전체
+      setTaskTypeFilter((prev) => ({ ...prev, isScheduled: 'all' }));
+      setTaskDateFilter('all');
+    }
+  }, [activeWorkType]);
 
   // 작업 유형 필터 핸들러
   const handleTaskTypeChange = useCallback((type, value) => {
@@ -50,12 +64,22 @@ const TodoSection = ({ tasks, activeMenu }) => {
   const filteredTasks = useCallback(() => {
     if (!tasks) return [];
 
-    console.log('**** tasks ****', tasks);
+    if (process.env.NODE_ENV === 'development') {
+       console.log('Task Structure Debug:', tasks[0]);
+       console.log('Active WorkType:', activeWorkType);
+    }
 
     let filteredByType = tasks;
 
+    // 0. WorkType(프로젝트 유형) 필터링 (전체가 아닐 경우)
+    if (activeWorkType !== 'all') {
+      filteredByType = filteredByType.filter(
+        (task) => task.project?.workType === activeWorkType
+      );
+    }
+
     // 1. 작업 유형별 필터링
-    filteredByType = tasks.filter((task) => {
+    filteredByType = filteredByType.filter((task) => {
       // isScheduled 필터링
       let passScheduledFilter = true;
       if (taskTypeFilter.isScheduled === 'true') {
@@ -65,16 +89,7 @@ const TodoSection = ({ tasks, activeMenu }) => {
       }
       // 'all'인 경우 passScheduledFilter는 true 유지
 
-      // isProgress 필터링
-      let passProgressFilter = true;
-      if (taskTypeFilter.isProgress === 'true') {
-        passProgressFilter = task.isProgress === true;
-      } else if (taskTypeFilter.isProgress === 'false') {
-        passProgressFilter = task.isProgress === false;
-      }
-      // 'all'인 경우 passProgressFilter는 true 유지
-
-      return passScheduledFilter && passProgressFilter;
+      return passScheduledFilter;
     });
 
     // activeMenu가 'todayTasks'가 아닌 경우 작업 유형 필터만 적용
@@ -86,6 +101,11 @@ const TodoSection = ({ tasks, activeMenu }) => {
     const today = dayjs().startOf('day');
 
     return filteredByType.filter((task) => {
+      // '전체' 선택 시 날짜 필터링 제외
+      if (taskDateFilter === 'all') {
+        return true;
+      }
+
       let startDate;
 
       if (task.isScheduled) {
@@ -106,7 +126,7 @@ const TodoSection = ({ tasks, activeMenu }) => {
         return startDate.isAfter(today);
       }
     });
-  }, [tasks, taskDateFilter, taskTypeFilter, activeMenu]);
+  }, [tasks, taskDateFilter, taskTypeFilter, activeMenu, activeWorkType]);
 
   // 패널 관련 함수
   // 패널 헤더에 추가할 액션 버튼 - 패널 타입에 따라 다르게 설정
@@ -235,47 +255,79 @@ const TodoSection = ({ tasks, activeMenu }) => {
     return (
       <div>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">할 일 목록</h2>
-          <div className="flex space-x-4">
-            {/* 작업 유형 필터 */}
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <label className="text-sm text-gray-700">일정:</label>
-                <select
-                  value={taskTypeFilter.isScheduled}
-                  onChange={(e) => handleTaskTypeChange('isScheduled', e.target.value)}
-                  className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-bold">할 일 목록</h2>
+          </div>
+          <div className="flex items-center space-x-4">
+            {/* WorkType(프로젝트 유형) 필터 버튼 */}
+            <div className="flex bg-gray-100 p-1 rounded-lg">
+              {[
+                { label: '전체', value: 'all' },
+                {
+                  label: WORK_TYPE.PROJECT.label,
+                  value: WORK_TYPE.PROJECT.code,
+                },
+                { label: WORK_TYPE.TASK.label, value: WORK_TYPE.TASK.code },
+                {
+                  label: WORK_TYPE.MAINTENANCE.label,
+                  value: WORK_TYPE.MAINTENANCE.code,
+                },
+              ].map((type) => (
+                <button
+                  key={type.value}
+                  onClick={() => setActiveWorkType(type.value)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                    activeWorkType === type.value
+                      ? 'bg-white text-indigo-600 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
                 >
-                  <option value="all">모두</option>
-                  <option value="true">있음</option>
-                  <option value="false">없음</option>
-                </select>
-              </div>
-              <div className="flex items-center space-x-2">
-                <label className="text-sm text-gray-700">진행률:</label>
-                <select
-                  value={taskTypeFilter.isProgress}
-                  onChange={(e) => handleTaskTypeChange('isProgress', e.target.value)}
-                  className="px-2 py-1 text-sm border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="all">모두</option>
-                  <option value="true">있음</option>
-                  <option value="false">없음</option>
-                </select>
-              </div>
+                  {type.label}
+                </button>
+              ))}
             </div>
 
-            {/* 날짜 필터 토글 */}
+            {/* 일정(계획/상시) 필터 버튼 */}
+            <div className="flex bg-gray-100 p-1 rounded-lg">
+              {[
+                { label: '전체', value: 'all' },
+                { label: '계획 업무', value: 'true' },
+                { label: '상시 업무', value: 'false' },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => handleTaskTypeChange('isScheduled', opt.value)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                    taskTypeFilter.isScheduled === opt.value
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {/* 시점(오늘/예정) 필터 버튼 */}
             {activeMenu !== 'searchTasks' && (
-              <div className="flex items-center">
-                <Switch
-                  checked={taskDateFilter === 'started'}
-                  onChange={toggleTaskDateFilter}
-                  className="mr-2"
-                />
-                <span className="text-sm">
-                  {taskDateFilter === 'started' ? '시작됨' : '작업예정'}
-                </span>
+              <div className="flex bg-gray-100 p-1 rounded-lg">
+                {[
+                  { label: '전체', value: 'all' },
+                  { label: '오늘 할 일', value: 'started' },
+                  { label: '향후 예정', value: 'upcoming' },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setTaskDateFilter(opt.value)}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                      taskDateFilter === opt.value
+                        ? 'bg-white text-green-600 shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
             )}
           </div>
@@ -295,16 +347,6 @@ const TodoSection = ({ tasks, activeMenu }) => {
               일정 false:{' '}
               {tasks?.filter((t) => t.isScheduled === false)
                 .length || 0}
-            </div>
-            <div>
-              진행률 true:{' '}
-              {tasks?.filter((t) => t.isProgress === true).length ||
-                0}
-            </div>
-            <div>
-              진행률 false:{' '}
-              {tasks?.filter((t) => t.isProgress === false).length ||
-                0}
             </div>
           </div>
         )}
@@ -339,6 +381,9 @@ const TodoSection = ({ tasks, activeMenu }) => {
               const typeText = selectedTypes.join(', ');
 
               if (activeMenu === 'todayTasks') {
+                if (taskDateFilter === 'all') {
+                    return `${typeText} 조건의 작업이 없습니다.`;
+                }
                 return `${typeText} 조건의 ${
                   taskDateFilter === 'started' ? '시작된' : '예정된'
                 } 작업이 없습니다.`;

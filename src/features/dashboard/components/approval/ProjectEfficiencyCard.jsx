@@ -1,3 +1,10 @@
+// src/features/dashboard/components/approval/ProjectEfficiencyCard.jsx
+/**
+ * 프로젝트 효율성 분석 카드
+ * - 승인 상세 Drawer에서 사용
+ * - 계획 공수, 가용 공수, 투입 효율, 등록 태스크 표시
+ */
+
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import {
@@ -8,29 +15,10 @@ import {
   FiAlertCircle,
   FiCheckCircle,
 } from 'react-icons/fi';
-import { PROJECT_COST_CONSTANTS } from '../../../../features/project/constants/projectCostConstants';
-import {
-  getProjectTypeInfo,
-  getWorkTypeInfo,
-} from '../../../../features/project/constants/projectTypeConstants';
-import {
-  STATUS_CHANGE_TYPE_CODES,
-  getStatusChangeTypeLabel,
-} from '../../../../features/project/constants/statusChangeTypeConstants';
-
-// dashboard/components/cards/ApprovalCard.jsx와 동일한 스타일 매핑
-const APPROVAL_TYPE_STYLES = {
-  [STATUS_CHANGE_TYPE_CODES.CREATE]: { color: 'bg-green-100 text-green-800' },
-  [STATUS_CHANGE_TYPE_CODES.INTERIM_REVIEW]: {
-    color: 'bg-blue-100 text-blue-800',
-  },
-  [STATUS_CHANGE_TYPE_CODES.FINAL_REVIEW]: { color: 'bg-blue-100 text-blue-800' },
-  [STATUS_CHANGE_TYPE_CODES.CLOSE]: { color: 'bg-gray-100 text-gray-800' },
-  [STATUS_CHANGE_TYPE_CODES.RESUME]: { color: 'bg-teal-100 text-teal-800' },
-  [STATUS_CHANGE_TYPE_CODES.STATUS_CHANGE]: {
-    color: 'bg-yellow-100 text-yellow-800',
-  },
-};
+import { PROJECT_COST_CONSTANTS } from '@features/project/constants/projectCostConstants';
+import { PROJECT_TYPE } from '@features/project/constants/projectTypeConstants';
+import { STATUS_CHANGE_TYPE_CODES } from '@features/project/constants/statusChangeTypeConstants';
+import EfficiencyStatCard from '../cards/EfficiencyStatCard';
 
 const ProjectEfficiencyCard = ({ project, changeTypeName }) => {
   if (!project) return null;
@@ -57,8 +45,9 @@ const ProjectEfficiencyCard = ({ project, changeTypeName }) => {
   const efficiencyRate =
     budgetHours > 0 ? Math.round((totalHours / budgetHours) * 100) : 0;
   const isOverBudget = totalHours > budgetHours;
-  const isRevenueProject = project.projectType === 'revenue';
-  const isCreate = changeTypeName === 'CREATE';
+  const isInvestmentProject = project.projectType === PROJECT_TYPE.INVESTMENT.code;
+  const isRevenueProject = project.projectType === PROJECT_TYPE.REVENUE.code;
+  const isCreate = changeTypeName === STATUS_CHANGE_TYPE_CODES.CREATE;
 
   // 검증 상태 및 메시지 계산
   const getVerificationStatus = () => {
@@ -108,33 +97,16 @@ const ProjectEfficiencyCard = ({ project, changeTypeName }) => {
 
   const status = getVerificationStatus();
 
-  // 유형 정보 조회 (상수 활용)
-  const projectTypeInfo = getProjectTypeInfo(project.projectType);
-  const workTypeInfo = getWorkTypeInfo(project.workType);
-
-  // 승인 유형 스타일 적용 (ApprovalCard와 일치)
-  const getApprovalTypeStyle = () => {
-    const style =
-      APPROVAL_TYPE_STYLES[changeTypeName] ||
-      APPROVAL_TYPE_STYLES[STATUS_CHANGE_TYPE_CODES.STATUS_CHANGE];
-    return {
-      label: getStatusChangeTypeLabel(changeTypeName),
-      color: style.color,
-    };
-  };
-
-  const approvalType = getApprovalTypeStyle();
-
   // 섹션 타이틀 결정
   const getSectionTitle = () => {
     switch (changeTypeName) {
-      case 'CREATE':
+      case STATUS_CHANGE_TYPE_CODES.CREATE:
         return '신규등록 검증';
-      case 'INTERIM_REVIEW':
+      case STATUS_CHANGE_TYPE_CODES.INTERIM_REVIEW:
         return '중간 점검 분석';
-      case 'FINAL_REVIEW':
+      case STATUS_CHANGE_TYPE_CODES.FINAL_REVIEW:
         return '최종 점검 분석';
-      case 'CLOSE':
+      case STATUS_CHANGE_TYPE_CODES.CLOSE:
         return '종료 데이터 확인';
       default:
         return '프로젝트 현황 분석';
@@ -144,105 +116,50 @@ const ProjectEfficiencyCard = ({ project, changeTypeName }) => {
   // 검증 바 라벨 결정
   const getVerificationLabel = () => {
     switch (changeTypeName) {
-      case 'CREATE':
+      case STATUS_CHANGE_TYPE_CODES.CREATE:
         return '등록 적정성 검증';
       default:
         return '운영 지표 점검';
     }
   };
 
-  const StatCard = ({
-    label,
-    value,
-    subValue,
-    icon: Icon,
-    colorClass,
-    isWarn = false,
-  }) => (
-    <div
-      className={`bg-white p-4 rounded-xl border ${
-        isWarn ? 'border-red-200' : 'border-gray-100'
-      } shadow-sm flex items-start justify-between`}
-    >
-      <div>
-        <p className="text-xs text-gray-500 font-medium mb-1">{label}</p>
-        <h4
-          className={`text-lg font-bold ${
-            isWarn ? 'text-red-600' : 'text-gray-800'
-          }`}
-        >
-          {value}
-        </h4>
-        {subValue && (
-          <p className="text-[10px] text-gray-400 mt-0.5">{subValue}</p>
-        )}
-      </div>
-      <div className={`p-2 rounded-lg ${colorClass}`}>
-        <Icon size={16} className="text-white" />
-      </div>
-    </div>
-  );
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-gray-700">
-            {getSectionTitle()}
-          </h3>
-          {changeTypeName && (
-            <span
-              className={`px-2 py-0.5 text-[11px] font-medium rounded flex-shrink-0 ${approvalType.color}`}
-            >
-              {approvalType.label}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${projectTypeInfo.colorClass}`}>
-            {projectTypeInfo.label}
-          </span>
-          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${workTypeInfo.colorClass}`}>
-            {workTypeInfo.label}
-          </span>
-        </div>
-      </div>
+    <section className="space-y-3">
+      <h3 className="text-base font-semibold text-gray-800">
+        {getSectionTitle()}
+      </h3>
 
-      {/* 4개의 메트릭 카드 그리드 */}
-      <div className="grid grid-cols-2 gap-3">
-        <StatCard
-          label="총 계획 공수"
-          value={`${totalHours} h`}
-          subValue="Estimated Effort"
+      {/* 4개의 메트릭 카드 - 1x4 가로 레이아웃 */}
+      <div className="grid grid-cols-4 gap-2">
+        <EfficiencyStatCard
+          label="계획 공수"
+          value={`${totalHours}h`}
           icon={FiClock}
           colorClass="bg-orange-500"
           isWarn={isOverBudget}
+          showIcon={false}
         />
-        <StatCard
+        <EfficiencyStatCard
           label="가용 공수"
-          value={
-            project.projectType === 'investment' ? '무제한' : `${budgetHours} h`
-          }
-          subValue="Budget Threshold"
+          value={isInvestmentProject ? '-' : `${budgetHours}h`}
           icon={FiPieChart}
           colorClass="bg-blue-500"
+          showIcon={false}
         />
-        <StatCard
+        <EfficiencyStatCard
           label="투입 효율"
-          value={
-            project.projectType === 'investment' ? 'N/A' : `${efficiencyRate}%`
-          }
-          subValue={isOverBudget ? '예산 초과 주의' : '예산 내 적정'}
+          value={isInvestmentProject ? '-' : `${efficiencyRate}%`}
           icon={FiTrendingUp}
           colorClass={isOverBudget ? 'bg-red-500' : 'bg-teal-500'}
           isWarn={isOverBudget}
+          showIcon={false}
         />
-        <StatCard
+        <EfficiencyStatCard
           label="등록 태스크"
-          value={`${totalTasks} 건`}
-          subValue="Total Tasks"
+          value={`${totalTasks}건`}
           icon={FiLayers}
           colorClass="bg-indigo-500"
+          showIcon={false}
         />
       </div>
 
@@ -251,31 +168,32 @@ const ProjectEfficiencyCard = ({ project, changeTypeName }) => {
         <div
           className={`rounded-lg p-3 border ${status.bgColor} ${status.borderColor}`}
         >
-          <div className={`flex items-center gap-2 mb-2 text-xs font-bold ${status.color}`}>
-            <status.icon />
+          <div className={`flex items-center gap-2 mb-2 text-xs font-semibold ${status.color}`}>
+            <status.icon size={14} />
             <span>{getVerificationLabel()}</span>
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <div className="w-full bg-white/60 rounded-full h-1.5 overflow-hidden">
               <div
                 className={`h-full transition-all duration-500 ${status.barColor}`}
                 style={{ width: `${Math.min(efficiencyRate, 100)}%` }}
-              ></div>
+              />
             </div>
-            <p className="text-[10px] text-gray-600">
+            <p className="text-xs text-gray-600">
               {status.message}
             </p>
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 };
 
 ProjectEfficiencyCard.propTypes = {
   project: PropTypes.shape({
     revenueProfit: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-    projectType: PropTypes.string,
+    projectType: PropTypes.oneOf([PROJECT_TYPE.REVENUE.code, PROJECT_TYPE.INVESTMENT.code]),
+    workType: PropTypes.string,
     projectTasks: PropTypes.arrayOf(
       PropTypes.shape({
         planningTimeData: PropTypes.shape({
@@ -287,7 +205,7 @@ ProjectEfficiencyCard.propTypes = {
       })
     ),
   }),
-  changeTypeName: PropTypes.string,
+  changeTypeName: PropTypes.oneOf(Object.values(STATUS_CHANGE_TYPE_CODES)),
 };
 
 export default ProjectEfficiencyCard;
