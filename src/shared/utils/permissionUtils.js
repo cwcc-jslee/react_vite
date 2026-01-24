@@ -3,21 +3,33 @@
  */
 
 /**
- * 권한 객체를 안전하게 추출 (중첩 구조 처리)
+ * 권한 객체를 안전하게 추출 (다양한 데이터 구조 처리)
  * @param {Object} userAccessControl
  * @returns {Object|null} permissions object
+ *
+ * 지원하는 데이터 구조:
+ * 1. { permissions: { default: {...}, pages: {...} } }
+ * 2. { permissions: { permissions: { default: {...}, pages: {...} } } } (중첩)
+ * 3. { default: {...}, pages: {...} } (래퍼 없음)
  */
 export const getSafePermissions = (userAccessControl) => {
   if (!userAccessControl) return null;
+
+  // Case 3: permissions 래퍼 없이 직접 default/pages가 있는 경우
+  if (userAccessControl.default && typeof userAccessControl.default === 'object') {
+    return userAccessControl;
+  }
+
   let { permissions } = userAccessControl;
 
   if (!permissions) return null;
 
-  // ⚠️ 중첩된 permissions 구조 처리 (Strapi 데이터 구조 이슈 대응)
+  // Case 2: 중첩된 permissions 구조 처리 (Strapi 데이터 구조 이슈 대응)
   if (permissions.permissions && typeof permissions.permissions === 'object') {
     return permissions.permissions;
   }
 
+  // Case 1: 정상적인 permissions 구조
   return permissions;
 };
 

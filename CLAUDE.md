@@ -334,6 +334,110 @@ await apiService.post('/projects', snakeCase);
 - **Default development server**: http://192.168.20.101:3001
 - **API URL**: Configurable via `VITE_API_URL` environment variable
 
+## Permission System (권한 시스템)
+
+사용자별 페이지 접근 및 기능 사용 권한을 관리하는 시스템입니다.
+
+### Permission Types (권한 타입)
+
+| Action | 설명 | 용도 |
+|--------|------|------|
+| `view` | 조회 권한 | 페이지/메뉴 접근, 데이터 조회 |
+| `create` | 생성 권한 | 데이터 추가, 복사 |
+| `update` | 수정 권한 | 데이터 편집 |
+| `delete` | 삭제 권한 | 데이터 삭제 |
+
+### Permission Data Structure (권한 데이터 구조)
+
+```javascript
+{
+  permissions: {
+    default: { view: true, create: false, update: false, delete: false },
+    initialPage: { path: '/todo' },
+    pages: {
+      sfa: {
+        view: true,
+        create: true,
+        update: true,
+        delete: false,
+        menus: {
+          forecast: { view: true },
+          analytics: { view: false }
+        }
+      }
+    }
+  }
+}
+```
+
+### Permission Utility Functions
+
+**Location**: `src/shared/utils/permissionUtils.js`
+
+```javascript
+import {
+  hasPermission,
+  hasPagePermission,
+  hasCreatePermission,
+  hasUpdatePermission,
+  hasDeletePermission,
+  hasMenuItemPermission,
+  hasSubMenuPermission,
+} from '@shared/utils/permissionUtils';
+
+// 통합 권한 체크
+hasPermission(userAccessControl, 'sfa', 'update')
+
+// 단축 함수
+hasCreatePermission(userAccessControl, 'sfa')
+hasUpdatePermission(userAccessControl, 'sfa')
+hasDeletePermission(userAccessControl, 'sfa')
+
+// 메뉴/서브메뉴 권한
+hasMenuItemPermission(userAccessControl, 'sfa', 'forecast')
+hasSubMenuPermission(userAccessControl, 'project', 'detail', 'board')
+```
+
+### Usage in Components
+
+```javascript
+import { useSelector } from 'react-redux';
+import { hasUpdatePermission, hasDeletePermission } from '@shared/utils/permissionUtils';
+
+const MyComponent = () => {
+  const user = useSelector(state => state.auth.user);
+  const userAccessControl = user?.userAccessControl;
+
+  const canUpdate = hasUpdatePermission(userAccessControl, 'sfa');
+  const canDelete = hasDeletePermission(userAccessControl, 'sfa');
+
+  return (
+    <>
+      {canUpdate && <button>수정</button>}
+      {canDelete && <button>삭제</button>}
+    </>
+  );
+};
+```
+
+### Permission Priority (권한 우선순위)
+
+```
+서브메뉴 권한 > 메뉴 권한 > 페이지 권한 > 기본 권한
+```
+
+- 명시적 거부(`false`) → 항상 거부
+- 명시적 허용(`true`) → 허용
+- 미설정 → 상위 레벨 권한 상속
+
+### Related Files
+
+| 파일 | 설명 |
+|------|------|
+| `src/shared/utils/permissionUtils.js` | 권한 체크 유틸리티 함수 |
+| `src/features/auth/store/authSlice.js` | 인증 상태 관리 (권한 정보 포함) |
+| `docs/common/permission-system.md` | 권한 시스템 상세 문서 |
+
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.

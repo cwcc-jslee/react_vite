@@ -5,7 +5,7 @@
  * - 결제매출 섹션: "매출내역 추가" / "매출내역 수정" 버튼으로 기능 분리
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { X } from 'lucide-react';
 import { Drawer, useDrawer, DRAWER_SIZES } from '@shared/components/drawer';
@@ -14,6 +14,11 @@ import { sfaSubmitService } from '../../services/sfaSubmitService.js';
 import { useQuery } from '@tanstack/react-query';
 import { projectApiService } from '@features/project/services/projectApiService.js';
 import { useProjectStore } from '@features/project/hooks/useProjectStore.js';
+import {
+  hasCreatePermission,
+  hasUpdatePermission,
+  hasDeletePermission,
+} from '@shared/utils/permissionUtils';
 
 // 섹션 컴포넌트 import
 import DrawerActionsMenu from './sections/DrawerActionsMenu.jsx';
@@ -33,6 +38,19 @@ const SfaViewDrawer = React.memo(
 
     // Redux store에서 최신 상세 데이터 구독
     const sfaDetail = useSelector((state) => state.sfa.sfaDetail);
+
+    // 사용자 권한 정보 조회
+    // state.auth.user 구조: { jwt, user: { ...userInfo, user_access_control } }
+    // ⚠️ user_access_control은 snake_case로 저장됨 (API 응답 그대로)
+    const authUser = useSelector((state) => state.auth.user);
+    const userAccessControl = authUser?.user?.user_access_control;
+
+    // SFA 페이지 권한 체크
+    const sfaPermissions = useMemo(() => ({
+      canCreate: hasCreatePermission(userAccessControl, 'sfa'),
+      canUpdate: hasUpdatePermission(userAccessControl, 'sfa'),
+      canDelete: hasDeletePermission(userAccessControl, 'sfa'),
+    }), [userAccessControl]);
 
     // 화면에 표시할 데이터 결정 (Store 데이터 우선 사용)
     const data = (sfaDetail && initialData && String(sfaDetail.id) === String(initialData.id)) 
@@ -385,6 +403,7 @@ const SfaViewDrawer = React.memo(
             onEditPayment={handleStartEditPayment}
             onDeletePayment={handleStartDeletePayment}
             paymentMode={paymentMode}
+            permissions={sfaPermissions}
           />
         }
       >
