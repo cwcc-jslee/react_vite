@@ -39,6 +39,7 @@ const ProjectDetailTaskSection = ({
   onTaskComplete = () => {},
   onTaskEdit = () => {},
   activeMenu: activeMenuProp, // Drawer에서 전달받은 activeMenu
+  isExpanded = false, // Drawer 확장 상태
 }) => {
   // 칸반 보드 훅 사용
   const {
@@ -162,7 +163,7 @@ const ProjectDetailTaskSection = ({
       <>
         {/* 뷰 모드에 따른 컴포넌트 렌더링 */}
         {activeMenu === 'table' && (
-          <ProjectTaskList projectTasks={projectTasks} />
+          <ProjectTaskList projectTasks={projectTasks} isExpanded={isExpanded} />
         )}
 
         {activeMenu === 'board' && (
@@ -218,7 +219,7 @@ const ProjectDetailTaskSection = ({
           </div>
         )}
 
-        {activeMenu === 'work' && <ProjectWorkListSection />}
+        {activeMenu === 'work' && <ProjectWorkListSection isExpanded={isExpanded} />}
       </>
 
       {/* 모달 렌더러 추가 */}

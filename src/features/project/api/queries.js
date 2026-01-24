@@ -142,6 +142,7 @@ export const buildProjectDetailQuery = (id) => {
             customer: {
               fields: ['name'],
             },
+            sfa_by_payments: true,
           },
         },
         pjt_status: {

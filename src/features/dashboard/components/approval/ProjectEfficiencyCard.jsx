@@ -1,7 +1,7 @@
 // src/features/dashboard/components/approval/ProjectEfficiencyCard.jsx
 /**
  * 프로젝트 효율성 분석 카드
- * - 승인 상세 Drawer에서 사용
+ * - 승인 상세 Drawer 및 프로젝트 개요에서 사용
  * - 계획 공수, 가용 공수, 투입 효율, 등록 태스크 표시
  */
 
@@ -15,18 +15,28 @@ import {
   FiAlertCircle,
   FiCheckCircle,
 } from 'react-icons/fi';
-import { PROJECT_COST_CONSTANTS } from '@features/project/constants/projectCostConstants';
-import { PROJECT_TYPE } from '@features/project/constants/projectTypeConstants';
-import { STATUS_CHANGE_TYPE_CODES } from '@features/project/constants/statusChangeTypeConstants';
+import { PROJECT_COST_CONSTANTS } from '../../../../features/project/constants/projectCostConstants';
+import { PROJECT_TYPE } from '../../../../features/project/constants/projectTypeConstants';
+import { STATUS_CHANGE_TYPE_CODES } from '../../../../features/project/constants/statusChangeTypeConstants';
+import { calculateTeamProfits } from '../../../../shared/utils/summaryCalculations';
 import EfficiencyStatCard from '../cards/EfficiencyStatCard';
 
 const ProjectEfficiencyCard = ({ project, changeTypeName }) => {
   if (!project) return null;
 
   // 1. 매출 이익 및 가용 공수 계산
-  const revenueProfit = Number(project.revenueProfit) || 0;
+  // SFA 데이터를 기반으로 사업부 매출이익 계산 (우선순위: 계산된 팀 이익 > 저장된 revenueProfit)
+  const teamRevenueProfit = useMemo(() => {
+    if (!project.sfa?.sfaByPayments || !project.team?.id) {
+      return Number(project.revenueProfit) || 0;
+    }
+    const teamProfits = calculateTeamProfits(project.sfa.sfaByPayments);
+    const myTeamData = teamProfits.find((tp) => tp.teamId === project.team.id);
+    return myTeamData ? myTeamData.totalProfit : Number(project.revenueProfit) || 0;
+  }, [project.sfa, project.team, project.revenueProfit]);
+
   const budgetHours = Math.floor(
-    revenueProfit / PROJECT_COST_CONSTANTS.STANDARD_HOURLY_RATE
+    teamRevenueProfit / PROJECT_COST_CONSTANTS.STANDARD_HOURLY_RATE
   );
 
   // 2. 총 계획 공수 및 태스크 수 계산
@@ -97,22 +107,6 @@ const ProjectEfficiencyCard = ({ project, changeTypeName }) => {
 
   const status = getVerificationStatus();
 
-  // 섹션 타이틀 결정
-  const getSectionTitle = () => {
-    switch (changeTypeName) {
-      case STATUS_CHANGE_TYPE_CODES.CREATE:
-        return '신규등록 검증';
-      case STATUS_CHANGE_TYPE_CODES.INTERIM_REVIEW:
-        return '중간 점검 분석';
-      case STATUS_CHANGE_TYPE_CODES.FINAL_REVIEW:
-        return '최종 점검 분석';
-      case STATUS_CHANGE_TYPE_CODES.CLOSE:
-        return '종료 데이터 확인';
-      default:
-        return '프로젝트 현황 분석';
-    }
-  };
-
   // 검증 바 라벨 결정
   const getVerificationLabel = () => {
     switch (changeTypeName) {
@@ -124,12 +118,8 @@ const ProjectEfficiencyCard = ({ project, changeTypeName }) => {
   };
 
   return (
-    <section className="space-y-3">
-      <h3 className="text-base font-semibold text-gray-800">
-        {getSectionTitle()}
-      </h3>
-
-      {/* 4개의 메트릭 카드 - 1x4 가로 레이아웃 */}
+    <div className="space-y-4">
+      {/* 4개의 메트릭 카드 그리드 */}
       <div className="grid grid-cols-4 gap-2">
         <EfficiencyStatCard
           label="계획 공수"
@@ -155,9 +145,9 @@ const ProjectEfficiencyCard = ({ project, changeTypeName }) => {
           showIcon={false}
         />
         <EfficiencyStatCard
-          label="등록 태스크"
-          value={`${totalTasks}건`}
-          icon={FiLayers}
+          label="사업부 매출이익"
+          value={teamRevenueProfit ? `${Number(teamRevenueProfit).toLocaleString()}원` : '0원'}
+          icon={FiPieChart}
           colorClass="bg-indigo-500"
           showIcon={false}
         />
@@ -185,14 +175,14 @@ const ProjectEfficiencyCard = ({ project, changeTypeName }) => {
           </div>
         </div>
       )}
-    </section>
+    </div>
   );
 };
 
 ProjectEfficiencyCard.propTypes = {
   project: PropTypes.shape({
     revenueProfit: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-    projectType: PropTypes.oneOf([PROJECT_TYPE.REVENUE.code, PROJECT_TYPE.INVESTMENT.code]),
+    projectType: PropTypes.string,
     workType: PropTypes.string,
     projectTasks: PropTypes.arrayOf(
       PropTypes.shape({
@@ -205,7 +195,7 @@ ProjectEfficiencyCard.propTypes = {
       })
     ),
   }),
-  changeTypeName: PropTypes.oneOf(Object.values(STATUS_CHANGE_TYPE_CODES)),
+  changeTypeName: PropTypes.string,
 };
 
 export default ProjectEfficiencyCard;

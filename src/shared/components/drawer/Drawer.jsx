@@ -197,7 +197,7 @@ const DrawerContent = ({
   <div className="flex h-full flex-col overflow-hidden bg-white shadow-xl">
     {/* Header */}
     <div className="flex items-center justify-between border-b border-gray-200 px-8 py-5">
-      <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+      <div className="text-xl font-bold text-gray-900">{title}</div>
       <div className="flex items-center gap-2">
         {/* Header Actions (더보기 메뉴 등) */}
         {headerActions && <div className="flex items-center">{headerActions}</div>}
@@ -238,7 +238,7 @@ const DrawerContent = ({
 );
 
 DrawerContent.propTypes = {
-  title: PropTypes.string.isRequired,
+  title: PropTypes.oneOfType([PropTypes.string, PropTypes.node]).isRequired,
   onClose: PropTypes.func.isRequired,
   showCloseButton: PropTypes.bool,
   showMenu: PropTypes.bool,
@@ -250,7 +250,7 @@ DrawerContent.propTypes = {
 
 Drawer.propTypes = {
   visible: PropTypes.bool.isRequired,
-  title: PropTypes.string.isRequired,
+  title: PropTypes.oneOfType([PropTypes.string, PropTypes.node]).isRequired,
   onClose: PropTypes.func.isRequired,
   width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   level: PropTypes.oneOf(['primary', 'secondary']),

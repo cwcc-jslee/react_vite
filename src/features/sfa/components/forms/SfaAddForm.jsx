@@ -9,7 +9,7 @@ import RevenueSource from '../elements/RevenueSource.jsx';
 import SalesItemSection from '../sections/SalesItemSection.jsx';
 import PaymentEditDrawer from '../drawer/PaymentEditDrawer.jsx';
 import PaymentCardList from '../cards/PaymentCardList';
-import RevenueSummaryCard from '../cards/RevenueSummaryCard.jsx';
+import RevenueSummaryCard from '../../../../shared/components/cards/RevenueSummaryCard.jsx';
 import { useSfaForm1 } from '../../hooks/useSfaForm1.js';
 import { useSfaStore } from '../../hooks/useSfaStore.js';
 import { useSfaOperations } from '../../hooks/useSfaSubmit.js';

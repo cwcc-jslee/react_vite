@@ -10,14 +10,21 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { useDispatch } from 'react-redux';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import { Drawer } from '@shared/components/drawer';
 import { useProjectStore } from '../../hooks/useProjectStore';
 import { fetchProjectWorks } from '../../../../store/slices/projectSlice';
+import {
+  getProjectTypeInfo,
+  getWorkTypeInfo,
+} from '../../constants/projectTypeConstants';
 
 // 섹션 컴포넌트
 import ProjectDetailTableSection from '../../sections/ProjectDetailTableSection';
 import ProjectDetailTaskSection from '../../sections/ProjectDetailTaskSection';
+import ProjectOverviewSection from '../../sections/ProjectOverviewSection';
 import ProjectStatusDrawer from './ProjectStatusDrawer';
+import ProjectStatusHistoryTab from './tabs/ProjectStatusHistoryTab';
 
 // 메뉴 컴포넌트
 import ProjectDetailDrawerMenu from './ProjectDetailDrawerMenu';
@@ -27,16 +34,29 @@ const ProjectDetailDrawer = ({ visible, data, onClose }) => {
   const { actions: projectActions } = useProjectStore();
 
   // ==================== 탭 상태 관리 ====================
-  const [activeTab, setActiveTab] = useState('info'); // 'info' | 'task' | 'work' | 'timeline'
-  const [activeTaskView, setActiveTaskView] = useState('table'); // 'table' | 'board'
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'tasks' | 'history' | 'statusHistory'
+  const [activeTaskView, setActiveTaskView] = useState('table'); // 'table' | 'board' | 'timeline'
+
+  // ==================== Drawer 크기 관리 ====================
+  const [isExpanded, setIsExpanded] = useState(false);
+  const drawerWidth = isExpanded ? 'WIDE' : 'XL';
+
+  // 확장 버튼 노출 조건: 작업 관리(리스트/보드) 탭에서만 노출
+  const showExpandButton = 
+    activeTab === 'tasks' && ['table', 'board'].includes(activeTaskView);
+
+  // 탭 변경 시 기본 크기로 초기화
+  React.useEffect(() => {
+    setIsExpanded(false);
+  }, [activeTab]);
 
   // ==================== 진행상태 관리 Drawer 상태 ====================
   const [statusDrawerVisible, setStatusDrawerVisible] = useState(false);
   const [statusDrawerData, setStatusDrawerData] = useState(null);
 
-  // ==================== 작업 탭 활성화 시 데이터 조회 ====================
+  // ==================== 작업 이력 탭 활성화 시 데이터 조회 ====================
   React.useEffect(() => {
-    if (activeTab === 'work' && data?.id) {
+    if (activeTab === 'history' && data?.id) {
       dispatch(fetchProjectWorks({ projectId: data.id }));
     }
   }, [activeTab, data?.id, dispatch]);
@@ -48,57 +68,57 @@ const ProjectDetailDrawer = ({ visible, data, onClose }) => {
         {/* 메인 탭 */}
         <div className="flex gap-2">
           <button
-            onClick={() => setActiveTab('info')}
+            onClick={() => setActiveTab('overview')}
             className={`
               px-4 py-2 text-sm font-medium rounded-md transition-colors
-              ${activeTab === 'info'
+              ${activeTab === 'overview'
                 ? 'bg-blue-600 text-white'
                 : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
               }
             `}
           >
-            프로젝트 정보
+            개요
           </button>
           <button
-            onClick={() => setActiveTab('task')}
+            onClick={() => setActiveTab('tasks')}
             className={`
               px-4 py-2 text-sm font-medium rounded-md transition-colors
-              ${activeTab === 'task'
+              ${activeTab === 'tasks'
                 ? 'bg-blue-600 text-white'
                 : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
               }
             `}
           >
-            TASK 관리
+            작업 관리
           </button>
           <button
-            onClick={() => setActiveTab('work')}
+            onClick={() => setActiveTab('history')}
             className={`
               px-4 py-2 text-sm font-medium rounded-md transition-colors
-              ${activeTab === 'work'
+              ${activeTab === 'history'
                 ? 'bg-blue-600 text-white'
                 : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
               }
             `}
           >
-            작업
+            작업 이력
           </button>
           <button
-            onClick={() => setActiveTab('timeline')}
+            onClick={() => setActiveTab('statusHistory')}
             className={`
               px-4 py-2 text-sm font-medium rounded-md transition-colors
-              ${activeTab === 'timeline'
+              ${activeTab === 'statusHistory'
                 ? 'bg-blue-600 text-white'
                 : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
               }
             `}
           >
-            타임라인
+            변경이력
           </button>
         </div>
 
         {/* Task 서브메뉴 (Task 탭 선택 시만 표시) */}
-        {activeTab === 'task' && (
+        {activeTab === 'tasks' && (
           <>
             <div className="h-6 w-px bg-gray-300" /> {/* 구분선 */}
             <div className="flex gap-1">
@@ -112,7 +132,7 @@ const ProjectDetailDrawer = ({ visible, data, onClose }) => {
                   }
                 `}
               >
-                테이블
+                리스트
               </button>
               <button
                 onClick={() => setActiveTaskView('board')}
@@ -125,6 +145,18 @@ const ProjectDetailDrawer = ({ visible, data, onClose }) => {
                 `}
               >
                 보드
+              </button>
+              <button
+                onClick={() => setActiveTaskView('timeline')}
+                className={`
+                  px-3 py-1.5 text-xs font-medium rounded transition-colors
+                  ${activeTaskView === 'timeline'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-600 hover:bg-gray-100'
+                  }
+                `}
+              >
+                타임라인
               </button>
             </div>
           </>
@@ -175,40 +207,69 @@ const ProjectDetailDrawer = ({ visible, data, onClose }) => {
       {/* 1차 Drawer: 프로젝트 상세보기 (사이드바 제외 전체) */}
       <Drawer
         visible={visible}
-        title={`프로젝트 상세정보 - (${data.id}) ${data.name || ''}`}
+        title={
+          <div className="flex items-center gap-3">
+            <span>프로젝트 상세정보 - ({data.id}) {data.name || ''}</span>
+            <div className="flex items-center gap-1.5">
+              <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getProjectTypeInfo(data.projectType).colorClass}`}>
+                {getProjectTypeInfo(data.projectType).label}
+              </span>
+              <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getWorkTypeInfo(data.workType).colorClass}`}>
+                {getWorkTypeInfo(data.workType).label}
+              </span>
+            </div>
+          </div>
+        }
         onClose={onClose}
-        width="WIDE"
+        width={drawerWidth}
         level="primary"  // z-index: 50
         enableOverlayClick={false}
         mode="view"
         animationEnabled={true}
         headerActions={
-          <ProjectDetailDrawerMenu
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onHistory={handleHistory}
-          />
+          <div className="flex items-center gap-2">
+            {/* 확장/축소 버튼 */}
+            {showExpandButton && (
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                title={isExpanded ? '기본 크기로 복원' : '넓게 보기'}
+              >
+                {isExpanded ? (
+                  <Minimize2 className="w-5 h-5" />
+                ) : (
+                  <Maximize2 className="w-5 h-5" />
+                )}
+              </button>
+            )}
+            <ProjectDetailDrawerMenu
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onHistory={handleHistory}
+            />
+          </div>
         }
         menu={renderTabMenu()}
       >
         {/* 탭별 컨텐츠 */}
-        {activeTab === 'info' && (
-          <ProjectDetailTableSection
+        {activeTab === 'overview' && (
+          <ProjectOverviewSection
             data={data}
             projectTasks={data.projectTasks || []}
             onStatusClick={handleStatusClick}
           />
         )}
 
-        {activeTab === 'task' && (
+        {activeTab === 'tasks' && (
           <ProjectDetailTaskSection
             projectTaskBuckets={data.projectTaskBuckets || []}
             projectTasks={data.projectTasks || []}
             activeMenu={activeTaskView}
+            isExpanded={isExpanded}
           />
         )}
 
-        {activeTab === 'work' && (
+        {activeTab === 'history' && (
           <ProjectDetailTaskSection
             projectTaskBuckets={data.projectTaskBuckets || []}
             projectTasks={data.projectTasks || []}
@@ -216,10 +277,8 @@ const ProjectDetailDrawer = ({ visible, data, onClose }) => {
           />
         )}
 
-        {activeTab === 'timeline' && (
-          <div className="p-6 text-center text-gray-500 border border-dashed border-gray-300 rounded-md">
-            타임라인 뷰는 현재 개발 중입니다.
-          </div>
+        {activeTab === 'statusHistory' && (
+          <ProjectStatusHistoryTab data={data} />
         )}
       </Drawer>
 

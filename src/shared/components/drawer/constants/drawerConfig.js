@@ -25,6 +25,7 @@ export const DRAWER_SIZE_CLASSES = {
   SM: 'w-[400px]',
   MD: 'w-[600px]',
   LG: 'w-[800px]',
+  LG_PLUS: 'w-[850px]', // 중첩 Drawer용
   XL: 'w-[1000px]',
   XXL: 'w-[1200px]',
   // WIDE: 'w-[calc(100vw-256px)]',
@@ -40,6 +41,7 @@ export const LEGACY_SIZE_MAP = {
   '400px': 'SM',
   '600px': 'MD',
   '800px': 'LG',
+  '850px': 'LG_PLUS',
   '900px': 'XL', // 기존 900px도 XL로 매핑 (하위 호환성)
   '1100px': 'XL',
 };

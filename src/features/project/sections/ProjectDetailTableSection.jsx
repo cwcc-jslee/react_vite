@@ -1,10 +1,6 @@
-// src/features/project/sections/ProjectDetailTableSection.jsx
-// 3단계 정보 계층 구조로 개선된 프로젝트 정보 섹션
-
 import React, { useMemo } from 'react';
 import { useUiStore } from '../../../shared/hooks/useUiStore';
 import ProjectMetricsSection from '../components/metrics/ProjectMetricsSection';
-import ProjectDetailInfo from '../components/details/ProjectDetailInfo';
 import {
   calculateProjectTotalPlannedHours,
   validateProjectPlanningHours,
@@ -14,7 +10,6 @@ import { calculateProjectProgress } from '../utils/projectProgressUtils';
 /**
  * 프로젝트 정보 섹션 컴포넌트
  * Tier 1: 핵심 지표 (카드)
- * Tier 2: 상세 정보 (Expandable)
  */
 const ProjectDetailTableSection = ({ data, projectTasks, onStatusClick }) => {
   const { actions } = useUiStore();
@@ -80,9 +75,6 @@ const ProjectDetailTableSection = ({ data, projectTasks, onStatusClick }) => {
         projectMetrics={projectMetrics}
         onStatusClick={handleStatusSectionClick}
       />
-
-      {/* Tier 2: 상세 정보 (Expandable) */}
-      <ProjectDetailInfo data={data} />
     </div>
   );
 };

@@ -22,7 +22,7 @@ import PaymentListSection from './sections/PaymentListSection.jsx';
 import ProjectRelationSection from './sections/ProjectRelationSection.jsx';
 import PaymentEditDrawer from './PaymentEditDrawer.jsx';
 import TeamSalesEditDrawer from './TeamSalesEditDrawer.jsx';
-import RevenueSummaryCard from '../cards/RevenueSummaryCard.jsx';
+import RevenueSummaryCard from '../../../../shared/components/cards/RevenueSummaryCard.jsx';
 import { CircleDollarSign, Briefcase } from 'lucide-react';
 
 const SfaViewDrawer = React.memo(

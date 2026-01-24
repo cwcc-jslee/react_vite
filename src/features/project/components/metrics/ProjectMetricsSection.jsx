@@ -4,13 +4,13 @@
 import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import MetricCard from '@shared/components/ui/card/MetricCard';
-import { Progress, Badge } from '@shared/components/ui/index';
+import { Progress } from '@shared/components/ui/index';
 import CompactStatusBadge from '../ui/CompactStatusBadge';
 import { PROJECT_EXCEPTION_STATUS } from '../../constants/projectStatusConstants';
 
 /**
  * 프로젝트 핵심 지표 섹션 컴포넌트
- * 6개의 핵심 지표를 카드 형태로 표시
+ * 핵심 지표를 카드 형태로 표시
  */
 const ProjectMetricsSection = ({
   data = {},
@@ -103,65 +103,63 @@ const ProjectMetricsSection = ({
     return 'default';
   };
 
-  // 금액 검증 상태
-  const getPriceValidationVariant = () => {
-    if (!validation.totalAmount) return 'default';
-    if (validation.status === 'error') return 'danger';
-    if (validation.status === 'warning') return 'warning';
-    if (validation.status === 'caution') return 'primary';
-    return 'success';
-  };
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {/* 1. 진행상태 카드 */}
+      {/* 1. 진행상태/진행률 통합 카드 */}
       <MetricCard title="진행상태" icon="📊">
-        <div className="flex flex-col gap-3">
-          <CompactStatusBadge
-            currentStatus={statusMetadata.currentStatus}
-            previousStatus={statusMetadata.previousStatus}
-            statusDetail={statusMetadata.statusDetail}
-            approvalStatus={statusMetadata.approvalStatus}
-            isException={statusMetadata.currentStatus === PROJECT_EXCEPTION_STATUS}
-            onClick={onStatusClick}
-            timeAgo={statusMetadata.requestedAt}
-            changedBy={statusMetadata.changedBy}
-            requestedStatus={statusMetadata.requestedStatus}
-          />
-
-          {/* 종료 상태 표시 */}
-          {data.isClosed && (
-            <div className="text-sm">
-              <span className="text-gray-500">종료: </span>
-              <span className="font-medium text-gray-700">
-                {data.projectClosure?.closureType?.name || '종료'}
+        {data.isClosed ? (
+          /* 종료 상태인 경우 */
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1.5 rounded-md text-sm font-bold bg-gray-100 text-gray-700 border border-gray-300">
+                종료
+              </span>
+              <span className="text-sm text-gray-600">
+                {data.projectClosure?.closureType?.name || ''}
               </span>
             </div>
-          )}
-        </div>
+            {data.projectClosure?.closureDate && (
+              <div className="text-xs text-gray-500">
+                종료일: {data.projectClosure.closureDate}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* 진행 중인 경우: 진행상태 + 승인상태 + 진행률 */
+          <div className="flex flex-col gap-3">
+            {/* 진행상태 및 승인상태 */}
+            <CompactStatusBadge
+              currentStatus={statusMetadata.currentStatus}
+              previousStatus={statusMetadata.previousStatus}
+              statusDetail={statusMetadata.statusDetail}
+              approvalStatus={statusMetadata.approvalStatus}
+              isException={statusMetadata.currentStatus === PROJECT_EXCEPTION_STATUS}
+              onClick={onStatusClick}
+              timeAgo={statusMetadata.requestedAt}
+              changedBy={statusMetadata.changedBy}
+              requestedStatus={statusMetadata.requestedStatus}
+            />
+
+            {/* 진행률 */}
+            <div className="pt-2 border-t border-gray-100">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-gray-500">진행률</span>
+                <span className="text-sm font-bold text-blue-600">
+                  {calculatedProgress}%
+                </span>
+              </div>
+              <Progress
+                percent={calculatedProgress}
+                status={calculatedProgress >= 100 ? 'success' : 'normal'}
+                size="small"
+                showInfo={false}
+              />
+            </div>
+          </div>
+        )}
       </MetricCard>
 
-      {/* 2. 진행률 카드 */}
-      <MetricCard title="진행률" icon="📈">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-blue-600">
-              {calculatedProgress}
-            </span>
-            <span className="text-lg text-gray-500">%</span>
-          </div>
-          <Progress
-            percent={calculatedProgress}
-            status={calculatedProgress >= 100 ? 'success' : 'normal'}
-            size="small"
-          />
-          <div className="text-xs text-gray-500">
-            가중평균 진행률 (계획시간 기반)
-          </div>
-        </div>
-      </MetricCard>
-
-      {/* 3. TASK 카드 */}
+      {/* 2. TASK 카드 */}
       <MetricCard title="TASK" icon="✅">
         <div className="flex flex-col gap-2">
           <div className="flex items-baseline gap-2">
@@ -182,7 +180,7 @@ const ProjectMetricsSection = ({
         </div>
       </MetricCard>
 
-      {/* 4. 투입/계획시간 카드 */}
+      {/* 3. 투입/계획시간 카드 */}
       <MetricCard
         title="투입/계획시간"
         icon="⏱️"
@@ -231,45 +229,7 @@ const ProjectMetricsSection = ({
         </div>
       </MetricCard>
 
-      {/* 5. 프로젝트 금액 카드 */}
-      <MetricCard
-        title="프로젝트 금액"
-        icon="💰"
-        variant={getPriceValidationVariant()}
-      >
-        <div className="flex flex-col gap-2">
-          {validation.totalAmount ? (
-            <>
-              <div className="text-2xl font-bold text-gray-700">
-                {(validation.totalAmount / 10000).toLocaleString()}
-                <span className="text-sm font-normal text-gray-500 ml-1">만원</span>
-              </div>
-              <Badge
-                className={`${
-                  validation.status === 'error'
-                    ? 'bg-red-100 text-red-800'
-                    : validation.status === 'warning'
-                    ? 'bg-amber-100 text-amber-800'
-                    : validation.status === 'caution'
-                    ? 'bg-blue-100 text-blue-800'
-                    : 'bg-green-100 text-green-800'
-                }`}
-                label={`계획시간 ${validation.message}`}
-              />
-              <div className="text-xs text-gray-500">
-                적정시간: {validation.expectedHours}h
-                ({validation.percentage > 0 ? '+' : ''}{validation.percentage}%)
-              </div>
-            </>
-          ) : (
-            <div className="text-sm text-gray-400">
-              매출정보 없음
-            </div>
-          )}
-        </div>
-      </MetricCard>
-
-      {/* 6. 프로젝트 기간 카드 */}
+      {/* 4. 프로젝트 기간 카드 */}
       <MetricCard title="프로젝트 기간" icon="📅">
         <div className="flex flex-col gap-1">
           {formatProjectDuration()}

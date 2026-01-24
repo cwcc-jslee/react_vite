@@ -24,9 +24,10 @@ const ProjectStatusDrawer = ({ visible, data, onClose }) => {
           onClick={() => setActiveTab('flow')}
           className={`
             px-4 py-2 text-sm font-medium rounded-md transition-colors
-            ${activeTab === 'flow'
-              ? 'bg-blue-600 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+            ${
+              activeTab === 'flow'
+                ? 'bg-blue-600 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
             }
           `}
         >
@@ -36,9 +37,10 @@ const ProjectStatusDrawer = ({ visible, data, onClose }) => {
           onClick={() => setActiveTab('history')}
           className={`
             px-4 py-2 text-sm font-medium rounded-md transition-colors
-            ${activeTab === 'history'
-              ? 'bg-blue-600 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+            ${
+              activeTab === 'history'
+                ? 'bg-blue-600 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
             }
           `}
         >
@@ -56,8 +58,8 @@ const ProjectStatusDrawer = ({ visible, data, onClose }) => {
       visible={visible}
       title="프로젝트 상태 관리"
       onClose={onClose}
-      width="900px"
-      level="secondary"  // z-index: 60 (중첩 Drawer)
+      width="LG_PLUS"
+      level="secondary" // z-index: 60 (중첩 Drawer)
       enableOverlayClick={false}
       mode="status"
       animationEnabled={true}

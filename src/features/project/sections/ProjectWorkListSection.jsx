@@ -42,7 +42,7 @@ const EmptyState = () => (
  *
  * @returns {JSX.Element} 프로젝트 테이블 섹션
  */
-const ProjectWorkListSection = () => {
+const ProjectWorkListSection = ({ isExpanded = false }) => {
   const { selectedItem, actions } = useProjectStore();
   const { works } = selectedItem || {};
   const { items, status, error, pagination } = works || {};
@@ -70,6 +70,7 @@ const ProjectWorkListSection = () => {
             pagination={pagination}
             handlePageChange={handlePageChange}
             handlePageSizeChange={handlePageSizeChange}
+            isExpanded={isExpanded}
           />
         ) : (
           <EmptyState />

@@ -3,12 +3,14 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useUiStore } from '../../../../shared/hooks/useUiStore';
+import { useTableColumns } from '../../../../shared/hooks/useTableColumns';
 import {
   Checkbox,
   Badge,
   Tooltip,
   Progress,
   Button,
+  TableColumnMenu,
 } from '../../../../shared/components/ui';
 import {
   FiCheckSquare,
@@ -25,15 +27,91 @@ import dayjs from 'dayjs';
 import { getTaskScheduleStatus } from '../../utils/scheduleStatusUtils';
 import { useProjectTaskUpdate } from '../../hooks/useProjectTaskUpdate';
 
+// 테이블 컬럼 정의
+const COLUMNS_DEF = [
+  { key: 'index', title: '순번', align: 'center', width: '60px', essential: true },
+  { key: 'priority', title: '우선순위', align: 'center' },
+  { key: 'completed', title: '완료', align: 'center', width: '60px' },
+  { key: 'taskStatus', title: 'TASK상태', align: 'center', width: '80px', essential: true },
+  {
+    key: 'timeOverStatus',
+    title: '시간초과',
+    align: 'center',
+    width: '80px',
+  },
+  { key: 'name', title: '작업명', align: 'left', essential: true },
+  { key: 'bucket', title: '버킷', align: 'center' },
+  { key: 'isScheduled', title: '일정구분', align: 'center' },
+  { key: 'progress', title: '진행률', align: 'center', width: '80px' },
+  { key: 'checklistProgress', title: '체크리스트', align: 'center' },
+  { key: 'assignee', title: '할당대상', align: 'center' },
+  { key: 'startDate', title: '시작일', align: 'center' },
+  { key: 'endDate', title: '완료일', align: 'center' },
+  { key: 'recentWorkDate', title: '최근작업일', align: 'center' },
+  { key: 'duration', title: '기간', align: 'center', width: '70px' },
+  {
+    key: 'totalWorkHours',
+    title: '작업/계획',
+    align: 'left',
+    width: '80px',
+  },
+  { key: 'actions', title: 'ACTION', align: 'center', width: '80px', essential: true },
+];
+
+// 기본적으로 표시할 컬럼 (기본 모드 - XL)
+const DEFAULT_COLUMNS_XL = [
+  'index',
+  'taskStatus',
+  'name',
+  'bucket',
+  'progress',
+  'assignee',
+  'endDate',
+  'recentWorkDate',
+  'totalWorkHours',
+  'actions',
+];
+
+// 확장 모드 (WIDE) 표시 컬럼
+const DEFAULT_COLUMNS_WIDE = [
+  'index',
+  'priority',
+  'taskStatus',
+  'timeOverStatus',
+  'name',
+  'bucket',
+  'isScheduled',
+  'progress',
+  'checklistProgress',
+  'assignee',
+  'startDate',
+  'endDate',
+  'recentWorkDate',
+  'duration',
+  'totalWorkHours',
+  'actions',
+];
+
 /**
  * 프로젝트 작업 테이블 컴포넌트
  * 프로젝트의 작업 목록을 테이블 형태로 표시
  */
-const ProjectTaskList = ({ projectTasks = [] }) => {
+const ProjectTaskList = ({ projectTasks = [], isExpanded = false }) => {
   console.log(`>>>> project task list  실행`);
   const dispatch = useDispatch();
   const { actions } = useUiStore();
   const { isUpdating, completeTask } = useProjectTaskUpdate();
+
+  // 컬럼 표시 상태 관리
+  const { visibleColumns, toggleColumn, resetColumns, showAllColumns, setVisibleColumns } =
+    useTableColumns(isExpanded ? DEFAULT_COLUMNS_WIDE : DEFAULT_COLUMNS_XL);
+
+  // 확장 상태 변경 시 컬럼 자동 조정
+  useEffect(() => {
+    setVisibleColumns(isExpanded ? DEFAULT_COLUMNS_WIDE : DEFAULT_COLUMNS_XL);
+  }, [isExpanded, setVisibleColumns]);
+
+  const isColumnVisible = (key) => visibleColumns.includes(key);
 
   // 완료 처리 상태 관리
   const [completingTaskId, setCompletingTaskId] = useState(null);
@@ -144,41 +222,10 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
     }
   };
 
-  // 테이블 컬럼 정의
-  const columns = [
-    { key: 'index', title: '순번', align: 'center', width: '60px' },
-    { key: 'priority', title: '우선순위', align: 'center' },
-    { key: 'completed', title: '완료', align: 'center', width: '60px' },
-    { key: 'taskStatus', title: 'TASK상태', align: 'center', width: '80px' },
-    {
-      key: 'timeOverStatus',
-      title: '시간초과',
-      align: 'center',
-      width: '80px',
-    },
-    { key: 'name', title: '작업명', align: 'left' },
-    { key: 'bucket', title: '버킷', align: 'center' },
-    { key: 'isScheduled', title: '일정구분', align: 'center' },
-    { key: 'progress', title: '진행률', align: 'center', width: '80px' },
-    { key: 'checklistProgress', title: '체크리스트', align: 'center' },
-    { key: 'assignee', title: '할당대상', align: 'center' },
-    { key: 'startDate', title: '시작일', align: 'center' },
-    { key: 'endDate', title: '완료일', align: 'center' },
-    { key: 'recentWorkDate', title: '최근작업일', align: 'center' },
-    { key: 'duration', title: '기간', align: 'center', width: '70px' },
-    {
-      key: 'totalWorkHours',
-      title: '작업/계획',
-      align: 'left',
-      width: '80px',
-    },
-    { key: 'actions', title: 'ACTION', align: 'center', width: '80px' },
-  ];
-
   // 빈 데이터 상태 표시 컴포넌트
   const EmptyState = () => (
     <tr>
-      <td colSpan={columns.length} className="py-8">
+      <td colSpan={visibleColumns.length} className="py-8">
         <div className="flex flex-col items-center justify-center gap-2">
           <span className="text-sm text-gray-500">등록된 작업이 없습니다</span>
         </div>
@@ -251,7 +298,7 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
       <table className="w-full">
         <thead>
           <tr className="bg-gray-50 border-y border-gray-200">
-            {columns.map((column) => (
+            {COLUMNS_DEF.filter((col) => isColumnVisible(col.key)).map((column) => (
               <th
                 key={column.key}
                 className={`px-3 py-2 text-sm font-semibold text-gray-700 whitespace-nowrap
@@ -260,7 +307,22 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
                   `}
                 style={{ width: column.width }}
               >
-                {column.title}
+                {column.key === 'actions' ? (
+                  <div className="flex items-center justify-center gap-1">
+                    {/* 설정 아이콘 - 컬럼 토글 */}
+                    <TableColumnMenu
+                      columns={COLUMNS_DEF}
+                      visibleColumns={visibleColumns}
+                      onToggleColumn={toggleColumn}
+                      onReset={resetColumns}
+                      onShowAll={showAllColumns}
+                      essentialColumns={COLUMNS_DEF.filter(c => c.essential).map(c => c.key)}
+                      defaultVisibleColumns={isExpanded ? DEFAULT_COLUMNS_WIDE : DEFAULT_COLUMNS_XL}
+                    />
+                  </div>
+                ) : (
+                  column.title
+                )}
               </th>
             ))}
           </tr>
@@ -280,284 +342,318 @@ const ProjectTaskList = ({ projectTasks = [] }) => {
                   onClick={() => handleTaskRowClick(task)}
                 >
                   {/* 순번 */}
-                  <td className="px-3 py-2 text-center text-sm">{index + 1}</td>
+                  {isColumnVisible('index') && (
+                    <td className="px-3 py-2 text-center text-sm">{index + 1}</td>
+                  )}
 
                   {/* 우선순위 */}
-                  <td className="px-3 py-2 text-center">
-                    {task.priorityLevel ? (
-                      <Badge
-                        className={`${getPriorityColor(
-                          task.priority,
-                        )} text-white`}
-                        label={task.priorityLevel}
-                      />
-                    ) : (
-                      '-'
-                    )}
-                  </td>
+                  {isColumnVisible('priority') && (
+                    <td className="px-3 py-2 text-center">
+                      {task.priorityLevel ? (
+                        <Badge
+                          className={`${getPriorityColor(
+                            task.priority,
+                          )} text-white`}
+                          label={task.priorityLevel}
+                        />
+                      ) : (
+                        '-'
+                      )}
+                    </td>
+                  )}
 
                   {/* 완료 체크박스 */}
-                  <td className="px-3 py-2 text-center">
-                    <Checkbox checked={task.isCompleted} disabled={true} />
-                  </td>
+                  {isColumnVisible('completed') && (
+                    <td className="px-3 py-2 text-center">
+                      <Checkbox checked={task.isCompleted} disabled={true} />
+                    </td>
+                  )}
 
                   {/* TASK상태 */}
-                  <td className="px-3 py-2 text-center text-sm">
-                    {formatTaskStatus(task)}
-                  </td>
+                  {isColumnVisible('taskStatus') && (
+                    <td className="px-3 py-2 text-center text-sm">
+                      {formatTaskStatus(task)}
+                    </td>
+                  )}
 
                   {/* 시간초과 */}
-                  <td className="px-3 py-2 text-center text-sm">
-                    {formatTaskTimeOverStatus(task)}
-                  </td>
+                  {isColumnVisible('timeOverStatus') && (
+                    <td className="px-3 py-2 text-center text-sm">
+                      {formatTaskTimeOverStatus(task)}
+                    </td>
+                  )}
 
                   {/* 작업명 */}
-                  <td className="px-3 py-2 text-sm">
-                    <div
-                      className={`${
-                        task.isCompleted ? 'line-through text-gray-400' : ''
-                      }`}
-                    >
-                      {task.name}
-                    </div>
-                  </td>
+                  {isColumnVisible('name') && (
+                    <td className="px-3 py-2 text-sm">
+                      <div
+                        className={`${
+                          task.isCompleted ? 'line-through text-gray-400' : ''
+                        }`}
+                      >
+                        {task.name}
+                      </div>
+                    </td>
+                  )}
 
                   {/* 버킷 */}
-                  <td className="px-3 py-2 text-center text-sm">
-                    <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-md text-xs">
-                      {task?.projectTaskBucket?.name}
-                    </span>
-                  </td>
+                  {isColumnVisible('bucket') && (
+                    <td className="px-3 py-2 text-center text-sm">
+                      <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-md text-xs">
+                        {task?.projectTaskBucket?.name}
+                      </span>
+                    </td>
+                  )}
 
                   {/* 스케줄 타입 */}
-                  <td className="px-3 py-2 text-center text-sm">
-                    {task.isScheduled ? (
-                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs">
-                        SCHEDULED
-                      </span>
-                    ) : (
-                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs">
-                        ONGOING
-                      </span>
-                    )}
-                  </td>
+                  {isColumnVisible('isScheduled') && (
+                    <td className="px-3 py-2 text-center text-sm">
+                      {task.isScheduled ? (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-xs">
+                          SCHEDULED
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs">
+                          ONGOING
+                        </span>
+                      )}
+                    </td>
+                  )}
 
                   {/* 진행률 */}
-                  <td className="px-3 py-2 text-center text-sm">
-                    {task.isProgress ? (
-                      <span className="text-gray-900 font-medium">
-                        {typeof task.taskProgress?.name === 'string'
-                          ? parseInt(task.taskProgress.name, 10)
-                          : task.taskProgress?.name || 0}
-                        %
-                      </span>
-                    ) : (
-                      '-'
-                    )}
-                  </td>
+                  {isColumnVisible('progress') && (
+                    <td className="px-3 py-2 text-center text-sm">
+                      {task.isProgress ? (
+                        <span className="text-gray-900 font-medium">
+                          {typeof task.taskProgress?.name === 'string'
+                            ? parseInt(task.taskProgress.name, 10)
+                            : task.taskProgress?.name || 0}
+                          %
+                        </span>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
+                  )}
 
                   {/* 체크리스트 */}
-                  <td className="px-3 py-2 text-center">
-                    {task.checklist?.length > 0 ? (
-                      <Tooltip
-                        content={`${
-                          task.checklist.filter((item) => item.checked).length
-                        }/${task.checklist.length} 완료`}
-                      >
-                        <div className="flex items-center gap-1">
-                          <FiCheckSquare className="text-indigo-500" />
-                          <span className="text-xs">
-                            {
-                              task.checklist.filter((item) => item.checked)
-                                .length
-                            }
-                            /{task.checklist.length}
-                          </span>
-                        </div>
-                      </Tooltip>
-                    ) : (
-                      '-'
-                    )}
-                  </td>
+                  {isColumnVisible('checklistProgress') && (
+                    <td className="px-3 py-2 text-center">
+                      {task.checklist?.length > 0 ? (
+                        <Tooltip
+                          content={`${
+                            task.checklist.filter((item) => item.checked).length
+                          }/${task.checklist.length} 완료`}
+                        >
+                          <div className="flex items-center gap-1">
+                            <FiCheckSquare className="text-indigo-500" />
+                            <span className="text-xs">
+                              {
+                                task.checklist.filter((item) => item.checked)
+                                  .length
+                              }
+                              /{task.checklist.length}
+                            </span>
+                          </div>
+                        </Tooltip>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
+                  )}
 
                   {/* 할당대상 */}
-                  <td className="px-3 py-2 text-center text-sm">
-                    {task.users && task.users.length > 0 ? (
-                      <div className="flex items-center justify-center">
-                        {task.users.slice(0, 2).map((user, index) => (
-                          <div
-                            key={user.id || index}
-                            className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-800 -ml-1 first:ml-0"
-                          >
-                            {user.username
-                              ? user.username.substring(1, 3)
-                              : '??'}
-                          </div>
-                        ))}
-                        {task.users.length > 2 && (
-                          <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 -ml-1">
-                            +{task.users.length - 2}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      '-'
-                    )}
-                  </td>
+                  {isColumnVisible('assignee') && (
+                    <td className="px-3 py-2 text-center text-sm">
+                      {task.users && task.users.length > 0 ? (
+                        <div className="flex items-center justify-center">
+                          {task.users.slice(0, 2).map((user, index) => (
+                            <div
+                              key={user.id || index}
+                              className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-800 -ml-1 first:ml-0"
+                            >
+                              {user.username
+                                ? user.username.substring(1, 3)
+                                : '??'}
+                            </div>
+                          ))}
+                          {task.users.length > 2 && (
+                            <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-medium text-gray-600 -ml-1">
+                              +{task.users.length - 2}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
+                  )}
 
                   {/* 시작일 */}
-                  <td className="px-3 py-2 text-center text-sm">
-                    <Tooltip
-                      content={
-                        <>
-                          {task.startDate && (
-                            <div>확정: {formatDate(task.startDate)}</div>
-                          )}
-                          {task.planStartDate && (
-                            <div>예정: {formatDate(task.planStartDate)}</div>
-                          )}
-                        </>
-                      }
-                    >
-                      <span
-                        className={`inline-flex items-center ${
-                          task.startDate
-                            ? 'text-gray-900'
-                            : 'text-gray-500 italic'
-                        }`}
+                  {isColumnVisible('startDate') && (
+                    <td className="px-3 py-2 text-center text-sm">
+                      <Tooltip
+                        content={
+                          <>
+                            {task.startDate && (
+                              <div>확정: {formatDate(task.startDate)}</div>
+                            )}
+                            {task.planStartDate && (
+                              <div>예정: {formatDate(task.planStartDate)}</div>
+                            )}
+                          </>
+                        }
                       >
-                        {formatDate(task.startDate || task.planStartDate)}
-                        {!task.startDate && task.planStartDate && (
-                          <span className="ml-1 text-xs text-gray-500">
-                            (예)
-                          </span>
-                        )}
-                      </span>
-                    </Tooltip>
-                  </td>
+                        <span
+                          className={`inline-flex items-center ${
+                            task.startDate
+                              ? 'text-gray-900'
+                              : 'text-gray-500 italic'
+                          }`}
+                        >
+                          {formatDate(task.startDate || task.planStartDate)}
+                          {!task.startDate && task.planStartDate && (
+                            <span className="ml-1 text-xs text-gray-500">
+                              (예)
+                            </span>
+                          )}
+                        </span>
+                      </Tooltip>
+                    </td>
+                  )}
 
                   {/* 완료일 */}
-                  <td className="px-3 py-2 text-center text-sm">
-                    <Tooltip
-                      content={
-                        <>
-                          {task.endDate && (
-                            <div>확정: {formatDate(task.endDate)}</div>
-                          )}
-                          {task.plannedEndDate && (
-                            <div>예정: {formatDate(task.planEndDate)}</div>
-                          )}
-                        </>
-                      }
-                    >
-                      <span
-                        className={`inline-flex items-center ${
-                          task.endDate
-                            ? 'text-gray-900'
-                            : 'text-gray-500 italic'
-                        }`}
+                  {isColumnVisible('endDate') && (
+                    <td className="px-3 py-2 text-center text-sm">
+                      <Tooltip
+                        content={
+                          <>
+                            {task.endDate && (
+                              <div>확정: {formatDate(task.endDate)}</div>
+                            )}
+                            {task.plannedEndDate && (
+                              <div>예정: {formatDate(task.planEndDate)}</div>
+                            )}
+                          </>
+                        }
                       >
-                        {formatDate(task.endDate || task.planEndDate)}
-                        {!task.endDate && task.planEndDate && (
-                          <span className="ml-1 text-xs text-gray-500">
-                            (예)
-                          </span>
-                        )}
-                      </span>
-                    </Tooltip>
-                  </td>
+                        <span
+                          className={`inline-flex items-center ${
+                            task.endDate
+                              ? 'text-gray-900'
+                              : 'text-gray-500 italic'
+                          }`}
+                        >
+                          {formatDate(task.endDate || task.planEndDate)}
+                          {!task.endDate && task.planEndDate && (
+                            <span className="ml-1 text-xs text-gray-500">
+                              (예)
+                            </span>
+                          )}
+                        </span>
+                      </Tooltip>
+                    </td>
+                  )}
 
                   {/* 최근작업일 */}
-                  <td className="px-3 py-2 text-center text-sm">
-                    {task.lastWorkupdateDate ? (
-                      <span className="text-gray-900">
-                        {formatDate(task.lastWorkupdateDate)}
-                      </span>
-                    ) : (
-                      '-'
-                    )}
-                  </td>
+                  {isColumnVisible('recentWorkDate') && (
+                    <td className="px-3 py-2 text-center text-sm">
+                      {task.lastWorkupdateDate ? (
+                        <span className="text-gray-900">
+                          {formatDate(task.lastWorkupdateDate)}
+                        </span>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
+                  )}
 
                   {/* 기간 */}
-                  <td className="px-3 py-2 text-center text-sm">
-                    {calculateDuration(task.planStartDate, task.planEndDate)}
-                  </td>
+                  {isColumnVisible('duration') && (
+                    <td className="px-3 py-2 text-center text-sm">
+                      {calculateDuration(task.planStartDate, task.planEndDate)}
+                    </td>
+                  )}
 
                   {/* 작업시간 */}
-                  <td className="px-3 py-2 text-center text-sm">
-                    {task.totalWorkHours ||
-                    task.planningTimeData?.totalPlannedHours ? (
-                      <div className="flex flex-col items-center gap-0.5">
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-gray-500">작업</span>
-                          <span
-                            className={`font-medium ${
-                              task.totalWorkHours >
-                              (task.planningTimeData?.totalPlannedHours || 0)
-                                ? 'text-red-500'
-                                : 'text-gray-700'
-                            }`}
-                          >
-                            {task.totalWorkHours
-                              ? `${task.totalWorkHours}h`
-                              : '0h'}
-                          </span>
+                  {isColumnVisible('totalWorkHours') && (
+                    <td className="px-3 py-2 text-center text-sm">
+                      {task.totalWorkHours ||
+                      task.planningTimeData?.totalPlannedHours ? (
+                        <div className="flex flex-col items-center gap-0.5">
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-gray-500">작업</span>
+                            <span
+                              className={`font-medium ${
+                                task.totalWorkHours >
+                                (task.planningTimeData?.totalPlannedHours || 0)
+                                  ? 'text-red-500'
+                                  : 'text-gray-700'
+                              }`}
+                            >
+                              {task.totalWorkHours
+                                ? `${task.totalWorkHours}h`
+                                : '0h'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-xs text-gray-500">계획</span>
+                            <span className="text-gray-700">
+                              {task.planningTimeData?.totalPlannedHours || 0}h
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs text-gray-500">계획</span>
-                          <span className="text-gray-700">
-                            {task.planningTimeData?.totalPlannedHours || 0}h
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      '-'
-                    )}
-                  </td>
+                      ) : (
+                        '-'
+                      )}
+                    </td>
+                  )}
 
                   {/* ACTION */}
-                  <td className="px-3 py-2 text-center relative">
-                    <div className="relative">
-                      <button
-                        onClick={(event) => toggleActionMenu(task.id, event)}
-                        className="p-1 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <FiMoreVertical size={16} className="text-gray-600" />
-                      </button>
+                  {isColumnVisible('actions') && (
+                    <td className="px-3 py-2 text-center relative">
+                      <div className="relative">
+                        <button
+                          onClick={(event) => toggleActionMenu(task.id, event)}
+                          className="p-1 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <FiMoreVertical size={16} className="text-gray-600" />
+                        </button>
 
-                      {/* 드롭다운 메뉴 */}
-                      {openMenuId === task.id && (
-                        <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-md shadow-lg z-10 min-w-[120px]">
-                          <button
-                            onClick={(event) =>
-                              handleActionClick('detail', task, event)
-                            }
-                            className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
-                          >
-                            <FiEye size={14} />
-                            TASK 상세
-                          </button>
-                          {!task.isCompleted && (
+                        {/* 드롭다운 메뉴 */}
+                        {openMenuId === task.id && (
+                          <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-md shadow-lg z-10 min-w-[120px]">
                             <button
                               onClick={(event) =>
-                                handleActionClick('complete', task, event)
+                                handleActionClick('detail', task, event)
                               }
-                              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100"
+                              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
                             >
-                              <FiCheck size={14} />
-                              완료처리
+                              <FiEye size={14} />
+                              TASK 상세
                             </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </td>
+                            {!task.isCompleted && (
+                              <button
+                                onClick={(event) =>
+                                  handleActionClick('complete', task, event)
+                                }
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100"
+                              >
+                                <FiCheck size={14} />
+                                완료처리
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                  )}
                 </tr>
 
                 {/* 완료 처리 입력 행 - 해당 작업 바로 아래 표시 */}
                 {completingTaskId === task.id && (
                   <tr className="bg-blue-50 border-t-2 border-blue-200">
-                    <td colSpan={columns.length} className="px-3 py-4">
+                    <td colSpan={visibleColumns.length} className="px-3 py-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <span className="text-sm font-medium text-blue-700">
