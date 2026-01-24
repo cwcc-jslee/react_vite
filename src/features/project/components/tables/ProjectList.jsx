@@ -1,15 +1,16 @@
 // src/features/project/components/table/ProjectTable.jsx
 import React from 'react';
 import { useDispatch } from 'react-redux';
-import { Button } from '../../../../shared/components/ui';
-import { Pagination } from '../../../../shared/components/ui/pagination/Pagination';
+import { Button, TableColumnMenu } from '@shared/components/ui';
+import { Pagination } from '@shared/components/ui/pagination/Pagination';
+import { useTableColumns } from '@shared/hooks/useTableColumns';
 import { fetchProjectDetail } from '../../store/projectStoreActions';
-import Badge from '../../../../shared/components/ui/badge/Badge';
+import Badge from '@shared/components/ui/badge/Badge';
 
 // 컴포넌트
 
 const COLUMNS = [
-  { key: 'id', title: 'ID', align: 'left' },
+  { key: 'id', title: 'ID', align: 'left', essential: true },
   {
     key: 'scheduleStatus',
     title: (
@@ -33,8 +34,9 @@ const COLUMNS = [
   { key: 'taskStatus', title: 'TASK상태', align: 'center' },
   { key: 'timeOverStatus', title: '시간초과', align: 'center' },
   { key: 'customer', title: '고객사', align: 'left' },
-  { key: 'name', title: '프로젝트명', align: 'left' },
+  { key: 'name', title: '프로젝트명', align: 'left', essential: true },
   { key: 'progressStatus', title: '진행상태', align: 'center' },
+  { key: 'approvalStatus', title: '승인상태', align: 'center' },
   { key: 'importanceLevel', title: '중요도', align: 'center' },
   { key: 'projectProgress', title: '진행률', align: 'center' },
   { key: 'taskCount', title: 'TASK', align: 'center' },
@@ -52,7 +54,23 @@ const COLUMNS = [
     ),
     align: 'center',
   },
-  { key: 'action', title: 'Action', align: 'center' },
+  { key: 'action', title: 'Action', align: 'center', essential: true },
+];
+
+const DEFAULT_VISIBLE_COLUMNS = [
+  'id',
+  'scheduleStatus',
+  'remainingDays',
+  'taskStatus',
+  'timeOverStatus',
+  'customer',
+  'name',
+  'progressStatus',
+  'approvalStatus',
+  'projectProgress',
+  'projectPeriod',
+  'totalProjectHours',
+  'action',
 ];
 
 // 테이블 로딩 상태 컴포넌트
@@ -238,7 +256,7 @@ const formatProjectPeriod = (item) => {
 };
 
 // 테이블 행 컴포넌트
-const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
+const TableRow = ({ item, index, pageSize, currentPage, actions, visibleColumns }) => {
   const dispatch = useDispatch();
   const actualIndex = (currentPage - 1) * pageSize + index + 1;
 
@@ -247,37 +265,14 @@ const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
     actions.detail.fetchDetailForDrawer(item.id);
   };
 
-  // business_type 표시를 위한 헬퍼 함수
-  const formatBusinessType = (types) => {
-    if (!Array.isArray(types) || types.length === 0) return '-';
+  const isColumnVisible = (key) => visibleColumns.includes(key);
 
-    if (types.length === 1) {
-      return types[0].name;
-    }
-
-    // 첫 번째 항목 + 추가 항목 수
-    return `${types[0].name} +${types.length - 1}`;
-  };
-
-  // funnel 표시를 위한 헬퍼 함수
-  const getNameFromArray = (arrayData) => {
-    if (!Array.isArray(arrayData) || arrayData.length === 0) return '-';
-    return arrayData.map((item) => item.name).join(', ');
-  };
-
-  // 일반적인 값 포맷팅을 위한 헬퍼 함수
-  const formatValue = (value) => {
-    if (value === null || value === undefined) return '-';
-    if (typeof value === 'string') return value;
-    if (typeof value === 'number') return String(value);
-    return '-';
-  };
-
-  return (
-    <tr className="hover:bg-gray-50">
-      <td className="px-3 py-2 text-center text-sm">{item.id}</td>
-      <td className="px-3 py-2 text-center text-sm">
-        {item?.isClosed ? (
+  const renderCell = (key) => {
+    switch (key) {
+      case 'id':
+        return item.id;
+      case 'scheduleStatus':
+        return item?.isClosed ? (
           <span className="text-xs font-medium text-gray-700">
             {item.projectClosure?.closureType?.name || '-'}
           </span>
@@ -296,10 +291,9 @@ const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
           />
         ) : (
           '-'
-        )}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">
-        {item?.isClosed ? (
+        );
+      case 'remainingDays':
+        return item?.isClosed ? (
           item.projectClosure?.closureDate ? (
             <span className="text-xs text-gray-600">
               {item.projectClosure.closureDate}
@@ -309,10 +303,9 @@ const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
           )
         ) : (
           formatRemainingDays(item)
-        )}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">
-        {item?.taskStatus ? (
+        );
+      case 'taskStatus':
+        return item?.taskStatus ? (
           <Badge
             label={item.taskStatus}
             color={
@@ -325,17 +318,15 @@ const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
           />
         ) : (
           '-'
-        )}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">
-        {formatTimeOverStatus(item)}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">
-        {item?.sfa?.customer?.name || item?.customer?.name || '-'}
-      </td>
-      <td className="px-3 py-2 text-sm">{item.name || '-'}</td>
-      <td className="px-3 py-2 text-center text-sm">
-        {item?.pjtStatus?.name ? (
+        );
+      case 'timeOverStatus':
+        return formatTimeOverStatus(item);
+      case 'customer':
+        return item?.sfa?.customer?.name || item?.customer?.name || '-';
+      case 'name':
+        return item.name || '-';
+      case 'progressStatus':
+        return item?.pjtStatus?.name ? (
           <Badge
             label={item.pjtStatus.name}
             color={
@@ -356,10 +347,31 @@ const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
           />
         ) : (
           '-'
-        )}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">
-        {item?.importanceLevel?.name ? (
+        );
+      case 'approvalStatus':
+        return item?.currentApprovalStatus ? (
+          <Badge
+            label={item.currentApprovalStatus}
+            color={
+              item.currentApprovalStatus === '승인완료' ||
+              item.currentApprovalStatus === '완료' ||
+              item.currentApprovalStatus === 'approved'
+                ? 'success'
+                : item.currentApprovalStatus === '반려' ||
+                  item.currentApprovalStatus === 'rejected'
+                ? 'error'
+                : item.currentApprovalStatus === '결재중' ||
+                  item.currentApprovalStatus === '진행중' ||
+                  item.currentApprovalStatus === 'pending'
+                ? 'warning'
+                : 'default'
+            }
+          />
+        ) : (
+          '-'
+        );
+      case 'importanceLevel':
+        return item?.importanceLevel?.name ? (
           <Badge
             label={item.importanceLevel.name}
             color={
@@ -372,10 +384,9 @@ const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
           />
         ) : (
           '-'
-        )}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">
-        {item?.calculatedProgress !== undefined ? (
+        );
+      case 'projectProgress':
+        return item?.calculatedProgress !== undefined ? (
           <div className="flex flex-col items-center gap-1">
             <span
               className={`text-sm font-medium ${
@@ -409,32 +420,46 @@ const TableRow = ({ item, index, pageSize, currentPage, actions }) => {
           `${item.projectProgress}%`
         ) : (
           '-'
-        )}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">
-        {item?.projectTasks?.length
+        );
+      case 'taskCount':
+        return item?.projectTasks?.length
           ? `${
               item.projectTasks.filter(
                 (task) => task?.taskProgress?.name === '100%',
               ).length
             }/${item.projectTasks.length}`
-          : '-'}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">{item?.service?.name}</td>
-      <td className="px-3 py-2 text-center text-sm">
-        {formatProjectPeriod(item)}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">
-        {item?.lastWorkupdateDate}
-      </td>
-      <td className="px-3 py-2 text-center text-sm">
-        {formatProjectHours(item)}
-      </td>
-      <td className="px-3 py-2 text-center">
-        <Button variant="outline" size="sm" onClick={handleViewDetail}>
-          View
-        </Button>
-      </td>
+          : '-';
+      case 'service':
+        return item?.service?.name;
+      case 'projectPeriod':
+        return formatProjectPeriod(item);
+      case 'lastDate':
+        return item?.lastWorkupdateDate;
+      case 'totalProjectHours':
+        return formatProjectHours(item);
+      case 'action':
+        return (
+          <Button variant="outline" size="sm" onClick={handleViewDetail}>
+            View
+          </Button>
+        );
+      default:
+        return '-';
+    }
+  };
+
+  return (
+    <tr className="hover:bg-gray-50">
+      {COLUMNS.filter(col => isColumnVisible(col.key)).map(col => (
+        <td
+          key={col.key}
+          className={`px-3 py-2 text-sm ${
+            col.align === 'center' ? 'text-center' : 'text-left'
+          }`}
+        >
+          {renderCell(col.key)}
+        </td>
+      ))}
     </tr>
   );
 };
@@ -448,12 +473,18 @@ const ProjectList = ({
   actions,
 }) => {
   console.log(`>>> items : `, items);
+
+  const { visibleColumns, toggleColumn, resetColumns, showAllColumns } =
+    useTableColumns(DEFAULT_VISIBLE_COLUMNS);
+
+  const isColumnVisible = (key) => visibleColumns.includes(key);
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
           <tr className="bg-gray-50 border-y border-gray-200">
-            {COLUMNS.map((column) => (
+            {COLUMNS.filter((col) => isColumnVisible(col.key)).map((column) => (
               <th
                 key={column.key}
                 className={`px-3 py-2 text-sm font-semibold text-gray-700 whitespace-nowrap
@@ -461,18 +492,32 @@ const ProjectList = ({
                   ${column.align === 'right' && 'text-right'}
                 `}
               >
-                {column.title}
+                {column.key === 'action' ? (
+                  <div className="flex items-center justify-center gap-1">
+                    <TableColumnMenu
+                      columns={COLUMNS}
+                      visibleColumns={visibleColumns}
+                      onToggleColumn={toggleColumn}
+                      onReset={resetColumns}
+                      onShowAll={showAllColumns}
+                      essentialColumns={['id', 'name', 'action']}
+                      defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}
+                    />
+                  </div>
+                ) : (
+                  column.title
+                )}
               </th>
             ))}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
           {loading ? (
-            <TableLoadingIndicator columnsCount={COLUMNS.length} />
+            <TableLoadingIndicator columnsCount={visibleColumns.length} />
           ) : error ? (
-            <TableErrorState columnsCount={COLUMNS.length} message={error} />
+            <TableErrorState columnsCount={visibleColumns.length} message={error} />
           ) : !items?.length ? (
-            <TableEmptyState columnsCount={COLUMNS.length} />
+            <TableEmptyState columnsCount={visibleColumns.length} />
           ) : (
             items.map((item, index) => (
               <TableRow
@@ -482,6 +527,7 @@ const ProjectList = ({
                 pageSize={pagination.pageSize}
                 currentPage={pagination.current}
                 actions={actions}
+                visibleColumns={visibleColumns}
               />
             ))
           )}

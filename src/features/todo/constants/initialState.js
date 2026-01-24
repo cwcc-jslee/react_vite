@@ -15,8 +15,15 @@ export const DEFAULT_FILTERS = {
       project: {
         pjt_status: {
           id: {
-            $in: [88],
+            $in: [87, 88, 89],
           },
+        },
+      },
+    },
+    {
+      project: {
+        current_approval_status: {
+          $eq: 'approved',
         },
       },
     },

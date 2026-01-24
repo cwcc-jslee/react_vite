@@ -1,14 +1,14 @@
 import React, { useEffect } from 'react';
 import { useSfaStore } from '../../hooks/useSfaStore';
-import { useUiStore } from '../../../../shared/hooks/useUiStore';
+import { useUiStore } from '@shared/hooks/useUiStore';
 import { useSfaBulkUpdate } from '../../hooks/useSfaBulkUpdate';
 import { fetchSfaDetail } from '../../../../store/slices/sfaSlice';
-import { useTableColumns } from '../../../../shared/hooks/useTableColumns';
-import { Button, TableColumnMenu } from '../../../../shared/components/ui';
-import { Card } from '../../../../shared/components/ui/card/Card';
-import { StateDisplay } from '../../../../shared/components/ui/state/StateDisplay';
-import { Pagination } from '../../../../shared/components/ui/pagination/Pagination';
-import { truncateText } from '../../../../shared/utils/textUtils';
+import { useTableColumns } from '@shared/hooks/useTableColumns';
+import { Button, TableColumnMenu } from '@shared/components/ui';
+import { Card } from '@shared/components/ui';
+import { StateDisplay } from '@shared/components/ui/state/StateDisplay';
+import { Pagination } from '@shared/components/ui/pagination/Pagination';
+import { truncateText } from '@shared/utils/textUtils';
 import SfaBulkActionMenu from './SfaBulkActionMenu';
 
 const COLUMNS = [

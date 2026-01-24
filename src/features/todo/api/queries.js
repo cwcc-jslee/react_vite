@@ -41,6 +41,9 @@ export const buildProjectTaskListQuery = (params) => {
           customer: {
             fields: ['name'],
           },
+          pjt_status: {
+            fields: ['name'],
+          },
         },
       },
       project_task_bucket: {

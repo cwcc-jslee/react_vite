@@ -50,7 +50,7 @@ const projectBucketSlice = createSlice({
 
     startEditingColumnTitle: (state, action) => {
       const bucketIndex = action.payload;
-      const columnTitle = state.buckets[bucketIndex]?.bucket || '';
+      const columnTitle = state.buckets[bucketIndex]?.name || '';
 
       state.editState = {
         isEditing: true,
@@ -78,7 +78,7 @@ const projectBucketSlice = createSlice({
           bucketIndex >= 0 &&
           bucketIndex < state.buckets.length
         ) {
-          state.buckets[bucketIndex].bucket = value;
+          state.buckets[bucketIndex].name = value;
         }
       } else if (taskIndex !== null) {
         // 작업 필드 업데이트

@@ -36,6 +36,7 @@ const ProjectTaskBoard = ({
   moveColumn,
   onOpenTaskEditModal, // 작업 수정 모달 열기
   isSingleWorkType,
+  enableAddTask = false, // 작업 추가 버튼 활성화 여부
 }) => {
   // 메뉴 상태 관리
   const [menuOpen, setMenuOpen] = useState(false);
@@ -141,8 +142,13 @@ const ProjectTaskBoard = ({
             {/* 작업 추가 버튼 */}
             <div className="p-2">
               <button
-                className="w-full h-10 flex items-center justify-center text-gray-500 border-gray-300 border-2 rounded-sm text-sm cursor-not-allowed"
-                disabled={true}
+                className={`w-full h-10 flex items-center justify-center border-2 rounded-sm text-sm transition-colors ${
+                  enableAddTask
+                    ? 'text-indigo-600 border-indigo-300 hover:bg-indigo-50 hover:border-indigo-400 cursor-pointer'
+                    : 'text-gray-500 border-gray-300 cursor-not-allowed'
+                }`}
+                disabled={!enableAddTask}
+                onClick={enableAddTask ? handleAddTaskClick : undefined}
               >
                 <FiPlus className="mr-2" size={18} />
                 <span>작업 추가</span>

@@ -268,11 +268,11 @@ export const Switch = ({ checked, onChange, disabled, className = '' }) => {
     <button
       type="button"
       className={`${checked ? 'bg-blue-600' : 'bg-gray-200'}
-        relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full 
+        relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full
         transition-colors duration-200 ease-in-out
         disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
       disabled={disabled}
-      onClick={onChange}
+      onClick={() => onChange && onChange(!checked)}
     >
       <span
         className={`${checked ? 'translate-x-6' : 'translate-x-1'}

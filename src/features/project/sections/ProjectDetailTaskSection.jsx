@@ -16,7 +16,7 @@ import useSelectData from '../../../shared/hooks/useSelectData';
 import { useProjectTaskSubmit } from '../hooks/useProjectTaskSubmit';
 
 // 컴포넌트
-import ProjectTaskList from '../components/tables/ProjectTaskList';
+import ProjectTaskTable from '../components/tables/ProjectTaskTable';
 import ProjectTaskBoard from '../components/card/ProjectTaskBoard';
 import ProjectWorkListSection from './ProjectWorkListSection';
 import ProjectTaskEditForm from '../components/forms/ProjectTaskEditForm';
@@ -163,7 +163,7 @@ const ProjectDetailTaskSection = ({
       <>
         {/* 뷰 모드에 따른 컴포넌트 렌더링 */}
         {activeMenu === 'table' && (
-          <ProjectTaskList projectTasks={projectTasks} isExpanded={isExpanded} />
+          <ProjectTaskTable projectTasks={projectTasks} isExpanded={isExpanded} />
         )}
 
         {activeMenu === 'board' && (

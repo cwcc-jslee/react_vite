@@ -29,6 +29,7 @@ const TodoSection = ({ tasks, activeMenu }) => {
   // 필터 상태 관리
   const [taskDateFilter, setTaskDateFilter] = useState('started');
   const [activeWorkType, setActiveWorkType] = useState(WORK_TYPE.PROJECT.code); // 기본값: 프로젝트
+  const [activeStatus, setActiveStatus] = useState('inProgress'); // 기본값: 진행중
   const [taskTypeFilter, setTaskTypeFilter] = useState({
     isScheduled: 'true', // 'all', 'true', 'false' - 기본값: 있음
   });
@@ -41,7 +42,10 @@ const TodoSection = ({ tasks, activeMenu }) => {
 
   // activeWorkType 변경 시 하위 필터 자동 설정
   useEffect(() => {
-    if (activeWorkType === WORK_TYPE.PROJECT.code || activeWorkType === WORK_TYPE.TASK.code) {
+    if (
+      activeWorkType === WORK_TYPE.PROJECT.code ||
+      activeWorkType === WORK_TYPE.TASK.code
+    ) {
       // 프로젝트, 단순작업: 계획 업무 & 오늘 할 일
       setTaskTypeFilter((prev) => ({ ...prev, isScheduled: 'true' }));
       setTaskDateFilter('started');
@@ -49,6 +53,13 @@ const TodoSection = ({ tasks, activeMenu }) => {
       // 유지보수, 전체: 전체 & 전체
       setTaskTypeFilter((prev) => ({ ...prev, isScheduled: 'all' }));
       setTaskDateFilter('all');
+    }
+
+    // 프로젝트 상태 필터 자동 설정
+    if (activeWorkType === WORK_TYPE.PROJECT.code) {
+      setActiveStatus('inProgress');
+    } else {
+      setActiveStatus('all');
     }
   }, [activeWorkType]);
 
@@ -65,8 +76,8 @@ const TodoSection = ({ tasks, activeMenu }) => {
     if (!tasks) return [];
 
     if (process.env.NODE_ENV === 'development') {
-       console.log('Task Structure Debug:', tasks[0]);
-       console.log('Active WorkType:', activeWorkType);
+      console.log('Task Structure Debug:', tasks[0]);
+      console.log('Active WorkType:', activeWorkType);
     }
 
     let filteredByType = tasks;
@@ -74,8 +85,28 @@ const TodoSection = ({ tasks, activeMenu }) => {
     // 0. WorkType(프로젝트 유형) 필터링 (전체가 아닐 경우)
     if (activeWorkType !== 'all') {
       filteredByType = filteredByType.filter(
-        (task) => task.project?.workType === activeWorkType
+        (task) => task.project?.workType === activeWorkType,
       );
+    }
+
+    // 0-1. Project Status(진행/검수) 필터링
+    if (activeStatus !== 'all') {
+      filteredByType = filteredByType.filter((task) => {
+        // camelCase 또는 snake_case 모두 확인
+        const statusId = task.project?.pjtStatus?.id || task.project?.pjt_status?.id;
+        
+        // 개발 모드 디버깅 로그
+        if (process.env.NODE_ENV === 'development') {
+           console.log(`Task ${task.id} Project:`, task.project?.name, `Status ID:`, statusId);
+        }
+
+        if (activeStatus === 'inProgress') {
+          return Number(statusId) === 88;
+        } else if (activeStatus === 'reviewing') {
+          return Number(statusId) === 87 || Number(statusId) === 89;
+        }
+        return true;
+      });
     }
 
     // 1. 작업 유형별 필터링
@@ -113,7 +144,9 @@ const TodoSection = ({ tasks, activeMenu }) => {
         startDate = dayjs(task.planStartDate).startOf('day');
       } else {
         // ongoing: project의 startDate 또는 planStartDate 기준
-        startDate = dayjs(task.project?.startDate || task.project?.planStartDate).startOf('day');
+        startDate = dayjs(
+          task.project?.startDate || task.project?.planStartDate,
+        ).startOf('day');
       }
 
       if (!startDate.isValid()) {
@@ -126,7 +159,14 @@ const TodoSection = ({ tasks, activeMenu }) => {
         return startDate.isAfter(today);
       }
     });
-  }, [tasks, taskDateFilter, taskTypeFilter, activeMenu, activeWorkType]);
+  }, [
+    tasks,
+    taskDateFilter,
+    taskTypeFilter,
+    activeMenu,
+    activeWorkType,
+    activeStatus,
+  ]);
 
   // 패널 관련 함수
   // 패널 헤더에 추가할 액션 버튼 - 패널 타입에 따라 다르게 설정
@@ -287,6 +327,30 @@ const TodoSection = ({ tasks, activeMenu }) => {
               ))}
             </div>
 
+            {/* Project Status(진행/검수) 필터 버튼 - 프로젝트 유형일 때만 활성화 */}
+            <div className={`flex bg-gray-100 p-1 rounded-lg ${
+              activeWorkType !== WORK_TYPE.PROJECT.code ? 'opacity-50 cursor-not-allowed' : ''
+            }`}>
+              {[
+                { label: '전체', value: 'all' },
+                { label: '진행중', value: 'inProgress' },
+                { label: '검수중', value: 'reviewing' },
+              ].map((status) => (
+                <button
+                  key={status.value}
+                  onClick={() => setActiveStatus(status.value)}
+                  disabled={activeWorkType !== WORK_TYPE.PROJECT.code}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                    activeStatus === status.value
+                      ? 'bg-white text-orange-600 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  } ${activeWorkType !== WORK_TYPE.PROJECT.code ? 'cursor-not-allowed' : ''}`}
+                >
+                  {status.label}
+                </button>
+              ))}
+            </div>
+
             {/* 일정(계획/상시) 필터 버튼 */}
             <div className="flex bg-gray-100 p-1 rounded-lg">
               {[
@@ -340,13 +404,11 @@ const TodoSection = ({ tasks, activeMenu }) => {
             <div>필터된 작업: {filteredTasks().length}</div>
             <div>
               일정 true:{' '}
-              {tasks?.filter((t) => t.isScheduled === true)
-                .length || 0}
+              {tasks?.filter((t) => t.isScheduled === true).length || 0}
             </div>
             <div>
               일정 false:{' '}
-              {tasks?.filter((t) => t.isScheduled === false)
-                .length || 0}
+              {tasks?.filter((t) => t.isScheduled === false).length || 0}
             </div>
           </div>
         )}
@@ -368,10 +430,14 @@ const TodoSection = ({ tasks, activeMenu }) => {
             {(() => {
               const selectedTypes = [];
               if (taskTypeFilter.isScheduled !== 'all') {
-                selectedTypes.push(`일정 ${taskTypeFilter.isScheduled === 'true' ? '있음' : '없음'}`);
+                selectedTypes.push(
+                  `일정 ${taskTypeFilter.isScheduled === 'true' ? '있음' : '없음'}`,
+                );
               }
               if (taskTypeFilter.isProgress !== 'all') {
-                selectedTypes.push(`진행률 ${taskTypeFilter.isProgress === 'true' ? '있음' : '없음'}`);
+                selectedTypes.push(
+                  `진행률 ${taskTypeFilter.isProgress === 'true' ? '있음' : '없음'}`,
+                );
               }
 
               if (selectedTypes.length === 0) {
@@ -382,7 +448,7 @@ const TodoSection = ({ tasks, activeMenu }) => {
 
               if (activeMenu === 'todayTasks') {
                 if (taskDateFilter === 'all') {
-                    return `${typeText} 조건의 작업이 없습니다.`;
+                  return `${typeText} 조건의 작업이 없습니다.`;
                 }
                 return `${typeText} 조건의 ${
                   taskDateFilter === 'started' ? '시작된' : '예정된'

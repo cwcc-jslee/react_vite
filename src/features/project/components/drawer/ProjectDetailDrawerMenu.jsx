@@ -1,92 +1,101 @@
 /**
  * ProjectDetailDrawer 헤더 메뉴 컴포넌트
- * SFA Drawer 메뉴 구조 참고
+ * - 기본정보 수정, 작업 추가/수정 기능 제공
+ * - Drawer Header 영역에 통합되어 사용
+ * - 사용자 권한에 따라 메뉴 표시/숨김 처리
  */
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { MoreVertical, Edit2, Trash2, History } from 'lucide-react';
+import { Edit3, Edit } from 'lucide-react';
+import { DrawerMenu } from '@shared/components/drawer';
 
-const ProjectDetailDrawerMenu = ({ onEdit, onDelete, onHistory }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef(null);
+const ProjectDetailDrawerMenu = ({
+  onEditBase,
+  isEditingBase,
+  onEditTask,
+  permissions, // { canCreate, canUpdate, canDelete }
+}) => {
+  // 권한 기본값 설정 (권한 정보가 없으면 모두 허용)
+  const { canUpdate = true } = permissions || {};
 
-  // 외부 클릭 감지
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsOpen(false);
+  // 권한에 따라 필터링된 메뉴 아이템
+  const dropdownMenuItems = useMemo(() => {
+    const allItems = [
+      // 기본정보 수정 (update 권한)
+      {
+        key: 'editBase',
+        label: '기본정보 수정',
+        icon: Edit3,
+        onClick: onEditBase,
+        className: isEditingBase
+          ? 'bg-blue-100 text-blue-700 font-semibold'
+          : 'text-gray-700 hover:bg-gray-50',
+        requiredPermission: 'update',
+      },
+      { separator: true, group: 'update' },
+      // 작업 수정 (update 권한) - 작업 추가/수정 통합
+      {
+        key: 'editTask',
+        label: '작업 수정',
+        icon: Edit,
+        onClick: onEditTask,
+        className: 'text-blue-600 hover:bg-blue-50',
+        requiredPermission: 'update',
+      },
+    ];
+
+    // 권한에 따라 메뉴 필터링
+    const checkPermission = (permission) => {
+      switch (permission) {
+        case 'update': return canUpdate;
+        default: return true;
       }
     };
 
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+    // 필터링 및 연속된 separator 제거
+    const filtered = allItems.filter(item => {
+      if (item.separator) {
+        return checkPermission(item.group);
+      }
+      return checkPermission(item.requiredPermission);
+    });
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
+    // 연속된 separator 및 처음/끝의 separator 제거
+    return filtered.filter((item, index, arr) => {
+      if (!item.separator) return true;
+      if (index === 0) return false;
+      if (index === arr.length - 1) return false;
+      if (arr[index - 1]?.separator) return false;
+      return true;
+    });
+  }, [
+    canUpdate,
+    isEditingBase,
+    onEditBase, onEditTask
+  ]);
 
-  const handleMenuClick = (callback) => {
-    setIsOpen(false);
-    if (callback) callback();
-  };
+  // 표시할 메뉴가 없으면 null 반환
+  if (dropdownMenuItems.length === 0) {
+    return null;
+  }
 
-  return (
-    <div className="relative" ref={menuRef}>
-      {/* 더보기 버튼 */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="p-2 hover:bg-gray-100 rounded-md transition-colors"
-        aria-label="더보기"
-      >
-        <MoreVertical className="w-5 h-5 text-gray-600" />
-      </button>
-
-      {/* 드롭다운 메뉴 */}
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-10">
-          <div className="py-1">
-            {/* 수정 */}
-            <button
-              onClick={() => handleMenuClick(onEdit)}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-            >
-              <Edit2 className="w-4 h-4" />
-              수정하기
-            </button>
-
-            {/* 삭제 */}
-            <button
-              onClick={() => handleMenuClick(onDelete)}
-              className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-            >
-              <Trash2 className="w-4 h-4" />
-              삭제하기
-            </button>
-
-            {/* 구분선 */}
-            <div className="border-t border-gray-200 my-1" />
-
-            {/* 이력 */}
-            <button
-              onClick={() => handleMenuClick(onHistory)}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-            >
-              <History className="w-4 h-4" />
-              변경 이력
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  return <DrawerMenu type="dropdown" items={dropdownMenuItems} />;
 };
 
 ProjectDetailDrawerMenu.propTypes = {
-  onEdit: PropTypes.func,
-  onDelete: PropTypes.func,
-  onHistory: PropTypes.func,
+  onEditBase: PropTypes.func,
+  isEditingBase: PropTypes.bool,
+  onEditTask: PropTypes.func,
+  permissions: PropTypes.shape({
+    canUpdate: PropTypes.bool,
+  }),
+};
+
+ProjectDetailDrawerMenu.defaultProps = {
+  isEditingBase: false,
+  permissions: {
+    canUpdate: true,
+  },
 };
 
 export default ProjectDetailDrawerMenu;

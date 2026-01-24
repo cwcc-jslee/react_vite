@@ -7,10 +7,15 @@
  */
 // src/features/project/components/drawer/ProjectDetailDrawer.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Maximize2, Minimize2 } from 'lucide-react';
+import {
+  hasCreatePermission,
+  hasUpdatePermission,
+  hasDeletePermission,
+} from '@shared/utils/permissionUtils';
 import { Drawer } from '@shared/components/drawer';
 import { useProjectStore } from '../../hooks/useProjectStore';
 import { fetchProjectWorks } from '../../../../store/slices/projectSlice';
@@ -28,14 +33,32 @@ import ProjectStatusHistoryTab from './tabs/ProjectStatusHistoryTab';
 
 // 메뉴 컴포넌트
 import ProjectDetailDrawerMenu from './ProjectDetailDrawerMenu';
+import ProjectTaskEditDrawer from './ProjectTaskEditDrawer';
 
 const ProjectDetailDrawer = ({ visible, data, onClose }) => {
   const dispatch = useDispatch();
   const { actions: projectActions } = useProjectStore();
 
+  // ==================== 권한 관리 ====================
+  const authUser = useSelector((state) => state.auth.user);
+  const userAccessControl = authUser?.user?.user_access_control;
+
+  // 프로젝트 권한 계산
+  const projectPermissions = useMemo(() => ({
+    canCreate: hasCreatePermission(userAccessControl, 'project'),
+    canUpdate: hasUpdatePermission(userAccessControl, 'project'),
+    canDelete: hasDeletePermission(userAccessControl, 'project'),
+  }), [userAccessControl]);
+
   // ==================== 탭 상태 관리 ====================
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'tasks' | 'history' | 'statusHistory'
   const [activeTaskView, setActiveTaskView] = useState('table'); // 'table' | 'board' | 'timeline'
+
+  // ==================== 편집 모드 상태 ====================
+  const [isEditingBase, setIsEditingBase] = useState(false);
+
+  // ==================== 작업 수정 Drawer 상태 ====================
+  const [taskEditDrawerVisible, setTaskEditDrawerVisible] = useState(false);
 
   // ==================== Drawer 크기 관리 ====================
   const [isExpanded, setIsExpanded] = useState(false);
@@ -187,16 +210,23 @@ const ProjectDetailDrawer = ({ visible, data, onClose }) => {
   };
 
   // ==================== 메뉴 액션 핸들러 ====================
-  const handleEdit = () => {
-    console.log('프로젝트 수정 기능 - 구현 예정');
+  const handleEditBase = () => {
+    setIsEditingBase(!isEditingBase);
+    console.log('기본정보 수정 모드:', !isEditingBase);
   };
 
-  const handleDelete = () => {
-    console.log('프로젝트 삭제 기능 - 구현 예정');
+  const handleEditTask = () => {
+    // 작업 수정 Drawer 열기
+    setTaskEditDrawerVisible(true);
   };
 
-  const handleHistory = () => {
-    console.log('변경 이력 기능 - 구현 예정');
+  const handleTaskEditDrawerClose = () => {
+    setTaskEditDrawerVisible(false);
+  };
+
+  const handleTaskSaveSuccess = () => {
+    // TODO: 프로젝트 데이터 갱신 필요 시 처리
+    console.log('작업 저장 성공');
   };
 
   // ==================== 렌더링 ====================
@@ -243,9 +273,10 @@ const ProjectDetailDrawer = ({ visible, data, onClose }) => {
               </button>
             )}
             <ProjectDetailDrawerMenu
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onHistory={handleHistory}
+              onEditBase={handleEditBase}
+              isEditingBase={isEditingBase}
+              onEditTask={handleEditTask}
+              permissions={projectPermissions}
             />
           </div>
         }
@@ -290,6 +321,14 @@ const ProjectDetailDrawer = ({ visible, data, onClose }) => {
           onClose={handleStatusDrawerClose}
         />
       )}
+
+      {/* 2차 Drawer: 작업 수정 (중첩 Drawer) */}
+      <ProjectTaskEditDrawer
+        visible={taskEditDrawerVisible}
+        data={data}
+        onClose={handleTaskEditDrawerClose}
+        onSaveSuccess={handleTaskSaveSuccess}
+      />
     </>
   );
 };

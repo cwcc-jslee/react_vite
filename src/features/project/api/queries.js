@@ -47,6 +47,7 @@ export const buildProjectListQuery = (params) => {
       'total_project_non_billable_hours',
       'createdAt',
       'is_closed',
+      'current_approval_status',
     ],
     populate: {
       customer: {
@@ -313,6 +314,9 @@ export const buildProjectTaskListQuery = (params) => {
                 fields: ['name'],
               },
             },
+          },
+          pjt_status: {
+            fields: ['name'],
           },
         },
       },

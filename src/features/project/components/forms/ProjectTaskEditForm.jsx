@@ -117,10 +117,10 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
   const calculatePlannedHours = () => {
     // planningTimeData가 없는 경우 안전하게 처리
     const planningData = formData.planningTimeData || {};
-    
+
     const personnelCount = parseInt(planningData.personnelCount) || 0;
     const allocationRate = parseFloat(planningData.allocationRate) || 0;
-    const workDays = parseInt(planningData.workDays) || 0;
+    const workDays = parseFloat(planningData.workDays) || 0;
 
     // 각 작업일은 8시간으로 가정 (기본 업무 시간)
     const hoursPerDay = 8;
@@ -238,11 +238,16 @@ const ProjectTaskForm = ({ codebooks, task, onSave, onCancel, usersData }) => {
         }
       }
 
-      // 작업일 검사 (0~30 사이의 정수)
-      const workDays = parseInt(formData.planningTimeData.workDays);
-      if (isNaN(workDays) || workDays < 1 || workDays > 30) {
+      // 작업일 검사 (0.1~30 사이, 소수점 첫째 자리까지)
+      const workDays = parseFloat(formData.planningTimeData.workDays);
+      if (isNaN(workDays) || workDays < 0.1 || workDays > 30) {
         console.log('>>> workDay : ', workDays);
-        validationErrors.push('작업일은 1에서 30 사이의 정수여야 합니다.');
+        validationErrors.push('작업일은 0.1에서 30 사이의 값이어야 합니다.');
+      } else {
+        const decimalPlaces = (workDays.toString().split('.')[1] || '').length;
+        if (decimalPlaces > 1) {
+          validationErrors.push('작업일은 소수점 첫째 자리까지만 입력 가능합니다.');
+        }
       }
     }
 
