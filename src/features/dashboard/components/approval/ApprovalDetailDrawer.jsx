@@ -208,6 +208,13 @@ const ApprovalDetailDrawer = ({ approval, onClose }) => {
                       {toStatus?.name}
                     </span>
                   </div>
+                  {/* 상태 세부 내용 (있을 경우) */}
+                  {statusDetail && (
+                    <p className="text-sm text-gray-600">
+                      <span className="text-gray-500">상세내용 : </span>
+                      <span className="text-blue-700 font-medium">{statusDetail}</span>
+                    </p>
+                  )}
                   {/* 변경 사유 (있을 경우) */}
                   {changeDescription && (
                     <p className="text-sm text-gray-600">

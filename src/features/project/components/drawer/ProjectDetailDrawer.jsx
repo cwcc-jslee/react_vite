@@ -198,6 +198,7 @@ const ProjectDetailDrawer = ({ visible, data, onClose }) => {
       isClosed: data.isClosed,
       projectClosure: data.projectClosure,
       projectTasks: data.projectTasks,
+      currentApprovalStatus: data.currentApprovalStatus,
     });
     setStatusDrawerVisible(true);
   };
@@ -280,6 +281,7 @@ const ProjectDetailDrawer = ({ visible, data, onClose }) => {
               isEditingBase={isEditingBase}
               onEditTask={handleEditTask}
               permissions={projectPermissions}
+              isPending={data.currentApprovalStatus === 'pending'}
             />
           </div>
         }

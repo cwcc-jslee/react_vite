@@ -14,6 +14,7 @@ const ProjectDetailDrawerMenu = ({
   isEditingBase,
   onEditTask,
   permissions, // { canCreate, canUpdate, canDelete }
+  isPending = false, // 승인 대기 여부
 }) => {
   // 권한 기본값 설정 (권한 정보가 없으면 모두 허용)
   const { canUpdate = true } = permissions || {};
@@ -27,8 +28,11 @@ const ProjectDetailDrawerMenu = ({
         label: '기본정보 수정',
         icon: Edit3,
         onClick: onEditBase,
+        disabled: isPending,
         className: isEditingBase
           ? 'bg-blue-100 text-blue-700 font-semibold'
+          : isPending
+          ? 'text-gray-400 cursor-not-allowed'
           : 'text-gray-700 hover:bg-gray-50',
         requiredPermission: 'update',
       },
@@ -39,7 +43,10 @@ const ProjectDetailDrawerMenu = ({
         label: '작업 수정',
         icon: Edit,
         onClick: onEditTask,
-        className: 'text-blue-600 hover:bg-blue-50',
+        disabled: isPending,
+        className: isPending
+          ? 'text-gray-400 cursor-not-allowed'
+          : 'text-blue-600 hover:bg-blue-50',
         requiredPermission: 'update',
       },
     ];
@@ -89,6 +96,7 @@ ProjectDetailDrawerMenu.propTypes = {
   permissions: PropTypes.shape({
     canUpdate: PropTypes.bool,
   }),
+  isPending: PropTypes.bool,
 };
 
 ProjectDetailDrawerMenu.defaultProps = {

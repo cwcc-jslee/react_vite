@@ -121,6 +121,19 @@ const ProjectDetailTaskSection = ({
     bucket.addColumn(newColumn);
   };
 
+  /**
+   * 테이블 행 클릭 핸들러
+   * 태스크 상세(수정) 모달을 연다.
+   */
+  const handleTaskClick = (task) => {
+    // allTasksWithIndices를 통해 전달된 인덱스 사용
+    if (typeof task._bucketIndex === 'number' && typeof task._taskIndex === 'number') {
+      handleOpenTaskEditModal(task, task._bucketIndex, task._taskIndex);
+    } else {
+      console.warn('Task indices not found', task);
+    }
+  };
+
   const allTasksWithIndices = useMemo(() => {
     const tasks = [];
     buckets.forEach((bucket, bucketIndex) => {
@@ -163,7 +176,11 @@ const ProjectDetailTaskSection = ({
       <>
         {/* 뷰 모드에 따른 컴포넌트 렌더링 */}
         {activeMenu === 'table' && (
-          <ProjectTaskTable projectTasks={projectTasks} isExpanded={isExpanded} />
+          <ProjectTaskTable 
+            projectTasks={allTasksWithIndices} 
+            isExpanded={isExpanded} 
+            onTaskClick={handleTaskClick}
+          />
         )}
 
         {activeMenu === 'board' && (

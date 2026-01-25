@@ -31,7 +31,7 @@ import { useProjectTaskUpdate } from '../../hooks/useProjectTaskUpdate';
 const COLUMNS_DEF = [
   { key: 'index', title: '순번', align: 'center', width: '60px', essential: true },
   { key: 'priority', title: '우선순위', align: 'center' },
-  { key: 'completed', title: '완료', align: 'center', width: '60px' },
+  { key: 'isCompleted', title: '완료', align: 'center', width: '60px' },
   { key: 'taskStatus', title: 'TASK상태', align: 'center', width: '80px', essential: true },
   {
     key: 'timeOverStatus',
@@ -55,12 +55,12 @@ const COLUMNS_DEF = [
     align: 'left',
     width: '80px',
   },
-  { key: 'actions', title: 'ACTION', align: 'center', width: '80px', essential: true },
 ];
 
 // 기본적으로 표시할 컬럼 (기본 모드 - XL)
 const DEFAULT_COLUMNS_XL = [
   'index',
+  'isCompleted',
   'taskStatus',
   'name',
   'bucket',
@@ -69,13 +69,13 @@ const DEFAULT_COLUMNS_XL = [
   'endDate',
   'recentWorkDate',
   'totalWorkHours',
-  'actions',
 ];
 
 // 확장 모드 (WIDE) 표시 컬럼
 const DEFAULT_COLUMNS_WIDE = [
   'index',
   'priority',
+  'isCompleted',
   'taskStatus',
   'timeOverStatus',
   'name',
@@ -89,18 +89,22 @@ const DEFAULT_COLUMNS_WIDE = [
   'recentWorkDate',
   'duration',
   'totalWorkHours',
-  'actions',
 ];
 
 /**
  * 프로젝트 작업 테이블 컴포넌트
  * 프로젝트의 작업 목록을 테이블 형태로 표시
  */
-const ProjectTaskTable = ({ projectTasks = [], isExpanded = false }) => {
+  const ProjectTaskTable = ({ projectTasks = [], isExpanded = false, onTaskClick }) => {
   console.log(`>>>> project task table 실행`);
   const dispatch = useDispatch();
-  const { actions } = useUiStore();
+  // const { actions } = useUiStore(); // 더 이상 사용하지 않음
   const { isUpdating, completeTask } = useProjectTaskUpdate();
+
+  // 태스크 완료 여부 판단 함수
+  const isTaskCompleted = (task) => {
+    return task.isCompleted === true || task.taskProgress?.code === '100';
+  };
 
   // 컬럼 표시 상태 관리
   const { visibleColumns, toggleColumn, resetColumns, showAllColumns, setVisibleColumns } =
@@ -116,24 +120,6 @@ const ProjectTaskTable = ({ projectTasks = [], isExpanded = false }) => {
   // 완료 처리 상태 관리
   const [completingTaskId, setCompletingTaskId] = useState(null);
   const [completionDate, setCompletionDate] = useState(new Date());
-
-  // 액션 메뉴 상태 관리
-  const [openMenuId, setOpenMenuId] = useState(null);
-
-  // 메뉴 외부 클릭시 닫기
-  useEffect(() => {
-    const handleClickOutside = () => {
-      setOpenMenuId(null);
-    };
-
-    if (openMenuId) {
-      document.addEventListener('click', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('click', handleClickOutside);
-    };
-  }, [openMenuId]);
 
   // 우선순위에 따른 배지 색상 결정
   const getPriorityColor = (priority) => {
@@ -231,33 +217,25 @@ const ProjectTaskTable = ({ projectTasks = [], isExpanded = false }) => {
     </tr>
   );
 
-  // 액션 메뉴 토글
-  const toggleActionMenu = (taskId, event) => {
-    event.stopPropagation();
-    setOpenMenuId(openMenuId === taskId ? null : taskId);
-  };
-
-  // 액션 메뉴 항목 클릭 핸들러
-  const handleActionClick = (action, task, event) => {
-    event.stopPropagation();
-    setOpenMenuId(null);
-
-    switch (action) {
-      case 'detail':
-        handleTaskRowClick(task);
-        break;
-      case 'complete':
-        if (!task.isCompleted) {
-          setCompletingTaskId(task.id);
-          // 최근작업일이 있으면 사용, 없으면 오늘 날짜
-          const defaultDate = task.lastWorkupdateDate
-            ? new Date(task.lastWorkupdateDate)
-            : new Date();
-          setCompletionDate(defaultDate);
-        }
-        break;
-      default:
-        break;
+  // 체크박스 클릭 핸들러 (완료 처리)
+  const handleCheckboxComplete = (task, event) => {
+    // 체크박스 기본 동작(체크 표시) 방지
+    if (event && event.preventDefault) {
+      event.preventDefault();
+    }
+    // event가 있으면 전파 중지 (테이블 행 클릭 방지)
+    if (event && event.stopPropagation) {
+      event.stopPropagation();
+    }
+    
+    // 이미 완료된 태스크는 처리하지 않음 (또는 해제 로직 추가 가능)
+    if (!isTaskCompleted(task)) {
+      setCompletingTaskId(task.id);
+      // 최근작업일이 있으면 사용, 없으면 오늘 날짜
+      const defaultDate = task.lastWorkupdateDate
+        ? new Date(task.lastWorkupdateDate)
+        : new Date();
+      setCompletionDate(defaultDate);
     }
   };
 
@@ -281,22 +259,15 @@ const ProjectTaskTable = ({ projectTasks = [], isExpanded = false }) => {
     setCompletingTaskId(null);
   };
 
-  // 행 클릭 핸들러
-  const handleTaskRowClick = (task) => {
-    // Redux drawer 상태 변경
-    actions.drawer.open({
-      mode: 'view',
-      data: task,
-      width: '900px',
-    });
-  };
+  // 행 클릭 핸들러 (기능 삭제됨)
+  // const handleTaskRowClick = (task) => { ... };
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
           <tr className="bg-gray-50 border-y border-gray-200">
-            {COLUMNS_DEF.filter((col) => isColumnVisible(col.key)).map((column) => (
+            {COLUMNS_DEF.filter((col) => isColumnVisible(col.key)).map((column, index, array) => (
               <th
                 key={column.key}
                 className={`px-3 py-2 text-sm font-semibold text-gray-700 whitespace-nowrap
@@ -305,9 +276,9 @@ const ProjectTaskTable = ({ projectTasks = [], isExpanded = false }) => {
                   `}
                 style={{ width: column.width }}
               >
-                {column.key === 'actions' ? (
+                {index === array.length - 1 ? (
                   <div className="flex items-center justify-center gap-1">
-                    {/* 설정 아이콘 - 컬럼 토글 */}
+                    <span>{column.title}</span>
                     <TableColumnMenu
                       columns={COLUMNS_DEF}
                       visibleColumns={visibleColumns}
@@ -332,12 +303,11 @@ const ProjectTaskTable = ({ projectTasks = [], isExpanded = false }) => {
             projectTasks.map((task, index) => (
               <React.Fragment key={task.id || index}>
                 <tr
-                  className={`hover:bg-gray-50 ${
-                    task.isCompleted ? 'bg-gray-50' : ''
+                  className={`hover:bg-gray-100 transition-colors ${
+                    isTaskCompleted(task) ? 'bg-zinc-50' : ''
                   } ${
                     completingTaskId === task.id ? 'bg-blue-50' : ''
-                  } cursor-pointer`}
-                  onClick={() => handleTaskRowClick(task)}
+                  }`}
                 >
                   {/* 순번 */}
                   {isColumnVisible('index') && (
@@ -361,9 +331,13 @@ const ProjectTaskTable = ({ projectTasks = [], isExpanded = false }) => {
                   )}
 
                   {/* 완료 체크박스 */}
-                  {isColumnVisible('completed') && (
+                  {isColumnVisible('isCompleted') && (
                     <td className="px-3 py-2 text-center">
-                      <Checkbox checked={task.isCompleted} disabled={true} />
+                      <Checkbox 
+                        checked={isTaskCompleted(task)} 
+                        onChange={(e) => handleCheckboxComplete(task, e)}
+                        disabled={isTaskCompleted(task)} // 이미 완료된 건은 비활성화 (기존 로직 유지)
+                      />
                     </td>
                   )}
 
@@ -386,7 +360,7 @@ const ProjectTaskTable = ({ projectTasks = [], isExpanded = false }) => {
                     <td className="px-3 py-2 text-sm">
                       <div
                         className={`${
-                          task.isCompleted ? 'line-through text-gray-400' : ''
+                          isTaskCompleted(task) ? 'text-gray-500' : ''
                         }`}
                       >
                         {task.name}
@@ -607,45 +581,7 @@ const ProjectTaskTable = ({ projectTasks = [], isExpanded = false }) => {
                     </td>
                   )}
 
-                  {/* ACTION */}
-                  {isColumnVisible('actions') && (
-                    <td className="px-3 py-2 text-center relative">
-                      <div className="relative">
-                        <button
-                          onClick={(event) => toggleActionMenu(task.id, event)}
-                          className="p-1 rounded hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <FiMoreVertical size={16} className="text-gray-600" />
-                        </button>
-
-                        {/* 드롭다운 메뉴 */}
-                        {openMenuId === task.id && (
-                          <div className="absolute right-0 top-8 bg-white border border-gray-200 rounded-md shadow-lg z-10 min-w-[120px]">
-                            <button
-                              onClick={(event) =>
-                                handleActionClick('detail', task, event)
-                              }
-                              className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
-                            >
-                              <FiEye size={14} />
-                              TASK 상세
-                            </button>
-                            {!task.isCompleted && (
-                              <button
-                                onClick={(event) =>
-                                  handleActionClick('complete', task, event)
-                                }
-                                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100"
-                              >
-                                <FiCheck size={14} />
-                                완료처리
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  )}
+                  {/* ACTION - 삭제됨 */}
                 </tr>
 
                 {/* 완료 처리 입력 행 - 해당 작업 바로 아래 표시 */}

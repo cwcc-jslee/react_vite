@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/ko';
+import { Tooltip } from '@shared/components/ui';
 import {
   PROJECT_STATUS_LABEL_TO_KEY,
   getStatusColorByKey,
@@ -77,28 +78,6 @@ const CompactStatusBadge = ({
     return colorMap[statusKey] || 'bg-gray-100 text-gray-700 ring-gray-400';
   };
 
-  // 승인 상태 배지 (간단한 사각 박스: 대기/승인/거부)
-  const ApprovalBadge = () => {
-    const config = {
-      pending: { letter: '대기', label: '승인 대기', className: 'bg-yellow-400 text-white' },
-      approved: { letter: '승인', label: '승인 완료', className: 'bg-green-500 text-white' },
-      rejected: { letter: '거부', label: '거부됨', className: 'bg-red-500 text-white' },
-    };
-
-    if (!approvalStatus || !config[approvalStatus]) return null;
-
-    const { letter, label, className } = config[approvalStatus];
-
-    return (
-      <div
-        className={`flex items-center justify-center px-2 h-8 text-xs font-bold rounded ${className}`}
-        title={label}
-      >
-        {letter}
-      </div>
-    );
-  };
-
   const handleClick = (e) => {
     e.stopPropagation();
     if (onClick) {
@@ -147,12 +126,13 @@ const CompactStatusBadge = ({
           style={{ backgroundColor: statusColorInfo?.color }}
         />
 
-        {/* 상태 텍스트 */}
-        <span>{status}</span>
-
-        {/* 상태 세부 내용 (강조된 상태에만 표시) */}
-        {isHighlighted && statusDetail && (
-          <span className="text-xs opacity-75">({statusDetail})</span>
+        {/* 상태 텍스트 (Tooltip 적용) */}
+        {isHighlighted && statusDetail ? (
+          <Tooltip content={statusDetail}>
+            <span>{status}</span>
+          </Tooltip>
+        ) : (
+          <span>{status}</span>
         )}
 
         {/* 예외 상태 표시 */}
@@ -182,9 +162,6 @@ const CompactStatusBadge = ({
           {/* to_status (requestedStatus) */}
           {requestedStatus && renderStatusBadge(requestedStatus, isToStatusHighlighted, false)}
         </div>
-
-        {/* 우측: 승인 상태 배지 */}
-        <ApprovalBadge />
       </div>
 
       {/* 2줄: 메타 정보 (변경 시간, 변경자) */}

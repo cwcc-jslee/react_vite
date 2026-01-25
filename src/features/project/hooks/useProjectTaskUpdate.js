@@ -62,7 +62,7 @@ export const useProjectTaskUpdate = () => {
         // 3. 프로젝트 상세 데이터 리프레시
         const currentProjectId = getCurrentProjectId();
         if (currentProjectId) {
-          await actions.detail.fetchDetail(currentProjectId);
+          await actions.detail.refreshDetail(currentProjectId);
         }
 
         return { success: true, data: result };
@@ -109,7 +109,7 @@ export const useProjectTaskUpdate = () => {
 
         const currentProjectId = getCurrentProjectId();
         if (currentProjectId) {
-          await actions.detail.fetchDetail(currentProjectId);
+          await actions.detail.refreshDetail(currentProjectId);
         }
 
         return { success: true, data: result };
@@ -145,14 +145,9 @@ export const useProjectTaskUpdate = () => {
       try {
         const result = await projectTaskService.updateTask(documentId, updateData);
 
-        notification.success({
-          message: 'TASK 업데이트 성공',
-          description: successMessage,
-        });
-
         const currentProjectId = getCurrentProjectId();
         if (currentProjectId) {
-          await actions.detail.fetchDetail(currentProjectId);
+          await actions.detail.refreshDetail(currentProjectId);
         }
 
         return { success: true, data: result };
@@ -197,7 +192,7 @@ export const useProjectTaskUpdate = () => {
 
         const currentProjectId = getCurrentProjectId();
         if (currentProjectId) {
-          await actions.detail.fetchDetail(currentProjectId);
+          await actions.detail.refreshDetail(currentProjectId);
         }
 
         return { success: true, results };

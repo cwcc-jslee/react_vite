@@ -27,6 +27,7 @@
 | `FINAL_REVIEW` | 고객검수 | 고객검수 요청 | → 고객검수 전환 시 |
 | `CLOSE` | 종료 | 프로젝트 종료 요청 | → 종료 전환 시 |
 | `RESUME` | 재개 | 보류→진행 등 재시작 | 보류/대기 → 다른 상태 |
+| `TASK_UPDATE` | 작업수정 | 프로젝트 작업/일정 변경 | 작업 수정 Drawer에서 저장 시 |
 
 ---
 
@@ -42,6 +43,7 @@ export const STATUS_CHANGE_TYPE_CODES = {
   FINAL_REVIEW: 'FINAL_REVIEW',
   CLOSE: 'CLOSE',
   RESUME: 'RESUME',
+  TASK_UPDATE: 'TASK_UPDATE',
 };
 ```
 
@@ -49,35 +51,16 @@ export const STATUS_CHANGE_TYPE_CODES = {
 
 ```javascript
 export const STATUS_CHANGE_TYPE = {
-  CREATE: {
-    code: 'CREATE',
-    label: '신규등록',
-    description: '프로젝트 최초 생성',
-  },
-  STATUS_CHANGE: {
-    code: 'STATUS_CHANGE',
-    label: '상태변경',
-    description: '일반 상태 전환',
-  },
-  INTERIM_REVIEW: {
-    code: 'INTERIM_REVIEW',
-    label: '중간검수',
-    description: '중간검수 요청',
-  },
-  FINAL_REVIEW: {
-    code: 'FINAL_REVIEW',
-    label: '고객검수',
-    description: '고객검수 요청',
-  },
-  CLOSE: {
-    code: 'CLOSE',
-    label: '종료',
-    description: '프로젝트 종료 요청',
-  },
+  // ... 기존 코드
   RESUME: {
     code: 'RESUME',
     label: '재개',
     description: '보류→진행 등 재시작',
+  },
+  TASK_UPDATE: {
+    code: 'TASK_UPDATE',
+    label: '작업수정',
+    description: '프로젝트 작업/일정 변경',
   },
 };
 ```
@@ -193,6 +176,25 @@ const statusChangeData = {
   requestedBy: currentUser?.user?.id || null,
   requestedAt: dayjs().toISOString(),
   changeDescription: formData.changeDescription || null,
+  approvalStatus: 'pending',
+};
+```
+
+### 4. 프로젝트 작업 수정
+
+**파일:** `src/features/project/hooks/useProjectTaskSubmit.js`
+
+```javascript
+import { STATUS_CHANGE_TYPE_CODES } from '../constants/statusChangeTypeConstants';
+
+const statusChangeData = {
+  project: projectId,
+  name: STATUS_CHANGE_TYPE_CODES.TASK_UPDATE, // 'TASK_UPDATE'
+  fromStatus: projectData.pjtStatus?.id,
+  toStatus: projectData.pjtStatus?.id, // 상태 유지
+  statusDetail: '작업/일정 변경에 따른 재승인 요청',
+  requestedBy: currentUser?.user?.id || null,
+  requestedAt: dayjs().toISOString(),
   approvalStatus: 'pending',
 };
 ```

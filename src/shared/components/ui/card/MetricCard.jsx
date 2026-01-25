@@ -57,7 +57,7 @@ const MetricCard = ({
       >
         <div className="flex items-center gap-2">
           {icon && <span className="text-lg">{icon}</span>}
-          <h3 className="text-sm font-semibold">
+          <h3 className="text-sm font-semibold flex-1">
             {title}
           </h3>
         </div>

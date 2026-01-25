@@ -14,6 +14,7 @@ export const STATUS_CHANGE_TYPE_CODES = {
   FINAL_REVIEW: 'FINAL_REVIEW',
   CLOSE: 'CLOSE',
   RESUME: 'RESUME',
+  TASK_UPDATE: 'TASK_UPDATE',
 };
 
 /**
@@ -49,6 +50,11 @@ export const STATUS_CHANGE_TYPE = {
     code: 'RESUME',
     label: '재개',
     description: '보류→진행 등 재시작',
+  },
+  TASK_UPDATE: {
+    code: 'TASK_UPDATE',
+    label: '작업수정',
+    description: '프로젝트 작업/일정 변경',
   },
 };
 

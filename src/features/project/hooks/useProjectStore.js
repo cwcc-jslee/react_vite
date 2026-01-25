@@ -391,6 +391,20 @@ export const useProjectStore = () => {
           );
         }
       },
+      // 데이터만 갱신 (Drawer 모드 유지용)
+      refreshDetail: async (id) => {
+        const resultAction = await dispatch(fetchProjectDetail(id));
+        if (fetchProjectDetail.fulfilled.match(resultAction)) {
+          // Drawer 데이터 업데이트
+          dispatch(
+            setDrawer({
+              visible: true,
+              mode: 'view', // 모드 유지
+              data: resultAction.payload,
+            }),
+          );
+        }
+      },
       refreshWorks: (id, params = {}) => {
         dispatch(fetchProjectWorks({ projectId: id, ...params }));
       },

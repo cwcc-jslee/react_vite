@@ -9,12 +9,17 @@
  */
 
 import { useCallback, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { notification } from '@shared/services/notification';
 import { projectTaskService } from '../services/projectTaskService';
+import { projectApiService } from '../services/projectApiService';
+import { STATUS_CHANGE_TYPE_CODES } from '../constants/statusChangeTypeConstants';
+import dayjs from 'dayjs';
 
 export const useProjectTaskSubmit = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [progress, setProgress] = useState(0);
+  const currentUser = useSelector((state) => state.auth.user);
 
   /**
    * 버킷 데이터 전처리
@@ -274,6 +279,38 @@ export const useProjectTaskSubmit = () => {
         setIsSubmitting(true);
         setProgress(0);
 
+        // 0단계: 현재 프로젝트 정보 및 수정 전 총 공수 조회
+        let projectData = null;
+        let oldTotalHours = 0;
+        try {
+          const projectResponse = await projectApiService.getProjectDetail(projectId);
+          projectData = Array.isArray(projectResponse?.data)
+            ? projectResponse.data[0]
+            : projectResponse?.data;
+
+          if (projectData?.projectTasks) {
+            oldTotalHours = projectData.projectTasks.reduce(
+              (sum, task) =>
+                sum + (Number(task.planningTimeData?.totalPlannedHours) || 0),
+              0,
+            );
+          }
+        } catch (e) {
+          console.error('Failed to fetch project detail', e);
+        }
+
+        // 수정 후 총 공수 계산
+        let newTotalHours = 0;
+        buckets.forEach((bucket) => {
+          if (bucket.tasks) {
+            newTotalHours += bucket.tasks.reduce(
+              (sum, task) =>
+                sum + (Number(task.planningTimeData?.totalPlannedHours) || 0),
+              0,
+            );
+          }
+        });
+
         const bucketResults = [];
         const taskResults = [];
         const bucketIdMap = new Map(); // 버킷 인덱스 → documentId 매핑
@@ -356,6 +393,41 @@ export const useProjectTaskSubmit = () => {
           message: '저장 완료',
           description: `버킷: ${newBucketsCount}개 생성, ${updatedBucketsCount}개 수정 | 태스크: ${newTasksCount}개 생성, ${updatedTasksCount}개 수정`,
         });
+
+        // 4단계: 프로젝트 승인 상태 변경 및 이력 생성
+        try {
+          if (projectData) {
+            // 승인 상태 'pending'으로 변경
+            // Strapi v5에서는 업데이트 시 documentId가 필요함
+            const updateId = projectData.documentId || projectId;
+
+            await projectApiService.updateProject(updateId, {
+              currentApprovalStatus: 'pending',
+            });
+
+            // 상태 변경 이력 생성
+            const statusChangeData = {
+              project: projectId,
+              name: STATUS_CHANGE_TYPE_CODES.TASK_UPDATE,
+              fromStatus: projectData.pjtStatus?.id,
+              toStatus: projectData.pjtStatus?.id, // 상태는 유지
+              statusDetail: `작업/일정 변경에 따른 재승인 요청 (계획공수: ${oldTotalHours}h → ${newTotalHours}h)`,
+              requestedBy: currentUser?.user?.id || null,
+              requestedAt: dayjs().toISOString(),
+              approvalStatus: 'pending',
+            };
+
+            await projectApiService.createProjectStatusChange(statusChangeData);
+            console.log('프로젝트 승인 상태 변경 및 이력 생성 완료');
+          }
+        } catch (statusError) {
+          console.error('프로젝트 상태 업데이트 중 오류 발생:', statusError);
+          // 저장 자체는 성공했으므로 에러를 throw하지 않고 경고만 표시하거나 무시
+          notification.warning({
+            message: '상태 업데이트 실패',
+            description: '작업은 저장되었으나 승인 상태 변경에 실패했습니다.',
+          });
+        }
 
         setProgress(100);
         return {

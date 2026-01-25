@@ -6,6 +6,7 @@ import PropTypes from 'prop-types';
 import MetricCard from '@shared/components/ui/card/MetricCard';
 import { Progress } from '@shared/components/ui/index';
 import CompactStatusBadge from '../ui/CompactStatusBadge';
+import ApprovalStatusBadge from '../ui/ApprovalStatusBadge';
 import { PROJECT_EXCEPTION_STATUS } from '../../constants/projectStatusConstants';
 
 /**
@@ -106,7 +107,15 @@ const ProjectMetricsSection = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {/* 1. 진행상태/진행률 통합 카드 */}
-      <MetricCard title="진행상태" icon="📊">
+      <MetricCard 
+        title={
+          <div className="flex items-center justify-between w-full">
+            <span>진행상태</span>
+            <ApprovalStatusBadge status={statusMetadata.approvalStatus} />
+          </div>
+        } 
+        icon="📊"
+      >
         {data.isClosed ? (
           /* 종료 상태인 경우 */
           <div className="flex flex-col gap-2">

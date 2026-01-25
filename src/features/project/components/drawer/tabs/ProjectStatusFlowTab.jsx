@@ -13,6 +13,7 @@ import {
   PROJECT_STATUS_DESCRIPTIONS,
   getStatusCodeByLabel,
 } from '../../../constants/projectStatusConstants';
+import ApprovalStatusBadge from '../../ui/ApprovalStatusBadge';
 import { determineStatusChangeType } from '../../../constants/statusChangeTypeConstants';
 import { useProjectUpdate } from '../../../hooks/useProjectUpdate';
 import { useProjectStore } from '../../../hooks/useProjectStore';
@@ -32,6 +33,7 @@ const ProjectStatusFlowTab = ({ data }) => {
   });
 
   const currentStatus = data.pjtStatus?.name || '시작전';
+  const isPending = data.currentApprovalStatus === 'pending';
 
   // 전환 가능한 상태 목록
   const availableTransitions = useMemo(() => {
@@ -40,6 +42,7 @@ const ProjectStatusFlowTab = ({ data }) => {
 
   // 상태 클릭 핸들러
   const handleStatusClick = (status) => {
+    if (isPending) return; // 승인 대기 중이면 변경 불가
     if (status === currentStatus) return;
 
     const canTransition = availableTransitions.includes(status);
@@ -126,6 +129,22 @@ const ProjectStatusFlowTab = ({ data }) => {
 
   return (
     <div className="p-6 space-y-6">
+      {/* 승인 대기 중 알림 */}
+      {isPending && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
+          <svg className="w-5 h-5 text-yellow-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <div>
+            <h4 className="text-sm font-semibold text-yellow-800">승인 대기 중</h4>
+            <p className="text-xs text-yellow-700 mt-1">
+              현재 상태 변경 또는 작업 수정에 대한 승인이 대기 중입니다.<br />
+              승인이 완료되거나 반려된 후에 다시 상태를 변경할 수 있습니다.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* 현재 상태 */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-2">
@@ -142,6 +161,7 @@ const ProjectStatusFlowTab = ({ data }) => {
             }}
           />
           <span className="text-lg font-semibold text-blue-900">{currentStatus}</span>
+          <ApprovalStatusBadge status={data.currentApprovalStatus} />
           {data.statusDetail && (
             <span className="text-sm text-blue-700">({data.statusDetail})</span>
           )}
@@ -165,10 +185,11 @@ const ProjectStatusFlowTab = ({ data }) => {
               <div key={status}>
                 <button
                   onClick={() => handleStatusClick(status)}
-                  disabled={!canTransition || isCurrent}
+                  disabled={!canTransition || isCurrent || isPending}
                   className={`
                     w-full p-4 rounded-lg border-2 text-left transition-all
                     ${getStatusClasses(status)}
+                    ${isPending && !isCurrent ? 'opacity-50 cursor-not-allowed' : ''}
                   `}
                 >
                   <div className="flex items-center justify-between">
@@ -215,12 +236,12 @@ const ProjectStatusFlowTab = ({ data }) => {
         <h3 className="text-sm font-semibold text-gray-700 mb-3">예외 상태</h3>
         <button
           onClick={() => handleStatusClick(PROJECT_EXCEPTION_STATUS)}
-          disabled={currentStatus === PROJECT_EXCEPTION_STATUS}
+          disabled={currentStatus === PROJECT_EXCEPTION_STATUS || isPending}
           className={`
             w-full p-4 rounded-lg border-2 text-left transition-all
             ${currentStatus === PROJECT_EXCEPTION_STATUS
               ? 'border-red-500 bg-red-50 ring-2 ring-red-500 cursor-default'
-              : availableTransitions.includes(PROJECT_EXCEPTION_STATUS)
+              : availableTransitions.includes(PROJECT_EXCEPTION_STATUS) && !isPending
               ? 'border-gray-300 hover:border-red-400 hover:bg-red-50 cursor-pointer'
               : 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
             }
