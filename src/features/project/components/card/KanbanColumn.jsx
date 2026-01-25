@@ -122,9 +122,9 @@ const KanbanColumn = ({
               ) : (
                 <h2
                   className="font-semibold text-zinc-800 mb-3 pl-1 cursor-pointer hover:text-indigo-700 flex-grow truncate"
-                  title={bucket.bucket}
+                  title={bucket.name}
                 >
-                  {bucket.bucket}
+                  {bucket.name}
                 </h2>
               )}
 
@@ -153,7 +153,7 @@ const KanbanColumn = ({
                   }}
                 >
                   <FiEdit className="mr-2" size={14} />
-                  이름 바꾸기
+                  버킷이름 변경
                 </button>
 
                 {!isSingleWorkType && (

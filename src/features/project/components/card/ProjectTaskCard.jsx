@@ -24,6 +24,7 @@ const ProjectTaskCard = ({
   toggleTaskCompletion,
   deleteTask,
   onOpenTaskEditModal,
+  isEditable = false,
 }) => {
   const {
     name,
@@ -138,38 +139,40 @@ const ProjectTaskCard = ({
     <>
       <div className="w-full mb-2 relative group">
         <div className="max-w-full rounded-sm border-0 shadow-sm bg-white">
-          {/* 메뉴 버튼 - 호버 시에만 표시 */}
-          <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              className="p-1 text-gray-500 hover:text-gray-700 focus:outline-none rounded-full hover:bg-gray-100"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              <FiMoreVertical size={16} />
-            </button>
-
-            {/* 드롭다운 메뉴 */}
-            {menuOpen && (
-              <div
-                ref={menuRef}
-                className="absolute right-2 mt-1 w-36 bg-white shadow-lg rounded-md py-1 z-20 border border-gray-200"
+          {/* 메뉴 버튼 - 호버 시에만 표시, 편집 모드일 때만 */}
+          {isEditable && (
+            <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                className="p-1 text-gray-500 hover:text-gray-700 focus:outline-none rounded-full hover:bg-gray-100"
+                onClick={() => setMenuOpen(!menuOpen)}
               >
-                <button
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                  onClick={handleTaskEditClick}
+                <FiMoreVertical size={16} />
+              </button>
+
+              {/* 드롭다운 메뉴 */}
+              {menuOpen && (
+                <div
+                  ref={menuRef}
+                  className="absolute right-2 mt-1 w-36 bg-white shadow-lg rounded-md py-1 z-20 border border-gray-200"
                 >
-                  <FiEdit className="mr-2" size={14} />
-                  작업수정
-                </button>
-                <button
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                  // onClick={handleTaskEditClick}
-                >
-                  <FiEdit className="mr-2" size={14} />
-                  작업삭제(예정)
-                </button>
-              </div>
-            )}
-          </div>
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    onClick={handleTaskEditClick}
+                  >
+                    <FiEdit className="mr-2" size={14} />
+                    작업수정
+                  </button>
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                    onClick={handleDeleteClick}
+                  >
+                    <FiTrash2 className="mr-2" size={14} />
+                    작업삭제
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="flex-col justify-between pr-3 flex">
             {/* 클릭 가능한 메인 영역 */}

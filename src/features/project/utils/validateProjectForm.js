@@ -81,7 +81,8 @@ export const validateProjectTaskForm = (projectBuckets) => {
   // 각 버킷(컬럼)별 유효성 검사
   projectBuckets.forEach((bucket, bucketIndex) => {
     // 버킷 이름이 비어있는지 확인
-    if (!bucket.bucket || bucket.bucket.trim() === '') {
+    const bucketName = bucket.name || bucket.bucket;
+    if (!bucketName || bucketName.trim() === '') {
       errors.push(`버킷 ${bucketIndex + 1}의 이름이 비어있습니다.`);
       isValid = false;
     }
@@ -94,7 +95,7 @@ export const validateProjectTaskForm = (projectBuckets) => {
         // 작업명 필수
         if (!task.name || task.name.trim() === '') {
           errors.push(
-            `${bucket.bucket || `버킷 ${bucketIndex + 1}`}의 작업 ${
+            `${bucketName || `버킷 ${bucketIndex + 1}`}의 작업 ${
               taskIndex + 1
             }에 작업명이 없습니다.`,
           );
@@ -109,7 +110,7 @@ export const validateProjectTaskForm = (projectBuckets) => {
           if (!task.planStartDate || !task.planEndDate) {
             console.error(`Validation Failed: Missing dates for scheduled task "${task.name}"`);
             errors.push(
-              `${bucket.bucket || `버킷 ${bucketIndex + 1}`}의 "${
+              `${bucketName || `버킷 ${bucketIndex + 1}`}의 "${
                 task.name || `작업 ${taskIndex + 1}`
               }"에 계획 시작/종료일이 없습니다.`,
             );
@@ -123,7 +124,7 @@ export const validateProjectTaskForm = (projectBuckets) => {
 
             if (startDate > endDate) {
               errors.push(
-                `${bucket.bucket || `버킷 ${bucketIndex + 1}`}의 "${
+                `${bucketName || `버킷 ${bucketIndex + 1}`}의 "${
                   task.name || `작업 ${taskIndex + 1}`
                 }"의 종료일이 시작일보다 빠릅니다.`,
               );
@@ -140,7 +141,7 @@ export const validateProjectTaskForm = (projectBuckets) => {
           // 인원수 검사
           if (isNaN(personnelCount) || personnelCount < 1) {
             errors.push(
-              `${bucket.bucket || `버킷 ${bucketIndex + 1}`}의 "${
+              `${bucketName || `버킷 ${bucketIndex + 1}`}의 "${
                 task.name || `작업 ${taskIndex + 1}`
               }"의 인원 수가 유효하지 않습니다.`,
             );
@@ -154,7 +155,7 @@ export const validateProjectTaskForm = (projectBuckets) => {
             allocationRate > 1
           ) {
             errors.push(
-              `${bucket.bucket || `버킷 ${bucketIndex + 1}`}의 "${
+              `${bucketName || `버킷 ${bucketIndex + 1}`}의 "${
                 task.name || `작업 ${taskIndex + 1}`
               }"의 투입률이 유효하지 않습니다.`,
             );
@@ -164,7 +165,7 @@ export const validateProjectTaskForm = (projectBuckets) => {
           // 작업일 검사
           if (isNaN(workDays) || workDays < 1) {
             errors.push(
-              `${bucket.bucket || `버킷 ${bucketIndex + 1}`}의 "${
+              `${bucketName || `버킷 ${bucketIndex + 1}`}의 "${
                 task.name || `작업 ${taskIndex + 1}`
               }"의 작업일이 유효하지 않습니다.`,
             );
@@ -176,7 +177,7 @@ export const validateProjectTaskForm = (projectBuckets) => {
       // 작업이 없는 버킷 경고 (에러는 아님)
       console.warn(
         `버킷 "${
-          bucket.bucket || `버킷 ${bucketIndex + 1}`
+          bucketName || `버킷 ${bucketIndex + 1}`
         }"에 작업이 없습니다.`,
       );
     }

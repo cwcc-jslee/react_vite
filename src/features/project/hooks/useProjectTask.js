@@ -68,7 +68,7 @@ export const convertProjectDataToKanbanFormat = (
       });
 
     return {
-      bucket: bucket.name,
+      name: bucket.name,
       id: bucket.id,
       documentId: bucket.documentId,
       position: bucket.position || index,
@@ -342,8 +342,10 @@ const useProjectTask = (initialColumns = []) => {
           );
 
           // 처리된 작업들을 포함한 새 컬럼 객체 반환
+          const { bucket: bucketTitle, ...restBucket } = bucket;
           return {
-            ...bucket,
+            ...restBucket,
+            name: bucketTitle || bucket.name || '무제 버킷',
             tasks: sortedTasks,
           };
         });

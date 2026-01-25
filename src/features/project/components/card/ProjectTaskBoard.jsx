@@ -37,6 +37,7 @@ const ProjectTaskBoard = ({
   onOpenTaskEditModal, // 작업 수정 모달 열기
   isSingleWorkType,
   enableAddTask = false, // 작업 추가 버튼 활성화 여부
+  isEditable = false, // 편집 모드 여부
 }) => {
   // 메뉴 상태 관리
   const [menuOpen, setMenuOpen] = useState(false);
@@ -102,26 +103,32 @@ const ProjectTaskBoard = ({
                 />
               ) : (
                 <h2
-                  className="font-semibold text-zinc-800 mb-3 pl-1 cursor-pointer hover:text-indigo-700 flex-grow"
-                  // onClick={() => startEditingColumnTitle(bucketIndex)}
+                  className={`font-semibold text-zinc-800 mb-3 pl-1 flex-grow ${
+                    isEditable ? 'cursor-pointer hover:text-indigo-700' : ''
+                  }`}
+                  onClick={() =>
+                    isEditable && startEditingColumnTitle(bucketIndex)
+                  }
                 >
                   {bucket.name}
                 </h2>
               )}
 
-              {/* 메뉴 버튼 - 호버 시에만 표시 */}
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  className="p-1 text-gray-500 hover:text-gray-700 focus:outline-none rounded-full hover:bg-gray-100"
-                  onClick={() => setMenuOpen(!menuOpen)}
-                >
-                  <FiMoreVertical size={16} />
-                </button>
-              </div>
+              {/* 메뉴 버튼 - 편집 모드일 때만 표시 */}
+              {isEditable && (
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    className="p-1 text-gray-500 hover:text-gray-700 focus:outline-none rounded-full hover:bg-gray-100"
+                    onClick={() => setMenuOpen(!menuOpen)}
+                  >
+                    <FiMoreVertical size={16} />
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* 드롭다운 메뉴 */}
-            {menuOpen && (
+            {menuOpen && isEditable && (
               <div
                 ref={menuRef}
                 className="absolute right-3 mt-1 w-36 bg-white shadow-lg rounded-md py-1 z-20 border border-gray-200"
@@ -134,26 +141,28 @@ const ProjectTaskBoard = ({
                   }}
                 >
                   <FiEdit className="mr-2" size={14} />
-                  이름 바꾸기
+                  버킷이름 변경
                 </button>
               </div>
             )}
 
-            {/* 작업 추가 버튼 */}
-            <div className="p-2">
-              <button
-                className={`w-full h-10 flex items-center justify-center border-2 rounded-sm text-sm transition-colors ${
-                  enableAddTask
-                    ? 'text-indigo-600 border-indigo-300 hover:bg-indigo-50 hover:border-indigo-400 cursor-pointer'
-                    : 'text-gray-500 border-gray-300 cursor-not-allowed'
-                }`}
-                disabled={!enableAddTask}
-                onClick={enableAddTask ? handleAddTaskClick : undefined}
-              >
-                <FiPlus className="mr-2" size={18} />
-                <span>작업 추가</span>
-              </button>
-            </div>
+            {/* 작업 추가 버튼 - 편집 모드일 때만 표시 */}
+            {isEditable && (
+              <div className="p-2">
+                <button
+                  className={`w-full h-10 flex items-center justify-center border-2 rounded-sm text-sm transition-colors ${
+                    enableAddTask
+                      ? 'text-indigo-600 border-indigo-300 hover:bg-indigo-50 hover:border-indigo-400 cursor-pointer'
+                      : 'text-gray-500 border-gray-300 cursor-not-allowed'
+                  }`}
+                  disabled={!enableAddTask}
+                  onClick={enableAddTask ? handleAddTaskClick : undefined}
+                >
+                  <FiPlus className="mr-2" size={18} />
+                  <span>작업 추가</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* 작업 카드 목록 - 스크롤 가능하도록 수정 */}
@@ -171,6 +180,7 @@ const ProjectTaskBoard = ({
                   toggleTaskCompletion={toggleTaskCompletion}
                   deleteTask={deleteTask}
                   onOpenTaskEditModal={onOpenTaskEditModal}
+                  isEditable={isEditable}
                 />
               );
             })}
@@ -220,6 +230,7 @@ const ProjectTaskBoard = ({
                           deleteTask={deleteTask}
                           onOpenTaskEditModal={onOpenTaskEditModal}
                           isSingleWorkType={isSingleWorkType}
+                          isEditable={isEditable}
                         />
                       );
                     })}

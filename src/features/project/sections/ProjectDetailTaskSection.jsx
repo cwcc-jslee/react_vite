@@ -192,18 +192,6 @@ const ProjectDetailTaskSection = ({
                 onOpenTaskEditModal={handleOpenTaskEditModal}
               />
             ))}
-
-            {/* 버킷 추가 버튼 */}
-            <div className="flex-shrink-0 w-72 h-full flex items-start p-2">
-              <button
-                className="w-full h-10 bg-gray-300 text-gray-500 border-2 border-gray-300 rounded-sm flex items-center justify-center text-sm cursor-not-allowed"
-                disabled={true}
-                // onClick={handleAddColumnClick}
-              >
-                <FiPlus className="mr-2" size={18} />
-                <span>버킷 추가</span>
-              </button>
-            </div>
           </div>
         )}
 

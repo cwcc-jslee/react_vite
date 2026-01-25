@@ -79,6 +79,7 @@ const projectBucketSlice = createSlice({
           bucketIndex < state.buckets.length
         ) {
           state.buckets[bucketIndex].name = value;
+          state.buckets[bucketIndex].isModified = true; // 수정 플래그 설정
         }
       } else if (taskIndex !== null) {
         // 작업 필드 업데이트
@@ -90,6 +91,7 @@ const projectBucketSlice = createSlice({
           taskIndex < state.buckets[bucketIndex].tasks.length
         ) {
           state.buckets[bucketIndex].tasks[taskIndex][field] = value;
+          state.buckets[bucketIndex].tasks[taskIndex].isModified = true; // 수정 플래그 설정
         }
       }
 
@@ -123,11 +125,12 @@ const projectBucketSlice = createSlice({
           ? Math.max(...state.buckets.map((col) => col.position || 0))
           : -1;
 
-      // 새 컬럼에 position 추가
+      // 새 컬럼에 position 추가 (신규 생성이므로 isModified = true)
       const columnWithPosition = {
         ...newColumn,
         position: maxPosition + 1,
         tasks: newColumn.tasks || [],
+        isModified: true, // 신규 생성 플래그
       };
 
       state.buckets.push(columnWithPosition);
@@ -164,6 +167,10 @@ const projectBucketSlice = createSlice({
         state.buckets[targetIndex],
         state.buckets[bucketIndex],
       ];
+
+      // 이동된 버킷들에 수정 플래그 설정
+      state.buckets[bucketIndex].isModified = true;
+      state.buckets[targetIndex].isModified = true;
     },
 
     // 작업 관리
@@ -179,10 +186,11 @@ const projectBucketSlice = createSlice({
             ? Math.max(...bucket.tasks.map((t) => t.position || 0))
             : -1;
 
-        // 새 task에 position 속성 추가
+        // 새 task에 position 속성 추가 (신규 생성이므로 isModified = true)
         const taskWithPosition = {
           ...task,
           position: maxPosition + 1,
+          isModified: true, // 신규 생성 플래그
         };
 
         state.buckets[bucketIndex].tasks.push(taskWithPosition);
@@ -201,6 +209,7 @@ const projectBucketSlice = createSlice({
         state.buckets[bucketIndex].tasks[taskIndex] = {
           ...state.buckets[bucketIndex].tasks[taskIndex],
           ...updatedTask,
+          isModified: true, // 수정 플래그 설정
         };
       }
     },
@@ -242,6 +251,7 @@ const projectBucketSlice = createSlice({
         state.buckets[bucketIndex].tasks[taskIndex] = {
           ...task,
           pjtProgress: isCompleted ? '0' : '100',
+          isModified: true, // 수정 플래그 설정
         };
       }
     },

@@ -50,7 +50,7 @@ export const useProjectSubmit = () => {
     const clonedData = JSON.parse(JSON.stringify(data));
 
     // 불필요한 임시 필드 및 참고용 데이터 제거
-    const { __temp, revenueAmount, revenueProfit, ...cleanData } = clonedData;
+    const { __temp, revenueAmount, revenueProfit, isModified, ...cleanData } = clonedData;
 
     // null이나 빈 문자열인 경우 해당 키 삭제
     Object.keys(cleanData).forEach((key) => {
@@ -72,7 +72,7 @@ export const useProjectSubmit = () => {
       if (!buckets || !Array.isArray(buckets)) return [];
 
       return buckets.map((bucket) => ({
-        bucket: bucket.bucket,
+        bucket: bucket.name || bucket.bucket,
         position: bucket.position,
         tasks:
           bucket.tasks?.map((task) => {

@@ -225,8 +225,11 @@ const ProjectDetailDrawer = ({ visible, data, onClose }) => {
   };
 
   const handleTaskSaveSuccess = () => {
-    // TODO: 프로젝트 데이터 갱신 필요 시 처리
-    console.log('작업 저장 성공');
+    // 프로젝트 데이터 최신화 (상세 정보 다시 조회하여 Drawer 데이터 업데이트)
+    if (data?.id) {
+      projectActions.detail.fetchDetailForDrawer(data.id);
+    }
+    console.log('작업 저장 성공 및 데이터 갱신 완료');
   };
 
   // ==================== 렌더링 ====================

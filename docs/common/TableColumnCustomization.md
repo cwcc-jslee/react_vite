@@ -20,6 +20,8 @@
     *   (구 `ProjectTaskList`와 `ProjectTaskTable` 통합)
     *   반응형/확장형 구현 예시
     *   화면 확장 상태(`isExpanded`)에 따라 기본 표시 컬럼 세트가 동적으로 변경됨
+*   **WorkList** (`src/features/todo/components/tables/WorkList.jsx`)
+    *   최근 작업 목록 표시를 위한 표준 테이블 구현 형태
 
 ## 주요 구성 요소
 

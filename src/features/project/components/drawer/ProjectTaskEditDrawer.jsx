@@ -51,7 +51,7 @@ const ProjectTaskEditDrawer = ({
   const [isTaskModified, setIsTaskModified] = useState(false);
 
   // 제출 상태
-  const { isSubmitting, progress, handleTaskUpdate } = useProjectTaskSubmit();
+  const { isSubmitting, progress, handleSaveAll } = useProjectTaskSubmit();
 
   // 프로젝트 데이터가 변경될 때마다 칸반 보드 동기화
   useEffect(() => {
@@ -110,12 +110,17 @@ const ProjectTaskEditDrawer = ({
 
   /**
    * 저장 핸들러
+   * - id/documentId 있음: UPDATE
+   * - id/documentId 없음: CREATE
    */
   const handleSave = async () => {
-    const result = await handleTaskUpdate(buckets);
+    const projectId = data?.id;
+    const result = await handleSaveAll(buckets, projectId);
     if (result.success) {
       setIsTaskModified(false);
       onSaveSuccess?.();
+      // 저장 성공 알림 확인 후 Drawer 닫기
+      onClose();
     }
   };
 
@@ -229,6 +234,7 @@ const ProjectTaskEditDrawer = ({
                 }}
                 onOpenTaskEditModal={handleOpenTaskEditModal}
                 enableAddTask={true}
+                isEditable={true}
               />
             ))}
 

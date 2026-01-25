@@ -32,6 +32,27 @@ export const projectTaskService = {
   },
 
   /**
+   * 버킷 수정
+   * @param {string|number} bucketId - 버킷 documentId
+   * @param {Object} bucketData - 수정할 버킷 데이터
+   * @returns {Promise<Object>} 수정된 버킷 객체
+   */
+  updateBucket: async (bucketId, bucketData) => {
+    try {
+      const response = await apiService.put(
+        `/project-task-buckets/${bucketId}`,
+        bucketData,
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Bucket update error:', error);
+      throw new Error(
+        '버킷 수정 실패: ' + (error.message || '알 수 없는 오류'),
+      );
+    }
+  },
+
+  /**
    * 새 태스크 생성
    *
    * @param {Object} taskData - 태스크 데이터 (project_id, bucket_id 포함)

@@ -94,7 +94,7 @@ const TaskPlanningBoard = () => {
   }
 
   const handleAddColumnClick = () => {
-    addColumn({ bucket: '새 버킷', tasks: [] });
+    addColumn({ name: '새 버킷', tasks: [] });
   };
 
   const handleTemplateSelect = async (e) => {
