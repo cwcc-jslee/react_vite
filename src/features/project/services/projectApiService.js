@@ -246,6 +246,7 @@ export const projectApiService = {
             project: { id: { $eq: projectId } },
           },
           fields: [
+            'name',
             'status_detail',
             'approval_status',
             'requested_at',

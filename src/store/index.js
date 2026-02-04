@@ -13,6 +13,7 @@ import sfaReducer from './slices/sfaSlice';
 import projectReducer from './slices/projectSlice';
 import todoReducer from './slices/todoSlice';
 import customerReducer from './slices/customerSlice';
+import bizradarReducer from './slices/bizradarSlice';
 
 // 변경예정
 import pageStateReducer from './slices/pageStateSlice';
@@ -37,6 +38,7 @@ export const store = configureStore({
     project: projectReducer,
     todo: todoReducer,
     customer: customerReducer,
+    bizradar: bizradarReducer,
 
     // work 상태 관리 리듀서(다른 페이지에서 사용 필요하여 별도 구성)
     projectBucket: projectBucketReducer,

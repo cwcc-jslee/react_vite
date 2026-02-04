@@ -1,0 +1,51 @@
+/**
+ * BizRadar 컨테이너 - 레이아웃 오케스트레이터
+ * Redux 상태에 따라 적절한 레이아웃을 렌더링
+ */
+import React, { useEffect, memo } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { Section } from '@shared/layout/components';
+import { closeDrawer } from '@/store/slices/uiSlice';
+import { useBizRadarStore } from '../hooks/useBizRadarStore';
+
+// 레이아웃 컴포넌트
+import BizRadarListLayout from '../layouts/BizRadarListLayout';
+import BizRadarSearchLayout from '../layouts/BizRadarSearchLayout';
+import BizRadarViewEditLayout from '../layouts/BizRadarViewEditLayout';
+
+const BizRadarContainer = memo(() => {
+  const dispatch = useDispatch();
+  const { layout } = useSelector((state) => state.ui.pageLayout);
+  const drawer = useSelector((state) => state.ui.drawer);
+  const { actions } = useBizRadarStore();
+
+  // 초기 데이터 로드
+  useEffect(() => {
+    actions.data.fetchList();
+  }, []);
+
+  // 드로어 닫기 핸들러
+  const handleCloseDrawer = () => {
+    dispatch(closeDrawer());
+    actions.data.clearSelected();
+    actions.form.reset();
+  };
+
+  return (
+    <>
+      <Section>
+        {layout === 'list' && <BizRadarListLayout />}
+        {layout === 'search' && <BizRadarSearchLayout />}
+      </Section>
+
+      {/* 상세/수정 드로어 */}
+      {drawer.visible && ['view', 'edit'].includes(drawer.mode) && (
+        <BizRadarViewEditLayout onClose={handleCloseDrawer} />
+      )}
+    </>
+  );
+});
+
+BizRadarContainer.displayName = 'BizRadarContainer';
+
+export default BizRadarContainer;

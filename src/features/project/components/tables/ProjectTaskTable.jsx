@@ -372,7 +372,7 @@ const DEFAULT_COLUMNS_WIDE = [
                   {isColumnVisible('bucket') && (
                     <td className="px-3 py-2 text-center text-sm">
                       <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-md text-xs">
-                        {task?.projectTaskBucket?.name}
+                        {task.bucket || task?.projectTaskBucket?.name || '-'}
                       </span>
                     </td>
                   )}

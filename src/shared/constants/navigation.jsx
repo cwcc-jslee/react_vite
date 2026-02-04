@@ -10,12 +10,14 @@ import {
   FaTable,
   FaChartBar,
   FaThLarge,
+  FaSearch,
 } from 'react-icons/fa';
 import {
   MdContacts,
   MdViewKanban,
   MdTimeline,
   MdDashboard,
+  MdRadar,
 } from 'react-icons/md';
 import { RiTimeLine } from 'react-icons/ri';
 import { LuListTodo } from 'react-icons/lu';
@@ -27,6 +29,12 @@ export const SIDEBAR_ITEMS = [
     path: '/dashboard',
     label: 'DASHBOARD',
     icon: <MdDashboard className="h-5 w-5" />,
+  },
+  {
+    id: 'bizradar',
+    path: '/bizradar',
+    label: 'BizRadar',
+    icon: <MdRadar className="h-5 w-5" />,
   },
   {
     id: 'sfa',
@@ -58,7 +66,6 @@ export const SIDEBAR_ITEMS = [
     label: 'CONTACT',
     icon: <FaAddressBook className="h-5 w-5" />,
   },
-
   // 나머지 메뉴 항목들...
 ];
 
@@ -484,6 +491,65 @@ export const PAGE_MENUS = {
           },
           drawer: {
             visible: false, // 드로어 표시 여부
+          },
+        },
+      },
+    },
+  },
+  // BizRadar
+  bizradar: {
+    defaultMenu: 'list',
+    items: {
+      list: {
+        label: '목록',
+        visible: true,
+        config: {
+          layout: 'list',
+          sections: {
+            bizradarFilter: true,
+            bizradarList: true,
+          },
+          components: {
+            filterBar: true,
+            bizradarTable: true,
+          },
+          drawer: {
+            visible: false,
+          },
+        },
+      },
+      search: {
+        label: '검색',
+        visible: true,
+        config: {
+          layout: 'search',
+          sections: {
+            bizradarSearch: true,
+            bizradarList: true,
+          },
+          components: {
+            searchForm: true,
+            bizradarTable: true,
+          },
+          drawer: {
+            visible: false,
+          },
+        },
+      },
+      detail: {
+        label: '상세',
+        visible: false, // 숨김 메뉴 - 행 클릭 시 접근
+        config: {
+          layout: 'detail',
+          sections: {
+            bizradarDetail: true,
+          },
+          components: {
+            detailView: true,
+            editForm: true,
+          },
+          drawer: {
+            visible: true,
           },
         },
       },

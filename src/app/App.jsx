@@ -21,6 +21,7 @@ const ProjectPage = React.lazy(() =>
   import('../features/project/pages/ProjectPage'),
 );
 const TodoPage = React.lazy(() => import('../features/todo/pages/TodoPage'));
+const BizRadarPage = React.lazy(() => import('../features/bizradar/pages/BizRadarPage'));
 
 // QueryClient 설정
 const queryClient = new QueryClient({
@@ -145,6 +146,14 @@ const App = () => {
                 element={
                   <PrivateRoute path="/todo">
                     <TodoPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/bizradar"
+                element={
+                  <PrivateRoute path="/bizradar">
+                    <BizRadarPage />
                   </PrivateRoute>
                 }
               />

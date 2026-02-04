@@ -36,6 +36,18 @@ export default defineConfig(({ mode }) => {
             });
           },
         },
+        '/bizradar': {
+          target: 'http://192.168.20.100:8000',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/bizradar/, ''),
+          configure: (proxy, options) => {
+            proxy.on('proxyReq', (proxyReq, req, res) => {
+              if (mode === 'development') {
+                console.log('BizRadar Proxying:', req.method, req.url);
+              }
+            });
+          },
+        },
       },
     },
     resolve: {

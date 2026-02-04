@@ -10,6 +10,7 @@ import {
   PROJECT_STATUS_LABEL_TO_KEY,
   getStatusColorByKey,
 } from '../../../constants/projectStatusConstants';
+import { getStatusChangeTypeLabel } from '../../../constants/statusChangeTypeConstants';
 import { projectApiService } from '../../../services/projectApiService';
 import { Spinner } from '../../../../../shared/components/ui';
 
@@ -34,6 +35,7 @@ const ProjectStatusHistoryTab = ({ data }) => {
         // API 응답 데이터를 UI용 형식으로 변환
         const formattedHistory = (response?.data || []).map((change) => ({
           id: change.id,
+          changeTypeLabel: getStatusChangeTypeLabel(change.name),
           fromStatus: change.fromStatus?.name || null,
           toStatus: change.toStatus?.name || '알 수 없음',
           statusDetail: change.statusDetail || null,
@@ -41,6 +43,7 @@ const ProjectStatusHistoryTab = ({ data }) => {
           changedAt: formatDateTime(change.requestedAt),
           changedBy: change.requestedBy?.username || '알 수 없음',
           changeDescription: change.changeDescription || null,
+          approvedAt: change.approvedAt ? formatDateTime(change.approvedAt) : null,
           approvedBy: change.approvedBy?.username || null,
           approvalComment: change.approvalComment || null,
         }));
@@ -207,6 +210,9 @@ const ProjectStatusHistoryTab = ({ data }) => {
                 <div className="space-y-2">
                   {/* 상태 전환 */}
                   <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-bold text-gray-800">
+                      [{history.changeTypeLabel}]
+                    </span>
                     {history.fromStatus && (
                       <>
                         <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded">
@@ -227,13 +233,6 @@ const ProjectStatusHistoryTab = ({ data }) => {
                       {history.toStatus}
                     </span>
 
-                    {/* 상태 세부 내용 */}
-                    {history.statusDetail && (
-                      <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-700 rounded">
-                        {history.statusDetail}
-                      </span>
-                    )}
-
                     {/* 승인 상태 */}
                     {history.approvalStatus && (
                       <ApprovalStatusBadge status={history.approvalStatus} />
@@ -247,29 +246,52 @@ const ProjectStatusHistoryTab = ({ data }) => {
                     )}
                   </div>
 
-                  {/* 변경 시간 및 변경자 */}
-                  <div className="flex items-center gap-2 text-xs text-gray-600">
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>{history.changedAt}</span>
+                  {/* 상태 세부 내용 (2행) */}
+                  {history.statusDetail && (
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="px-2 py-0.5 font-bold bg-purple-100 text-purple-700 rounded border border-purple-200">
+                        {history.statusDetail}
+                      </span>
+                    </div>
+                  )}
 
-                    {history.changedBy && (
-                      <>
-                        <span>·</span>
+                  {/* 변경 시간 및 변경자 (3행 - 요청/승인 통합 1라인) */}
+                  <div className="flex items-center gap-x-4 gap-y-1 text-xs text-gray-500 flex-wrap">
+                    {/* 요청 정보 */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[10px] font-semibold text-gray-400 uppercase">요청</span>
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{history.changedAt}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                         <span>{history.changedBy}</span>
-                      </>
-                    )}
+                      </div>
+                    </div>
 
-                    {/* 승인자 */}
-                    {history.approvedBy && (
-                      <>
-                        <span>·</span>
-                        <span className="text-green-700">승인: {history.approvedBy}</span>
-                      </>
+                    {/* 승인 정보 (구분선과 함께 표시) */}
+                    {(history.approvedAt || history.approvedBy) && (
+                      <div className="flex items-center gap-3">
+                        <span className="text-gray-300">|</span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-[10px] font-semibold text-green-600 uppercase">승인</span>
+                          <svg className="w-3 h-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="text-green-700">{history.approvedAt || '-'}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <svg className="w-3 h-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                          <span className="text-green-700">{history.approvedBy || '-'}</span>
+                        </div>
+                      </div>
                     )}
                   </div>
 
