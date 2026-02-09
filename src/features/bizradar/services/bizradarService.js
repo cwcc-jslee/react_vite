@@ -48,7 +48,7 @@ export const bizradarService = {
   update: async (id, data) => {
     try {
       // 수정 가능한 필드만 추출
-      const allowedFields = ['tags', 'summary', 'submission_status', 'final_support_type'];
+      const allowedFields = ['tags', 'summary', 'submission_status', 'confirmed_category'];
       const updateData = {};
 
       allowedFields.forEach((field) => {

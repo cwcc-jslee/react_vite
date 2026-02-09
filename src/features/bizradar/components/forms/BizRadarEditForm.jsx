@@ -50,8 +50,8 @@ const BizRadarEditForm = ({ data, onSave, onCancel }) => {
           지원 유형
         </label>
         <select
-          name="final_support_type"
-          value={form.data.final_support_type || ''}
+          name="confirmed_category"
+          value={form.data.confirmed_category || ''}
           onChange={handleChange}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >

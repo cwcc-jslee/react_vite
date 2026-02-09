@@ -98,10 +98,13 @@ export const bizradarApi = {
   },
 
   /**
-   * 유효 사업만 조회 (A, B, C)
+   * 리드 검토 확정
+   * @param {number} id - 리드 ID
+   * @param {Object} data - 확정 데이터 (confirmed_category, review_status, notes)
    */
-  getValidLeads: async (params = {}) => {
-    return bizradarApi.getList({ ...params, type: 'A,B,C' });
+  confirm: async (id, data) => {
+    const response = await bizradarApiClient.patch(`/leads/${id}/confirm`, data);
+    return response.data;
   },
 };
 

@@ -23,7 +23,22 @@ export default defineConfig(({ mode }) => {
       // 환경변수에서 host, port 가져오기
       host: env.VITE_HOST || '192.168.20.101',
       port: parseInt(env.VITE_PORT) || 3001,
+      // SPA 라우팅을 위한 fallback 설정
+      historyApiFallback: true,
       proxy: {
+        // 순서 중요: 더 구체적인 경로가 먼저 와야 함
+        '/api/bizradar': {
+          target: 'http://192.168.20.100:8000',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/bizradar/, ''),
+          configure: (proxy, options) => {
+            proxy.on('proxyReq', (proxyReq, req, res) => {
+              if (mode === 'development') {
+                console.log('BizRadar API Proxying:', req.method, req.url);
+              }
+            });
+          },
+        },
         '/api': {
           target: env.VITE_API_URL || 'http://192.168.20.101:1337',
           changeOrigin: true,
@@ -32,18 +47,6 @@ export default defineConfig(({ mode }) => {
             proxy.on('proxyReq', (proxyReq, req, res) => {
               if (mode === 'development') {
                 console.log('Proxying:', req.method, req.url);
-              }
-            });
-          },
-        },
-        '/bizradar': {
-          target: 'http://192.168.20.100:8000',
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/bizradar/, ''),
-          configure: (proxy, options) => {
-            proxy.on('proxyReq', (proxyReq, req, res) => {
-              if (mode === 'development') {
-                console.log('BizRadar Proxying:', req.method, req.url);
               }
             });
           },

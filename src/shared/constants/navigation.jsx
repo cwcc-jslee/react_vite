@@ -498,8 +498,26 @@ export const PAGE_MENUS = {
   },
   // BizRadar
   bizradar: {
-    defaultMenu: 'list',
+    defaultMenu: 'dashboard',
     items: {
+      dashboard: {
+        label: '대시보드',
+        visible: true,
+        config: {
+          layout: 'dashboard',
+          sections: {
+            bizradarDashboard: true,
+          },
+          components: {
+            statsCards: true,
+            typeChart: true,
+            deadlineTimeline: true,
+          },
+          drawer: {
+            visible: false,
+          },
+        },
+      },
       list: {
         label: '목록',
         visible: true,
@@ -518,6 +536,22 @@ export const PAGE_MENUS = {
           },
         },
       },
+      review: {
+        label: '검토대기',
+        visible: true,
+        config: {
+          layout: 'review',
+          sections: {
+            bizradarReview: true,
+          },
+          components: {
+            reviewQueue: true,
+          },
+          drawer: {
+            visible: false,
+          },
+        },
+      },
       search: {
         label: '검색',
         visible: true,
@@ -530,6 +564,22 @@ export const PAGE_MENUS = {
           components: {
             searchForm: true,
             bizradarTable: true,
+          },
+          drawer: {
+            visible: false,
+          },
+        },
+      },
+      archive: {
+        label: '과거사업',
+        visible: true,
+        config: {
+          layout: 'archive',
+          sections: {
+            bizradarArchive: true,
+          },
+          components: {
+            archiveTable: true,
           },
           drawer: {
             visible: false,

@@ -72,6 +72,19 @@ export const SUBMISSION_STATUS = {
   예정: { label: '예정', color: 'bg-purple-100 text-purple-800' },
 };
 
+// 확정 상태 정의
+export const CONFIRMATION_STATUS = {
+  pending: { label: '검토대기', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
+  confirmed: { label: '확정완료', color: 'bg-green-100 text-green-800', icon: '✓' },
+  rejected: { label: '재검토', color: 'bg-red-100 text-red-800', icon: '✗' },
+};
+
+// 프로젝트 상태 정의 (진행중/과거)
+export const PROJECT_STATUS = {
+  active: { label: '진행중', color: 'bg-blue-100 text-blue-800', description: '현재 진행중인 사업' },
+  archived: { label: '과거', color: 'bg-gray-100 text-gray-600', description: '마감된 사업' },
+};
+
 // 데이터 출처 정의
 export const DATA_SOURCES = {
   all: { label: '전체', value: '', description: '모든 출처' },
@@ -98,6 +111,7 @@ export const DEFAULT_FILTERS = {
   region: null,      // 지역 (부분 일치)
   min_date: null,    // 마감일 최소값 (YYYY-MM-DD)
   keyword: '',       // 검색 키워드 (프론트엔드 전용)
+  project_status: 'active', // 프로젝트 상태 (active/archived/all)
 };
 
 // 테이블 컬럼 정의
@@ -105,7 +119,7 @@ export const TABLE_COLUMNS = [
   { key: 'id', title: 'ID', width: 60, align: 'center' },
   { key: 'source', title: '출처', width: 100, align: 'center' },
   { key: 'title', title: '공고명', width: 300, align: 'left', essential: true },
-  { key: 'final_support_type', title: '유형', width: 80, align: 'center', essential: true },
+  { key: 'confirmed_category', title: '유형', width: 80, align: 'center', essential: true },
   { key: 'region', title: '지역', width: 80, align: 'center' },
   { key: 'period', title: '신청기간', width: 120, align: 'center' },
   { key: 'created_at', title: '등록일', width: 100, align: 'center' },
@@ -114,13 +128,15 @@ export const TABLE_COLUMNS = [
 ];
 
 // 수정 가능한 필드
-export const EDITABLE_FIELDS = ['tags', 'summary', 'submission_status', 'final_support_type'];
+export const EDITABLE_FIELDS = ['tags', 'summary', 'submission_status', 'confirmed_category'];
 
 export default {
   SUPPORT_TYPES,
   SUPPORT_TYPE_COLORS,
   CONFIDENCE_LEVELS,
   SUBMISSION_STATUS,
+  CONFIRMATION_STATUS,
+  PROJECT_STATUS,
   DATA_SOURCES,
   SOURCE_LIST,
   DEFAULT_PAGINATION,

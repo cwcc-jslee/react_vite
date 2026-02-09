@@ -18,16 +18,18 @@ import {
   TABLE_COLUMNS,
 } from '../../constants/initialState';
 
-// 테이블 컬럼 정의 (상수 + 액션 컬럼)
+// 테이블 컬럼 정의 (체크박스 + 상수 + 액션 컬럼)
 const COLUMNS_DEF = [
+  { key: 'checkbox', title: '', width: 40, align: 'center', essential: true },
   ...TABLE_COLUMNS,
   { key: 'action', title: '액션', width: 100, align: 'center', essential: true },
 ];
 
 const DEFAULT_VISIBLE_COLUMNS = [
+  'checkbox',
   'source',
   'title',
-  'final_support_type',
+  'confirmed_category',
   'region',
   'period',
   'submission_status',
@@ -85,12 +87,12 @@ const getComputedStatus = (item) => {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const endDate = new Date(item.end_date);
-  
+
   // 날짜 파싱 실패 시 원본 상태 반환
   if (isNaN(endDate.getTime())) return { label: item.submission_status || '-', type: '접수중' };
-  
+
   endDate.setHours(0, 0, 0, 0);
 
   // 마감일이 지났으면 '마감'
@@ -102,7 +104,7 @@ const getComputedStatus = (item) => {
 
   // 라벨 생성
   const label = diffDays === 0 ? 'D-Day' : `D-${diffDays}일`;
-  
+
   // 7일 이내면 '마감임박'(Red), 아니면 '접수중'(Blue)
   const type = diffDays <= 7 ? '마감임박' : '접수중';
 
@@ -110,11 +112,23 @@ const getComputedStatus = (item) => {
 };
 
 // 테이블 행 컴포넌트
-const TableRow = ({ item, onClick, onOpenUrl, visibleColumns }) => {
+const TableRow = ({ item, onClick, onOpenUrl, visibleColumns, isSelected, onSelect }) => {
   const isColumnVisible = (key) => visibleColumns.includes(key);
 
   const renderCell = (key) => {
     switch (key) {
+      case 'checkbox':
+        return (
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={(e) => {
+              e.stopPropagation();
+              onSelect(item.id);
+            }}
+            className="h-4 w-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+          />
+        );
       case 'id':
         return item.id;
       case 'source':
@@ -127,13 +141,13 @@ const TableRow = ({ item, onClick, onOpenUrl, visibleColumns }) => {
             </div>
           </Tooltip>
         );
-      case 'final_support_type':
+      case 'confirmed_category':
         return (
           <SupportTypeBadge
             type={
-              item.final_support_type ||
-              item.finalSupportType ||
-              item.support_type ||
+              item.confirmed_category ||
+              item.confirmedCategory ||
+              item.analyzed_category ||
               '-'
             }
           />
@@ -190,16 +204,14 @@ const TableRow = ({ item, onClick, onOpenUrl, visibleColumns }) => {
       {COLUMNS_DEF.filter((col) => isColumnVisible(col.key)).map((col) => (
         <td
           key={col.key}
-          className={`px-4 py-3 text-sm ${
-            col.key === 'title' ? 'text-gray-900' : 'whitespace-nowrap'
-          } ${col.align === 'center' ? 'text-center' : 'text-left'} ${
-            col.key === 'id' ||
-            col.key === 'region' ||
-            col.key === 'published_date' ||
-            col.key === 'end_date'
+          className={`px-4 py-3 text-sm ${col.key === 'title' ? 'text-gray-900' : 'whitespace-nowrap'
+            } ${col.align === 'center' ? 'text-center' : 'text-left'} ${col.key === 'id' ||
+              col.key === 'region' ||
+              col.key === 'published_date' ||
+              col.key === 'end_date'
               ? 'text-gray-500'
               : ''
-          }`}
+            }`}
         >
           {renderCell(col.key)}
         </td>
@@ -256,11 +268,10 @@ const Pagination = ({ current, total, pageSize, onChange }) => {
           <button
             key={page}
             onClick={() => onChange(page)}
-            className={`px-3 py-1 text-sm border rounded ${
-              current === page
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'hover:bg-gray-100'
-            }`}
+            className={`px-3 py-1 text-sm border rounded ${current === page
+              ? 'bg-blue-600 text-white border-blue-600'
+              : 'hover:bg-gray-100'
+              }`}
           >
             {page}
           </button>
@@ -284,7 +295,7 @@ const Pagination = ({ current, total, pageSize, onChange }) => {
   );
 };
 
-const BizRadarListTable = () => {
+const BizRadarListTable = ({ selectedIds = [], onSelect, onSelectAll }) => {
   const dispatch = useDispatch();
   const { items, pagination, isLoading, isError, error, changePage } = useBizRadarStore();
 
@@ -334,7 +345,7 @@ const BizRadarListTable = () => {
   }
 
   // 빈 데이터
-  if (!items || items.length === 0) {
+  if (!items || !Array.isArray(items) || items.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-8 text-center">
         <p className="text-gray-500">조회된 공고가 없습니다.</p>
@@ -356,7 +367,14 @@ const BizRadarListTable = () => {
                   `}
                   style={{ width: col.width }}
                 >
-                  {index === array.length - 1 ? (
+                  {col.key === 'checkbox' ? (
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.length > 0 && selectedIds.length === items.length}
+                      onChange={onSelectAll}
+                      className="h-4 w-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                    />
+                  ) : index === array.length - 1 ? (
                     <div className="flex items-center justify-center gap-1">
                       <span>{col.title}</span>
                       <TableColumnMenu
@@ -365,7 +383,7 @@ const BizRadarListTable = () => {
                         onToggleColumn={toggleColumn}
                         onReset={resetColumns}
                         onShowAll={showAllColumns}
-                        essentialColumns={['title', 'final_support_type', 'action']}
+                        essentialColumns={['title', 'confirmed_category', 'action']}
                         defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}
                       />
                     </div>
@@ -384,6 +402,8 @@ const BizRadarListTable = () => {
                 onClick={handleRowClick}
                 onOpenUrl={handleOpenUrl}
                 visibleColumns={visibleColumns}
+                isSelected={selectedIds.includes(item.id)}
+                onSelect={onSelect}
               />
             ))}
           </tbody>

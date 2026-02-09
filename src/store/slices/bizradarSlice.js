@@ -79,6 +79,21 @@ export const updateBizradarItem = createAsyncThunk(
   }
 );
 
+// 공고 검토 확정
+export const confirmBizradarItem = createAsyncThunk(
+  'bizradar/confirm',
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const response = await bizradarApi.confirm(id, data);
+      return response;
+    } catch (error) {
+      return rejectWithValue(
+        error.message || '공고 확정 중 오류가 발생했습니다.'
+      );
+    }
+  }
+);
+
 // 초기 상태
 const initialState = {
   // 목록 데이터
@@ -226,6 +241,28 @@ const bizradarSlice = createSlice({
         }
       })
       .addCase(updateBizradarItem.rejected, (state, action) => {
+        state.form.isSubmitting = false;
+        state.form.errors.submit = action.payload;
+      })
+
+      // 검토 확정
+      .addCase(confirmBizradarItem.pending, (state) => {
+        state.form.isSubmitting = true;
+        state.form.errors = {};
+      })
+      .addCase(confirmBizradarItem.fulfilled, (state, action) => {
+        state.form.isSubmitting = false;
+        state.form.isDirty = false;
+
+        // 목록에서 해당 항목 제거 (확정되었으므로 검토 목록에서 제외)
+        // 만약 상세 보기 중이었다면 데이터 업데이트
+        if (state.selectedItem.data && state.selectedItem.data.id === action.payload.id) {
+          state.selectedItem.data = action.payload;
+        }
+
+        state.items = state.items.filter((item) => item.id !== action.payload.id);
+      })
+      .addCase(confirmBizradarItem.rejected, (state, action) => {
         state.form.isSubmitting = false;
         state.form.errors.submit = action.payload;
       });

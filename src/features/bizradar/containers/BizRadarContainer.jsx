@@ -9,8 +9,11 @@ import { closeDrawer } from '@/store/slices/uiSlice';
 import { useBizRadarStore } from '../hooks/useBizRadarStore';
 
 // 레이아웃 컴포넌트
+import BizRadarDashboardLayout from '../layouts/BizRadarDashboardLayout';
 import BizRadarListLayout from '../layouts/BizRadarListLayout';
+import BizRadarReviewLayout from '../layouts/BizRadarReviewLayout';
 import BizRadarSearchLayout from '../layouts/BizRadarSearchLayout';
+import BizRadarArchiveLayout from '../layouts/BizRadarArchiveLayout';
 import BizRadarViewEditLayout from '../layouts/BizRadarViewEditLayout';
 
 const BizRadarContainer = memo(() => {
@@ -34,12 +37,15 @@ const BizRadarContainer = memo(() => {
   return (
     <>
       <Section>
+        {layout === 'dashboard' && <BizRadarDashboardLayout />}
         {layout === 'list' && <BizRadarListLayout />}
+        {layout === 'review' && <BizRadarReviewLayout />}
         {layout === 'search' && <BizRadarSearchLayout />}
+        {layout === 'archive' && <BizRadarArchiveLayout />}
       </Section>
 
       {/* 상세/수정 드로어 */}
-      {drawer.visible && ['view', 'edit'].includes(drawer.mode) && (
+      {drawer.visible && ['view', 'edit', 'review'].includes(drawer.mode) && (
         <BizRadarViewEditLayout onClose={handleCloseDrawer} />
       )}
     </>

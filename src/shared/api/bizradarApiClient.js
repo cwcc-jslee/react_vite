@@ -11,7 +11,7 @@ import axios from 'axios';
 
 // BizRadar FastAPI 전용 클라이언트
 export const bizradarApiClient = axios.create({
-  baseURL: '/bizradar',
+  baseURL: '/api/bizradar', // Vite 프록시 경로 (→ http://192.168.20.100:8000)
   headers: {
     'Content-Type': 'application/json',
   },
