@@ -9,12 +9,15 @@ import { closeDrawer } from '@/store/slices/uiSlice';
 import { useBizRadarStore } from '../hooks/useBizRadarStore';
 
 // 레이아웃 컴포넌트
+import BizRadarDiscoveryLayout from '../layouts/BizRadarDiscoveryLayout';
+import BizRadarDashboardV2Layout from '../layouts/BizRadarDashboardV2Layout';
 import BizRadarDashboardLayout from '../layouts/BizRadarDashboardLayout';
 import BizRadarListLayout from '../layouts/BizRadarListLayout';
 import BizRadarReviewLayout from '../layouts/BizRadarReviewLayout';
 import BizRadarSearchLayout from '../layouts/BizRadarSearchLayout';
 import BizRadarArchiveLayout from '../layouts/BizRadarArchiveLayout';
 import BizRadarViewEditLayout from '../layouts/BizRadarViewEditLayout';
+import BizRadarMatchingLayout from '../layouts/BizRadarMatchingLayout';
 
 const BizRadarContainer = memo(() => {
   const dispatch = useDispatch();
@@ -22,10 +25,10 @@ const BizRadarContainer = memo(() => {
   const drawer = useSelector((state) => state.ui.drawer);
   const { actions } = useBizRadarStore();
 
-  // 초기 데이터 로드
-  useEffect(() => {
-    actions.data.fetchList();
-  }, []);
+  // 초기 데이터 로드 - 각 레이아웃에서 자체적으로 필터 설정 후 데이터 로드
+  // useEffect(() => {
+  //   actions.data.fetchList();
+  // }, []);
 
   // 드로어 닫기 핸들러
   const handleCloseDrawer = () => {
@@ -37,10 +40,13 @@ const BizRadarContainer = memo(() => {
   return (
     <>
       <Section>
+        {layout === 'discovery' && <BizRadarDiscoveryLayout />}
+        {layout === 'dashboard_v2' && <BizRadarDashboardV2Layout />}
         {layout === 'dashboard' && <BizRadarDashboardLayout />}
         {layout === 'list' && <BizRadarListLayout />}
         {layout === 'review' && <BizRadarReviewLayout />}
         {layout === 'search' && <BizRadarSearchLayout />}
+        {layout === 'matching' && <BizRadarMatchingLayout />}
         {layout === 'archive' && <BizRadarArchiveLayout />}
       </Section>
 

@@ -504,6 +504,70 @@ export const PAGE_MENUS = {
         label: '대시보드',
         visible: true,
         config: {
+          layout: 'dashboard_v2', // New Layout
+          sections: {
+            bizradarDashboardV2: true,
+          },
+          components: {
+            dashboardV2: true,
+          },
+          drawer: {
+            visible: false,
+          },
+        },
+      },
+      discovery: {
+        label: '발굴',
+        visible: true,
+        config: {
+          layout: 'discovery',
+          sections: {
+            bizradarDiscovery: true,
+          },
+          components: {
+            discoveryLayout: true,
+          },
+          drawer: {
+            visible: false,
+          },
+        },
+      },
+      matching: {
+        label: '매칭관리',
+        visible: true,
+        config: {
+          layout: 'matching',
+          sections: {
+            bizradarMatching: true,
+          },
+          components: {
+            matchingBoard: true,
+          },
+          drawer: {
+            visible: false,
+          },
+        },
+      },
+      archive: {
+        label: '아카이브',
+        visible: true,
+        config: {
+          layout: 'archive',
+          sections: {
+            bizradarArchive: true,
+          },
+          components: {
+            archiveTable: true,
+          },
+          drawer: {
+            visible: false,
+          },
+        },
+      },
+      dashboard_old: {
+        label: 'DB_old',
+        visible: true,
+        config: {
           layout: 'dashboard',
           sections: {
             bizradarDashboard: true,
@@ -570,22 +634,7 @@ export const PAGE_MENUS = {
           },
         },
       },
-      archive: {
-        label: '과거사업',
-        visible: true,
-        config: {
-          layout: 'archive',
-          sections: {
-            bizradarArchive: true,
-          },
-          components: {
-            archiveTable: true,
-          },
-          drawer: {
-            visible: false,
-          },
-        },
-      },
+
       detail: {
         label: '상세',
         visible: false, // 숨김 메뉴 - 행 클릭 시 접근

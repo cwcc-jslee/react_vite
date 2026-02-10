@@ -73,7 +73,7 @@ export const SUBMISSION_STATUS = {
 };
 
 // 확정 상태 정의
-export const CONFIRMATION_STATUS = {
+export const REVIEW_STATUS = {
   pending: { label: '검토대기', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
   confirmed: { label: '확정완료', color: 'bg-green-100 text-green-800', icon: '✓' },
   rejected: { label: '재검토', color: 'bg-red-100 text-red-800', icon: '✗' },
@@ -135,7 +135,7 @@ export default {
   SUPPORT_TYPE_COLORS,
   CONFIDENCE_LEVELS,
   SUBMISSION_STATUS,
-  CONFIRMATION_STATUS,
+  REVIEW_STATUS,
   PROJECT_STATUS,
   DATA_SOURCES,
   SOURCE_LIST,

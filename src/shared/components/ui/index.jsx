@@ -571,9 +571,8 @@ export const Badge = ({
 
   return (
     <span
-      className={`${baseStyles} ${
-        variantStyles[variant] || variantStyles.default
-      } ${sizeStyles[size] || sizeStyles.md} ${className}`}
+      className={`${baseStyles} ${variantStyles[variant] || variantStyles.default
+        } ${sizeStyles[size] || sizeStyles.md} ${className}`}
       {...props}
     >
       {children}

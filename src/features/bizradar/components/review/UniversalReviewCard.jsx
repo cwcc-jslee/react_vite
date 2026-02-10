@@ -12,7 +12,7 @@ const UniversalReviewCard = ({ item }) => {
 
     // 초기값 설정
     const initialType = item.confirmedCategory || item.confirmed_category || item.analyzedCategory || item.analyzed_category;
-    const confirmationStatus = item.reviewStatus || item.review_status || 'pending';
+    const reviewStatus = item.reviewStatus || item.review_status || 'pending';
 
     const handleCardClick = () => {
         dispatch(
@@ -34,8 +34,8 @@ const UniversalReviewCard = ({ item }) => {
     };
 
     const currentTypeConfig = SUPPORT_TYPES[initialType];
-    const borderColor = confirmationStatus === 'confirmed' ? 'border-green-300' :
-        confirmationStatus === 'rejected' ? 'border-red-300' :
+    const borderColor = reviewStatus === 'confirmed' ? 'border-green-300' :
+        reviewStatus === 'rejected' ? 'border-red-300' :
             'border-gray-200';
 
     return (
@@ -89,7 +89,7 @@ const UniversalReviewCard = ({ item }) => {
                     )}
                 </div>
                 <div className="flex items-center gap-2">
-                    {confirmationStatus === 'rejected' && (
+                    {reviewStatus === 'rejected' && (
                         <span className="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-1 rounded">RE-REVIEW</span>
                     )}
                     <span className="text-xs font-bold text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity">Review Details →</span>

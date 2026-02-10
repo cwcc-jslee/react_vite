@@ -36,6 +36,8 @@ export const bizradarApi = {
       region,
       min_date,
       status = 'completed',
+      analyzed_category,
+      review_status,
     } = params;
 
     // 페이지 번호를 skip으로 변환
@@ -67,6 +69,16 @@ export const bizradarApi = {
       queryParams.min_date = min_date;
     }
 
+    // AI 분석 카테고리 필터
+    if (analyzed_category) {
+      queryParams.analyzed_category = analyzed_category;
+    }
+
+    // 검토 상태 필터
+    if (review_status) {
+      queryParams.review_status = review_status;
+    }
+
     const response = await bizradarApiClient.get('/leads', { params: queryParams });
     return response.data;
   },
@@ -87,6 +99,17 @@ export const bizradarApi = {
    */
   update: async (id, data) => {
     const response = await bizradarApiClient.patch(`/leads/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * 대시보드 통계 조회
+   * @param {Object} params - 조회 파라미터
+   * @param {string} params.start_date - 시작일 (YYYY-MM-DD)
+   * @param {string} params.end_date - 종료일 (YYYY-MM-DD)
+   */
+  getDashboardStats: async (params = {}) => {
+    const response = await bizradarApiClient.get('/dashboard/stats', { params });
     return response.data;
   },
 

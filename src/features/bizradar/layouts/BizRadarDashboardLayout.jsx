@@ -47,14 +47,14 @@ const calculateConfirmationStats = (items) => {
 
     items.forEach((item) => {
         const type = item.confirmedCategory || item.confirmed_category || item.analyzedCategory || item.analyzed_category;
-        const confirmationStatus = item.reviewStatus || item.review_status || 'pending';
+        const reviewStatus = item.reviewStatus || item.review_status || 'pending';
 
         // 확정 상태별 카운트
-        if (confirmationStatus === 'pending') {
+        if (reviewStatus === 'pending') {
             stats.pending++;
-        } else if (confirmationStatus === 'confirmed') {
+        } else if (reviewStatus === 'confirmed') {
             stats.confirmed++;
-        } else if (confirmationStatus === 'rejected') {
+        } else if (reviewStatus === 'rejected') {
             stats.rejected++;
         }
 
@@ -62,9 +62,9 @@ const calculateConfirmationStats = (items) => {
         if (type && stats.byType.hasOwnProperty(type)) {
             stats.byType[type]++;
 
-            if (confirmationStatus === 'confirmed') {
+            if (reviewStatus === 'confirmed') {
                 stats.byTypeConfirmed[type]++;
-            } else if (confirmationStatus === 'pending' || confirmationStatus === 'rejected') {
+            } else if (reviewStatus === 'pending' || reviewStatus === 'rejected') {
                 stats.byTypePending[type]++;
             }
         }
@@ -77,7 +77,7 @@ const calculateConfirmationStats = (items) => {
                 end.setHours(0, 0, 0, 0);
                 if (end >= today && end <= weekLater) {
                     stats.deadlineSoon++;
-                    if (confirmationStatus === 'pending' || confirmationStatus === 'rejected') {
+                    if (reviewStatus === 'pending' || reviewStatus === 'rejected') {
                         stats.deadlineSoonPending++;
                     }
                 }
